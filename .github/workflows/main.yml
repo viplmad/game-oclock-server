@@ -18,10 +18,16 @@ jobs:
     steps:
 
       - uses: actions/checkout@v3
-      
+
       # Setup the rust environment
       - uses: actions-rs/toolchain@v1
-      
+        with:
+          profile: minimal
+          toolchain: nightly
+          components: rustfmt, clippy
+          override: true
+
+      # Analyse
       - run: cargo clippy
 
   build:
@@ -31,8 +37,13 @@ jobs:
     steps:
 
       - uses: actions/checkout@v3
-    
+
       # Setup the rust environment
       - uses: actions-rs/toolchain@v1
+        with:
+          toolchain: nightly
+          components: rustfmt, clippy
+          override: true
 
+      # Build
       - run: cargo build --release
