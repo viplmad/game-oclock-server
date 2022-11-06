@@ -36,6 +36,19 @@ where
         .map_err(|err| RepositoryError(err.to_string()))
 }
 
+pub(super) async fn execute_return_single<'c, X, T>(
+    executor: X,
+    query: impl QueryStatementWriter,
+) -> Result<T, RepositoryError>
+where
+    X: sqlx::Executor<'c, Database = Postgres>,
+    T: for<'r> sqlx::Decode<'r, Postgres> + sqlx::Type<Postgres> + Send + Unpin,
+{
+    execute_return(executor, query)
+        .await
+        .map(|tuple: (T,)| tuple.0)
+}
+
 pub(super) async fn execute_return_id<'c, X>(
     executor: X,
     query: impl QueryStatementWriter,
@@ -43,9 +56,7 @@ pub(super) async fn execute_return_id<'c, X>(
 where
     X: sqlx::Executor<'c, Database = Postgres>,
 {
-    execute_return(executor, query)
-        .await
-        .map(|tuple: (i32,)| tuple.0)
+    execute_return_single(executor, query).await
 }
 
 pub(super) async fn execute<'c, X>(
@@ -96,16 +107,40 @@ where
         .map_err(|err| RepositoryError(err.to_string()))
 }
 
-pub(super) async fn exists<'c, X>(
+pub(super) async fn fetch_all_single<'c, X, T>(
+    executor: X,
+    query: impl QueryStatementWriter,
+) -> Result<Vec<T>, RepositoryError>
+where
+    X: sqlx::Executor<'c, Database = Postgres>,
+    T: for<'r> sqlx::Decode<'r, Postgres> + sqlx::Type<Postgres> + Send + Unpin,
+{
+    fetch_all(executor, query)
+        .await
+        .map(|list: Vec<(T,)>| list.into_iter().map(|tuple| tuple.0).collect())
+}
+
+pub(super) async fn exists<'c, X, T>(
+    executor: X,
+    query: impl QueryStatementWriter,
+) -> Result<bool, RepositoryError>
+where
+    X: sqlx::Executor<'c, Database = Postgres>,
+    T: for<'r> sqlx::Decode<'r, Postgres> + sqlx::Type<Postgres> + Send + Unpin,
+{
+    fetch_all(executor, query)
+        .await
+        .map(|res: Vec<(T, )>| !res.is_empty())
+}
+
+pub(super) async fn exists_id<'c, X>(
     executor: X,
     query: impl QueryStatementWriter,
 ) -> Result<bool, RepositoryError>
 where
     X: sqlx::Executor<'c, Database = Postgres>,
 {
-    fetch_all(executor, query)
-        .await
-        .map(|res: Vec<(i32,)>| !res.is_empty())
+    exists::<X, i32>(executor, query).await
 }
 
 fn build_sql(query: impl QueryStatementWriter) -> String {

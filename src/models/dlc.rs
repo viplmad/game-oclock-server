@@ -54,7 +54,7 @@ impl ModelName for DLCDTO {
     const UNIQUE_FIELDS: &'static [&'static str] = &["name"];
 }
 
-#[derive(Serialize, Deserialize, ToSchema)]
+#[derive(Deserialize, ToSchema)]
 pub struct NewDLCDTO {
     pub name: Option<String>,
     pub base_game_id: Option<i32>,

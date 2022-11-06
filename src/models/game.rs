@@ -72,7 +72,7 @@ impl ModelName for GameDTO {
     const UNIQUE_FIELDS: &'static [&'static str] = &["name", "edition"];
 }
 
-#[derive(Serialize, Deserialize, ToSchema)]
+#[derive(Deserialize, ToSchema)]
 pub struct NewGameDTO {
     pub name: Option<String>,
     pub edition: Option<String>,

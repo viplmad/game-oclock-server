@@ -4,7 +4,7 @@ use crate::entities::DLC;
 use crate::errors::RepositoryError;
 use crate::query::dlc_query;
 
-use super::base::{execute, execute_return_id, exists, fetch_all, fetch_optional};
+use super::base::{execute, execute_return_id, exists_id, fetch_all, fetch_optional};
 
 pub async fn find_by_id(
     pool: &PgPool,
@@ -70,7 +70,7 @@ pub async fn exists_by_id(
     dlc_id: i32,
 ) -> Result<bool, RepositoryError> {
     let query = dlc_query::exists_by_id(user_id, dlc_id);
-    exists(pool, query).await
+    exists_id(pool, query).await
 }
 
 pub async fn exists_with_unique(
@@ -79,7 +79,7 @@ pub async fn exists_with_unique(
     dlc: &DLC,
 ) -> Result<bool, RepositoryError> {
     let query = dlc_query::exists_by_name(user_id, &dlc.name);
-    exists(pool, query).await
+    exists_id(pool, query).await
 }
 
 pub async fn exists_with_unique_except_id(
@@ -89,5 +89,5 @@ pub async fn exists_with_unique_except_id(
     dlc_id: i32,
 ) -> Result<bool, RepositoryError> {
     let query = dlc_query::exists_by_name_and_id_not(user_id, &dlc.name, dlc_id);
-    exists(pool, query).await
+    exists_id(pool, query).await
 }

@@ -117,11 +117,14 @@ async fn run(
         paths(
             routes::get_game,
             routes::get_game_dlcs,
+            routes::get_game_finishes,
             routes::get_games,
             routes::post_game,
+            routes::post_game_finish,
             routes::put_game,
             routes::put_game_dlc,
             routes::delete_game,
+            routes::delete_game_finish,
             routes::get_dlc,
             routes::get_dlc_base_game,
             routes::get_dlcs,
@@ -187,11 +190,14 @@ async fn run(
                         // Games
                         .service(routes::get_game)
                         .service(routes::get_game_dlcs)
+                        .service(routes::get_game_finishes)
                         .service(routes::get_games)
                         .service(routes::post_game)
+                        .service(routes::post_game_finish)
                         .service(routes::put_game)
                         .service(routes::put_game_dlc)
                         .service(routes::delete_game)
+                        .service(routes::delete_game_finish)
                         // DLCs
                         .service(routes::get_dlc)
                         .service(routes::get_dlc_base_game)

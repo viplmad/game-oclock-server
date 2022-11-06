@@ -9,7 +9,7 @@ where
 {
     repository_result.map_err(|err| {
         ApiErrors::UnknownError(error_message_builder::inner_error(
-            &error_message_builder::get_error(T::MODEL_NAME),
+            &error_message_builder::database_error(T::MODEL_NAME),
             &err.0,
         ))
     })
@@ -36,14 +36,22 @@ where
     Ok(T::from(entity))
 }
 
+pub(super) fn handle_get_list_result_raw<E, T>(
+    repository_result: Result<Vec<E>, RepositoryError>,
+) -> Result<Vec<E>, ApiErrors>
+where
+    T: ModelName,
+{
+    handle_result::<Vec<E>, T>(repository_result)
+}
+
 pub(super) fn handle_get_list_result<E, T>(
     repository_result: Result<Vec<E>, RepositoryError>,
 ) -> Result<Vec<T>, ApiErrors>
 where
     T: From<E> + ModelName,
 {
-    let entity_list: Vec<E> = handle_result::<Vec<E>, T>(repository_result)?;
-
+    let entity_list: Vec<E> = handle_get_list_result_raw::<E, T>(repository_result)?;
     Ok(entity_list.into_iter().map(T::from).collect())
 }
 

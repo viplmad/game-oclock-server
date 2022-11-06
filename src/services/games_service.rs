@@ -12,8 +12,8 @@ use super::base::{
 };
 
 pub async fn get_game(pool: &PgPool, user_id: i32, game_id: i32) -> Result<GameDTO, ApiErrors> {
-    let result = game_repository::find_by_id(pool, user_id, game_id).await;
-    handle_get_result(result)
+    let find_result = game_repository::find_by_id(pool, user_id, game_id).await;
+    handle_get_result(find_result)
 }
 
 pub async fn get_games(
@@ -21,8 +21,8 @@ pub async fn get_games(
     user_id: i32,
     query: QueryRequest,
 ) -> Result<Vec<GameDTO>, ApiErrors> {
-    let result = game_repository::find_all(pool, user_id, query.limit.unwrap_or(10)).await;
-    handle_get_list_result(result)
+    let find_result = game_repository::find_all(pool, user_id, query.limit.unwrap_or(10)).await;
+    handle_get_list_result(find_result)
 }
 
 pub async fn create_game(
@@ -80,7 +80,7 @@ pub async fn delete_game(pool: &PgPool, user_id: i32, game_id: i32) -> Result<()
 }
 
 pub async fn exists_game(
-    pool: &sqlx::Pool<sqlx::Postgres>,
+    pool: &PgPool,
     user_id: i32,
     game_id: i32,
 ) -> Result<(), ApiErrors> {

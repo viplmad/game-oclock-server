@@ -13,8 +13,8 @@ use super::base::{
 use super::games_service;
 
 pub async fn get_dlc(pool: &PgPool, user_id: i32, dlc_id: i32) -> Result<DLCDTO, ApiErrors> {
-    let result = dlc_repository::find_by_id(pool, user_id, dlc_id).await;
-    handle_get_result(result)
+    let find_result = dlc_repository::find_by_id(pool, user_id, dlc_id).await;
+    handle_get_result(find_result)
 }
 
 pub async fn get_dlc_base_game(
@@ -36,8 +36,8 @@ pub async fn get_game_dlcs(
 ) -> Result<Vec<DLCDTO>, ApiErrors> {
     games_service::exists_game(pool, user_id, game_id).await?;
 
-    let result = dlc_repository::find_all_by_base_game_id(pool, user_id, game_id).await;
-    handle_get_list_result(result)
+    let find_result = dlc_repository::find_all_by_base_game_id(pool, user_id, game_id).await;
+    handle_get_list_result(find_result)
 }
 
 pub async fn get_dlcs(
@@ -45,8 +45,8 @@ pub async fn get_dlcs(
     user_id: i32,
     query: QueryRequest,
 ) -> Result<Vec<DLCDTO>, ApiErrors> {
-    let result = dlc_repository::find_all(pool, user_id, query.limit.unwrap_or(10)).await;
-    handle_get_list_result(result)
+    let find_result = dlc_repository::find_all(pool, user_id, query.limit.unwrap_or(10)).await;
+    handle_get_list_result(find_result)
 }
 
 pub async fn create_dlc(pool: &PgPool, user_id: i32, dlc: NewDLCDTO) -> Result<DLCDTO, ApiErrors> {
@@ -112,7 +112,7 @@ pub async fn delete_dlc(pool: &PgPool, user_id: i32, dlc_id: i32) -> Result<(), 
 }
 
 pub async fn exists_dlc(
-    pool: &sqlx::Pool<sqlx::Postgres>,
+    pool: &PgPool,
     user_id: i32,
     dlc_id: i32,
 ) -> Result<(), ApiErrors> {
@@ -128,6 +128,5 @@ async fn exists_base_game(
     match base_game {
         Some(base_game_id) => games_service::exists_game(pool, user_id, base_game_id).await,
         None => Ok(()),
-    }?;
-    Ok(())
+    }
 }

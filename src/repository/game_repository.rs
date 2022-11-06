@@ -5,7 +5,7 @@ use crate::errors::RepositoryError;
 use crate::query::game_query;
 
 use super::base::{
-    begin_transaction, commit_transaction, execute, execute_return, execute_return_id, exists,
+    begin_transaction, commit_transaction, execute, execute_return, execute_return_id, exists_id,
     fetch_all, fetch_optional,
 };
 
@@ -85,7 +85,7 @@ pub async fn exists_by_id(
     game_id: i32,
 ) -> Result<bool, RepositoryError> {
     let query = game_query::exists_by_id(user_id, game_id);
-    exists(pool, query).await
+    exists_id(pool, query).await
 }
 
 pub async fn exists_with_unique(
@@ -94,7 +94,7 @@ pub async fn exists_with_unique(
     game: &Game,
 ) -> Result<bool, RepositoryError> {
     let query = game_query::exists_by_name_and_edition(user_id, &game.name, &game.edition);
-    exists(pool, query).await
+    exists_id(pool, query).await
 }
 
 pub async fn exists_with_unique_except_id(
@@ -109,5 +109,5 @@ pub async fn exists_with_unique_except_id(
         &game.edition,
         game_id,
     );
-    exists(pool, query).await
+    exists_id(pool, query).await
 }

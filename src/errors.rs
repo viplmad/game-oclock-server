@@ -10,15 +10,19 @@ pub trait ToError {
 
 pub mod error_message_builder {
     pub fn missing_param(param_name: &str) -> String {
-        format!("Request body field '{param_name}' cannot be empty.")
+        format!("Request parameter '{param_name}' cannot be empty.")
+    }
+
+    pub fn missing_body_field(field_name: &str) -> String {
+        format!("Request body field '{field_name}' cannot be empty.")
     }
 
     pub fn empty_param(param_name: &str) -> String {
         format!("{param_name} is empty.")
     }
 
-    pub fn get_error(model_name: &str) -> String {
-        format!("{model_name} could not be retrieved.")
+    pub fn database_error(model_name: &str) -> String {
+        format!("Database error accessing {model_name}.")
     }
 
     pub fn created_but_error_get(model_name: &str) -> String {

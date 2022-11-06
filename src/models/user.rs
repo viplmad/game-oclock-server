@@ -43,7 +43,7 @@ impl ModelName for UserDTO {
     const UNIQUE_FIELDS: &'static [&'static str] = &["username"];
 }
 
-#[derive(Serialize, Deserialize, ToSchema)]
+#[derive(Deserialize, ToSchema)]
 pub struct NewUserDTO {
     pub username: String,
     pub password: String, // TODO Secret<String>
