@@ -1,0 +1,38 @@
+name: Rust CI
+
+# This workflow is triggered on pushes to the repository.
+
+# Controls when the action will run.
+on:
+  # Triggers the workflow on push or pull request events but only for the main branch
+  push:
+    branches: [ main ]
+
+env:
+  CARGO_TERM_COLOR: always
+
+jobs:
+  analysis:
+    # This job will run on ubuntu virtual machine
+    runs-on: ubuntu-latest
+    steps:
+
+      - uses: actions/checkout@v3
+      
+      # Setup the rust environment
+      - uses: actions-rs/toolchain@v1
+      
+      - run: cargo clippy
+
+  build:
+    needs: analysis
+    # This job will run on ubuntu virtual machine
+    runs-on: ubuntu-latest
+    steps:
+
+      - uses: actions/checkout@v3
+    
+      # Setup the rust environment
+      - uses: actions-rs/toolchain@v1
+
+      - run: cargo build --release
