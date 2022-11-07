@@ -120,19 +120,6 @@ where
         .map(|list: Vec<(T,)>| list.into_iter().map(|tuple| tuple.0).collect())
 }
 
-pub(super) async fn exists<'c, X, T>(
-    executor: X,
-    query: impl QueryStatementWriter,
-) -> Result<bool, RepositoryError>
-where
-    X: sqlx::Executor<'c, Database = Postgres>,
-    T: for<'r> sqlx::Decode<'r, Postgres> + sqlx::Type<Postgres> + Send + Unpin,
-{
-    fetch_all(executor, query)
-        .await
-        .map(|res: Vec<(T, )>| !res.is_empty())
-}
-
 pub(super) async fn exists_id<'c, X>(
     executor: X,
     query: impl QueryStatementWriter,
@@ -140,7 +127,9 @@ pub(super) async fn exists_id<'c, X>(
 where
     X: sqlx::Executor<'c, Database = Postgres>,
 {
-    exists::<X, i32>(executor, query).await
+    fetch_all(executor, query)
+        .await
+        .map(|res: Vec<(i32, )>| !res.is_empty())
 }
 
 fn build_sql(query: impl QueryStatementWriter) -> String {

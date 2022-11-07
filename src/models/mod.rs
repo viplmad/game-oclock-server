@@ -1,5 +1,6 @@
 mod auth;
 mod dlc;
+mod dlc_finish;
 mod error;
 mod game;
 mod game_finish;
@@ -13,6 +14,7 @@ mod user;
 
 pub use auth::*;
 pub use dlc::*;
+pub use dlc_finish::*;
 pub use error::*;
 pub use game::*;
 pub use game_finish::*;

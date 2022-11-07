@@ -4,7 +4,7 @@ use sqlx::PgPool;
 use crate::errors::RepositoryError;
 use crate::query::game_finish_query;
 
-use super::base::{execute, exists, fetch_all_single};
+use super::base::{execute, exists_id, fetch_all_single};
 
 pub async fn find_all_by_game_id(
     pool: &PgPool,
@@ -42,5 +42,5 @@ pub async fn exists_by_id(
     date: NaiveDate,
 ) -> Result<bool, RepositoryError> {
     let query = game_finish_query::exists_by_id(user_id, game_id, date);
-    exists::<_, NaiveDate>(pool, query).await
+    exists_id(pool, query).await
 }

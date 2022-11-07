@@ -46,7 +46,7 @@ pub fn exists_by_id(user_id: i32, game_id: i32, date: NaiveDate) -> impl QuerySt
 
     from_and_where_user_id(&mut select, user_id);
     select
-        .column((GameFinishIden::Table, GameFinishIden::Date))
+        .column((GameFinishIden::Table, GameFinishIden::GameId))
         .and_where(Expr::col(GameFinishIden::GameId).eq(game_id))
         .and_where(Expr::col(GameFinishIden::Date).eq(date));
 

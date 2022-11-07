@@ -1,13 +1,13 @@
 use sea_query::Iden;
 
 #[derive(Iden)]
-#[iden = "GameFinish"]
-pub enum GameFinishIden {
+#[iden = "DLCFinish"]
+pub enum DLCFinishIden {
     Table,
     #[iden = "user_id"]
     UserId,
-    #[iden = "game_id"]
-    GameId,
+    #[iden = "dlc_id"]
+    DLCId,
     #[iden = "date"]
     Date,
 }
