@@ -3,11 +3,11 @@ use sea_query::{Expr, Query, QueryStatementWriter, SelectStatement};
 
 use crate::entities::{DLCIden, DLC};
 
-pub fn select_by_id(user_id: i32, dlc_id: i32) -> impl QueryStatementWriter {
+pub fn select_by_id(user_id: i32, id: i32) -> impl QueryStatementWriter {
     let mut select = Query::select();
 
     from_and_where_user_id(&mut select, user_id);
-    where_id(&mut select, dlc_id);
+    where_id(&mut select, id);
     add_fields(&mut select);
 
     select
@@ -61,7 +61,7 @@ pub fn insert(user_id: i32, dlc: &DLC) -> impl QueryStatementWriter {
     insert
 }
 
-pub fn update_by_id(user_id: i32, dlc_id: i32, dlc: &DLC) -> impl QueryStatementWriter {
+pub fn update_by_id(user_id: i32, id: i32, dlc: &DLC) -> impl QueryStatementWriter {
     let mut update = Query::update();
 
     update
@@ -74,7 +74,7 @@ pub fn update_by_id(user_id: i32, dlc_id: i32, dlc: &DLC) -> impl QueryStatement
             (DLCIden::UpdatedDateTime, Utc::now().naive_utc().into()),
         ])
         .and_where(Expr::col(DLCIden::UserId).eq(user_id))
-        .and_where(Expr::col(DLCIden::Id).eq(dlc_id))
+        .and_where(Expr::col(DLCIden::Id).eq(id))
         .returning(Query::returning().columns([DLCIden::Id]));
 
     update
@@ -82,8 +82,8 @@ pub fn update_by_id(user_id: i32, dlc_id: i32, dlc: &DLC) -> impl QueryStatement
 
 pub fn update_base_game_id_by_id(
     user_id: i32,
-    dlc_id: i32,
-    base_game_id: i32,
+    id: i32,
+    base_game_id: Option<i32>,
 ) -> impl QueryStatementWriter {
     let mut update = Query::update();
 
@@ -91,28 +91,28 @@ pub fn update_base_game_id_by_id(
         .table(DLCIden::Table)
         .values(vec![(DLCIden::BaseGameId, base_game_id.into())])
         .and_where(Expr::col(DLCIden::UserId).eq(user_id))
-        .and_where(Expr::col(DLCIden::Id).eq(dlc_id))
+        .and_where(Expr::col(DLCIden::Id).eq(id))
         .returning(Query::returning().columns([DLCIden::Id]));
 
     update
 }
 
-pub fn delete_by_id(user_id: i32, dlc_id: i32) -> impl QueryStatementWriter {
+pub fn delete_by_id(user_id: i32, id: i32) -> impl QueryStatementWriter {
     let mut delete = Query::delete();
 
     delete
         .from_table(DLCIden::Table)
         .and_where(Expr::col(DLCIden::UserId).eq(user_id))
-        .and_where(Expr::col(DLCIden::Id).eq(dlc_id));
+        .and_where(Expr::col(DLCIden::Id).eq(id));
 
     delete
 }
 
-pub fn exists_by_id(user_id: i32, dlc_id: i32) -> impl QueryStatementWriter {
+pub fn exists_by_id(user_id: i32, id: i32) -> impl QueryStatementWriter {
     let mut select = Query::select();
 
     from_and_where_user_id(&mut select, user_id);
-    where_id(&mut select, dlc_id);
+    where_id(&mut select, id);
     add_id_field(&mut select);
 
     select
@@ -131,7 +131,7 @@ pub fn exists_by_name(user_id: i32, name: &str) -> impl QueryStatementWriter {
 pub fn exists_by_name_and_id_not(
     user_id: i32,
     name: &str,
-    dlc_id: i32,
+    id: i32,
 ) -> impl QueryStatementWriter {
     let mut select = Query::select();
 
@@ -139,7 +139,7 @@ pub fn exists_by_name_and_id_not(
     add_id_field(&mut select);
     select
         .and_where(Expr::col(DLCIden::Name).eq(name))
-        .and_where(Expr::col(DLCIden::Id).ne(dlc_id));
+        .and_where(Expr::col(DLCIden::Id).ne(id));
 
     select
 }
@@ -150,8 +150,8 @@ fn from_and_where_user_id(select: &mut SelectStatement, user_id: i32) {
         .and_where(Expr::col((DLCIden::Table, DLCIden::UserId)).eq(user_id));
 }
 
-fn where_id(select: &mut SelectStatement, dlc_id: i32) {
-    select.and_where(Expr::col((DLCIden::Table, DLCIden::Id)).eq(dlc_id));
+fn where_id(select: &mut SelectStatement, id: i32) {
+    select.and_where(Expr::col((DLCIden::Table, DLCIden::Id)).eq(id));
 }
 
 fn add_id_field(select: &mut SelectStatement) {

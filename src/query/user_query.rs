@@ -3,11 +3,11 @@ use sea_query::{Expr, Query, QueryStatementWriter, SelectStatement};
 
 use crate::entities::{User, UserIden};
 
-pub fn select_by_id(user_id: i32) -> impl QueryStatementWriter {
+pub fn select_by_id(id: i32) -> impl QueryStatementWriter {
     let mut select = Query::select();
 
     from(&mut select);
-    where_id(&mut select, user_id);
+    where_id(&mut select, id);
     add_fields(&mut select);
 
     select
@@ -45,7 +45,7 @@ pub fn insert(user: &User, password: &str) -> impl QueryStatementWriter {
     insert
 }
 
-pub fn update_password(user_id: i32, password: &str) -> impl QueryStatementWriter {
+pub fn update_password_by_id(id: i32, password: &str) -> impl QueryStatementWriter {
     let mut update = Query::update();
 
     update
@@ -54,7 +54,7 @@ pub fn update_password(user_id: i32, password: &str) -> impl QueryStatementWrite
             (UserIden::Password, password.into()),
             (UserIden::UpdatedDateTime, Utc::now().naive_utc().into()),
         ])
-        .and_where(Expr::col(UserIden::Id).eq(user_id))
+        .and_where(Expr::col(UserIden::Id).eq(id))
         .returning(Query::returning().columns([UserIden::Id]));
 
     update
@@ -74,8 +74,8 @@ fn from(select: &mut SelectStatement) {
     select.from(UserIden::Table);
 }
 
-fn where_id(select: &mut SelectStatement, user_id: i32) {
-    select.and_where(Expr::col((UserIden::Table, UserIden::Id)).eq(user_id));
+fn where_id(select: &mut SelectStatement, id: i32) {
+    select.and_where(Expr::col((UserIden::Table, UserIden::Id)).eq(id));
 }
 
 fn add_id_field(select: &mut SelectStatement) {

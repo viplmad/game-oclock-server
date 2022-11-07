@@ -89,7 +89,7 @@ CREATE TABLE public."Platform" (
     user_id integer NOT NULL,
     name text NOT NULL,
     icon_filename text,
-    type smallint DEFAULT 0 NOT NULL,
+    type smallint,
     added_datetime timestamp without time zone NOT NULL,
     updated_datetime timestamp without time zone NOT NULL
 );

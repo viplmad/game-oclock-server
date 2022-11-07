@@ -28,7 +28,7 @@ pub async fn update_password(
     user_id: i32,
     password: &str,
 ) -> Result<i32, RepositoryError> {
-    let query = user_query::update_password(user_id, password);
+    let query = user_query::update_password_by_id(user_id, password);
     execute_return_id(pool, query).await
 }
 

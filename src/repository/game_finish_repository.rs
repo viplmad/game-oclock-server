@@ -31,7 +31,7 @@ pub async fn delete(
     game_id: i32,
     date: NaiveDate,
 ) -> Result<(), RepositoryError> {
-    let query = game_finish_query::delete(user_id, game_id, date);
+    let query = game_finish_query::delete_by_id(user_id, game_id, date);
     execute(pool, query).await
 }
 

@@ -29,7 +29,7 @@ pub fn insert(user_id: i32, game_id: i32, date: NaiveDate) -> impl QueryStatemen
     insert
 }
 
-pub fn delete(user_id: i32, game_id: i32, date: NaiveDate) -> impl QueryStatementWriter {
+pub fn delete_by_id(user_id: i32, game_id: i32, date: NaiveDate) -> impl QueryStatementWriter {
     let mut delete = Query::delete();
 
     delete

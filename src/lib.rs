@@ -1,4 +1,5 @@
 #![feature(async_closure)]
+#![feature(is_some_and)]
 
 pub mod auth;
 pub mod entities;

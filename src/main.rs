@@ -125,6 +125,7 @@ async fn run(
             routes::put_game_dlc,
             routes::delete_game,
             routes::delete_game_finish,
+            routes::remove_game_dlc,
             routes::get_dlc,
             routes::get_dlc_base_game,
             routes::get_dlcs,
@@ -197,6 +198,7 @@ async fn run(
                         .service(routes::put_game)
                         .service(routes::put_game_dlc)
                         .service(routes::delete_game)
+                        .service(routes::remove_game_dlc)
                         .service(routes::delete_game_finish)
                         // DLCs
                         .service(routes::get_dlc)

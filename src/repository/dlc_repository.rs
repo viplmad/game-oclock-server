@@ -53,7 +53,7 @@ pub async fn update_base_game_id(
     pool: &PgPool,
     user_id: i32,
     dlc_id: i32,
-    base_game_id: i32,
+    base_game_id: Option<i32>,
 ) -> Result<(), RepositoryError> {
     let query = dlc_query::update_base_game_id_by_id(user_id, dlc_id, base_game_id);
     execute(pool, query).await

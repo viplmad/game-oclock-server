@@ -218,7 +218,7 @@ async fn put_game(
         ("other_id" = i32, Path, description = "DLC id")
     ),
     responses(
-        (status = 204, description = "DLC linked"),
+        (status = 204, description = "Game and DLC linked"),
         (status = 401, description = "Unauthorized", body = ErrorMessage, content_type = "application/json"),
         (status = 404, description = "Game or DLC not found", body = ErrorMessage, content_type = "application/json"),
         (status = 500, description = "Internal server error", body = ErrorMessage, content_type = "application/json"),
@@ -268,6 +268,36 @@ async fn delete_game(
 
 #[utoipa::path(
     delete,
+    path = "/api/v1/games/{id}/dlcs/{other_id}",
+    tag = "Games",
+    params(
+        ("id" = i32, Path, description = "Game id"),
+        ("other_id" = i32, Path, description = "DLC id")
+    ),
+    responses(
+        (status = 204, description = "Game and DLC unlinked"),
+        (status = 400, description = "Bad request", body = ErrorMessage, content_type = "application/json"),
+        (status = 401, description = "Unauthorized", body = ErrorMessage, content_type = "application/json"),
+        (status = 404, description = "Game or DLC not found", body = ErrorMessage, content_type = "application/json"),
+        (status = 500, description = "Internal server error", body = ErrorMessage, content_type = "application/json"),
+    ),
+    security(
+        ("bearer_token" = [])
+    )
+)]
+#[delete("/games/{id}/dlcs/{other_id}")]
+async fn remove_game_dlc(
+    pool: web::Data<PgPool>,
+    path: web::Path<ItemIdAndRelatedId>,
+    logged_user: LoggedUser,
+) -> impl Responder {
+    let ItemIdAndRelatedId(id, dlc_id) = path.into_inner();
+    let update_result = dlcs_service::remove_dlc_base_game(&pool, logged_user.id, dlc_id, id).await;
+    handle_action_result(update_result)
+}
+
+#[utoipa::path(
+    delete,
     path = "/api/v1/games/{id}/finishes",
     tag = "Games",
     params(
@@ -292,6 +322,7 @@ async fn delete_game_finish(
     logged_user: LoggedUser,
 ) -> impl Responder {
     let ItemId(id) = path.into_inner();
-    let delete_result = game_finishes_service::delete_game_finish(&pool, logged_user.id, id, body.0).await;
+    let delete_result =
+        game_finishes_service::delete_game_finish(&pool, logged_user.id, id, body.0).await;
     handle_delete_result(delete_result)
 }

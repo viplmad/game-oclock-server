@@ -21,6 +21,10 @@ pub mod error_message_builder {
         format!("{param_name} is empty.")
     }
 
+    pub fn param_not_match(param_name: &str) -> String {
+        format!("{param_name} does not match the one provided.")
+    }
+
     pub fn database_error(model_name: &str) -> String {
         format!("Database error accessing {model_name}.")
     }

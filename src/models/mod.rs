@@ -7,6 +7,8 @@ mod game_status;
 mod merge;
 mod model_name;
 mod params;
+mod platform;
+mod platform_type;
 mod user;
 
 pub use auth::*;
@@ -18,4 +20,6 @@ pub use game_status::*;
 pub use merge::*;
 pub use model_name::*;
 pub use params::*;
+pub use platform::*;
+pub use platform_type::*;
 pub use user::*;

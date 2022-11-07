@@ -3,11 +3,11 @@ use sea_query::{Expr, Query, QueryStatementWriter, SelectStatement};
 
 use crate::entities::{Game, GameIden, GameUserInfoIden};
 
-pub fn select_by_id(user_id: i32, game_id: i32) -> impl QueryStatementWriter {
+pub fn select_by_id(user_id: i32, id: i32) -> impl QueryStatementWriter {
     let mut select = Query::select();
 
     from_and_where_user_id(&mut select, user_id);
-    where_id(&mut select, game_id);
+    where_id(&mut select, id);
     join_user_info(&mut select);
     add_fields(&mut select);
 
@@ -89,7 +89,7 @@ pub fn insert_user_info(user_id: i32, game_id: i32, game: &Game) -> impl QuerySt
     insert
 }
 
-pub fn update_by_id(user_id: i32, game_id: i32, game: &Game) -> impl QueryStatementWriter {
+pub fn update_by_id(user_id: i32, id: i32, game: &Game) -> impl QueryStatementWriter {
     let mut update = Query::update();
 
     update
@@ -102,7 +102,7 @@ pub fn update_by_id(user_id: i32, game_id: i32, game: &Game) -> impl QueryStatem
             (GameIden::UpdatedDateTime, Utc::now().naive_utc().into()),
         ])
         .and_where(Expr::col(GameIden::UserId).eq(user_id))
-        .and_where(Expr::col(GameIden::Id).eq(game_id))
+        .and_where(Expr::col(GameIden::Id).eq(id))
         .returning(Query::returning().columns([GameIden::Id]));
 
     update
@@ -144,13 +144,13 @@ pub fn update_user_info_by_id(
     update
 }
 
-pub fn delete_by_id(user_id: i32, game_id: i32) -> impl QueryStatementWriter {
+pub fn delete_by_id(user_id: i32, id: i32) -> impl QueryStatementWriter {
     let mut delete = Query::delete();
 
     delete
         .from_table(GameIden::Table)
         .and_where(Expr::col(GameIden::UserId).eq(user_id))
-        .and_where(Expr::col(GameIden::Id).eq(game_id));
+        .and_where(Expr::col(GameIden::Id).eq(id));
 
     delete
 }
@@ -166,11 +166,11 @@ pub fn delete_user_info_by_id(user_id: i32, game_id: i32) -> impl QueryStatement
     delete
 }
 
-pub fn exists_by_id(user_id: i32, game_id: i32) -> impl QueryStatementWriter {
+pub fn exists_by_id(user_id: i32, id: i32) -> impl QueryStatementWriter {
     let mut select = Query::select();
 
     from_and_where_user_id(&mut select, user_id);
-    where_id(&mut select, game_id);
+    where_id(&mut select, id);
     add_id_field(&mut select);
 
     select
@@ -192,11 +192,12 @@ pub fn exists_by_name_and_edition(
     select
 }
 
+// TODO same as above but with notequal
 pub fn exists_by_name_and_edition_and_id_not(
     user_id: i32,
     name: &str,
     edition: &str,
-    game_id: i32,
+    id: i32,
 ) -> impl QueryStatementWriter {
     let mut select = Query::select();
 
@@ -205,7 +206,7 @@ pub fn exists_by_name_and_edition_and_id_not(
     select
         .and_where(Expr::col(GameIden::Name).eq(name))
         .and_where(Expr::col(GameIden::Edition).eq(edition))
-        .and_where(Expr::col(GameIden::Id).ne(game_id));
+        .and_where(Expr::col(GameIden::Id).ne(id));
 
     select
 }
@@ -216,8 +217,8 @@ fn from_and_where_user_id(select: &mut SelectStatement, user_id: i32) {
         .and_where(Expr::col((GameIden::Table, GameIden::UserId)).eq(user_id));
 }
 
-fn where_id(select: &mut SelectStatement, game_id: i32) {
-    select.and_where(Expr::col((GameIden::Table, GameIden::Id)).eq(game_id));
+fn where_id(select: &mut SelectStatement, id: i32) {
+    select.and_where(Expr::col((GameIden::Table, GameIden::Id)).eq(id));
 }
 
 fn join_user_info(select: &mut SelectStatement) {

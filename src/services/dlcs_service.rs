@@ -2,11 +2,11 @@ use sqlx::PgPool;
 
 use crate::entities::DLC;
 use crate::errors::{error_message_builder, ApiErrors};
-use crate::models::{GameDTO, NewDLCDTO, QueryRequest, DLCDTO, UserDTO};
+use crate::models::{GameDTO, NewDLCDTO, QueryRequest, UserDTO, DLCDTO};
 use crate::repository::dlc_repository;
 
 use super::base::{
-    create_merged, handle_already_exists_result, handle_create_result, handle_action_result,
+    create_merged, handle_action_result, handle_already_exists_result, handle_create_result,
     handle_get_list_result, handle_get_result, handle_not_found_result, handle_update_result,
     update_merged,
 };
@@ -24,7 +24,7 @@ pub async fn get_dlc_base_game(
 ) -> Result<GameDTO, ApiErrors> {
     let dlc = get_dlc(pool, user_id, dlc_id).await?;
     let base_game_id = dlc.base_game_id.ok_or_else(|| {
-        ApiErrors::InvalidParameter(error_message_builder::empty_param("Base game"))
+        ApiErrors::InvalidParameter(error_message_builder::empty_param("DLC base game"))
     })?;
     games_service::get_game(pool, user_id, base_game_id).await
 }
@@ -100,7 +100,8 @@ pub async fn update_dlc_base_game(
     exists_dlc(pool, user_id, dlc_id).await?;
     games_service::exists_game(pool, user_id, base_game_id).await?;
 
-    let update_result = dlc_repository::update_base_game_id(pool, user_id, dlc_id, base_game_id).await;
+    let update_result =
+        dlc_repository::update_base_game_id(pool, user_id, dlc_id, Some(base_game_id)).await;
     handle_action_result::<UserDTO>(update_result)
 }
 
@@ -111,11 +112,24 @@ pub async fn delete_dlc(pool: &PgPool, user_id: i32, dlc_id: i32) -> Result<(), 
     handle_action_result::<DLCDTO>(delete_result)
 }
 
-pub async fn exists_dlc(
+pub async fn remove_dlc_base_game(
     pool: &PgPool,
     user_id: i32,
     dlc_id: i32,
+    base_game_id: i32,
 ) -> Result<(), ApiErrors> {
+    let dlc = get_dlc(pool, user_id, dlc_id).await?;
+    if dlc.base_game_id.is_none() {
+        return Err(ApiErrors::InvalidParameter(error_message_builder::empty_param("DLC base game")));
+    } else if dlc.base_game_id.is_some_and(|game_id| base_game_id != game_id) {
+        return Err(ApiErrors::InvalidParameter(error_message_builder::param_not_match("DLC base game")))
+    }
+
+    let update_result = dlc_repository::update_base_game_id(pool, user_id, dlc_id, None).await;
+    handle_action_result::<UserDTO>(update_result)
+}
+
+pub async fn exists_dlc(pool: &PgPool, user_id: i32, dlc_id: i32) -> Result<(), ApiErrors> {
     let exists_result = dlc_repository::exists_by_id(pool, user_id, dlc_id).await;
     handle_not_found_result::<DLCDTO>(exists_result)
 }
