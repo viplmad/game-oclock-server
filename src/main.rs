@@ -131,10 +131,13 @@ async fn run(
             routes::delete_game_log,
             routes::get_dlc,
             routes::get_dlc_base_game,
+            routes::get_dlc_finishes,
             routes::get_dlcs,
             routes::post_dlc,
+            routes::post_dlc_finish,
             routes::put_dlc,
             routes::delete_dlc,
+            routes::delete_dlc_finish,
             routes::get_current_user,
             routes::post_user,
             routes::change_password,
@@ -192,6 +195,7 @@ async fn run(
                         .app_data(web::Data::new(encoding_key.clone()))
                         .app_data(web::Data::new(decoding_key.clone()))
                         .wrap(auth)
+                        // TODO finish and log in different scopes
                         // Games
                         .service(routes::get_game)
                         .service(routes::get_game_dlcs)
@@ -210,10 +214,13 @@ async fn run(
                         // DLCs
                         .service(routes::get_dlc)
                         .service(routes::get_dlc_base_game)
+                        .service(routes::get_dlc_finishes)
                         .service(routes::get_dlcs)
                         .service(routes::post_dlc)
+                        .service(routes::post_dlc_finish)
                         .service(routes::put_dlc)
                         .service(routes::delete_dlc)
+                        .service(routes::delete_dlc_finish)
                         // Users
                         .service(routes::get_current_user)
                         .service(routes::post_user)
