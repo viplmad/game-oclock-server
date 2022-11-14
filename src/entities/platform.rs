@@ -1,4 +1,4 @@
-use chrono::NaiveDateTime;
+use chrono::{NaiveDateTime, NaiveDate};
 use sea_query::Iden;
 use sqlx::FromRow;
 
@@ -26,6 +26,18 @@ pub enum PlatformIden {
 pub struct Platform {
     pub id: i32,
     pub user_id: i32,
+    pub name: String,
+    pub _type: Option<i16>,
+    pub icon_filename: Option<String>,
+    pub added_datetime: NaiveDateTime,
+    pub updated_datetime: NaiveDateTime,
+}
+
+#[derive(FromRow)]
+pub struct PlatformAvailable {
+    pub id: i32,
+    pub user_id: i32,
+    pub available_date: NaiveDate,
     pub name: String,
     pub _type: Option<i16>,
     pub icon_filename: Option<String>,

@@ -4,10 +4,10 @@ use sea_query::Iden;
 #[iden = "GameUserInfo"]
 pub enum GameUserInfoIden {
     Table,
-    #[iden = "game_id"]
-    GameId,
     #[iden = "user_id"]
     UserId,
+    #[iden = "game_id"]
+    GameId,
     #[iden = "status"]
     Status,
     #[iden = "rating"]

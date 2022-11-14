@@ -8,7 +8,7 @@ pub fn select_all_by_user_id_and_dlc_id(user_id: i32, dlc_id: i32) -> impl Query
 
     from_and_where_user_id(&mut select, user_id);
     select
-        .column((DLCFinishIden::Table, DLCFinishIden::Date)) // TODO Remove unnecessary table
+        .column((DLCFinishIden::Table, DLCFinishIden::Date))
         .and_where(Expr::col(DLCFinishIden::DLCId).eq(dlc_id));
 
     select

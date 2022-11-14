@@ -3,6 +3,8 @@ use sea_query::{Expr, Query, QueryStatementWriter, SelectStatement};
 
 use crate::entities::{Game, GameIden, GameUserInfoIden};
 
+use super::game_available_query::join_game_available_by_platform_id;
+
 pub fn select_by_id(user_id: i32, id: i32) -> impl QueryStatementWriter {
     let mut select = Query::select();
 
@@ -21,6 +23,18 @@ pub fn select_all(user_id: i32, limit: u64) -> impl QueryStatementWriter {
     join_user_info(&mut select);
     add_fields(&mut select);
     select.limit(limit);
+
+    select
+}
+
+pub fn select_all_by_platform_id(user_id: i32, platform_id: i32) -> impl QueryStatementWriter {
+    let mut select = Query::select();
+
+    from_and_where_user_id(&mut select, user_id);
+    join_user_info(&mut select);
+    add_fields(&mut select);
+
+    join_game_available_by_platform_id(&mut select, platform_id);
 
     select
 }

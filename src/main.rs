@@ -118,14 +118,17 @@ async fn run(
             routes::get_game,
             routes::get_game_dlcs,
             routes::get_game_finishes,
+            routes::get_game_logs,
             routes::get_games,
             routes::post_game,
             routes::post_game_finish,
+            routes::post_game_log,
             routes::put_game,
             routes::put_game_dlc,
             routes::delete_game,
-            routes::delete_game_finish,
             routes::remove_game_dlc,
+            routes::delete_game_finish,
+            routes::delete_game_log,
             routes::get_dlc,
             routes::get_dlc_base_game,
             routes::get_dlcs,
@@ -142,6 +145,7 @@ async fn run(
             models::GameDTO,
             models::NewGameDTO,
             models::GameStatus,
+            models::GameLogDTO,
             models::DLCDTO,
             models::NewDLCDTO,
             models::UserDTO,
@@ -192,14 +196,17 @@ async fn run(
                         .service(routes::get_game)
                         .service(routes::get_game_dlcs)
                         .service(routes::get_game_finishes)
+                        .service(routes::get_game_logs)
                         .service(routes::get_games)
                         .service(routes::post_game)
                         .service(routes::post_game_finish)
+                        .service(routes::post_game_log)
                         .service(routes::put_game)
                         .service(routes::put_game_dlc)
                         .service(routes::delete_game)
                         .service(routes::remove_game_dlc)
                         .service(routes::delete_game_finish)
+                        .service(routes::delete_game_log)
                         // DLCs
                         .service(routes::get_dlc)
                         .service(routes::get_dlc_base_game)

@@ -15,15 +15,15 @@ CREATE TABLE public."DLC" (
 );
 
 CREATE TABLE public."DLCAvailable" (
-    dlc_id integer NOT NULL,
     user_id integer NOT NULL,
+    dlc_id integer NOT NULL,
     platform_id integer NOT NULL,
     added_date date NOT NULL
 );
 
 CREATE TABLE public."DLCFinish" (
-    dlc_id integer NOT NULL,
     user_Id integer NOT NULL,
+    dlc_id integer NOT NULL,
     date date NOT NULL
 );
 
@@ -49,27 +49,27 @@ CREATE TABLE public."Game" (
 );
 
 CREATE TABLE public."GameAvailable" (
-    game_id integer NOT NULL,
     user_id integer NOT NULL,
+    game_id integer NOT NULL,
     platform_id integer NOT NULL,
     added_date date NOT NULL
 );
 
 CREATE TABLE public."GameTag" (
-    game_id integer NOT NULL,
     user_id integer NOT NULL,
+    game_id integer NOT NULL,
     tag_id integer NOT NULL
 );
 
 CREATE TABLE public."GameFinish" (
-    game_id integer NOT NULL,
     user_id integer NOT NULL,
+    game_id integer NOT NULL,
     date date NOT NULL
 );
 
 CREATE TABLE public."GameLog" (
-    game_id integer NOT NULL,
     user_id integer NOT NULL,
+    game_id integer NOT NULL,
     datetime timestamp without time zone NOT NULL,
     time interval NOT NULL
 );
@@ -123,8 +123,8 @@ CREATE SEQUENCE public."Tag_Id_seq"
 ALTER SEQUENCE public."Tag_Id_seq" OWNED BY public."Tag".id;
 
 CREATE TABLE public."GameUserInfo" (
-    game_id integer NOT NULL,
     user_id integer NOT NULL,
+    game_id integer NOT NULL,
     status smallint DEFAULT 0 NOT NULL,
     rating integer DEFAULT 0 NOT NULL,
     notes text DEFAULT ''::text NOT NULL,
@@ -164,7 +164,7 @@ ALTER TABLE ONLY public."User" ALTER COLUMN id SET DEFAULT nextval('public."User
 
 
 ALTER TABLE ONLY public."DLCFinish"
-    ADD CONSTRAINT "DLCFinish_pk" PRIMARY KEY (dlc_id, user_id, date);
+    ADD CONSTRAINT "DLCFinish_pk" PRIMARY KEY (user_id, dlc_id, date);
 
 ALTER TABLE ONLY public."DLC"
     ADD CONSTRAINT "DLC_unique" UNIQUE (user_id, name);
@@ -173,13 +173,13 @@ ALTER TABLE ONLY public."DLC"
     ADD CONSTRAINT "DLC_pk" PRIMARY KEY (id);
 
 ALTER TABLE ONLY public."GameAvailable"
-    ADD CONSTRAINT "GameAvailable_pk" PRIMARY KEY (game_id, user_id, platform_id);
+    ADD CONSTRAINT "GameAvailable_pk" PRIMARY KEY (user_id, game_id, platform_id);
 
 ALTER TABLE ONLY public."GameTag"
-    ADD CONSTRAINT "GameTag_pk" PRIMARY KEY (game_id, user_id, tag_id);
+    ADD CONSTRAINT "GameTag_pk" PRIMARY KEY (user_id, game_id, tag_id);
 
 ALTER TABLE ONLY public."GameFinish"
-    ADD CONSTRAINT "GameFinish_pk" PRIMARY KEY (game_id, user_id, date);
+    ADD CONSTRAINT "GameFinish_pk" PRIMARY KEY (user_id, game_id, date);
 
 ALTER TABLE ONLY public."Game"
     ADD CONSTRAINT "Game_unique" UNIQUE (user_id, name, edition);
@@ -188,7 +188,7 @@ ALTER TABLE ONLY public."Game"
     ADD CONSTRAINT "Game_pk" PRIMARY KEY (id);
 
 ALTER TABLE ONLY public."GameLog"
-    ADD CONSTRAINT "GameLog_pk" PRIMARY KEY (game_id, user_id, datetime);
+    ADD CONSTRAINT "GameLog_pk" PRIMARY KEY (user_id, game_id, datetime);
 
 ALTER TABLE ONLY public."Platform"
     ADD CONSTRAINT "Platform_unique" UNIQUE (user_id, name);
@@ -203,10 +203,10 @@ ALTER TABLE ONLY public."Tag"
     ADD CONSTRAINT "Tag_pk" PRIMARY KEY (id);
 
 ALTER TABLE ONLY public."DLCAvailable"
-    ADD CONSTRAINT "DLCAvailable_pk" PRIMARY KEY (dlc_id, user_id, platform_id);
+    ADD CONSTRAINT "DLCAvailable_pk" PRIMARY KEY (user_id, dlc_id, platform_id);
 
 ALTER TABLE ONLY public."GameUserInfo"
-    ADD CONSTRAINT "GameUserInfo_pk" PRIMARY KEY (game_id, user_id);
+    ADD CONSTRAINT "GameUserInfo_pk" PRIMARY KEY (user_id, game_id);
 
 ALTER TABLE ONLY public."User"
     ADD CONSTRAINT "User_unique" UNIQUE (username);

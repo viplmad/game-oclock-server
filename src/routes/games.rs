@@ -1,9 +1,9 @@
 use actix_web::{delete, get, post, put, web, Responder};
-use chrono::NaiveDate;
+use chrono::{NaiveDate, NaiveDateTime};
 use sqlx::PgPool;
 
-use crate::models::{ItemId, ItemIdAndRelatedId, LoggedUser, NewGameDTO, QueryRequest};
-use crate::services::{dlcs_service, game_finishes_service, games_service};
+use crate::models::{GameLogDTO, ItemId, ItemIdAndRelatedId, LoggedUser, NewGameDTO, QueryRequest};
+use crate::services::{dlcs_service, game_finishes_service, game_logs_service, games_service};
 
 use super::base::{
     handle_action_result, handle_create_result, handle_delete_result, handle_get_result,
@@ -96,6 +96,34 @@ async fn get_game_finishes(
 
 #[utoipa::path(
     get,
+    path = "/api/v1/games/{id}/logs",
+    tag = "Games",
+    params(
+        ("id" = i32, Path, description = "Game id"),
+    ),
+    responses(
+        (status = 200, description = "Logs obtained", body = [GameLogDTO], content_type = "application/json"),
+        (status = 401, description = "Unauthorized", body = ErrorMessage, content_type = "application/json"),
+        (status = 404, description = "Game not found", body = ErrorMessage, content_type = "application/json"),
+        (status = 500, description = "Internal server error", body = ErrorMessage, content_type = "application/json"),
+    ),
+    security(
+        ("bearer_token" = [])
+    )
+)]
+#[get("/games/{id}/logs")]
+async fn get_game_logs(
+    pool: web::Data<PgPool>,
+    path: web::Path<ItemId>,
+    logged_user: LoggedUser,
+) -> impl Responder {
+    let ItemId(id) = path.into_inner();
+    let get_result = game_logs_service::get_game_logs(&pool, logged_user.id, id).await;
+    handle_get_result(get_result)
+}
+
+#[utoipa::path(
+    get,
     path = "/api/v1/games",
     tag = "Games",
     params(
@@ -175,6 +203,37 @@ async fn post_game_finish(
     let ItemId(id) = path.into_inner();
     let create_result =
         game_finishes_service::create_game_finish(&pool, logged_user.id, id, body.0).await;
+    handle_action_result(create_result)
+}
+
+#[utoipa::path(
+    post,
+    path = "/api/v1/games/{id}/logs",
+    tag = "Games",
+    params(
+        ("id" = i32, Path, description = "Game id"),
+    ),
+    request_body(content = GameLogDTO, description = "Game log to be added", content_type = "application/json"),
+    responses(
+        (status = 204, description = "Game log added"),
+        (status = 400, description = "Bad request", body = ErrorMessage, content_type = "application/json"),
+        (status = 401, description = "Unauthorized", body = ErrorMessage, content_type = "application/json"),
+        (status = 404, description = "Game not found", body = ErrorMessage, content_type = "application/json"),
+        (status = 500, description = "Internal server error", body = ErrorMessage, content_type = "application/json"),
+    ),
+    security(
+        ("bearer_token" = [])
+    )
+)]
+#[post("/games/{id}/logs")]
+async fn post_game_log(
+    pool: web::Data<PgPool>,
+    path: web::Path<ItemId>,
+    body: web::Json<GameLogDTO>,
+    logged_user: LoggedUser,
+) -> impl Responder {
+    let ItemId(id) = path.into_inner();
+    let create_result = game_logs_service::create_game_log(&pool, logged_user.id, id, body.0).await;
     handle_action_result(create_result)
 }
 
@@ -324,5 +383,35 @@ async fn delete_game_finish(
     let ItemId(id) = path.into_inner();
     let delete_result =
         game_finishes_service::delete_game_finish(&pool, logged_user.id, id, body.0).await;
+    handle_delete_result(delete_result)
+}
+
+#[utoipa::path(
+    delete,
+    path = "/api/v1/games/{id}/logs",
+    tag = "Games",
+    params(
+        ("id" = i32, Path, description = "Game id"),
+    ),
+    request_body(content = String, description = "Game log datetime to be deleted", content_type = "application/json"),
+    responses(
+        (status = 204, description = "Game log deleted"),
+        (status = 401, description = "Unauthorized", body = ErrorMessage, content_type = "application/json"),
+        (status = 404, description = "Game not found", body = ErrorMessage, content_type = "application/json"),
+        (status = 500, description = "Internal server error", body = ErrorMessage, content_type = "application/json"),
+    ),
+    security(
+        ("bearer_token" = [])
+    )
+)]
+#[delete("/games/{id}/logs")]
+async fn delete_game_log(
+    pool: web::Data<PgPool>,
+    path: web::Path<ItemId>,
+    body: web::Json<NaiveDateTime>,
+    logged_user: LoggedUser,
+) -> impl Responder {
+    let ItemId(id) = path.into_inner();
+    let delete_result = game_logs_service::delete_game_log(&pool, logged_user.id, id, body.0).await;
     handle_delete_result(delete_result)
 }

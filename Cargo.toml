@@ -10,6 +10,7 @@ actix-web = { version = "^4", default-features = false }
 sqlx = { version = "^0", default-features = false, features = [ "macros", "runtime-actix-native-tls", "postgres", "chrono" ] }
 sea-query = { version = "^0", default-features = false, features = [ "derive", "backend-postgres", "with-chrono" ] }
 chrono = { version = "^0", default-features = false, features = [ "serde" ] }
+iso8601 = { version = "^0", default-features = false }
 
 # Authentication
 actix-web-httpauth = { version = "^0", default-features = false }

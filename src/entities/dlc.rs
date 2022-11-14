@@ -1,4 +1,4 @@
-use chrono::NaiveDateTime;
+use chrono::{NaiveDate, NaiveDateTime};
 use sea_query::Iden;
 use sqlx::FromRow;
 
@@ -28,6 +28,19 @@ pub enum DLCIden {
 pub struct DLC {
     pub id: i32,
     pub user_id: i32,
+    pub name: String,
+    pub base_game_id: Option<i32>,
+    pub release_year: Option<i32>,
+    pub cover_filename: Option<String>,
+    pub added_datetime: NaiveDateTime,
+    pub updated_datetime: NaiveDateTime,
+}
+
+#[derive(FromRow)]
+pub struct DLCAvailable {
+    pub id: i32,
+    pub user_id: i32,
+    pub available_date: NaiveDate,
     pub name: String,
     pub base_game_id: Option<i32>,
     pub release_year: Option<i32>,
