@@ -1,8 +1,7 @@
 use sqlx::PgPool;
 
-use crate::entities::DLC;
 use crate::errors::{error_message_builder, ApiErrors};
-use crate::models::{GameDTO, NewDLCDTO, QueryRequest, UserDTO, DLCDTO};
+use crate::models::{GameDTO, NewDLCDTO, QueryRequest, DLCDTO};
 use crate::repository::dlc_repository;
 
 use super::base::{
@@ -52,8 +51,8 @@ pub async fn get_dlcs(
 pub async fn create_dlc(pool: &PgPool, user_id: i32, dlc: NewDLCDTO) -> Result<DLCDTO, ApiErrors> {
     create_merged(
         dlc,
-        async move |created_dlc_id: i32| get_dlc(pool, user_id, created_dlc_id).await,
-        async move |dlc_to_create: DLC| {
+        async move |created_dlc_id| get_dlc(pool, user_id, created_dlc_id).await,
+        async move |dlc_to_create| {
             let exists_result =
                 dlc_repository::exists_with_unique(pool, user_id, &dlc_to_create).await;
             handle_already_exists_result::<DLCDTO>(exists_result)?;
@@ -76,7 +75,7 @@ pub async fn update_dlc(
     update_merged(
         dlc,
         async move || get_dlc(pool, user_id, dlc_id).await,
-        async move |dlc_to_update: DLC| {
+        async move |dlc_to_update| {
             let exists_result =
                 dlc_repository::exists_with_unique_except_id(pool, user_id, &dlc_to_update, dlc_id)
                     .await;
@@ -102,7 +101,7 @@ pub async fn update_dlc_base_game(
 
     let update_result =
         dlc_repository::update_base_game_id(pool, user_id, dlc_id, Some(base_game_id)).await;
-    handle_action_result::<UserDTO>(update_result)
+    handle_action_result::<DLCDTO>(update_result)
 }
 
 pub async fn delete_dlc(pool: &PgPool, user_id: i32, dlc_id: i32) -> Result<(), ApiErrors> {
@@ -133,7 +132,7 @@ pub async fn remove_dlc_base_game(
     }
 
     let update_result = dlc_repository::update_base_game_id(pool, user_id, dlc_id, None).await;
-    handle_action_result::<UserDTO>(update_result)
+    handle_action_result::<DLCDTO>(update_result)
 }
 
 pub async fn exists_dlc(pool: &PgPool, user_id: i32, dlc_id: i32) -> Result<(), ApiErrors> {

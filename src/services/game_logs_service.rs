@@ -31,6 +31,8 @@ pub async fn create_game_log(
 ) -> Result<(), ApiErrors> {
     games_service::exists_game(pool, user_id, game_id).await?;
 
+    // TODO check log does not overlap
+
     let exists_result =
         game_log_repository::exists_by_id(pool, user_id, game_id, log.datetime).await;
     handle_already_exists_result::<GameLogDTO>(exists_result)?;

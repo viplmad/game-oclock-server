@@ -21,7 +21,7 @@ pub async fn create_user(pool: &PgPool, user: NewUserDTO) -> Result<UserDTO, Api
     create_merged(
         user,
         async move |created_user_id| get_user(pool, created_user_id).await,
-        async move |user_to_create: User| {
+        async move |user_to_create| {
             let exists_result = user_repository::exists_with_unique(pool, &user_to_create).await;
             handle_already_exists_result::<UserDTO>(exists_result)?;
 

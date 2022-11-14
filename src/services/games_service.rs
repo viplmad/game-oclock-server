@@ -1,6 +1,5 @@
 use sqlx::PgPool;
 
-use crate::entities::Game;
 use crate::errors::ApiErrors;
 use crate::models::{GameDTO, NewGameDTO, QueryRequest};
 use crate::repository::game_repository;
@@ -32,8 +31,8 @@ pub async fn create_game(
 ) -> Result<GameDTO, ApiErrors> {
     create_merged(
         game,
-        async move |created_game_id: i32| get_game(pool, user_id, created_game_id).await,
-        async move |game_to_create: Game| {
+        async move |created_game_id| get_game(pool, user_id, created_game_id).await,
+        async move |game_to_create| {
             let exists_result =
                 game_repository::exists_with_unique(pool, user_id, &game_to_create).await;
             handle_already_exists_result::<GameDTO>(exists_result)?;
@@ -54,7 +53,7 @@ pub async fn update_game(
     update_merged(
         game,
         async move || get_game(pool, user_id, game_id).await,
-        async move |game_to_update: Game| {
+        async move |game_to_update| {
             let exists_result = game_repository::exists_with_unique_except_id(
                 pool,
                 user_id,

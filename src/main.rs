@@ -138,6 +138,11 @@ async fn run(
             routes::put_dlc,
             routes::delete_dlc,
             routes::delete_dlc_finish,
+            routes::get_tag,
+            routes::get_tags,
+            routes::post_tag,
+            routes::put_tag,
+            routes::delete_tag,
             routes::get_current_user,
             routes::post_user,
             routes::change_password,
@@ -151,6 +156,8 @@ async fn run(
             models::GameLogDTO,
             models::DLCDTO,
             models::NewDLCDTO,
+            models::TagDTO,
+            models::NewTagDTO,
             models::UserDTO,
             models::NewUserDTO,
             models::PasswordChangeDTO,
@@ -221,6 +228,12 @@ async fn run(
                         .service(routes::put_dlc)
                         .service(routes::delete_dlc)
                         .service(routes::delete_dlc_finish)
+                        // Tags
+                        .service(routes::get_tag)
+                        .service(routes::get_tags)
+                        .service(routes::post_tag)
+                        .service(routes::put_tag)
+                        .service(routes::delete_tag)
                         // Users
                         .service(routes::get_current_user)
                         .service(routes::post_user)

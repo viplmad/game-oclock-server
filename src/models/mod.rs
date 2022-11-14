@@ -12,6 +12,7 @@ mod model_name;
 mod params;
 mod platform;
 mod platform_type;
+mod tag;
 mod user;
 
 pub use auth::*;
@@ -28,4 +29,5 @@ pub use model_name::*;
 pub use params::*;
 pub use platform::*;
 pub use platform_type::*;
+pub use tag::*;
 pub use user::*;
