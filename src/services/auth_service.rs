@@ -2,7 +2,7 @@ use jsonwebtoken::{DecodingKey, EncodingKey};
 use sqlx::PgPool;
 
 use crate::entities::User;
-use crate::errors::{error_message_builder, TokenErrors, ApiErrors};
+use crate::errors::{error_message_builder, ApiErrors, TokenErrors};
 use crate::models::{TokenRequest, TokenResponse};
 use crate::repository::user_repository;
 

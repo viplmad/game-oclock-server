@@ -128,11 +128,7 @@ pub fn exists_by_name(user_id: i32, name: &str) -> impl QueryStatementWriter {
     select
 }
 
-pub fn exists_by_name_and_id_not(
-    user_id: i32,
-    name: &str,
-    id: i32,
-) -> impl QueryStatementWriter {
+pub fn exists_by_name_and_id_not(user_id: i32, name: &str, id: i32) -> impl QueryStatementWriter {
     let mut select = Query::select();
 
     from_and_where_user_id(&mut select, user_id);

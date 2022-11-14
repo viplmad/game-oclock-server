@@ -70,7 +70,10 @@ pub fn update_by_id(user_id: i32, id: i32, platform: &Platform) -> impl QuerySta
         .values(vec![
             (PlatformIden::Name, platform.name.clone().into()),
             (PlatformIden::Type, platform._type.into()),
-            (PlatformIden::IconFilename, platform.icon_filename.clone().into()),
+            (
+                PlatformIden::IconFilename,
+                platform.icon_filename.clone().into(),
+            ),
             (PlatformIden::UpdatedDateTime, Utc::now().naive_utc().into()),
         ])
         .and_where(Expr::col(PlatformIden::UserId).eq(user_id))

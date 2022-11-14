@@ -1,7 +1,8 @@
 use chrono::NaiveDateTime;
 use sqlx::PgPool;
 
-use crate::{errors::RepositoryError, entities::GameLog};
+use crate::entities::GameLog;
+use crate::errors::RepositoryError;
 use crate::query::game_log_query;
 
 use super::base::{execute, exists_id, fetch_all};

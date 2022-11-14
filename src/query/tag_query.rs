@@ -1,7 +1,7 @@
 use chrono::Utc;
 use sea_query::{Expr, Query, QueryStatementWriter, SelectStatement};
 
-use crate::entities::{TagIden, Tag};
+use crate::entities::{Tag, TagIden};
 
 pub fn select_by_id(user_id: i32, id: i32) -> impl QueryStatementWriter {
     let mut select = Query::select();
@@ -92,11 +92,7 @@ pub fn exists_by_name(user_id: i32, name: &str) -> impl QueryStatementWriter {
     select
 }
 
-pub fn exists_by_name_and_id_not(
-    user_id: i32,
-    name: &str,
-    id: i32,
-) -> impl QueryStatementWriter {
+pub fn exists_by_name_and_id_not(user_id: i32, name: &str, id: i32) -> impl QueryStatementWriter {
     let mut select = Query::select();
 
     from_and_where_user_id(&mut select, user_id);

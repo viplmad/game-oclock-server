@@ -16,7 +16,7 @@ impl From<PgInterval> for DurationDef {
     fn from(interval: PgInterval) -> Self {
         let microseconds = interval.microseconds;
         Self {
-            micros: u64::try_from(microseconds).expect("Time was not within valid range")
+            micros: u64::try_from(microseconds).expect("Time was not within valid range"),
         }
     }
 }

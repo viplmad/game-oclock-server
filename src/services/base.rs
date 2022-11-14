@@ -16,18 +16,21 @@ where
 }
 
 pub(super) fn handle_get_result_raw<E, T>(
-    repository_result: Result<Option<E>, RepositoryError>
+    repository_result: Result<Option<E>, RepositoryError>,
 ) -> Result<E, ApiErrors>
 where
     T: ModelName,
 {
     handle_result::<Option<E>, T>(repository_result)?.ok_or_else(|| {
-        ApiErrors::NotFound(error_message_builder::not_found(T::MODEL_NAME, T::ID_FIELDS))
+        ApiErrors::NotFound(error_message_builder::not_found(
+            T::MODEL_NAME,
+            T::ID_FIELDS,
+        ))
     })
 }
 
 pub(super) fn handle_get_result<E, T>(
-    repository_result: Result<Option<E>, RepositoryError>
+    repository_result: Result<Option<E>, RepositoryError>,
 ) -> Result<T, ApiErrors>
 where
     T: From<E> + ModelName,
@@ -83,7 +86,7 @@ where
 }
 
 pub(super) fn handle_already_exists_result<T>(
-    repository_result: Result<bool, RepositoryError>
+    repository_result: Result<bool, RepositoryError>,
 ) -> Result<(), ApiErrors>
 where
     T: ModelName,
@@ -98,7 +101,7 @@ where
 }
 
 pub(super) fn handle_not_found_result<T>(
-    repository_result: Result<bool, RepositoryError>
+    repository_result: Result<bool, RepositoryError>,
 ) -> Result<(), ApiErrors>
 where
     T: ModelName,

@@ -129,7 +129,7 @@ where
 {
     fetch_all(executor, query)
         .await
-        .map(|res: Vec<(i32, )>| !res.is_empty())
+        .map(|res: Vec<(i32,)>| !res.is_empty())
 }
 
 fn build_sql(query: impl QueryStatementWriter) -> String {

@@ -6,7 +6,7 @@ use crate::models::{GameDTO, NewGameDTO, QueryRequest};
 use crate::repository::game_repository;
 
 use super::base::{
-    create_merged, handle_already_exists_result, handle_create_result, handle_action_result,
+    create_merged, handle_action_result, handle_already_exists_result, handle_create_result,
     handle_get_list_result, handle_get_result, handle_not_found_result, handle_update_result,
     update_merged,
 };
@@ -79,11 +79,7 @@ pub async fn delete_game(pool: &PgPool, user_id: i32, game_id: i32) -> Result<()
     handle_action_result::<GameDTO>(delete_result)
 }
 
-pub async fn exists_game(
-    pool: &PgPool,
-    user_id: i32,
-    game_id: i32,
-) -> Result<(), ApiErrors> {
+pub async fn exists_game(pool: &PgPool, user_id: i32, game_id: i32) -> Result<(), ApiErrors> {
     let exists_result = game_repository::exists_by_id(pool, user_id, game_id).await;
     handle_not_found_result::<GameDTO>(exists_result)
 }

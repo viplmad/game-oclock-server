@@ -120,9 +120,16 @@ pub async fn remove_dlc_base_game(
 ) -> Result<(), ApiErrors> {
     let dlc = get_dlc(pool, user_id, dlc_id).await?;
     if dlc.base_game_id.is_none() {
-        return Err(ApiErrors::InvalidParameter(error_message_builder::empty_param("DLC base game")));
-    } else if dlc.base_game_id.is_some_and(|game_id| base_game_id != game_id) {
-        return Err(ApiErrors::InvalidParameter(error_message_builder::param_not_match("DLC base game")))
+        return Err(ApiErrors::InvalidParameter(
+            error_message_builder::empty_param("DLC base game"),
+        ));
+    } else if dlc
+        .base_game_id
+        .is_some_and(|game_id| base_game_id != game_id)
+    {
+        return Err(ApiErrors::InvalidParameter(
+            error_message_builder::param_not_match("DLC base game"),
+        ));
     }
 
     let update_result = dlc_repository::update_base_game_id(pool, user_id, dlc_id, None).await;

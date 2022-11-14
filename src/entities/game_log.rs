@@ -1,6 +1,6 @@
 use chrono::NaiveDateTime;
 use sea_query::Iden;
-use sqlx::{FromRow, postgres::types::PgInterval};
+use sqlx::{postgres::types::PgInterval, FromRow};
 
 #[derive(Iden)]
 #[iden = "GameLog"]

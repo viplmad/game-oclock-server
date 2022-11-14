@@ -1,4 +1,4 @@
-use chrono::{NaiveDateTime, NaiveDate};
+use chrono::{NaiveDate, NaiveDateTime};
 use sea_query::Iden;
 use sqlx::FromRow;
 
