@@ -89,7 +89,7 @@ pub fn exists_by_id(
 
     from_and_where_user_id(&mut select, user_id);
     select
-        .column((GameAvailableIden::Table, GameAvailableIden::GameId))
+        .column((GameAvailableIden::Table, GameAvailableIden::UserId))
         .and_where(Expr::col(GameAvailableIden::GameId).eq(game_id))
         .and_where(Expr::col(GameAvailableIden::PlatformId).eq(platform_id))
         .and_where(Expr::col(GameAvailableIden::AddedDate).eq(added_date));

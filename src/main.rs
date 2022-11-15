@@ -119,6 +119,7 @@ async fn run(
             routes::get_game_dlcs,
             routes::get_game_finishes,
             routes::get_game_logs,
+            routes::get_game_tags,
             routes::get_games,
             routes::post_game,
             routes::post_game_finish,
@@ -144,10 +145,13 @@ async fn run(
             routes::put_platform,
             routes::delete_platform,
             routes::get_tag,
+            routes::get_tag_games,
             routes::get_tags,
             routes::post_tag,
+            routes::post_tag_game,
             routes::put_tag,
             routes::delete_tag,
+            routes::delete_tag_game,
             routes::get_current_user,
             routes::post_user,
             routes::change_password,
@@ -161,6 +165,8 @@ async fn run(
             models::GameLogDTO,
             models::DLCDTO,
             models::NewDLCDTO,
+            models::PlatformDTO,
+            models::NewPlatformDTO,
             models::TagDTO,
             models::NewTagDTO,
             models::UserDTO,
@@ -198,7 +204,7 @@ async fn run(
         let auth = HttpAuthentication::bearer(game_collection_server::auth::token_validator);
 
         App::new()
-            .app_data(web::Data::new(db_pool.clone()))
+            .app_data(web::Data::new(db_pool.clone())) // TODO Wrap dbpool
             .app_data(web::Data::new(encoding_key.clone()))
             .app_data(web::Data::new(decoding_key.clone()))
             .service(
@@ -213,6 +219,7 @@ async fn run(
                         .service(routes::get_game_dlcs)
                         .service(routes::get_game_finishes)
                         .service(routes::get_game_logs)
+                        .service(routes::get_game_tags)
                         .service(routes::get_games)
                         .service(routes::post_game)
                         .service(routes::post_game_finish)
@@ -241,10 +248,13 @@ async fn run(
                         .service(routes::delete_platform)
                         // Tags
                         .service(routes::get_tag)
+                        .service(routes::get_tag_games)
                         .service(routes::get_tags)
                         .service(routes::post_tag)
+                        .service(routes::post_tag_game)
                         .service(routes::put_tag)
                         .service(routes::delete_tag)
+                        .service(routes::delete_tag_game)
                         // Users
                         .service(routes::get_current_user)
                         .service(routes::post_user)

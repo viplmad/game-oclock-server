@@ -3,7 +3,9 @@ use chrono::{NaiveDate, NaiveDateTime};
 use sqlx::PgPool;
 
 use crate::models::{GameLogDTO, ItemId, ItemIdAndRelatedId, LoggedUser, NewGameDTO, QueryRequest};
-use crate::services::{dlcs_service, game_finishes_service, game_logs_service, games_service};
+use crate::services::{
+    dlcs_service, game_finishes_service, game_logs_service, game_tags_service, games_service,
+};
 
 use super::base::{
     handle_action_result, handle_create_result, handle_delete_result, handle_get_result,
@@ -119,6 +121,34 @@ async fn get_game_logs(
 ) -> impl Responder {
     let ItemId(id) = path.into_inner();
     let get_result = game_logs_service::get_game_logs(&pool, logged_user.id, id).await;
+    handle_get_result(get_result)
+}
+
+#[utoipa::path(
+    get,
+    path = "/api/v1/games/{id}/tags",
+    tag = "Games",
+    params(
+        ("id" = i32, Path, description = "Game id"),
+    ),
+    responses(
+        (status = 200, description = "Tags obtained", body = [TagDTO], content_type = "application/json"),
+        (status = 401, description = "Unauthorized", body = ErrorMessage, content_type = "application/json"),
+        (status = 404, description = "Game not found", body = ErrorMessage, content_type = "application/json"),
+        (status = 500, description = "Internal server error", body = ErrorMessage, content_type = "application/json"),
+    ),
+    security(
+        ("bearer_token" = [])
+    )
+)]
+#[get("/games/{id}/tags")]
+async fn get_game_tags(
+    pool: web::Data<PgPool>,
+    path: web::Path<ItemId>,
+    logged_user: LoggedUser,
+) -> impl Responder {
+    let ItemId(id) = path.into_inner();
+    let get_result = game_tags_service::get_game_tags(&pool, logged_user.id, id).await;
     handle_get_result(get_result)
 }
 
@@ -337,7 +367,7 @@ async fn delete_game(
         (status = 204, description = "Game and DLC unlinked"),
         (status = 400, description = "Bad request", body = ErrorMessage, content_type = "application/json"),
         (status = 401, description = "Unauthorized", body = ErrorMessage, content_type = "application/json"),
-        (status = 404, description = "Game or DLC not found", body = ErrorMessage, content_type = "application/json"),
+        (status = 404, description = "DLC not found", body = ErrorMessage, content_type = "application/json"),
         (status = 500, description = "Internal server error", body = ErrorMessage, content_type = "application/json"),
     ),
     security(
