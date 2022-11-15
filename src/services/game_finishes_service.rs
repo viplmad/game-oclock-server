@@ -46,7 +46,7 @@ pub async fn delete_game_finish(
     games_service::exists_game(pool, user_id, game_id).await?;
     exists_game_finish(pool, user_id, game_id, date).await?;
 
-    let delete_result = game_finish_repository::delete(pool, user_id, game_id, date).await;
+    let delete_result = game_finish_repository::delete_by_id(pool, user_id, game_id, date).await;
     handle_action_result::<GameFinish>(delete_result)
 }
 

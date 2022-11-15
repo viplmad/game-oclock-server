@@ -51,7 +51,7 @@ pub async fn delete_game_log(
     games_service::exists_game(pool, user_id, game_id).await?;
     exists_game_log(pool, user_id, game_id, datetime).await?;
 
-    let delete_result = game_log_repository::delete(pool, user_id, game_id, datetime).await;
+    let delete_result = game_log_repository::delete_by_id(pool, user_id, game_id, datetime).await;
     handle_action_result::<GameLogDTO>(delete_result)
 }
 

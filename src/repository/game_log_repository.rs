@@ -26,7 +26,7 @@ pub async fn create(
     execute(pool, query).await
 }
 
-pub async fn delete(
+pub async fn delete_by_id(
     pool: &PgPool,
     user_id: i32,
     game_id: i32,

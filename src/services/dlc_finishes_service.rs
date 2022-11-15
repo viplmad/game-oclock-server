@@ -46,7 +46,7 @@ pub async fn delete_dlc_finish(
     dlcs_service::exists_dlc(pool, user_id, dlc_id).await?;
     exists_dlc_finish(pool, user_id, dlc_id, date).await?;
 
-    let delete_result = dlc_finish_repository::delete(pool, user_id, dlc_id, date).await;
+    let delete_result = dlc_finish_repository::delete_by_id(pool, user_id, dlc_id, date).await;
     handle_action_result::<DLCFinish>(delete_result)
 }
 

@@ -64,7 +64,7 @@ pub async fn update_game(
             handle_already_exists_result::<GameDTO>(exists_result)?;
 
             let update_result =
-                game_repository::update(pool, user_id, game_id, &game_to_update).await;
+                game_repository::update_by_id(pool, user_id, game_id, &game_to_update).await;
             handle_update_result::<i32, GameDTO>(update_result)
         },
     )

@@ -55,7 +55,8 @@ pub async fn update_tag(
                     .await;
             handle_already_exists_result::<TagDTO>(exists_result)?;
 
-            let update_result = tag_repository::update(pool, user_id, tag_id, &tag_to_update).await;
+            let update_result =
+                tag_repository::update_by_id(pool, user_id, tag_id, &tag_to_update).await;
             handle_update_result::<i32, TagDTO>(update_result)
         },
     )

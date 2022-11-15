@@ -138,6 +138,11 @@ async fn run(
             routes::put_dlc,
             routes::delete_dlc,
             routes::delete_dlc_finish,
+            routes::get_platform,
+            routes::get_platforms,
+            routes::post_platform,
+            routes::put_platform,
+            routes::delete_platform,
             routes::get_tag,
             routes::get_tags,
             routes::post_tag,
@@ -228,6 +233,12 @@ async fn run(
                         .service(routes::put_dlc)
                         .service(routes::delete_dlc)
                         .service(routes::delete_dlc_finish)
+                        // Platforms
+                        .service(routes::get_platform)
+                        .service(routes::get_platforms)
+                        .service(routes::post_platform)
+                        .service(routes::put_platform)
+                        .service(routes::delete_platform)
                         // Tags
                         .service(routes::get_tag)
                         .service(routes::get_tags)

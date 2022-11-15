@@ -114,6 +114,18 @@ pub fn exists_by_name(user_id: i32, name: &str) -> impl QueryStatementWriter {
     select
 }
 
+pub fn exists_by_name_and_id_not(user_id: i32, name: &str, id: i32) -> impl QueryStatementWriter {
+    let mut select = Query::select();
+
+    from_and_where_user_id(&mut select, user_id);
+    add_id_field(&mut select);
+    select
+        .and_where(Expr::col(PlatformIden::Name).eq(name))
+        .and_where(Expr::col(PlatformIden::Id).ne(id));
+
+    select
+}
+
 fn from_and_where_user_id(select: &mut SelectStatement, user_id: i32) {
     select
         .from(PlatformIden::Table)

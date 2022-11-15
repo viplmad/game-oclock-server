@@ -83,7 +83,8 @@ pub async fn update_dlc(
 
             exists_base_game(pool, user_id, dlc_to_update.base_game_id).await?;
 
-            let update_result = dlc_repository::update(pool, user_id, dlc_id, &dlc_to_update).await;
+            let update_result =
+                dlc_repository::update_by_id(pool, user_id, dlc_id, &dlc_to_update).await;
             handle_update_result::<i32, DLCDTO>(update_result)
         },
     )

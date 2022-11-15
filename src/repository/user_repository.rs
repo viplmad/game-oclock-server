@@ -5,8 +5,8 @@ use crate::{entities::User, errors::RepositoryError};
 
 use super::base::{execute_return_id, exists_id, fetch_optional};
 
-pub async fn find_by_id(pool: &PgPool, user_id: i32) -> Result<Option<User>, RepositoryError> {
-    let query = user_query::select_by_id(user_id);
+pub async fn find_by_id(pool: &PgPool, id: i32) -> Result<Option<User>, RepositoryError> {
+    let query = user_query::select_by_id(id);
     fetch_optional(pool, query).await
 }
 
@@ -25,10 +25,10 @@ pub async fn create(pool: &PgPool, user: &User, password: &str) -> Result<i32, R
 
 pub async fn update_password(
     pool: &PgPool,
-    user_id: i32,
+    id: i32,
     password: &str,
 ) -> Result<i32, RepositoryError> {
-    let query = user_query::update_password_by_id(user_id, password);
+    let query = user_query::update_password_by_id(id, password);
     execute_return_id(pool, query).await
 }
 
