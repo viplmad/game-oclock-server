@@ -7,7 +7,7 @@ pub enum DLCAvailableIden {
     #[iden = "user_id"]
     UserId,
     #[iden = "dlc_id"]
-    GameId,
+    DLCId,
     #[iden = "platform_id"]
     PlatformId,
     #[iden = "added_date"]

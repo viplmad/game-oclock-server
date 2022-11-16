@@ -115,47 +115,59 @@ async fn run(
     #[derive(OpenApi)]
     #[openapi(
         paths(
+            // Games
             routes::get_game,
-            routes::get_game_dlcs,
             routes::get_game_finishes,
             routes::get_game_logs,
+            routes::get_game_dlcs,
             routes::get_game_tags,
             routes::get_games,
             routes::post_game,
             routes::post_game_finish,
             routes::post_game_log,
             routes::put_game,
-            routes::put_game_dlc,
+            routes::link_game_dlc,
+            routes::link_game_tag,
             routes::delete_game,
-            routes::remove_game_dlc,
             routes::delete_game_finish,
             routes::delete_game_log,
+            routes::unlink_game_dlc,
+            routes::unlink_game_tag,
+            // DLCs
             routes::get_dlc,
-            routes::get_dlc_base_game,
             routes::get_dlc_finishes,
+            routes::get_dlc_base_game,
+            routes::get_dlc_platforms,
             routes::get_dlcs,
             routes::post_dlc,
             routes::post_dlc_finish,
             routes::put_dlc,
+            routes::link_dlc_platform,
             routes::delete_dlc,
             routes::delete_dlc_finish,
+            routes::unlink_dlc_platform,
+            // Platforms
             routes::get_platform,
+            routes::get_platform_dlcs,
+            //routes::get_platform_games,
             routes::get_platforms,
             routes::post_platform,
             routes::put_platform,
             routes::delete_platform,
+            // Tags
             routes::get_tag,
             routes::get_tag_games,
             routes::get_tags,
             routes::post_tag,
-            routes::post_tag_game,
             routes::put_tag,
             routes::delete_tag,
-            routes::delete_tag_game,
+            // Users
             routes::get_current_user,
             routes::post_user,
             routes::change_password,
+            // Authentication
             routes::token,
+            // Health check
             routes::is_alive,
         ),
         components(schemas(
@@ -165,8 +177,11 @@ async fn run(
             models::GameLogDTO,
             models::DLCDTO,
             models::NewDLCDTO,
+            models::DLCAvailableDTO,
             models::PlatformDTO,
             models::NewPlatformDTO,
+            models::PlatformAvailableDTO,
+            models::PlatformType,
             models::TagDTO,
             models::NewTagDTO,
             models::UserDTO,
@@ -216,32 +231,36 @@ async fn run(
                         // TODO finish and log in different scopes
                         // Games
                         .service(routes::get_game)
-                        .service(routes::get_game_dlcs)
                         .service(routes::get_game_finishes)
                         .service(routes::get_game_logs)
+                        .service(routes::get_game_dlcs)
                         .service(routes::get_game_tags)
                         .service(routes::get_games)
                         .service(routes::post_game)
                         .service(routes::post_game_finish)
                         .service(routes::post_game_log)
                         .service(routes::put_game)
-                        .service(routes::put_game_dlc)
+                        .service(routes::link_game_dlc)
                         .service(routes::delete_game)
-                        .service(routes::remove_game_dlc)
                         .service(routes::delete_game_finish)
                         .service(routes::delete_game_log)
+                        .service(routes::unlink_game_dlc)
                         // DLCs
                         .service(routes::get_dlc)
                         .service(routes::get_dlc_base_game)
                         .service(routes::get_dlc_finishes)
+                        .service(routes::get_dlc_platforms)
                         .service(routes::get_dlcs)
                         .service(routes::post_dlc)
                         .service(routes::post_dlc_finish)
                         .service(routes::put_dlc)
+                        .service(routes::link_dlc_platform)
                         .service(routes::delete_dlc)
                         .service(routes::delete_dlc_finish)
+                        .service(routes::unlink_dlc_platform)
                         // Platforms
                         .service(routes::get_platform)
+                        .service(routes::get_platform_dlcs)
                         .service(routes::get_platforms)
                         .service(routes::post_platform)
                         .service(routes::put_platform)
@@ -251,10 +270,8 @@ async fn run(
                         .service(routes::get_tag_games)
                         .service(routes::get_tags)
                         .service(routes::post_tag)
-                        .service(routes::post_tag_game)
                         .service(routes::put_tag)
                         .service(routes::delete_tag)
-                        .service(routes::delete_tag_game)
                         // Users
                         .service(routes::get_current_user)
                         .service(routes::post_user)

@@ -38,7 +38,7 @@ pub async fn create_game_log(
     handle_already_exists_result::<GameLogDTO>(exists_result)?;
 
     let log_to_create = GameLog::from(log);
-    let create_result = game_log_repository::create(pool, user_id, game_id, &log_to_create).await; // TODO
+    let create_result = game_log_repository::create(pool, user_id, game_id, &log_to_create).await;
     handle_action_result::<GameLogDTO>(create_result)
 }
 

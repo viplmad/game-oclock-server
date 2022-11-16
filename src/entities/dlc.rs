@@ -40,6 +40,7 @@ pub struct DLC {
 pub struct DLCAvailable {
     pub id: i32,
     pub user_id: i32,
+    #[sqlx(rename = "added_date")] // TODO Prefer rename in sql
     pub available_date: NaiveDate,
     pub name: String,
     pub base_game_id: Option<i32>,

@@ -1,3 +1,4 @@
+pub mod dlc_available_query;
 pub mod dlc_finish_query;
 pub mod dlc_query;
 pub mod game_available_query;

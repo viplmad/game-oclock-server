@@ -2,8 +2,8 @@ use actix_web::{delete, get, post, put, web, Responder};
 use chrono::NaiveDate;
 use sqlx::PgPool;
 
-use crate::models::{ItemId, LoggedUser, NewDLCDTO, QueryRequest};
-use crate::services::{dlc_finishes_service, dlcs_service};
+use crate::models::{ItemId, ItemIdAndRelatedId, LoggedUser, NewDLCDTO, QueryRequest};
+use crate::services::{dlc_available_service, dlc_finishes_service, dlcs_service};
 
 use super::base::{
     handle_action_result, handle_create_result, handle_delete_result, handle_get_result,
@@ -66,8 +66,6 @@ async fn get_dlc_base_game(
     handle_get_result(get_result)
 }
 
-// TODO add put base-game??
-
 #[utoipa::path(
     get,
     path = "/api/v1/dlcs/{id}/finishes",
@@ -93,6 +91,34 @@ async fn get_dlc_finishes(
 ) -> impl Responder {
     let ItemId(id) = path.into_inner();
     let get_result = dlc_finishes_service::get_dlc_finishes(&pool, logged_user.id, id).await;
+    handle_get_result(get_result)
+}
+
+#[utoipa::path(
+    get,
+    path = "/api/v1/dlcs/{id}/platforms", // TODO or /available
+    tag = "DLCs",
+    params(
+        ("id" = i32, Path, description = "DLC id"),
+    ),
+    responses(
+        (status = 200, description = "Platforms obtained", body = [PlatformAvailableDTO], content_type = "application/json"),
+        (status = 401, description = "Unauthorized", body = ErrorMessage, content_type = "application/json"),
+        (status = 404, description = "DLC not found", body = ErrorMessage, content_type = "application/json"),
+        (status = 500, description = "Internal server error", body = ErrorMessage, content_type = "application/json"),
+    ),
+    security(
+        ("bearer_token" = [])
+    )
+)]
+#[get("/dlcs/{id}/platforms")]
+async fn get_dlc_platforms(
+    pool: web::Data<PgPool>,
+    path: web::Path<ItemId>,
+    logged_user: LoggedUser,
+) -> impl Responder {
+    let ItemId(id) = path.into_inner();
+    let get_result = dlc_available_service::get_dlc_platforms(&pool, logged_user.id, id).await;
     handle_get_result(get_result)
 }
 
@@ -212,6 +238,39 @@ async fn put_dlc(
 }
 
 #[utoipa::path(
+    put,
+    path = "/api/v1/dlcs/{id}/platforms/{other_id}",
+    tag = "DLCs",
+    params(
+        ("id" = i32, Path, description = "DLC id"),
+        ("other_id" = i32, Path, description = "Platform id")
+    ),
+    request_body(content = String, description = "Available date", content_type = "application/json"),
+    responses(
+        (status = 204, description = "DLC and Platform linked"),
+        (status = 401, description = "Unauthorized", body = ErrorMessage, content_type = "application/json"),
+        (status = 404, description = "DLC or Platform not found", body = ErrorMessage, content_type = "application/json"),
+        (status = 500, description = "Internal server error", body = ErrorMessage, content_type = "application/json"),
+    ),
+    security(
+        ("bearer_token" = [])
+    )
+)]
+#[put("/dlcs/{id}/platforms/{other_id}")]
+async fn link_dlc_platform(
+    pool: web::Data<PgPool>,
+    path: web::Path<ItemIdAndRelatedId>,
+    body: web::Json<NaiveDate>,
+    logged_user: LoggedUser,
+) -> impl Responder {
+    let ItemIdAndRelatedId(id, platform_id) = path.into_inner();
+    let update_result =
+        dlc_available_service::create_dlc_available(&pool, logged_user.id, id, platform_id, body.0)
+            .await;
+    handle_action_result(update_result)
+}
+
+#[utoipa::path(
     delete,
     path = "/api/v1/dlcs/{id}",
     tag = "DLCs",
@@ -268,4 +327,35 @@ async fn delete_dlc_finish(
     let delete_result =
         dlc_finishes_service::delete_dlc_finish(&pool, logged_user.id, id, body.0).await;
     handle_delete_result(delete_result)
+}
+
+#[utoipa::path(
+    delete,
+    path = "/api/v1/dlcs/{id}/platforms/{other_id}",
+    tag = "DLCs",
+    params(
+        ("id" = i32, Path, description = "DLC id"),
+        ("other_id" = i32, Path, description = "Platform id")
+    ),
+    responses(
+        (status = 204, description = "DLC and Platform unlinked"),
+        (status = 400, description = "Bad request", body = ErrorMessage, content_type = "application/json"),
+        (status = 401, description = "Unauthorized", body = ErrorMessage, content_type = "application/json"),
+        (status = 404, description = "DLC or Platform not found", body = ErrorMessage, content_type = "application/json"),
+        (status = 500, description = "Internal server error", body = ErrorMessage, content_type = "application/json"),
+    ),
+    security(
+        ("bearer_token" = [])
+    )
+)]
+#[delete("/dlcs/{id}/platforms/{other_id}")]
+async fn unlink_dlc_platform(
+    pool: web::Data<PgPool>,
+    path: web::Path<ItemIdAndRelatedId>,
+    logged_user: LoggedUser,
+) -> impl Responder {
+    let ItemIdAndRelatedId(id, platform_id) = path.into_inner();
+    let update_result =
+        dlc_available_service::delete_dlc_available(&pool, logged_user.id, id, platform_id).await;
+    handle_action_result(update_result)
 }

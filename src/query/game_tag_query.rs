@@ -48,7 +48,7 @@ pub fn exists_by_id(user_id: i32, game_id: i32, tag_id: i32) -> impl QueryStatem
 
     from_and_where_user_id(&mut select, user_id);
     select
-        .column((GameTagIden::Table, GameTagIden::GameId))
+        .column((GameTagIden::Table, GameTagIden::UserId))
         .and_where(Expr::col(GameTagIden::GameId).eq(game_id))
         .and_where(Expr::col(GameTagIden::TagId).eq(tag_id));
 

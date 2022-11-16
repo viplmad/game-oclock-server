@@ -27,6 +27,7 @@ pub struct Platform {
     pub id: i32,
     pub user_id: i32,
     pub name: String,
+    #[sqlx(rename = "type")] // TODO fix type reserved name
     pub _type: Option<i16>,
     pub icon_filename: Option<String>,
     pub added_datetime: NaiveDateTime,
@@ -37,8 +38,10 @@ pub struct Platform {
 pub struct PlatformAvailable {
     pub id: i32,
     pub user_id: i32,
+    #[sqlx(rename = "added_date")] // TODO Prefer rename in sql
     pub available_date: NaiveDate,
     pub name: String,
+    #[sqlx(rename = "type")] // TODO fix type reserved name
     pub _type: Option<i16>,
     pub icon_filename: Option<String>,
     pub added_datetime: NaiveDateTime,

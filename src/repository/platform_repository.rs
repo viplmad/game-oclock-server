@@ -21,7 +21,7 @@ pub async fn find_all(
     limit: u64,
 ) -> Result<Vec<Platform>, RepositoryError> {
     // TODO Replace limit with query/search
-    let query = platform_query::select_all(user_id, limit);
+    let query = platform_query::select_all_by_query(user_id, limit);
     fetch_all(pool, query).await
 }
 

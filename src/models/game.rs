@@ -10,7 +10,7 @@ pub struct GameDTO {
     pub user_id: i32,
     pub name: String,
     pub edition: String,
-    pub release_year: Option<i32>,
+    pub release_year: Option<i32>, // TODO Skip deserializing if None
     pub cover_filename: Option<String>,
     #[schema(value_type = String)]
     pub added_datetime: NaiveDateTime,

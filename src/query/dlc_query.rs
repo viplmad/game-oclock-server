@@ -23,12 +23,19 @@ pub fn select_all_by_base_game_id(user_id: i32, base_game_id: i32) -> impl Query
     select
 }
 
-pub fn select_all(user_id: i32, limit: u64) -> impl QueryStatementWriter {
+pub fn select_all_by_query(user_id: i32, limit: u64) -> impl QueryStatementWriter {
+    let mut select = select_all(user_id);
+
+    select.limit(limit);
+
+    select
+}
+
+pub(super) fn select_all(user_id: i32) -> SelectStatement {
     let mut select = Query::select();
 
     from_and_where_user_id(&mut select, user_id);
     add_fields(&mut select);
-    select.limit(limit);
 
     select
 }
