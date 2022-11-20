@@ -5,7 +5,6 @@ impl From<DLC> for DLCDTO {
     fn from(dlc: DLC) -> Self {
         Self {
             id: dlc.id,
-            user_id: dlc.user_id,
             name: dlc.name,
             base_game_id: dlc.base_game_id,
             release_year: dlc.release_year,
@@ -20,7 +19,7 @@ impl From<DLCDTO> for DLC {
     fn from(dlc: DLCDTO) -> Self {
         Self {
             id: dlc.id,
-            user_id: dlc.user_id,
+            user_id: -1,
             name: dlc.name,
             base_game_id: dlc.base_game_id,
             release_year: dlc.release_year,
@@ -35,7 +34,6 @@ impl From<DLCAvailable> for DLCAvailableDTO {
     fn from(dlc: DLCAvailable) -> Self {
         Self {
             id: dlc.id,
-            user_id: dlc.user_id,
             available_date: dlc.available_date,
             name: dlc.name,
             base_game_id: dlc.base_game_id,

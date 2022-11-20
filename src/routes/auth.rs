@@ -7,7 +7,6 @@ use crate::services::auth_service;
 
 use super::base::handle_get_result;
 
-// TODO grant_type como selector
 #[utoipa::path(
     post,
     path = "/auth/token",

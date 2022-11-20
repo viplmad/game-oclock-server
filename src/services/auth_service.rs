@@ -3,13 +3,10 @@ use sqlx::PgPool;
 
 use crate::entities::User;
 use crate::errors::{error_message_builder, ApiErrors, TokenErrors};
-use crate::models::{TokenRequest, TokenResponse};
+use crate::models::{GrantType, TokenRequest, TokenResponse};
 use crate::repository::user_repository;
 
 use super::users_service;
-
-const GRANT_TYPE_PASSWORD: &str = "password";
-const GRANT_TYPE_REFRESH: &str = "refresh_token";
 
 pub async fn get_token(
     pool: &PgPool,
@@ -17,8 +14,8 @@ pub async fn get_token(
     decoding_key: &DecodingKey,
     token_request: TokenRequest,
 ) -> Result<TokenResponse, TokenErrors> {
-    match token_request.grant_type.as_str() {
-        GRANT_TYPE_PASSWORD => {
+    match token_request.grant_type {
+        GrantType::Password => {
             if crate::utils::optional_string_is_none_or_blank(&token_request.username) {
                 return Err(TokenErrors::InvalidRequest(String::from(
                     "Request was missing the 'username' parameter.",
@@ -39,7 +36,7 @@ pub async fn get_token(
             )
             .await
         }
-        GRANT_TYPE_REFRESH => {
+        GrantType::RefreshToken => {
             if crate::utils::optional_string_is_none_or_blank(&token_request.refresh_token) {
                 return Err(TokenErrors::InvalidRequest(String::from(
                     "Request was missing the 'refresh_token' parameter.",
@@ -54,9 +51,6 @@ pub async fn get_token(
             )
             .await
         }
-        _ => Err(TokenErrors::UnsupportedGrantType(String::from(
-            "Only 'password' and 'refresh_token' grant types are supported.",
-        ))),
     }
 }
 

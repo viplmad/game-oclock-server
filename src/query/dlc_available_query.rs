@@ -1,7 +1,7 @@
 use chrono::NaiveDate;
-use sea_query::{Expr, Query, QueryStatementWriter, SelectStatement};
+use sea_query::{Alias, Expr, Query, QueryStatementWriter, SelectStatement};
 
-use crate::entities::{DLCAvailableIden, DLCIden, PlatformIden};
+use crate::entities::{DLCAvailableIden, DLCIden, PlatformIden, AVAILABLE_DATE_ALIAS};
 
 use super::{dlc_query, platform_query};
 
@@ -110,5 +110,9 @@ fn from_and_where_user_id(select: &mut SelectStatement, user_id: i32) {
 }
 
 fn add_fields(select: &mut SelectStatement) {
-    select.column((DLCAvailableIden::Table, DLCAvailableIden::AddedDate));
+    select.column((
+        DLCAvailableIden::Table,
+        DLCAvailableIden::AddedDate,
+        Alias::new(AVAILABLE_DATE_ALIAS),
+    ));
 }

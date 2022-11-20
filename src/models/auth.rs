@@ -5,15 +5,23 @@ use actix_web_httpauth::extractors::bearer::BearerAuth;
 use serde::{Deserialize, Serialize};
 use utoipa::ToSchema;
 
-#[derive(Serialize, Deserialize, ToSchema)]
+#[derive(Deserialize, ToSchema)]
 pub struct TokenRequest {
-    pub grant_type: String,
+    pub grant_type: GrantType,
     pub username: Option<String>,
     pub password: Option<String>,
     pub refresh_token: Option<String>,
 }
 
-#[derive(Serialize, Deserialize, ToSchema)]
+#[derive(Clone, Deserialize, ToSchema)]
+pub enum GrantType {
+    #[serde(rename = "password")]
+    Password,
+    #[serde(rename = "refresh_token")]
+    RefreshToken,
+}
+
+#[derive(Serialize, ToSchema)]
 pub struct TokenResponse {
     pub access_token: String,
     pub refresh_token: String,
@@ -51,11 +59,6 @@ impl UserClaims {
     pub fn sub_as_user_id(&self) -> i32 {
         self.sub.parse().unwrap()
     }
-}
-
-pub struct PasswordHash {
-    pub hash: String,
-    pub salt: String,
 }
 
 pub struct LoggedUser {

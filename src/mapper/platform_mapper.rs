@@ -5,7 +5,6 @@ impl From<Platform> for PlatformDTO {
     fn from(platform: Platform) -> Self {
         Self {
             id: platform.id,
-            user_id: platform.user_id,
             name: platform.name,
             ptype: platform.ptype.map(|ptype| {
                 PlatformType::try_from(ptype).expect("Type was not within valid range")
@@ -21,7 +20,7 @@ impl From<PlatformDTO> for Platform {
     fn from(platform: PlatformDTO) -> Self {
         Self {
             id: platform.id,
-            user_id: platform.user_id,
+            user_id: -1,
             name: platform.name,
             ptype: platform.ptype.map(i16::from),
             icon_filename: platform.icon_filename,
@@ -35,7 +34,6 @@ impl From<PlatformAvailable> for PlatformAvailableDTO {
     fn from(platform: PlatformAvailable) -> Self {
         Self {
             id: platform.id,
-            user_id: platform.user_id,
             available_date: platform.available_date,
             name: platform.name,
             ptype: platform.ptype.map(|ptype| {

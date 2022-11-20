@@ -5,7 +5,6 @@ impl From<Game> for GameDTO {
     fn from(game: Game) -> Self {
         Self {
             id: game.id,
-            user_id: game.user_id,
             name: game.name,
             edition: game.edition,
             release_year: game.release_year,
@@ -26,7 +25,7 @@ impl From<GameDTO> for Game {
     fn from(game: GameDTO) -> Self {
         Self {
             id: game.id,
-            user_id: game.user_id,
+            user_id: -1,
             name: game.name,
             edition: game.edition,
             release_year: game.release_year,
@@ -47,7 +46,6 @@ impl From<GameAvailable> for GameAvailableDTO {
     fn from(game: GameAvailable) -> Self {
         Self {
             id: game.id,
-            user_id: game.user_id,
             available_date: game.available_date,
             name: game.name,
             edition: game.edition,

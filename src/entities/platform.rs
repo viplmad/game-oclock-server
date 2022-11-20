@@ -38,7 +38,6 @@ pub struct Platform {
 pub struct PlatformAvailable {
     pub id: i32,
     pub user_id: i32,
-    #[sqlx(rename = "added_date")] // TODO Prefer rename in sql
     pub available_date: NaiveDate,
     pub name: String,
     #[sqlx(rename = "type")] // Fix to use type reserved name

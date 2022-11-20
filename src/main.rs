@@ -193,6 +193,7 @@ async fn run(
             models::PasswordChangeDTO,
             models::TokenRequest,
             models::TokenResponse,
+            models::GrantType,
             models::ErrorMessage,
         )),
         modifiers(&SecurityAddon)

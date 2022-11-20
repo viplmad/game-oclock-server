@@ -4,7 +4,7 @@ use utoipa::ToSchema;
 
 use super::{Merge, ModelName};
 
-#[derive(Serialize, Deserialize, ToSchema)]
+#[derive(Serialize, ToSchema)]
 pub struct UserDTO {
     pub id: i32,
     pub username: String,
@@ -49,7 +49,7 @@ pub struct NewUserDTO {
     pub password: String, // TODO Secret<String>
 }
 
-#[derive(Serialize, Deserialize, ToSchema)]
+#[derive(Deserialize, ToSchema)]
 pub struct PasswordChangeDTO {
     pub current_password: String,
     pub new_password: String,
