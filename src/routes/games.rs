@@ -4,7 +4,8 @@ use sqlx::PgPool;
 
 use crate::models::{GameLogDTO, ItemId, ItemIdAndRelatedId, LoggedUser, NewGameDTO, QueryRequest};
 use crate::services::{
-    dlcs_service, game_finishes_service, game_logs_service, game_tags_service, games_service,
+    dlcs_service, game_available_service, game_finishes_service, game_logs_service,
+    game_tags_service, games_service,
 };
 
 use super::base::{
@@ -149,6 +150,34 @@ async fn get_game_tags(
 ) -> impl Responder {
     let ItemId(id) = path.into_inner();
     let get_result = game_tags_service::get_game_tags(&pool, logged_user.id, id).await;
+    handle_get_result(get_result)
+}
+
+#[utoipa::path(
+    get,
+    path = "/api/v1/games/{id}/platforms",
+    tag = "Games",
+    params(
+        ("id" = i32, Path, description = "Game id"),
+    ),
+    responses(
+        (status = 200, description = "Platforms obtained", body = [PlatformAvailableDTO], content_type = "application/json"),
+        (status = 401, description = "Unauthorized", body = ErrorMessage, content_type = "application/json"),
+        (status = 404, description = "Game not found", body = ErrorMessage, content_type = "application/json"),
+        (status = 500, description = "Internal server error", body = ErrorMessage, content_type = "application/json"),
+    ),
+    security(
+        ("bearer_token" = [])
+    )
+)]
+#[get("/games/{id}/platforms")]
+async fn get_game_platforms(
+    pool: web::Data<PgPool>,
+    path: web::Path<ItemId>,
+    logged_user: LoggedUser,
+) -> impl Responder {
+    let ItemId(id) = path.into_inner();
+    let get_result = game_available_service::get_game_platforms(&pool, logged_user.id, id).await;
     handle_get_result(get_result)
 }
 
@@ -337,6 +366,7 @@ async fn link_game_dlc(
     ),
     responses(
         (status = 204, description = "Game and Tag linked"),
+        (status = 400, description = "Bad request", body = ErrorMessage, content_type = "application/json"),
         (status = 401, description = "Unauthorized", body = ErrorMessage, content_type = "application/json"),
         (status = 404, description = "Game or Tag not found", body = ErrorMessage, content_type = "application/json"),
         (status = 500, description = "Internal server error", body = ErrorMessage, content_type = "application/json"),
@@ -352,8 +382,47 @@ async fn link_game_tag(
     logged_user: LoggedUser,
 ) -> impl Responder {
     let ItemIdAndRelatedId(id, tag_id) = path.into_inner();
-    let update_result = game_tags_service::create_game_tag(&pool, logged_user.id, id, tag_id).await;
-    handle_action_result(update_result)
+    let create_result = game_tags_service::create_game_tag(&pool, logged_user.id, id, tag_id).await;
+    handle_action_result(create_result)
+}
+
+#[utoipa::path(
+    put,
+    path = "/api/v1/games/{id}/platforms/{other_id}",
+    tag = "Games",
+    params(
+        ("id" = i32, Path, description = "Game id"),
+        ("other_id" = i32, Path, description = "Platform id")
+    ),
+    request_body(content = String, description = "Available date", content_type = "application/json"),
+    responses(
+        (status = 204, description = "Game and Platform linked"),
+        (status = 400, description = "Bad request", body = ErrorMessage, content_type = "application/json"),
+        (status = 401, description = "Unauthorized", body = ErrorMessage, content_type = "application/json"),
+        (status = 404, description = "Game or Platform not found", body = ErrorMessage, content_type = "application/json"),
+        (status = 500, description = "Internal server error", body = ErrorMessage, content_type = "application/json"),
+    ),
+    security(
+        ("bearer_token" = [])
+    )
+)]
+#[put("/games/{id}/platforms/{other_id}")]
+async fn link_game_platform(
+    pool: web::Data<PgPool>,
+    path: web::Path<ItemIdAndRelatedId>,
+    body: web::Json<NaiveDate>,
+    logged_user: LoggedUser,
+) -> impl Responder {
+    let ItemIdAndRelatedId(id, platform_id) = path.into_inner();
+    let create_result = game_available_service::create_game_available(
+        &pool,
+        logged_user.id,
+        id,
+        platform_id,
+        body.0,
+    )
+    .await;
+    handle_action_result(create_result)
 }
 
 #[utoipa::path(
@@ -501,6 +570,37 @@ async fn unlink_game_tag(
     logged_user: LoggedUser,
 ) -> impl Responder {
     let ItemIdAndRelatedId(id, tag_id) = path.into_inner();
-    let update_result = game_tags_service::delete_game_tag(&pool, logged_user.id, id, tag_id).await;
-    handle_action_result(update_result)
+    let delete_result = game_tags_service::delete_game_tag(&pool, logged_user.id, id, tag_id).await;
+    handle_action_result(delete_result)
+}
+
+#[utoipa::path(
+    delete,
+    path = "/api/v1/games/{id}/platforms/{other_id}",
+    tag = "Games",
+    params(
+        ("id" = i32, Path, description = "Game id"),
+        ("other_id" = i32, Path, description = "Platform id")
+    ),
+    responses(
+        (status = 204, description = "Game and Platform unlinked"),
+        (status = 400, description = "Bad request", body = ErrorMessage, content_type = "application/json"),
+        (status = 401, description = "Unauthorized", body = ErrorMessage, content_type = "application/json"),
+        (status = 404, description = "Game and Platform relation not found", body = ErrorMessage, content_type = "application/json"),
+        (status = 500, description = "Internal server error", body = ErrorMessage, content_type = "application/json"),
+    ),
+    security(
+        ("bearer_token" = [])
+    )
+)]
+#[delete("/games/{id}/platforms/{other_id}")]
+async fn unlink_game_platform(
+    pool: web::Data<PgPool>,
+    path: web::Path<ItemIdAndRelatedId>,
+    logged_user: LoggedUser,
+) -> impl Responder {
+    let ItemIdAndRelatedId(id, platform_id) = path.into_inner();
+    let delete_result =
+        game_available_service::delete_game_available(&pool, logged_user.id, id, platform_id).await;
+    handle_action_result(delete_result)
 }

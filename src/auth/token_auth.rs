@@ -8,13 +8,13 @@ use uuid::Uuid;
 use crate::errors::{error_message_builder, TokenErrors, ValidationError};
 use crate::models::{TokenResponse, UserClaims};
 
-const KID: &str = "075d91f0-a35b-455a-9d78-8598846805e8"; // Random UUID TODO Obtain from env
+const KID: &str = "075d91f0-a35b-455a-9d78-8598846805e8"; // Random UUID
 const ISSUER: &str = "game_collection_server";
 
 const TOKEN_TYPE_BEARER: &str = "bearer";
 
-const ONE_DAY: i64 = 60 * 60 * 24; // in seconds
-const ONE_WEEK: i64 = 60 * 60 * 24 * 7; // in seconds
+const ONE_DAY_IN_SECONDS: i64 = 60 * 60 * 24; // in seconds
+const ONE_WEEK_IN_SECONDS: i64 = 60 * 60 * 24 * 7; // in seconds
 
 pub async fn token_validator(
     req: ServiceRequest,
@@ -79,11 +79,15 @@ pub fn generate_token_response(
 }
 
 fn create_access_token_claims(user_id: i32) -> UserClaims {
-    create_token_claims(user_id, ONE_DAY, None)
+    create_token_claims(user_id, ONE_DAY_IN_SECONDS, None)
 }
 
 fn create_refresh_token_claims(user_id: i32, access_token_id: &str) -> UserClaims {
-    create_token_claims(user_id, ONE_WEEK, Some(String::from(access_token_id)))
+    create_token_claims(
+        user_id,
+        ONE_WEEK_IN_SECONDS,
+        Some(String::from(access_token_id)),
+    )
 }
 
 fn create_token_id() -> String {

@@ -11,18 +11,6 @@ use super::base::{
 };
 use super::{dlcs_service, platforms_service};
 
-pub async fn get_dlc_platforms(
-    pool: &PgPool,
-    user_id: i32,
-    dlc_id: i32,
-) -> Result<Vec<PlatformAvailableDTO>, ApiErrors> {
-    dlcs_service::exists_dlc(pool, user_id, dlc_id).await?;
-
-    let find_result =
-        dlc_available_repository::find_all_platforms_with_dlc(pool, user_id, dlc_id).await;
-    handle_get_list_result(find_result)
-}
-
 pub async fn get_platform_dlcs(
     pool: &PgPool,
     user_id: i32,
@@ -32,6 +20,18 @@ pub async fn get_platform_dlcs(
 
     let find_result =
         dlc_available_repository::find_all_dlcs_with_platform(pool, user_id, platform_id).await;
+    handle_get_list_result(find_result)
+}
+
+pub async fn get_dlc_platforms(
+    pool: &PgPool,
+    user_id: i32,
+    dlc_id: i32,
+) -> Result<Vec<PlatformAvailableDTO>, ApiErrors> {
+    dlcs_service::exists_dlc(pool, user_id, dlc_id).await?;
+
+    let find_result =
+        dlc_available_repository::find_all_platforms_with_dlc(pool, user_id, dlc_id).await;
     handle_get_list_result(find_result)
 }
 

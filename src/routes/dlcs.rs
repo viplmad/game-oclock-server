@@ -96,7 +96,7 @@ async fn get_dlc_finishes(
 
 #[utoipa::path(
     get,
-    path = "/api/v1/dlcs/{id}/platforms", // TODO or /available
+    path = "/api/v1/dlcs/{id}/platforms",
     tag = "DLCs",
     params(
         ("id" = i32, Path, description = "DLC id"),
@@ -248,6 +248,7 @@ async fn put_dlc(
     request_body(content = String, description = "Available date", content_type = "application/json"),
     responses(
         (status = 204, description = "DLC and Platform linked"),
+        (status = 400, description = "Bad request", body = ErrorMessage, content_type = "application/json"),
         (status = 401, description = "Unauthorized", body = ErrorMessage, content_type = "application/json"),
         (status = 404, description = "DLC or Platform not found", body = ErrorMessage, content_type = "application/json"),
         (status = 500, description = "Internal server error", body = ErrorMessage, content_type = "application/json"),
@@ -264,10 +265,10 @@ async fn link_dlc_platform(
     logged_user: LoggedUser,
 ) -> impl Responder {
     let ItemIdAndRelatedId(id, platform_id) = path.into_inner();
-    let update_result =
+    let create_result =
         dlc_available_service::create_dlc_available(&pool, logged_user.id, id, platform_id, body.0)
             .await;
-    handle_action_result(update_result)
+    handle_action_result(create_result)
 }
 
 #[utoipa::path(
@@ -341,7 +342,7 @@ async fn delete_dlc_finish(
         (status = 204, description = "DLC and Platform unlinked"),
         (status = 400, description = "Bad request", body = ErrorMessage, content_type = "application/json"),
         (status = 401, description = "Unauthorized", body = ErrorMessage, content_type = "application/json"),
-        (status = 404, description = "DLC or Platform not found", body = ErrorMessage, content_type = "application/json"),
+        (status = 404, description = "DLC and Platform relation not found", body = ErrorMessage, content_type = "application/json"),
         (status = 500, description = "Internal server error", body = ErrorMessage, content_type = "application/json"),
     ),
     security(
@@ -355,7 +356,7 @@ async fn unlink_dlc_platform(
     logged_user: LoggedUser,
 ) -> impl Responder {
     let ItemIdAndRelatedId(id, platform_id) = path.into_inner();
-    let update_result =
+    let delete_result =
         dlc_available_service::delete_dlc_available(&pool, logged_user.id, id, platform_id).await;
-    handle_action_result(update_result)
+    handle_action_result(delete_result)
 }

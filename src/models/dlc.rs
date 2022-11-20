@@ -79,7 +79,7 @@ pub struct DLCAvailableDTO {
 }
 
 impl ModelName for DLCAvailableDTO {
-    const MODEL_NAME: &'static str = "Relation of Game and Platform";
+    const MODEL_NAME: &'static str = "Relation of DLC and Platform";
     const ID_FIELDS: &'static [&'static str] = &["dlc id", "platform id"];
     const UNIQUE_FIELDS: &'static [&'static str] = DLCAvailableDTO::ID_FIELDS;
 }

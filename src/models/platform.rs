@@ -9,7 +9,8 @@ pub struct PlatformDTO {
     pub id: i32,
     pub user_id: i32,
     pub name: String,
-    pub ptype: Option<PlatformType>, // TODO de/serialize as type
+    #[serde(rename = "type")] // Fix to use type reserved name
+    pub ptype: Option<PlatformType>,
     pub icon_filename: Option<String>,
     #[schema(value_type = String)]
     pub added_datetime: NaiveDateTime,
@@ -65,6 +66,7 @@ pub struct PlatformAvailableDTO {
     #[schema(value_type = String)]
     pub available_date: NaiveDate,
     pub name: String,
+    #[serde(rename = "type")] // Fix to use type reserved name
     pub ptype: Option<PlatformType>,
     pub icon_filename: Option<String>,
     #[schema(value_type = String)]
@@ -74,7 +76,7 @@ pub struct PlatformAvailableDTO {
 }
 
 impl ModelName for PlatformAvailableDTO {
-    const MODEL_NAME: &'static str = "Relation of Game and Platform";
-    const ID_FIELDS: &'static [&'static str] = &["dlc id", "platform id"];
+    const MODEL_NAME: &'static str = "Relation with Platform";
+    const ID_FIELDS: &'static [&'static str] = &["id", "platform id"];
     const UNIQUE_FIELDS: &'static [&'static str] = PlatformAvailableDTO::ID_FIELDS;
 }

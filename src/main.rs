@@ -121,6 +121,7 @@ async fn run(
             routes::get_game_logs,
             routes::get_game_dlcs,
             routes::get_game_tags,
+            routes::get_game_platforms,
             routes::get_games,
             routes::post_game,
             routes::post_game_finish,
@@ -128,11 +129,13 @@ async fn run(
             routes::put_game,
             routes::link_game_dlc,
             routes::link_game_tag,
+            routes::link_game_platform,
             routes::delete_game,
             routes::delete_game_finish,
             routes::delete_game_log,
             routes::unlink_game_dlc,
             routes::unlink_game_tag,
+            routes::unlink_game_platform,
             // DLCs
             routes::get_dlc,
             routes::get_dlc_finishes,
@@ -148,8 +151,8 @@ async fn run(
             routes::unlink_dlc_platform,
             // Platforms
             routes::get_platform,
+            routes::get_platform_games,
             routes::get_platform_dlcs,
-            //routes::get_platform_games,
             routes::get_platforms,
             routes::post_platform,
             routes::put_platform,
@@ -173,6 +176,7 @@ async fn run(
         components(schemas(
             models::GameDTO,
             models::NewGameDTO,
+            models::GameAvailableDTO,
             models::GameStatus,
             models::GameLogDTO,
             models::DLCDTO,
@@ -235,16 +239,20 @@ async fn run(
                         .service(routes::get_game_logs)
                         .service(routes::get_game_dlcs)
                         .service(routes::get_game_tags)
+                        .service(routes::get_game_platforms)
                         .service(routes::get_games)
                         .service(routes::post_game)
                         .service(routes::post_game_finish)
                         .service(routes::post_game_log)
                         .service(routes::put_game)
                         .service(routes::link_game_dlc)
+                        .service(routes::link_game_platform)
                         .service(routes::delete_game)
                         .service(routes::delete_game_finish)
                         .service(routes::delete_game_log)
                         .service(routes::unlink_game_dlc)
+                        .service(routes::unlink_game_tag)
+                        .service(routes::unlink_game_platform)
                         // DLCs
                         .service(routes::get_dlc)
                         .service(routes::get_dlc_base_game)
@@ -260,6 +268,7 @@ async fn run(
                         .service(routes::unlink_dlc_platform)
                         // Platforms
                         .service(routes::get_platform)
+                        .service(routes::get_platform_games)
                         .service(routes::get_platform_dlcs)
                         .service(routes::get_platforms)
                         .service(routes::post_platform)

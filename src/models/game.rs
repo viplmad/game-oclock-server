@@ -1,4 +1,4 @@
-use chrono::NaiveDateTime;
+use chrono::{NaiveDate, NaiveDateTime};
 use serde::{Deserialize, Serialize};
 use utoipa::ToSchema;
 
@@ -84,4 +84,32 @@ pub struct NewGameDTO {
     pub save_folder: Option<String>,
     pub screenshot_folder: Option<String>,
     pub backup: Option<bool>,
+}
+
+#[derive(Serialize, ToSchema)]
+pub struct GameAvailableDTO {
+    pub id: i32,
+    pub user_id: i32,
+    #[schema(value_type = String)]
+    pub available_date: NaiveDate,
+    pub name: String,
+    pub edition: String,
+    pub release_year: Option<i32>,
+    pub cover_filename: Option<String>,
+    #[schema(value_type = String)]
+    pub added_datetime: NaiveDateTime,
+    #[schema(value_type = String)]
+    pub updated_datetime: NaiveDateTime,
+    pub status: GameStatus,
+    pub rating: i32,
+    pub notes: String,
+    pub save_folder: String,
+    pub screenshot_folder: String,
+    pub backup: bool,
+}
+
+impl ModelName for GameAvailableDTO {
+    const MODEL_NAME: &'static str = "Relation of Game and Platform";
+    const ID_FIELDS: &'static [&'static str] = &["game id", "platform id"];
+    const UNIQUE_FIELDS: &'static [&'static str] = GameAvailableDTO::ID_FIELDS;
 }

@@ -20,7 +20,7 @@ pub enum UserIden {
 
 #[derive(FromRow)]
 pub struct User {
-    pub id: i32, // TODO use uuid
+    pub id: i32,
     pub username: String,
     pub password: String,
     pub added_datetime: NaiveDateTime,

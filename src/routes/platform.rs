@@ -2,7 +2,7 @@ use actix_web::{delete, get, post, put, web, Responder};
 use sqlx::PgPool;
 
 use crate::models::{ItemId, LoggedUser, NewPlatformDTO, QueryRequest};
-use crate::services::{dlc_available_service, platforms_service};
+use crate::services::{dlc_available_service, game_available_service, platforms_service};
 
 use super::base::{
     handle_create_result, handle_delete_result, handle_get_result, handle_update_result,
@@ -38,7 +38,35 @@ async fn get_platform(
 
 #[utoipa::path(
     get,
-    path = "/api/v1/platforms/{id}/dlcs", // TODO or /available
+    path = "/api/v1/platforms/{id}/games",
+    tag = "Platforms",
+    params(
+        ("id" = i32, Path, description = "Platform id"),
+    ),
+    responses(
+        (status = 200, description = "Games obtained", body = [GameAvailableDTO], content_type = "application/json"),
+        (status = 401, description = "Unauthorized", body = ErrorMessage, content_type = "application/json"),
+        (status = 404, description = "Platform not found", body = ErrorMessage, content_type = "application/json"),
+        (status = 500, description = "Internal server error", body = ErrorMessage, content_type = "application/json"),
+    ),
+    security(
+        ("bearer_token" = [])
+    )
+)]
+#[get("/platforms/{id}/games")]
+async fn get_platform_games(
+    pool: web::Data<PgPool>,
+    path: web::Path<ItemId>,
+    logged_user: LoggedUser,
+) -> impl Responder {
+    let ItemId(id) = path.into_inner();
+    let get_result = game_available_service::get_platform_games(&pool, logged_user.id, id).await;
+    handle_get_result(get_result)
+}
+
+#[utoipa::path(
+    get,
+    path = "/api/v1/platforms/{id}/dlcs",
     tag = "Platforms",
     params(
         ("id" = i32, Path, description = "Platform id"),

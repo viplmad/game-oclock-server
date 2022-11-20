@@ -3,8 +3,6 @@ use sea_query::{Expr, Query, QueryStatementWriter, SelectStatement};
 
 use crate::entities::{Platform, PlatformIden};
 
-use super::game_available_query::join_game_available_by_game_id;
-
 pub fn select_by_id(user_id: i32, id: i32) -> impl QueryStatementWriter {
     let mut select = Query::select();
 
@@ -32,17 +30,6 @@ pub(super) fn select_all(user_id: i32) -> SelectStatement {
     select
 }
 
-pub fn select_all_by_game_id(user_id: i32, game_id: i32) -> impl QueryStatementWriter {
-    let mut select = Query::select();
-
-    from_and_where_user_id(&mut select, user_id);
-    add_fields(&mut select);
-
-    join_game_available_by_game_id(&mut select, game_id);
-
-    select
-}
-
 pub fn insert(user_id: i32, platform: &Platform) -> impl QueryStatementWriter {
     let mut insert = Query::insert();
 
@@ -59,7 +46,7 @@ pub fn insert(user_id: i32, platform: &Platform) -> impl QueryStatementWriter {
         .values_panic([
             user_id.into(),
             platform.name.clone().into(),
-            platform._type.into(),
+            platform.ptype.into(),
             platform.icon_filename.clone().into(),
             Utc::now().naive_utc().into(),
             Utc::now().naive_utc().into(),
@@ -76,7 +63,7 @@ pub fn update_by_id(user_id: i32, id: i32, platform: &Platform) -> impl QuerySta
         .table(PlatformIden::Table)
         .values(vec![
             (PlatformIden::Name, platform.name.clone().into()),
-            (PlatformIden::Type, platform._type.into()),
+            (PlatformIden::Type, platform.ptype.into()),
             (
                 PlatformIden::IconFilename,
                 platform.icon_filename.clone().into(),
