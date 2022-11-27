@@ -16,7 +16,7 @@ use utoipa::{
 };
 use utoipa_swagger_ui::SwaggerUi;
 
-const DEFAULT_HOST: &str = "127.0.0.1";
+const DEFAULT_HOST: &str = "0.0.0.0";
 const DEFAULT_PORT: &str = "8080";
 
 #[actix_web::main]
