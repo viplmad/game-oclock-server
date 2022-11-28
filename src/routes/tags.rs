@@ -1,7 +1,7 @@
 use actix_web::{delete, get, post, put, web, Responder};
 use sqlx::PgPool;
 
-use crate::models::{ItemId, LoggedUser, NewTagDTO, QueryRequest};
+use crate::models::{ItemId, LoggedUser, NewTagDTO, QueryDTO};
 use crate::services::{game_tags_service, tags_service};
 
 use super::base::{
@@ -68,9 +68,7 @@ async fn get_tag_games(
     get,
     path = "/api/v1/tags",
     tag = "Tags",
-    params(
-        QueryRequest,
-    ),
+    request_body(content = QueryDTO, description = "Query", content_type = "application/json"),
     responses(
         (status = 200, description = "Tags obtained", body = [TagDTO], content_type = "application/json"),
         (status = 401, description = "Unauthorized", body = ErrorMessage, content_type = "application/json"),
@@ -83,10 +81,10 @@ async fn get_tag_games(
 #[get("/tags")]
 async fn get_tags(
     pool: web::Data<PgPool>,
-    query: web::Query<QueryRequest>,
+    body: web::Json<QueryDTO>,
     logged_user: LoggedUser,
 ) -> impl Responder {
-    let get_result = tags_service::get_tags(&pool, logged_user.id, query.0).await;
+    let get_result = tags_service::get_tags(&pool, logged_user.id, body.0).await;
     handle_get_result(get_result)
 }
 

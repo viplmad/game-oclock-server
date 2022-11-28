@@ -1,7 +1,8 @@
 use sqlx::PgPool;
 
+use crate::entities::DLCQuery;
 use crate::errors::{error_message_builder, ApiErrors};
-use crate::models::{GameDTO, NewDLCDTO, QueryRequest, DLCDTO};
+use crate::models::{GameDTO, NewDLCDTO, QueryDTO, DLCDTO};
 use crate::repository::dlc_repository;
 
 use super::base::{
@@ -42,9 +43,9 @@ pub async fn get_game_dlcs(
 pub async fn get_dlcs(
     pool: &PgPool,
     user_id: i32,
-    query: QueryRequest,
+    query: QueryDTO,
 ) -> Result<Vec<DLCDTO>, ApiErrors> {
-    let find_result = dlc_repository::find_all(pool, user_id, query.limit.unwrap_or(10)).await;
+    let find_result = dlc_repository::find_all(pool, user_id, DLCQuery::from(query)).await;
     handle_get_list_result(find_result)
 }
 

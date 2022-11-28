@@ -1,7 +1,7 @@
 use actix_web::{delete, get, post, put, web, Responder};
 use sqlx::PgPool;
 
-use crate::models::{ItemId, LoggedUser, NewPlatformDTO, QueryRequest};
+use crate::models::{ItemId, LoggedUser, NewPlatformDTO, QueryDTO};
 use crate::services::{dlc_available_service, game_available_service, platforms_service};
 
 use super::base::{
@@ -96,9 +96,7 @@ async fn get_platform_dlcs(
     get,
     path = "/api/v1/platforms",
     tag = "Platforms",
-    params(
-        QueryRequest,
-    ),
+    request_body(content = QueryDTO, description = "Query", content_type = "application/json"),
     responses(
         (status = 200, description = "Platforms obtained", body = [PlatformDTO], content_type = "application/json"),
         (status = 401, description = "Unauthorized", body = ErrorMessage, content_type = "application/json"),
@@ -111,10 +109,10 @@ async fn get_platform_dlcs(
 #[get("/platforms")]
 async fn get_platforms(
     pool: web::Data<PgPool>,
-    query: web::Query<QueryRequest>,
+    body: web::Json<QueryDTO>,
     logged_user: LoggedUser,
 ) -> impl Responder {
-    let get_result = platforms_service::get_platforms(&pool, logged_user.id, query.0).await;
+    let get_result = platforms_service::get_platforms(&pool, logged_user.id, body.0).await;
     handle_get_result(get_result)
 }
 

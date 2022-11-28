@@ -1,6 +1,6 @@
 use sqlx::PgPool;
 
-use crate::entities::DLC;
+use crate::entities::{DLCIden, Query, DLC};
 use crate::errors::RepositoryError;
 use crate::query::dlc_query;
 
@@ -27,10 +27,9 @@ pub async fn find_all_by_base_game_id(
 pub async fn find_all(
     pool: &PgPool,
     user_id: i32,
-    limit: u64,
+    query: Query<DLCIden>,
 ) -> Result<Vec<DLC>, RepositoryError> {
-    // TODO Replace limit with query/search
-    let query = dlc_query::select_all_by_query(user_id, limit);
+    let query = dlc_query::select_all_by_query(user_id, query);
     fetch_all(pool, query).await
 }
 

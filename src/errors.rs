@@ -58,6 +58,9 @@ pub struct PasswordError(pub String);
 
 pub struct RepositoryError(pub String);
 
+#[derive(Debug)]
+pub struct MappingError(pub String);
+
 pub enum ApiErrors {
     InvalidParameter(String),
     AlreadyExists(String),

@@ -2,11 +2,6 @@ use serde::Deserialize;
 use utoipa::IntoParams;
 
 #[derive(Deserialize, IntoParams)]
-pub struct QueryRequest {
-    pub limit: Option<u64>,
-}
-
-#[derive(Deserialize, IntoParams)]
 #[into_params(names("id"))]
 pub struct ItemId(pub i32);
 

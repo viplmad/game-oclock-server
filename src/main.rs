@@ -195,6 +195,13 @@ async fn run(
             models::TokenResponse,
             models::GrantType,
             models::ErrorMessage,
+
+            models::QueryDTO,
+            models::SearchFilterDTO,
+            models::SearchValue,
+            models::OperatorType,
+            models::SortDTO,
+            models::OrderType,
         )),
         modifiers(&SecurityAddon)
     )]

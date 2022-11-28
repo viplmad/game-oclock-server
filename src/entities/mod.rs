@@ -8,6 +8,7 @@ mod game_log;
 mod game_tag;
 mod game_user_info;
 mod platform;
+mod query;
 mod tag;
 mod user;
 
@@ -21,5 +22,6 @@ pub use game_log::*;
 pub use game_tag::*;
 pub use game_user_info::*;
 pub use platform::*;
+pub use query::*;
 pub use tag::*;
 pub use user::*;

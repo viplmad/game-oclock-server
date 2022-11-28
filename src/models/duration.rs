@@ -92,7 +92,7 @@ impl Display for DurationDef {
 }
 
 impl FromStr for DurationDef {
-    type Err = ();
+    type Err = (); // TODO
     fn from_str(s: &str) -> Result<Self, Self::Err> {
         let duration = iso8601::duration(s).map_err(|_| ())?;
         match duration {

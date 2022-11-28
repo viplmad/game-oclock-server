@@ -1,7 +1,7 @@
 use sqlx::PgPool;
 
 use crate::errors::ApiErrors;
-use crate::models::{NewTagDTO, QueryRequest, TagDTO};
+use crate::models::{NewTagDTO, QueryDTO, TagDTO};
 use crate::repository::tag_repository;
 
 use super::base::{
@@ -18,7 +18,7 @@ pub async fn get_tag(pool: &PgPool, user_id: i32, tag_id: i32) -> Result<TagDTO,
 pub async fn get_tags(
     pool: &PgPool,
     user_id: i32,
-    query: QueryRequest,
+    query: QueryDTO,
 ) -> Result<Vec<TagDTO>, ApiErrors> {
     let find_result = tag_repository::find_all(pool, user_id, query.limit.unwrap_or(10)).await;
     handle_get_list_result(find_result)
