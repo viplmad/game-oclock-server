@@ -10,11 +10,11 @@ pub trait ToError {
 
 pub mod error_message_builder {
     pub fn missing_param(param_name: &str) -> String {
-        format!("Request parameter '{param_name}' cannot be empty.")
+        format!("Request parameter \"{param_name}\" cannot be empty.")
     }
 
     pub fn missing_body_field(field_name: &str) -> String {
-        format!("Request body field '{field_name}' cannot be empty.")
+        format!("Request body field \"{field_name}\" cannot be empty.")
     }
 
     pub fn empty_param(param_name: &str) -> String {
@@ -50,6 +50,14 @@ pub mod error_message_builder {
     pub fn inner_error(msg: &str, inner_msg: &str) -> String {
         format!("{msg} - {inner_msg}")
     }
+
+    pub fn field_not_found(model_name: &str, field_name: &str) -> String {
+        format!("Field \"{field_name}\" from {model_name} does not exist")
+    }
+
+    pub fn convert_to_error(value: &str, type_string: &str) -> String {
+        format!("Could not convert \"{value}\" to {type_string}")
+    }
 }
 
 pub struct ValidationError(pub String);
@@ -58,8 +66,7 @@ pub struct PasswordError(pub String);
 
 pub struct RepositoryError(pub String);
 
-#[derive(Debug)]
-pub struct MappingError(pub String);
+pub struct FieldMappingError(pub String);
 
 pub enum ApiErrors {
     InvalidParameter(String),

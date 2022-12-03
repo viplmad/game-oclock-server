@@ -1,7 +1,8 @@
 use std::future::Future;
 
-use crate::errors::{error_message_builder, ApiErrors, RepositoryError};
-use crate::models::{Merge, ModelName};
+use crate::entities::SearchResult;
+use crate::errors::{error_message_builder, ApiErrors, FieldMappingError, RepositoryError};
+use crate::models::{Merge, ModelName, SearchResultDTO, SearchDTO};
 
 fn handle_result<E, T>(repository_result: Result<E, RepositoryError>) -> Result<E, ApiErrors>
 where
@@ -56,6 +57,20 @@ where
 {
     let entity_list: Vec<E> = handle_get_list_result_raw::<E, T>(repository_result)?;
     Ok(entity_list.into_iter().map(T::from).collect())
+}
+
+pub(super) fn handle_get_list_paged_result<E, T>(
+    repository_result: Result<SearchResult<E>, RepositoryError>,
+) -> Result<SearchResultDTO<T>, ApiErrors>
+where
+    T: From<E> + ModelName,
+{
+    let entity_search = handle_result::<SearchResult<E>, T>(repository_result)?;
+    Ok(SearchResultDTO {
+        data: entity_search.data.into_iter().map(T::from).collect(),
+        page: entity_search.page,
+        size: entity_search.size,
+    })
 }
 
 pub(super) fn handle_create_result<I, T>(
@@ -163,5 +178,18 @@ where
             ApiErrors::NotFound(error_message_builder::updated_but_error_get(T::MODEL_NAME))
         }
         other => other,
+    })
+}
+
+pub(super) fn handle_query_mapping<T, S>(search: SearchDTO) -> Result<S, ApiErrors>
+where
+    T: ModelName,
+    S: TryFrom<SearchDTO, Error = FieldMappingError>,
+{
+    S::try_from(search).map_err(|err| {
+        ApiErrors::InvalidParameter(error_message_builder::field_not_found(
+            T::MODEL_NAME,
+            &err.0,
+        ))
     })
 }

@@ -1,16 +1,23 @@
-use sea_query::{BinOper, Iden, Order};
+use sea_query::{BinOper, Iden, Order, SelectStatement};
 
-pub struct Query<I: Iden> {
-    pub filter: Option<Vec<SearchFilter<I>>>,
+pub struct SearchQuery {
+    pub query: SelectStatement,
+    pub page: u64,
+    pub size: u64,
+}
+
+pub struct Search<I: Iden> {
+    pub filter: Option<Vec<Filter<I>>>,
     pub sort: Option<Vec<Sort<I>>>,
     pub page: Option<u64>,
     pub size: Option<u64>,
 }
 
-pub struct SearchFilter<I: Iden> {
+pub struct Filter<I: Iden> {
     pub field: I,
     pub value: FieldValue,
     pub operator: BinOper,
+    pub chain_operator: BinOper,
 }
 
 pub enum FieldValue {

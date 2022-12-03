@@ -2,7 +2,7 @@ use actix_web::{delete, get, post, put, web, Responder};
 use chrono::{NaiveDate, NaiveDateTime};
 use sqlx::PgPool;
 
-use crate::models::{GameLogDTO, ItemId, ItemIdAndRelatedId, LoggedUser, NewGameDTO, QueryDTO};
+use crate::models::{GameLogDTO, ItemId, ItemIdAndRelatedId, LoggedUser, NewGameDTO, SearchDTO};
 use crate::services::{
     dlcs_service, game_available_service, game_finishes_service, game_logs_service,
     game_tags_service, games_service,
@@ -185,7 +185,7 @@ async fn get_game_platforms(
     get,
     path = "/api/v1/games",
     tag = "Games",
-    request_body(content = QueryDTO, description = "Query", content_type = "application/json"),
+    request_body(content = SearchDTO, description = "Query", content_type = "application/json"),
     responses(
         (status = 200, description = "Games obtained", body = [GameDTO], content_type = "application/json"),
         (status = 401, description = "Unauthorized", body = ErrorMessage, content_type = "application/json"),
@@ -198,7 +198,7 @@ async fn get_game_platforms(
 #[get("/games")]
 async fn get_games(
     pool: web::Data<PgPool>,
-    body: web::Json<QueryDTO>,
+    body: web::Json<SearchDTO>,
     logged_user: LoggedUser,
 ) -> impl Responder {
     let get_result = games_service::get_games(&pool, logged_user.id, body.0).await;

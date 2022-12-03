@@ -43,7 +43,7 @@ impl<'de> Visitor<'de> for DurationVisitor {
     type Value = DurationDef;
 
     fn expecting(&self, formatter: &mut std::fmt::Formatter) -> std::fmt::Result {
-        formatter.write_str("a string of a duration in iso8601 format")
+        formatter.write_str("a string of a duration in ISO 8601 format")
     }
 
     fn visit_str<E>(self, v: &str) -> Result<Self::Value, E>

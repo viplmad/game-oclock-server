@@ -1,7 +1,7 @@
 use sqlx::PgPool;
 
 use crate::errors::ApiErrors;
-use crate::models::{NewPlatformDTO, PlatformDTO, QueryDTO};
+use crate::models::{NewPlatformDTO, PlatformDTO, SearchDTO};
 use crate::repository::platform_repository;
 
 use super::base::{
@@ -22,9 +22,10 @@ pub async fn get_platform(
 pub async fn get_platforms(
     pool: &PgPool,
     user_id: i32,
-    query: QueryDTO,
+    search: SearchDTO,
 ) -> Result<Vec<PlatformDTO>, ApiErrors> {
-    let find_result = platform_repository::find_all(pool, user_id, query.limit.unwrap_or(10)).await;
+    let find_result =
+        platform_repository::find_all(pool, user_id, search.limit.unwrap_or(10)).await;
     handle_get_list_result(find_result)
 }
 

@@ -2,7 +2,7 @@ use actix_web::{delete, get, post, put, web, Responder};
 use chrono::NaiveDate;
 use sqlx::PgPool;
 
-use crate::models::{ItemId, ItemIdAndRelatedId, LoggedUser, NewDLCDTO, QueryDTO};
+use crate::models::{ItemId, ItemIdAndRelatedId, LoggedUser, NewDLCDTO, SearchDTO};
 use crate::services::{dlc_available_service, dlc_finishes_service, dlcs_service};
 
 use super::base::{
@@ -126,9 +126,9 @@ async fn get_dlc_platforms(
     post,
     path = "/api/v1/dlcs/list",
     tag = "DLCs",
-    request_body(content = QueryDTO, description = "Query", content_type = "application/json"),
+    request_body(content = SearchDTO, description = "Query", content_type = "application/json"),
     responses(
-        (status = 200, description = "DLCs obtained", body = [DLCDTO], content_type = "application/json"),
+        (status = 200, description = "DLCs obtained", body = DLCPage, content_type = "application/json"),
         (status = 401, description = "Unauthorized", body = ErrorMessage, content_type = "application/json"),
         (status = 500, description = "Internal server error", body = ErrorMessage, content_type = "application/json"),
     ),
@@ -139,11 +139,11 @@ async fn get_dlc_platforms(
 #[post("/dlcs/list")]
 async fn get_dlcs(
     pool: web::Data<PgPool>,
-    body: web::Json<QueryDTO>,
+    body: web::Json<SearchDTO>,
     logged_user: LoggedUser,
 ) -> impl Responder {
-    let get_result = dlcs_service::get_dlcs(&pool, logged_user.id, body.0).await;
-    handle_get_result(get_result)
+    let search_result = dlcs_service::search_dlcs(&pool, logged_user.id, body.0).await;
+    handle_get_result(search_result)
 }
 
 #[utoipa::path(

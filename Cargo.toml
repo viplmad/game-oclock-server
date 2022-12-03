@@ -3,8 +3,6 @@ name = "game_collection_server"
 version = "0.0.1"
 edition = "2021"
 
-# See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
-
 [dependencies]
 actix-web = { version = "^4", default-features = false }
 sqlx = { version = "^0", default-features = false, features = [ "macros", "runtime-actix-native-tls", "postgres", "chrono" ] }

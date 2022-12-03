@@ -13,8 +13,8 @@ const ISSUER: &str = "game_collection_server";
 
 const TOKEN_TYPE_BEARER: &str = "bearer";
 
-const ONE_DAY_IN_SECONDS: i64 = 60 * 60 * 24; // in seconds
-const ONE_WEEK_IN_SECONDS: i64 = 60 * 60 * 24 * 7; // in seconds
+const ONE_DAY_IN_SECONDS: i64 = 60 * 60 * 24;
+const ONE_WEEK_IN_SECONDS: i64 = 60 * 60 * 24 * 7;
 
 pub async fn token_validator(
     req: ServiceRequest,

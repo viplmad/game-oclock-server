@@ -1,7 +1,7 @@
 use sqlx::PgPool;
 
 use crate::errors::ApiErrors;
-use crate::models::{GameDTO, NewGameDTO, QueryDTO};
+use crate::models::{GameDTO, NewGameDTO, SearchDTO};
 use crate::repository::game_repository;
 
 use super::base::{
@@ -18,9 +18,9 @@ pub async fn get_game(pool: &PgPool, user_id: i32, game_id: i32) -> Result<GameD
 pub async fn get_games(
     pool: &PgPool,
     user_id: i32,
-    query: QueryDTO,
+    search: SearchDTO,
 ) -> Result<Vec<GameDTO>, ApiErrors> {
-    let find_result = game_repository::find_all(pool, user_id, query.limit.unwrap_or(10)).await;
+    let find_result = game_repository::find_all(pool, user_id, search.limit.unwrap_or(10)).await;
     handle_get_list_result(find_result)
 }
 

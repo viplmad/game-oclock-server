@@ -1,9 +1,10 @@
 use chrono::Utc;
 use sea_query::{Expr, Query, QueryStatementWriter, SelectStatement};
 
-use crate::entities::{DLCIden, DLCQuery, DLC};
+use crate::entities::{DLCIden, DLCSearch, SearchQuery, DLC};
+use crate::errors::RepositoryError;
 
-use super::query::apply_query;
+use super::search::apply_search;
 
 pub fn select_by_id(user_id: i32, id: i32) -> impl QueryStatementWriter {
     let mut select = Query::select();
@@ -25,10 +26,13 @@ pub fn select_all_by_base_game_id(user_id: i32, base_game_id: i32) -> impl Query
     select
 }
 
-pub fn select_all_by_query(user_id: i32, query: DLCQuery) -> impl QueryStatementWriter {
+pub fn select_all_by_query(
+    user_id: i32,
+    search: DLCSearch,
+) -> Result<SearchQuery, RepositoryError> {
     let select = select_all(user_id);
 
-    apply_query(select, DLCIden::Table, query)
+    apply_search(select, DLCIden::Table, search)
 }
 
 pub(super) fn select_all(user_id: i32) -> SelectStatement {

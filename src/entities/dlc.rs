@@ -4,9 +4,9 @@ use chrono::{NaiveDate, NaiveDateTime};
 use sea_query::Iden;
 use sqlx::FromRow;
 
-use crate::errors::MappingError;
+use super::{FieldIden, FieldType, Search};
 
-use super::{FieldIden, FieldType, Query};
+pub type DLCSearch = Search<DLCIden>;
 
 #[derive(Clone, Copy, PartialEq, Eq, Hash, Iden)]
 #[iden = "DLC"]
@@ -30,10 +30,33 @@ pub enum DLCIden {
     UpdatedDateTime,
 }
 
-pub type DLCQuery = Query<DLCIden>;
+#[derive(FromRow)]
+pub struct DLC {
+    pub id: i32,
+    pub user_id: i32,
+    pub name: String,
+    pub base_game_id: Option<i32>,
+    pub release_year: Option<i32>,
+    pub cover_filename: Option<String>,
+    pub added_datetime: NaiveDateTime,
+    pub updated_datetime: NaiveDateTime,
+}
+
+#[derive(FromRow)]
+pub struct DLCAvailable {
+    pub id: i32,
+    pub user_id: i32,
+    pub available_date: NaiveDate,
+    pub name: String,
+    pub base_game_id: Option<i32>,
+    pub release_year: Option<i32>,
+    pub cover_filename: Option<String>,
+    pub added_datetime: NaiveDateTime,
+    pub updated_datetime: NaiveDateTime,
+}
 
 impl FromStr for FieldIden<DLCIden> {
-    type Err = MappingError;
+    type Err = ();
 
     fn from_str(field: &str) -> Result<Self, Self::Err> {
         match field {
@@ -65,32 +88,7 @@ impl FromStr for FieldIden<DLCIden> {
                 iden: DLCIden::UpdatedDateTime,
                 _type: FieldType::DateTime,
             }),
-            _ => Err(MappingError(String::from("Field does not exist"))), // TODO
+            _ => Err(()),
         }
     }
-}
-
-#[derive(FromRow)]
-pub struct DLC {
-    pub id: i32,
-    pub user_id: i32,
-    pub name: String,
-    pub base_game_id: Option<i32>,
-    pub release_year: Option<i32>,
-    pub cover_filename: Option<String>,
-    pub added_datetime: NaiveDateTime,
-    pub updated_datetime: NaiveDateTime,
-}
-
-#[derive(FromRow)]
-pub struct DLCAvailable {
-    pub id: i32,
-    pub user_id: i32,
-    pub available_date: NaiveDate,
-    pub name: String,
-    pub base_game_id: Option<i32>,
-    pub release_year: Option<i32>,
-    pub cover_filename: Option<String>,
-    pub added_datetime: NaiveDateTime,
-    pub updated_datetime: NaiveDateTime,
 }

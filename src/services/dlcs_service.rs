@@ -1,14 +1,14 @@
 use sqlx::PgPool;
 
-use crate::entities::DLCQuery;
+use crate::entities::DLCSearch;
 use crate::errors::{error_message_builder, ApiErrors};
-use crate::models::{GameDTO, NewDLCDTO, QueryDTO, DLCDTO};
+use crate::models::{DLCSearchResult, GameDTO, NewDLCDTO, SearchDTO, DLCDTO};
 use crate::repository::dlc_repository;
 
 use super::base::{
     create_merged, handle_action_result, handle_already_exists_result, handle_create_result,
-    handle_get_list_result, handle_get_result, handle_not_found_result, handle_update_result,
-    update_merged,
+    handle_get_list_paged_result, handle_get_list_result, handle_get_result,
+    handle_not_found_result, handle_query_mapping, handle_update_result, update_merged,
 };
 use super::games_service;
 
@@ -40,13 +40,14 @@ pub async fn get_game_dlcs(
     handle_get_list_result(find_result)
 }
 
-pub async fn get_dlcs(
+pub async fn search_dlcs(
     pool: &PgPool,
     user_id: i32,
-    query: QueryDTO,
-) -> Result<Vec<DLCDTO>, ApiErrors> {
-    let find_result = dlc_repository::find_all(pool, user_id, DLCQuery::from(query)).await;
-    handle_get_list_result(find_result)
+    search: SearchDTO,
+) -> Result<DLCSearchResult, ApiErrors> {
+    let search = handle_query_mapping::<DLCDTO, DLCSearch>(search)?;
+    let find_result = dlc_repository::search_all(pool, user_id, search).await;
+    handle_get_list_paged_result(find_result)
 }
 
 pub async fn create_dlc(pool: &PgPool, user_id: i32, dlc: NewDLCDTO) -> Result<DLCDTO, ApiErrors> {

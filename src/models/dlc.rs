@@ -2,7 +2,9 @@ use chrono::{NaiveDate, NaiveDateTime};
 use serde::{Deserialize, Serialize};
 use utoipa::ToSchema;
 
-use super::{Merge, ModelName};
+use super::{Merge, ModelName, SearchResultDTO};
+
+pub type DLCSearchResult = SearchResultDTO<DLCDTO>;
 
 #[derive(Serialize, ToSchema)]
 pub struct DLCDTO {
