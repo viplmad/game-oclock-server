@@ -1,0 +1,9 @@
+additionalProperties:
+  ensureUniqueParams: true
+  pubAuthor: viplmad
+  pubAuthorEmail:
+  pubDescription: Game collection client for dart
+  pubHomepage:
+  pubLibrary: n2t.game_collection.client
+  pubName: game_collection_client
+  pubVersion: 0.1.0+24
