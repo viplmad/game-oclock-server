@@ -26,13 +26,13 @@ pub fn select_all_by_base_game_id(user_id: i32, base_game_id: i32) -> impl Query
     select
 }
 
-pub fn select_all_by_query(
+pub fn select_all_with_search(
     user_id: i32,
     search: DLCSearch,
 ) -> Result<SearchQuery, RepositoryError> {
     let select = select_all(user_id);
 
-    apply_search(select, DLCIden::Table, search)
+    apply_search(select, search)
 }
 
 pub(super) fn select_all(user_id: i32) -> SelectStatement {

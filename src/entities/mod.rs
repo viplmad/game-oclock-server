@@ -10,6 +10,7 @@ mod game_user_info;
 mod pagination;
 mod platform;
 mod search;
+mod table;
 mod tag;
 mod user;
 
@@ -25,5 +26,6 @@ pub use game_user_info::*;
 pub use pagination::*;
 pub use platform::*;
 pub use search::*;
+pub use table::*;
 pub use tag::*;
 pub use user::*;

@@ -1,32 +1,35 @@
 use std::str::FromStr;
 
-use sea_query::{BinOper, Iden, LikeExpr, Order, Value};
+use chrono::{NaiveDate, NaiveDateTime};
+use sea_query::{BinOper, Order, Value};
 
 use crate::entities::{
-    FieldIden, FieldSearchValue, FieldSearchValues, FieldType, FieldValue, Filter, Search, Sort,
+    FieldIden, FieldSearchValue, FieldSearchValues, FieldType, FieldValue, Filter, FilterOperator,
+    Search, Sort, TableIden,
 };
 use crate::errors::{error_message_builder, FieldMappingError, RepositoryError};
 use crate::models::{
-    ChainOperatorType, FilterDTO, OperatorType, OrderType, SearchDTO, SearchValue, SortDTO,
+    ChainOperatorType, FilterDTO, GameStatus, OperatorType, OrderType, PlatformType, SearchDTO,
+    SearchValue, SortDTO,
 };
 
-impl From<OperatorType> for BinOper {
+impl From<OperatorType> for FilterOperator {
     fn from(operator: OperatorType) -> Self {
         match operator {
-            OperatorType::Eq => BinOper::Equal,
-            OperatorType::NotEq => BinOper::NotEqual,
-            OperatorType::Gt => BinOper::GreaterThan,
-            OperatorType::Gte => BinOper::GreaterThanOrEqual,
-            OperatorType::Lt => BinOper::SmallerThan,
-            OperatorType::Lte => BinOper::SmallerThanOrEqual,
-            OperatorType::In => BinOper::In,
-            OperatorType::NotIn => BinOper::NotIn,
-            OperatorType::StartsWith => BinOper::Like,
-            OperatorType::NotStartsWith => BinOper::NotLike,
-            OperatorType::EndsWith => BinOper::Like,
-            OperatorType::NotEndsWith => BinOper::NotLike,
-            OperatorType::Contains => BinOper::Like,
-            OperatorType::NotContains => BinOper::NotLike,
+            OperatorType::Eq => FilterOperator::Equal,
+            OperatorType::NotEq => FilterOperator::NotEqual,
+            OperatorType::Gt => FilterOperator::GreaterThan,
+            OperatorType::Gte => FilterOperator::GreaterThanOrEqual,
+            OperatorType::Lt => FilterOperator::SmallerThan,
+            OperatorType::Lte => FilterOperator::SmallerThanOrEqual,
+            OperatorType::In => FilterOperator::In,
+            OperatorType::NotIn => FilterOperator::NotIn,
+            OperatorType::StartsWith => FilterOperator::StartsWith,
+            OperatorType::NotStartsWith => FilterOperator::NotStartsWith,
+            OperatorType::EndsWith => FilterOperator::EndsWith,
+            OperatorType::NotEndsWith => FilterOperator::NotEndsWith,
+            OperatorType::Contains => FilterOperator::Contains,
+            OperatorType::NotContains => FilterOperator::NotContains,
         }
     }
 }
@@ -49,7 +52,7 @@ impl From<ChainOperatorType> for BinOper {
     }
 }
 
-impl<I: Iden> TryFrom<SearchDTO> for Search<I>
+impl<I: TableIden> TryFrom<SearchDTO> for Search<I>
 where
     FieldIden<I>: FromStr,
 {
@@ -87,7 +90,7 @@ where
     }
 }
 
-impl<I: Iden> TryFrom<FilterDTO> for Filter<I>
+impl<I: TableIden> TryFrom<FilterDTO> for Filter<I>
 where
     FieldIden<I>: FromStr,
 {
@@ -97,9 +100,10 @@ where
         let field_iden =
             FieldIden::<I>::from_str(&filter.field).map_err(|_| FieldMappingError(filter.field))?;
 
-        Ok(Self {
-            field: field_iden.iden,
-            value: match filter.value {
+        Ok(Self::new::<I>(
+            field_iden.table,
+            field_iden.iden,
+            match filter.value {
                 SearchValue::Value(value) => FieldValue::Value(FieldSearchValue {
                     _type: field_iden._type,
                     value,
@@ -109,16 +113,16 @@ where
                     values,
                 }),
             },
-            operator: BinOper::from(filter.operator),
-            chain_operator: match filter.chain_operator {
+            FilterOperator::from(filter.operator),
+            match filter.chain_operator {
                 Some(chain_op) => BinOper::from(chain_op),
                 None => BinOper::And,
             },
-        })
+        ))
     }
 }
 
-impl<I: Iden> TryFrom<SortDTO> for Sort<I>
+impl<I: TableIden> TryFrom<SortDTO> for Sort<I>
 where
     FieldIden<I>: FromStr,
 {
@@ -128,10 +132,11 @@ where
         let field_iden =
             FieldIden::<I>::from_str(&sort.field).map_err(|_| FieldMappingError(sort.field))?;
 
-        Ok(Self {
-            field: field_iden.iden,
-            order: Order::from(sort.order),
-        })
+        Ok(Self::new::<I>(
+            field_iden.table,
+            field_iden.iden,
+            Order::from(sort.order),
+        ))
     }
 }
 
@@ -142,26 +147,42 @@ impl TryFrom<FieldSearchValue> for Value {
         let value: &str = &search.value;
         match search._type {
             FieldType::Integer => {
-                let int_value = i32::from_str(value).map_err(|_| {
-                    RepositoryError(error_message_builder::convert_to_error(value, "integer"))
-                })?;
+                let int_value = convert_with_serde::<i32>(value, "integer")?;
                 Ok(int_value.into())
             }
             FieldType::String => Ok(value.into()),
-            FieldType::Date => todo!(),
-            FieldType::DateTime => todo!(),
+            FieldType::Boolean => {
+                let bool_value = convert_with_serde::<bool>(value, "boolean")?;
+                Ok(bool_value.into())
+            }
+            FieldType::Date => {
+                let date_value = convert_with_serde::<NaiveDate>(value, "date")?;
+                Ok(date_value.into())
+            }
+            FieldType::DateTime => {
+                let date_time_value = convert_with_serde::<NaiveDateTime>(value, "date time")?;
+                Ok(date_time_value.into())
+            }
+            FieldType::GameStatus => {
+                let status =
+                    convert_with_serde::<GameStatus>(&format!("\"{value}\""), "game status")?;
+                let status_value = i16::from(status);
+                Ok(status_value.into())
+            }
+            FieldType::PlatformType => {
+                let ptype =
+                    convert_with_serde::<PlatformType>(&format!("\"{value}\""), "platform type")?;
+                let ptype_value = i16::from(ptype);
+                Ok(ptype_value.into())
+            }
         }
     }
 }
 
-impl From<FieldSearchValue> for LikeExpr {
-    fn from(search: FieldSearchValue) -> Self {
-        let value: &str = &search.value;
-        match search._type {
-            FieldType::Integer => todo!(),
-            FieldType::String => LikeExpr::str(value),
-            FieldType::Date => todo!(),
-            FieldType::DateTime => todo!(),
-        }
-    }
+fn convert_with_serde<'a, T>(value: &'a str, type_string: &str) -> Result<T, RepositoryError>
+where
+    T: serde::de::Deserialize<'a>,
+{
+    serde_json::from_str::<T>(value)
+        .map_err(|_| RepositoryError(error_message_builder::convert_to_error(value, type_string)))
 }

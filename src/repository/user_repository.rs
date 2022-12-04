@@ -1,7 +1,8 @@
 use sqlx::PgPool;
 
+use crate::entities::User;
+use crate::errors::RepositoryError;
 use crate::query::user_query;
-use crate::{entities::User, errors::RepositoryError};
 
 use super::base::{execute_return_id, exists_id, fetch_optional};
 

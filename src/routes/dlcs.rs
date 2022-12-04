@@ -128,7 +128,7 @@ async fn get_dlc_platforms(
     tag = "DLCs",
     request_body(content = SearchDTO, description = "Query", content_type = "application/json"),
     responses(
-        (status = 200, description = "DLCs obtained", body = DLCPage, content_type = "application/json"),
+        (status = 200, description = "DLCs obtained", body = DLCSearchResult, content_type = "application/json"),
         (status = 401, description = "Unauthorized", body = ErrorMessage, content_type = "application/json"),
         (status = 500, description = "Internal server error", body = ErrorMessage, content_type = "application/json"),
     ),

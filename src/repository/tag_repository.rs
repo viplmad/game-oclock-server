@@ -1,10 +1,10 @@
 use sqlx::PgPool;
 
-use crate::entities::Tag;
+use crate::entities::{SearchResult, Tag, TagSearch};
 use crate::errors::RepositoryError;
 use crate::query::tag_query;
 
-use super::base::{execute, execute_return_id, exists_id, fetch_all, fetch_optional};
+use super::base::{execute, execute_return_id, exists_id, fetch_all_search, fetch_optional};
 
 pub async fn find_by_id(
     pool: &PgPool,
@@ -15,14 +15,13 @@ pub async fn find_by_id(
     fetch_optional(pool, query).await
 }
 
-pub async fn find_all(
+pub async fn search_all(
     pool: &PgPool,
     user_id: i32,
-    limit: u64,
-) -> Result<Vec<Tag>, RepositoryError> {
-    // TODO Replace limit with query/search
-    let query = tag_query::select_all_by_query(user_id, limit);
-    fetch_all(pool, query).await
+    search: TagSearch,
+) -> Result<SearchResult<Tag>, RepositoryError> {
+    let search_query = tag_query::select_all_with_query(user_id, search)?;
+    fetch_all_search(pool, search_query).await
 }
 
 pub async fn create(pool: &PgPool, user_id: i32, tag: &Tag) -> Result<i32, RepositoryError> {

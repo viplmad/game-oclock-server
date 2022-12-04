@@ -65,12 +65,12 @@ async fn get_tag_games(
 }
 
 #[utoipa::path(
-    get,
-    path = "/api/v1/tags",
+    post,
+    path = "/api/v1/tags/list",
     tag = "Tags",
     request_body(content = SearchDTO, description = "Query", content_type = "application/json"),
     responses(
-        (status = 200, description = "Tags obtained", body = [TagDTO], content_type = "application/json"),
+        (status = 200, description = "Tags obtained", body = TagSearchResult, content_type = "application/json"),
         (status = 401, description = "Unauthorized", body = ErrorMessage, content_type = "application/json"),
         (status = 500, description = "Internal server error", body = ErrorMessage, content_type = "application/json"),
     ),
@@ -78,14 +78,14 @@ async fn get_tag_games(
         ("bearer_token" = [])
     )
 )]
-#[get("/tags")]
+#[post("/tags/list")]
 async fn get_tags(
     pool: web::Data<PgPool>,
     body: web::Json<SearchDTO>,
     logged_user: LoggedUser,
 ) -> impl Responder {
-    let get_result = tags_service::get_tags(&pool, logged_user.id, body.0).await;
-    handle_get_result(get_result)
+    let search_result = tags_service::search_tags(&pool, logged_user.id, body.0).await;
+    handle_get_result(search_result)
 }
 
 #[utoipa::path(

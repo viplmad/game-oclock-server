@@ -7,7 +7,6 @@ pub struct SearchDTO {
     pub sort: Option<Vec<SortDTO>>,
     pub page: Option<u64>,
     pub size: Option<u64>,
-    pub limit: Option<u64>,
 }
 
 #[derive(Deserialize, ToSchema)]

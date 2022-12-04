@@ -1,13 +1,14 @@
 use sqlx::PgPool;
 
+use crate::entities::PlatformSearch;
 use crate::errors::ApiErrors;
-use crate::models::{NewPlatformDTO, PlatformDTO, SearchDTO};
+use crate::models::{NewPlatformDTO, PlatformDTO, PlatformSearchResult, SearchDTO};
 use crate::repository::platform_repository;
 
 use super::base::{
     create_merged, handle_action_result, handle_already_exists_result, handle_create_result,
-    handle_get_list_result, handle_get_result, handle_not_found_result, handle_update_result,
-    update_merged,
+    handle_get_list_paged_result, handle_get_result, handle_not_found_result, handle_query_mapping,
+    handle_update_result, update_merged,
 };
 
 pub async fn get_platform(
@@ -19,14 +20,14 @@ pub async fn get_platform(
     handle_get_result(find_result)
 }
 
-pub async fn get_platforms(
+pub async fn search_platforms(
     pool: &PgPool,
     user_id: i32,
     search: SearchDTO,
-) -> Result<Vec<PlatformDTO>, ApiErrors> {
-    let find_result =
-        platform_repository::find_all(pool, user_id, search.limit.unwrap_or(10)).await;
-    handle_get_list_result(find_result)
+) -> Result<PlatformSearchResult, ApiErrors> {
+    let search = handle_query_mapping::<PlatformDTO, PlatformSearch>(search)?;
+    let find_result = platform_repository::search_all(pool, user_id, search).await;
+    handle_get_list_paged_result(find_result)
 }
 
 pub async fn create_platform(

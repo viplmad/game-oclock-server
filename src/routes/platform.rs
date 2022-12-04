@@ -93,12 +93,12 @@ async fn get_platform_dlcs(
 }
 
 #[utoipa::path(
-    get,
-    path = "/api/v1/platforms",
+    post,
+    path = "/api/v1/platforms/list",
     tag = "Platforms",
     request_body(content = SearchDTO, description = "Query", content_type = "application/json"),
     responses(
-        (status = 200, description = "Platforms obtained", body = [PlatformDTO], content_type = "application/json"),
+        (status = 200, description = "Platforms obtained", body = PlatformSearchResult, content_type = "application/json"),
         (status = 401, description = "Unauthorized", body = ErrorMessage, content_type = "application/json"),
         (status = 500, description = "Internal server error", body = ErrorMessage, content_type = "application/json"),
     ),
@@ -106,14 +106,14 @@ async fn get_platform_dlcs(
         ("bearer_token" = [])
     )
 )]
-#[get("/platforms")]
+#[post("/platforms/list")]
 async fn get_platforms(
     pool: web::Data<PgPool>,
     body: web::Json<SearchDTO>,
     logged_user: LoggedUser,
 ) -> impl Responder {
-    let get_result = platforms_service::get_platforms(&pool, logged_user.id, body.0).await;
-    handle_get_result(get_result)
+    let search_result = platforms_service::search_platforms(&pool, logged_user.id, body.0).await;
+    handle_get_result(search_result)
 }
 
 #[utoipa::path(

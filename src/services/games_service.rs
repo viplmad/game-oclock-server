@@ -1,13 +1,14 @@
 use sqlx::PgPool;
 
+use crate::entities::GameSearch;
 use crate::errors::ApiErrors;
-use crate::models::{GameDTO, NewGameDTO, SearchDTO};
+use crate::models::{GameDTO, GameSearchResult, NewGameDTO, SearchDTO};
 use crate::repository::game_repository;
 
 use super::base::{
     create_merged, handle_action_result, handle_already_exists_result, handle_create_result,
-    handle_get_list_result, handle_get_result, handle_not_found_result, handle_update_result,
-    update_merged,
+    handle_get_list_paged_result, handle_get_result, handle_not_found_result, handle_query_mapping,
+    handle_update_result, update_merged,
 };
 
 pub async fn get_game(pool: &PgPool, user_id: i32, game_id: i32) -> Result<GameDTO, ApiErrors> {
@@ -15,13 +16,14 @@ pub async fn get_game(pool: &PgPool, user_id: i32, game_id: i32) -> Result<GameD
     handle_get_result(find_result)
 }
 
-pub async fn get_games(
+pub async fn search_games(
     pool: &PgPool,
     user_id: i32,
     search: SearchDTO,
-) -> Result<Vec<GameDTO>, ApiErrors> {
-    let find_result = game_repository::find_all(pool, user_id, search.limit.unwrap_or(10)).await;
-    handle_get_list_result(find_result)
+) -> Result<GameSearchResult, ApiErrors> {
+    let search = handle_query_mapping::<GameDTO, GameSearch>(search)?;
+    let find_result = game_repository::search_all(pool, user_id, search).await;
+    handle_get_list_paged_result(find_result)
 }
 
 pub async fn create_game(

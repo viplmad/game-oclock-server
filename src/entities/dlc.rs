@@ -4,11 +4,11 @@ use chrono::{NaiveDate, NaiveDateTime};
 use sea_query::Iden;
 use sqlx::FromRow;
 
-use super::{FieldIden, FieldType, Search};
+use super::{FieldIden, FieldType, Search, TableIden};
 
 pub type DLCSearch = Search<DLCIden>;
 
-#[derive(Clone, Copy, PartialEq, Eq, Hash, Iden)]
+#[derive(Clone, Copy, Iden)]
 #[iden = "DLC"]
 pub enum DLCIden {
     Table,
@@ -28,6 +28,10 @@ pub enum DLCIden {
     AddedDateTime,
     #[iden = "updated_datetime"]
     UpdatedDateTime,
+}
+
+impl TableIden for DLCIden {
+    const TABLE: Self = Self::Table;
 }
 
 #[derive(FromRow)]
@@ -60,34 +64,16 @@ impl FromStr for FieldIden<DLCIden> {
 
     fn from_str(field: &str) -> Result<Self, Self::Err> {
         match field {
-            "id" => Ok(FieldIden {
-                iden: DLCIden::Id,
-                _type: FieldType::Integer,
-            }),
-            "name" => Ok(FieldIden {
-                iden: DLCIden::Name,
-                _type: FieldType::String,
-            }),
-            "base_game_id" => Ok(FieldIden {
-                iden: DLCIden::BaseGameId,
-                _type: FieldType::Integer,
-            }),
-            "release_year" => Ok(FieldIden {
-                iden: DLCIden::ReleaseYear,
-                _type: FieldType::Integer,
-            }),
-            "cover_filename" => Ok(FieldIden {
-                iden: DLCIden::CoverFilename,
-                _type: FieldType::String,
-            }),
-            "added_datetime" => Ok(FieldIden {
-                iden: DLCIden::AddedDateTime,
-                _type: FieldType::DateTime,
-            }),
-            "updated_datetime" => Ok(FieldIden {
-                iden: DLCIden::UpdatedDateTime,
-                _type: FieldType::DateTime,
-            }),
+            "id" => Ok(FieldIden::new(DLCIden::Id, FieldType::Integer)),
+            "name" => Ok(FieldIden::new(DLCIden::Name, FieldType::String)),
+            "base_game_id" => Ok(FieldIden::new(DLCIden::BaseGameId, FieldType::Integer)),
+            "release_year" => Ok(FieldIden::new(DLCIden::ReleaseYear, FieldType::Integer)),
+            "cover_filename" => Ok(FieldIden::new(DLCIden::CoverFilename, FieldType::String)),
+            "added_datetime" => Ok(FieldIden::new(DLCIden::AddedDateTime, FieldType::DateTime)),
+            "updated_datetime" => Ok(FieldIden::new(
+                DLCIden::UpdatedDateTime,
+                FieldType::DateTime,
+            )),
             _ => Err(()),
         }
     }

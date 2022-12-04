@@ -1,10 +1,12 @@
 use sqlx::PgPool;
 
-use crate::entities::{DLCIden, Search, SearchResult, DLC};
+use crate::entities::{DLCSearch, SearchResult, DLC};
 use crate::errors::RepositoryError;
 use crate::query::dlc_query;
 
-use super::base::{execute, execute_return_id, exists_id, fetch_all, fetch_optional};
+use super::base::{
+    execute, execute_return_id, exists_id, fetch_all, fetch_all_search, fetch_optional,
+};
 
 pub async fn find_by_id(
     pool: &PgPool,
@@ -27,16 +29,10 @@ pub async fn find_all_by_base_game_id(
 pub async fn search_all(
     pool: &PgPool,
     user_id: i32,
-    search: Search<DLCIden>,
+    search: DLCSearch,
 ) -> Result<SearchResult<DLC>, RepositoryError> {
-    let search_query = dlc_query::select_all_by_query(user_id, search)?;
-    fetch_all(pool, search_query.query)
-        .await
-        .map(|res| SearchResult {
-            data: res,
-            page: search_query.page,
-            size: search_query.size,
-        })
+    let search_query = dlc_query::select_all_with_search(user_id, search)?;
+    fetch_all_search(pool, search_query).await
 }
 
 pub async fn create(pool: &PgPool, user_id: i32, dlc: &DLC) -> Result<i32, RepositoryError> {

@@ -1,7 +1,10 @@
 use chrono::Utc;
 use sea_query::{Expr, Query, QueryStatementWriter, SelectStatement};
 
-use crate::entities::{Platform, PlatformIden};
+use crate::entities::{Platform, PlatformIden, PlatformSearch, SearchQuery};
+use crate::errors::RepositoryError;
+
+use super::search::apply_search;
 
 pub fn select_by_id(user_id: i32, id: i32) -> impl QueryStatementWriter {
     let mut select = Query::select();
@@ -13,12 +16,13 @@ pub fn select_by_id(user_id: i32, id: i32) -> impl QueryStatementWriter {
     select
 }
 
-pub fn select_all_by_query(user_id: i32, limit: u64) -> impl QueryStatementWriter {
-    let mut select = select_all(user_id);
+pub fn select_all_with_search(
+    user_id: i32,
+    search: PlatformSearch,
+) -> Result<SearchQuery, RepositoryError> {
+    let select = select_all(user_id);
 
-    select.limit(limit);
-
-    select
+    apply_search(select, search)
 }
 
 pub(super) fn select_all(user_id: i32) -> SelectStatement {

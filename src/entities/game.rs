@@ -1,8 +1,14 @@
+use std::str::FromStr;
+
 use chrono::{NaiveDate, NaiveDateTime};
 use sea_query::Iden;
 use sqlx::FromRow;
 
-#[derive(Iden)]
+use super::{FieldIden, FieldType, GameUserInfoIden, Search, TableIden};
+
+pub type GameSearch = Search<GameIden>;
+
+#[derive(Clone, Copy, Iden)]
 #[iden = "Game"]
 pub enum GameIden {
     Table,
@@ -22,6 +28,10 @@ pub enum GameIden {
     AddedDateTime,
     #[iden = "updated_datetime"]
     UpdatedDateTime,
+}
+
+impl TableIden for GameIden {
+    const TABLE: Self = Self::Table;
 }
 
 #[derive(FromRow)]
@@ -59,4 +69,39 @@ pub struct GameAvailable {
     pub save_folder: String,
     pub screenshot_folder: String,
     pub backup: bool,
+}
+
+impl FromStr for FieldIden<GameIden> {
+    type Err = ();
+
+    fn from_str(field: &str) -> Result<Self, Self::Err> {
+        match field {
+            "id" => Ok(FieldIden::new(GameIden::Id, FieldType::Integer)),
+            "name" => Ok(FieldIden::new(GameIden::Name, FieldType::String)),
+            "edition" => Ok(FieldIden::new(GameIden::Edition, FieldType::String)),
+            "release_year" => Ok(FieldIden::new(GameIden::ReleaseYear, FieldType::Integer)),
+            "cover_filename" => Ok(FieldIden::new(GameIden::CoverFilename, FieldType::String)),
+            "status" => Ok(FieldIden::new(
+                GameUserInfoIden::Status,
+                FieldType::GameStatus,
+            )),
+            "rating" => Ok(FieldIden::new(GameUserInfoIden::Rating, FieldType::Integer)),
+            "notes" => Ok(FieldIden::new(GameUserInfoIden::Notes, FieldType::String)),
+            "save_folder" => Ok(FieldIden::new(
+                GameUserInfoIden::SaveFolder,
+                FieldType::String,
+            )),
+            "screenshot_folder" => Ok(FieldIden::new(
+                GameUserInfoIden::ScreenshotFolder,
+                FieldType::String,
+            )),
+            "backup" => Ok(FieldIden::new(GameUserInfoIden::Backup, FieldType::Boolean)),
+            "added_datetime" => Ok(FieldIden::new(GameIden::AddedDateTime, FieldType::DateTime)),
+            "updated_datetime" => Ok(FieldIden::new(
+                GameIden::UpdatedDateTime,
+                FieldType::DateTime,
+            )),
+            _ => Err(()),
+        }
+    }
 }

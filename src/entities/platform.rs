@@ -1,8 +1,14 @@
+use std::str::FromStr;
+
 use chrono::{NaiveDate, NaiveDateTime};
 use sea_query::Iden;
 use sqlx::FromRow;
 
-#[derive(Iden)]
+use super::{FieldIden, FieldType, Search, TableIden};
+
+pub type PlatformSearch = Search<PlatformIden>;
+
+#[derive(Clone, Copy, Iden)]
 #[iden = "Platform"]
 pub enum PlatformIden {
     Table,
@@ -20,6 +26,10 @@ pub enum PlatformIden {
     AddedDateTime,
     #[iden = "updated_datetime"]
     UpdatedDateTime,
+}
+
+impl TableIden for PlatformIden {
+    const TABLE: Self = Self::Table;
 }
 
 #[derive(FromRow)]
@@ -45,4 +55,29 @@ pub struct PlatformAvailable {
     pub icon_filename: Option<String>,
     pub added_datetime: NaiveDateTime,
     pub updated_datetime: NaiveDateTime,
+}
+
+impl FromStr for FieldIden<PlatformIden> {
+    type Err = ();
+
+    fn from_str(field: &str) -> Result<Self, Self::Err> {
+        match field {
+            "id" => Ok(FieldIden::new(PlatformIden::Id, FieldType::Integer)),
+            "name" => Ok(FieldIden::new(PlatformIden::Name, FieldType::String)),
+            "type" => Ok(FieldIden::new(PlatformIden::Type, FieldType::PlatformType)),
+            "icon_filename" => Ok(FieldIden::new(
+                PlatformIden::IconFilename,
+                FieldType::String,
+            )),
+            "added_datetime" => Ok(FieldIden::new(
+                PlatformIden::AddedDateTime,
+                FieldType::DateTime,
+            )),
+            "updated_datetime" => Ok(FieldIden::new(
+                PlatformIden::UpdatedDateTime,
+                FieldType::DateTime,
+            )),
+            _ => Err(()),
+        }
+    }
 }

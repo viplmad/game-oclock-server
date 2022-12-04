@@ -182,12 +182,12 @@ async fn get_game_platforms(
 }
 
 #[utoipa::path(
-    get,
-    path = "/api/v1/games",
+    post,
+    path = "/api/v1/games/list",
     tag = "Games",
     request_body(content = SearchDTO, description = "Query", content_type = "application/json"),
     responses(
-        (status = 200, description = "Games obtained", body = [GameDTO], content_type = "application/json"),
+        (status = 200, description = "Games obtained", body = GameSearchResult, content_type = "application/json"),
         (status = 401, description = "Unauthorized", body = ErrorMessage, content_type = "application/json"),
         (status = 500, description = "Internal server error", body = ErrorMessage, content_type = "application/json"),
     ),
@@ -195,14 +195,14 @@ async fn get_game_platforms(
         ("bearer_token" = [])
     )
 )]
-#[get("/games")]
+#[post("/games/list")]
 async fn get_games(
     pool: web::Data<PgPool>,
     body: web::Json<SearchDTO>,
     logged_user: LoggedUser,
 ) -> impl Responder {
-    let get_result = games_service::get_games(&pool, logged_user.id, body.0).await;
-    handle_get_result(get_result)
+    let search_result = games_service::search_games(&pool, logged_user.id, body.0).await;
+    handle_get_result(search_result)
 }
 
 #[utoipa::path(

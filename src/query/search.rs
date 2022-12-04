@@ -1,41 +1,61 @@
-use sea_query::{BinOper, Expr, Iden, LikeExpr, SelectStatement, Value};
+use sea_query::{BinOper, Expr, LikeExpr, SelectStatement, Value};
 
-use crate::entities::{FieldValue, Search, SearchQuery};
+use crate::entities::{
+    FieldSearchValue, FieldValue, FilterOperator, Search, SearchQuery, TableIden,
+};
 use crate::errors::RepositoryError;
 
 const DEFAULT_PAGE_SIZE: u64 = 500;
 const INITIAL_PAGE: u64 = 0;
+const LIKE_SYMBOL: &str = "%";
 
-pub fn apply_search<I: 'static + Iden + Clone + Copy>(
+pub fn apply_search<I: 'static + TableIden + Clone + Copy>(
     mut select: SelectStatement,
-    table_iden: I,
     search: Search<I>,
 ) -> Result<SearchQuery, RepositoryError> {
     if search.sort.is_some() {
         // Safe unwrap: already checked before
         for sort in search.sort.unwrap() {
+            let table = sort.table;
             let field = sort.field;
             let order = sort.order;
-            select.order_by((table_iden, field), order);
+            select.order_by((table, field), order);
         }
     }
 
     if search.filter.is_some() {
         // Safe unwrap: already checked before
         for filter in search.filter.unwrap() {
+            let table = filter.table;
             let field = filter.field;
-            let col = Expr::col((table_iden, field));
+            let col = Expr::col((table, field));
             let expr = match filter.value {
                 FieldValue::Value(value) => match filter.operator {
-                    BinOper::Equal => col.eq(Value::try_from(value)?),
-                    BinOper::NotEqual => col.ne(Value::try_from(value)?),
-                    BinOper::GreaterThan => col.gt(Value::try_from(value)?),
-                    BinOper::GreaterThanOrEqual => col.gte(Value::try_from(value)?),
-                    BinOper::SmallerThan => col.lt(Value::try_from(value)?),
-                    BinOper::SmallerThanOrEqual => col.lte(Value::try_from(value)?),
-                    BinOper::Like => col.like(LikeExpr::from(value)),
-                    BinOper::NotLike => col.not_like(LikeExpr::from(value)),
-                    _ => unreachable!(),
+                    FilterOperator::Equal => col.eq(Value::try_from(value)?),
+                    FilterOperator::NotEqual => col.ne(Value::try_from(value)?),
+                    FilterOperator::GreaterThan => col.gt(Value::try_from(value)?),
+                    FilterOperator::GreaterThanOrEqual => col.gte(Value::try_from(value)?),
+                    FilterOperator::SmallerThan => col.lt(Value::try_from(value)?),
+                    FilterOperator::SmallerThanOrEqual => col.lte(Value::try_from(value)?),
+                    FilterOperator::StartsWith => {
+                        col.like(LikeExpr::str(&format_like_starts_with(value)))
+                    }
+                    FilterOperator::NotStartsWith => {
+                        col.not_like(LikeExpr::str(&format_like_starts_with(value)))
+                    }
+                    FilterOperator::EndsWith => {
+                        col.like(LikeExpr::str(&format_like_ends_with(value)))
+                    }
+                    FilterOperator::NotEndsWith => {
+                        col.not_like(LikeExpr::str(&format_like_ends_with(value)))
+                    }
+                    FilterOperator::Contains => {
+                        col.like(LikeExpr::str(&format_like_contains(value)))
+                    }
+                    FilterOperator::NotContains => {
+                        col.not_like(LikeExpr::str(&format_like_contains(value)))
+                    }
+                    _ => unimplemented!(),
                 },
                 FieldValue::Values(value) => {
                     let _type = value._type;
@@ -52,9 +72,9 @@ pub fn apply_search<I: 'static + Iden + Clone + Copy>(
                         .collect::<Result<Vec<Value>, RepositoryError>>()?;
 
                     match filter.operator {
-                        BinOper::In => col.is_in(in_values),
-                        BinOper::NotIn => col.is_not_in(in_values),
-                        _ => unreachable!(),
+                        FilterOperator::In => col.is_in(in_values),
+                        FilterOperator::NotIn => col.is_not_in(in_values),
+                        _ => unimplemented!(),
                     }
                 }
             };
@@ -81,4 +101,19 @@ pub fn apply_search<I: 'static + Iden + Clone + Copy>(
         page,
         size,
     })
+}
+
+fn format_like_starts_with(search: FieldSearchValue) -> String {
+    let value: &str = &search.value;
+    format!("{value}{LIKE_SYMBOL}")
+}
+
+fn format_like_ends_with(search: FieldSearchValue) -> String {
+    let value: &str = &search.value;
+    format!("{LIKE_SYMBOL}{value}")
+}
+
+fn format_like_contains(search: FieldSearchValue) -> String {
+    let value: &str = &search.value;
+    format!("{LIKE_SYMBOL}{value}{LIKE_SYMBOL}")
 }

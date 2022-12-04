@@ -1,6 +1,7 @@
 use sea_query::{PostgresQueryBuilder, QueryStatementWriter};
 use sqlx::{PgPool, Postgres, Transaction};
 
+use crate::entities::{SearchQuery, SearchResult};
 use crate::errors::RepositoryError;
 
 pub(super) async fn begin_transaction(
@@ -105,6 +106,23 @@ where
         .fetch_all(executor)
         .await
         .map_err(|err| RepositoryError(err.to_string()))
+}
+
+pub(super) async fn fetch_all_search<'c, X, T>(
+    executor: X,
+    search_query: SearchQuery,
+) -> Result<SearchResult<T>, RepositoryError>
+where
+    X: sqlx::Executor<'c, Database = Postgres>,
+    T: for<'r> sqlx::FromRow<'r, sqlx::postgres::PgRow> + Send + Unpin,
+{
+    fetch_all(executor, search_query.query)
+        .await
+        .map(|list| SearchResult {
+            data: list,
+            page: search_query.page,
+            size: search_query.size,
+        })
 }
 
 pub(super) async fn fetch_all_single<'c, X, T>(

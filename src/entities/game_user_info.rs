@@ -1,5 +1,7 @@
 use sea_query::Iden;
 
+use super::TableIden;
+
 #[derive(Iden)]
 #[iden = "GameUserInfo"]
 pub enum GameUserInfoIden {
@@ -24,4 +26,8 @@ pub enum GameUserInfoIden {
     AddedDateTime,
     #[iden = "updated_datetime"]
     UpdatedDateTime,
+}
+
+impl TableIden for GameUserInfoIden {
+    const TABLE: Self = Self::Table;
 }

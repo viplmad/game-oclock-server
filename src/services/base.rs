@@ -2,7 +2,7 @@ use std::future::Future;
 
 use crate::entities::SearchResult;
 use crate::errors::{error_message_builder, ApiErrors, FieldMappingError, RepositoryError};
-use crate::models::{Merge, ModelName, SearchResultDTO, SearchDTO};
+use crate::models::{Merge, ModelName, SearchDTO, SearchResultDTO};
 
 fn handle_result<E, T>(repository_result: Result<E, RepositoryError>) -> Result<E, ApiErrors>
 where
