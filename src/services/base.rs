@@ -189,6 +189,20 @@ where
     T: ModelInfo,
     S: TryFrom<SearchDTO, Error = FieldMappingError>,
 {
+    add_quicksearch::<T>(&mut search, quicksearch);
+
+    S::try_from(search).map_err(|err| {
+        ApiErrors::InvalidParameter(error_message_builder::field_not_found(
+            T::MODEL_NAME,
+            &err.0,
+        ))
+    })
+}
+
+fn add_quicksearch<T>(search: &mut SearchDTO, quicksearch: Option<String>)
+where
+    T: ModelInfo,
+{
     if let Some(quicksearch_value) = quicksearch {
         let mut quicksearch_filters: Vec<FilterDTO> = T::UNIQUE_FIELDS
             .iter()
@@ -200,16 +214,9 @@ where
             })
             .collect();
 
-        if let Some(mut filters) = search.filter {
-            quicksearch_filters.append(&mut filters)
+        if let Some(filters) = &mut search.filter {
+            quicksearch_filters.append(filters)
         }
         search.filter = Some(quicksearch_filters);
     }
-
-    S::try_from(search).map_err(|err| {
-        ApiErrors::InvalidParameter(error_message_builder::field_not_found(
-            T::MODEL_NAME,
-            &err.0,
-        ))
-    })
 }
