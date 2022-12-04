@@ -2,7 +2,7 @@ use chrono::NaiveDateTime;
 use serde::{Deserialize, Serialize};
 use utoipa::ToSchema;
 
-use super::{Merge, ModelName, SearchResultDTO};
+use super::{Merge, ModelInfo, SearchResultDTO};
 
 pub type TagSearchResult = SearchResultDTO<TagDTO>;
 
@@ -38,7 +38,7 @@ impl Merge<NewTagDTO> for TagDTO {
     }
 }
 
-impl ModelName for TagDTO {
+impl ModelInfo for TagDTO {
     const MODEL_NAME: &'static str = "Tag";
     const ID_FIELDS: &'static [&'static str] = &["id"];
     const UNIQUE_FIELDS: &'static [&'static str] = &["name"];

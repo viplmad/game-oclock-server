@@ -1,7 +1,7 @@
 use actix_web::{delete, get, post, put, web, Responder};
 use sqlx::PgPool;
 
-use crate::models::{ItemId, LoggedUser, NewTagDTO, SearchDTO};
+use crate::models::{ItemId, LoggedUser, NewTagDTO, QuicksearchQuery, SearchDTO};
 use crate::services::{game_tags_service, tags_service};
 
 use super::base::{
@@ -68,6 +68,9 @@ async fn get_tag_games(
     post,
     path = "/api/v1/tags/list",
     tag = "Tags",
+    params(
+        QuicksearchQuery,
+    ),
     request_body(content = SearchDTO, description = "Query", content_type = "application/json"),
     responses(
         (status = 200, description = "Tags obtained", body = TagSearchResult, content_type = "application/json"),
@@ -81,10 +84,11 @@ async fn get_tag_games(
 #[post("/tags/list")]
 async fn get_tags(
     pool: web::Data<PgPool>,
+    query: web::Query<QuicksearchQuery>,
     body: web::Json<SearchDTO>,
     logged_user: LoggedUser,
 ) -> impl Responder {
-    let search_result = tags_service::search_tags(&pool, logged_user.id, body.0).await;
+    let search_result = tags_service::search_tags(&pool, logged_user.id, body.0, query.0.q).await;
     handle_get_result(search_result)
 }
 

@@ -2,7 +2,7 @@ use chrono::NaiveDateTime;
 use serde::{Deserialize, Serialize};
 use utoipa::ToSchema;
 
-use super::{DurationDef, ModelName};
+use super::{DurationDef, ModelInfo};
 
 #[derive(Serialize, Deserialize, ToSchema)]
 pub struct GameLogDTO {
@@ -10,7 +10,7 @@ pub struct GameLogDTO {
     pub time: DurationDef,
 }
 
-impl ModelName for GameLogDTO {
+impl ModelInfo for GameLogDTO {
     const MODEL_NAME: &'static str = "Game log";
     const ID_FIELDS: &'static [&'static str] = &["game id", "datetime"];
     const UNIQUE_FIELDS: &'static [&'static str] = GameLogDTO::ID_FIELDS;

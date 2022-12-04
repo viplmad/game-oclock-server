@@ -1,12 +1,12 @@
 use serde::Serialize;
 use utoipa::ToSchema;
 
-use super::ModelName;
+use super::ModelInfo;
 
 #[derive(Serialize, ToSchema)]
 pub struct SearchResultDTO<T>
 where
-    T: ModelName,
+    T: ModelInfo,
 {
     pub data: Vec<T>,
     pub page: u64,

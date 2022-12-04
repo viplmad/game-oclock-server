@@ -1,5 +1,10 @@
 use serde::Deserialize;
-use utoipa::ToSchema;
+use utoipa::{IntoParams, ToSchema};
+
+#[derive(Deserialize, IntoParams)]
+pub struct QuicksearchQuery {
+    pub q: Option<String>,
+}
 
 #[derive(Deserialize, ToSchema)]
 pub struct SearchDTO {

@@ -2,7 +2,7 @@ use chrono::NaiveDateTime;
 use serde::{Deserialize, Serialize};
 use utoipa::ToSchema;
 
-use super::{Merge, ModelName};
+use super::{Merge, ModelInfo};
 
 #[derive(Serialize, ToSchema)]
 pub struct UserDTO {
@@ -37,7 +37,7 @@ impl Merge<NewUserDTO> for UserDTO {
     }
 }
 
-impl ModelName for UserDTO {
+impl ModelInfo for UserDTO {
     const MODEL_NAME: &'static str = "User";
     const ID_FIELDS: &'static [&'static str] = &["id"];
     const UNIQUE_FIELDS: &'static [&'static str] = &["username"];

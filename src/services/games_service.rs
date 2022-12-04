@@ -20,8 +20,9 @@ pub async fn search_games(
     pool: &PgPool,
     user_id: i32,
     search: SearchDTO,
+    quicksearch: Option<String>,
 ) -> Result<GameSearchResult, ApiErrors> {
-    let search = handle_query_mapping::<GameDTO, GameSearch>(search)?;
+    let search = handle_query_mapping::<GameDTO, GameSearch>(search, quicksearch)?;
     let find_result = game_repository::search_all(pool, user_id, search).await;
     handle_get_list_paged_result(find_result)
 }

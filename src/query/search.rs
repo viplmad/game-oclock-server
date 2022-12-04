@@ -1,4 +1,4 @@
-use sea_query::{BinOper, Expr, LikeExpr, SelectStatement, Value};
+use sea_query::{BinOper, Cond, Expr, LikeExpr, SelectStatement, Value};
 
 use crate::entities::{
     FieldSearchValue, FieldValue, FilterOperator, Search, SearchQuery, TableIden,
@@ -13,9 +13,8 @@ pub fn apply_search<I: 'static + TableIden + Clone + Copy>(
     mut select: SelectStatement,
     search: Search<I>,
 ) -> Result<SearchQuery, RepositoryError> {
-    if search.sort.is_some() {
-        // Safe unwrap: already checked before
-        for sort in search.sort.unwrap() {
+    if let Some(sorts) = search.sort {
+        for sort in sorts {
             let table = sort.table;
             let field = sort.field;
             let order = sort.order;
@@ -23,9 +22,11 @@ pub fn apply_search<I: 'static + TableIden + Clone + Copy>(
         }
     }
 
-    if search.filter.is_some() {
-        // Safe unwrap: already checked before
-        for filter in search.filter.unwrap() {
+    if let Some(filters) = search.filter {
+        let mut ands = Cond::all();
+        let mut ors = Cond::any();
+
+        for filter in filters {
             let table = filter.table;
             let field = filter.field;
             let col = Expr::col((table, field));
@@ -55,7 +56,9 @@ pub fn apply_search<I: 'static + TableIden + Clone + Copy>(
                     FilterOperator::NotContains => {
                         col.not_like(LikeExpr::str(&format_like_contains(value)))
                     }
-                    _ => unimplemented!(),
+                    _ => Err(RepositoryError(String::from(
+                        "Operator not supported with single value.",
+                    )))?,
                 },
                 FieldValue::Values(value) => {
                     let _type = value._type;
@@ -74,17 +77,22 @@ pub fn apply_search<I: 'static + TableIden + Clone + Copy>(
                     match filter.operator {
                         FilterOperator::In => col.is_in(in_values),
                         FilterOperator::NotIn => col.is_not_in(in_values),
-                        _ => unimplemented!(),
+                        _ => Err(RepositoryError(String::from(
+                            "Operator not supported with multiple values.",
+                        )))?,
                     }
                 }
             };
 
             match filter.chain_operator {
-                BinOper::And => select.and_where(expr),
-                BinOper::Or => todo!(), // TODO select.cond_where(Cond::any().add(expr)),
+                BinOper::And => ands = ands.add(expr),
+                BinOper::Or => ors = ors.add(expr),
                 _ => unreachable!(),
             };
         }
+
+        select.cond_where(ands);
+        select.cond_where(ors);
     }
 
     let size = search.size.unwrap_or(DEFAULT_PAGE_SIZE);

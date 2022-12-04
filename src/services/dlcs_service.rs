@@ -44,8 +44,9 @@ pub async fn search_dlcs(
     pool: &PgPool,
     user_id: i32,
     search: SearchDTO,
+    quicksearch: Option<String>,
 ) -> Result<DLCSearchResult, ApiErrors> {
-    let search = handle_query_mapping::<DLCDTO, DLCSearch>(search)?;
+    let search = handle_query_mapping::<DLCDTO, DLCSearch>(search, quicksearch)?;
     let find_result = dlc_repository::search_all(pool, user_id, search).await;
     handle_get_list_paged_result(find_result)
 }

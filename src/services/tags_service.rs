@@ -20,8 +20,9 @@ pub async fn search_tags(
     pool: &PgPool,
     user_id: i32,
     search: SearchDTO,
+    quicksearch: Option<String>,
 ) -> Result<TagSearchResult, ApiErrors> {
-    let search = handle_query_mapping::<TagDTO, TagSearch>(search)?;
+    let search = handle_query_mapping::<TagDTO, TagSearch>(search, quicksearch)?;
     let find_result = tag_repository::search_all(pool, user_id, search).await;
     handle_get_list_paged_result(find_result)
 }

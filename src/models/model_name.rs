@@ -1,4 +1,4 @@
-pub trait ModelName {
+pub trait ModelInfo {
     /// Obtain name of model
     const MODEL_NAME: &'static str;
 

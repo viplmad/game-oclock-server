@@ -2,7 +2,7 @@ use chrono::{NaiveDate, NaiveDateTime};
 use serde::{Deserialize, Serialize};
 use utoipa::ToSchema;
 
-use super::{Merge, ModelName, SearchResultDTO};
+use super::{Merge, ModelInfo, SearchResultDTO};
 
 pub type DLCSearchResult = SearchResultDTO<DLCDTO>;
 
@@ -50,7 +50,7 @@ impl Merge<NewDLCDTO> for DLCDTO {
     }
 }
 
-impl ModelName for DLCDTO {
+impl ModelInfo for DLCDTO {
     const MODEL_NAME: &'static str = "DLC";
     const ID_FIELDS: &'static [&'static str] = &["id"];
     const UNIQUE_FIELDS: &'static [&'static str] = &["name"];
@@ -82,7 +82,7 @@ pub struct DLCAvailableDTO {
     pub updated_datetime: NaiveDateTime,
 }
 
-impl ModelName for DLCAvailableDTO {
+impl ModelInfo for DLCAvailableDTO {
     const MODEL_NAME: &'static str = "Relation of DLC and Platform";
     const ID_FIELDS: &'static [&'static str] = &["dlc id", "platform id"];
     const UNIQUE_FIELDS: &'static [&'static str] = DLCAvailableDTO::ID_FIELDS;

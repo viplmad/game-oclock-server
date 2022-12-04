@@ -2,7 +2,7 @@ use chrono::{NaiveDate, NaiveDateTime};
 use serde::{Deserialize, Serialize};
 use utoipa::ToSchema;
 
-use super::{Merge, ModelName, PlatformType, SearchResultDTO};
+use super::{Merge, ModelInfo, PlatformType, SearchResultDTO};
 
 pub type PlatformSearchResult = SearchResultDTO<PlatformDTO>;
 
@@ -47,7 +47,7 @@ impl Merge<NewPlatformDTO> for PlatformDTO {
     }
 }
 
-impl ModelName for PlatformDTO {
+impl ModelInfo for PlatformDTO {
     const MODEL_NAME: &'static str = "Platform";
     const ID_FIELDS: &'static [&'static str] = &["id"];
     const UNIQUE_FIELDS: &'static [&'static str] = &["name"];
@@ -77,7 +77,7 @@ pub struct PlatformAvailableDTO {
     pub updated_datetime: NaiveDateTime,
 }
 
-impl ModelName for PlatformAvailableDTO {
+impl ModelInfo for PlatformAvailableDTO {
     const MODEL_NAME: &'static str = "Relation with Platform";
     const ID_FIELDS: &'static [&'static str] = &["id", "platform id"];
     const UNIQUE_FIELDS: &'static [&'static str] = PlatformAvailableDTO::ID_FIELDS;

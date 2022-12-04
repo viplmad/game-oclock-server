@@ -2,11 +2,11 @@ use std::future::Future;
 
 use crate::entities::SearchResult;
 use crate::errors::{error_message_builder, ApiErrors, FieldMappingError, RepositoryError};
-use crate::models::{Merge, ModelName, SearchDTO, SearchResultDTO};
+use crate::models::{FilterDTO, Merge, ModelInfo, SearchDTO, SearchResultDTO};
 
 fn handle_result<E, T>(repository_result: Result<E, RepositoryError>) -> Result<E, ApiErrors>
 where
-    T: ModelName,
+    T: ModelInfo,
 {
     repository_result.map_err(|err| {
         ApiErrors::UnknownError(error_message_builder::inner_error(
@@ -20,7 +20,7 @@ pub(super) fn handle_get_result_raw<E, T>(
     repository_result: Result<Option<E>, RepositoryError>,
 ) -> Result<E, ApiErrors>
 where
-    T: ModelName,
+    T: ModelInfo,
 {
     handle_result::<Option<E>, T>(repository_result)?.ok_or_else(|| {
         ApiErrors::NotFound(error_message_builder::not_found(
@@ -34,7 +34,7 @@ pub(super) fn handle_get_result<E, T>(
     repository_result: Result<Option<E>, RepositoryError>,
 ) -> Result<T, ApiErrors>
 where
-    T: From<E> + ModelName,
+    T: From<E> + ModelInfo,
 {
     let entity: E = handle_get_result_raw::<E, T>(repository_result)?;
     Ok(T::from(entity))
@@ -44,7 +44,7 @@ pub(super) fn handle_get_list_result_raw<E, T>(
     repository_result: Result<Vec<E>, RepositoryError>,
 ) -> Result<Vec<E>, ApiErrors>
 where
-    T: ModelName,
+    T: ModelInfo,
 {
     handle_result::<Vec<E>, T>(repository_result)
 }
@@ -53,7 +53,7 @@ pub(super) fn handle_get_list_result<E, T>(
     repository_result: Result<Vec<E>, RepositoryError>,
 ) -> Result<Vec<T>, ApiErrors>
 where
-    T: From<E> + ModelName,
+    T: From<E> + ModelInfo,
 {
     let entity_list: Vec<E> = handle_get_list_result_raw::<E, T>(repository_result)?;
     Ok(entity_list.into_iter().map(T::from).collect())
@@ -63,7 +63,7 @@ pub(super) fn handle_get_list_paged_result<E, T>(
     repository_result: Result<SearchResult<E>, RepositoryError>,
 ) -> Result<SearchResultDTO<T>, ApiErrors>
 where
-    T: From<E> + ModelName,
+    T: From<E> + ModelInfo,
 {
     let entity_search = handle_result::<SearchResult<E>, T>(repository_result)?;
     Ok(SearchResultDTO {
@@ -77,7 +77,7 @@ pub(super) fn handle_create_result<I, T>(
     repository_result: Result<I, RepositoryError>,
 ) -> Result<I, ApiErrors>
 where
-    T: ModelName,
+    T: ModelInfo,
 {
     handle_result::<I, T>(repository_result)
 }
@@ -86,7 +86,7 @@ pub(super) fn handle_update_result<I, T>(
     repository_result: Result<I, RepositoryError>,
 ) -> Result<(), ApiErrors>
 where
-    T: ModelName,
+    T: ModelInfo,
 {
     handle_result::<I, T>(repository_result).map(|_| ())
 }
@@ -95,7 +95,7 @@ pub(super) fn handle_action_result<T>(
     repository_result: Result<(), RepositoryError>,
 ) -> Result<(), ApiErrors>
 where
-    T: ModelName,
+    T: ModelInfo,
 {
     handle_result::<(), T>(repository_result)
 }
@@ -104,7 +104,7 @@ pub(super) fn handle_already_exists_result<T>(
     repository_result: Result<bool, RepositoryError>,
 ) -> Result<(), ApiErrors>
 where
-    T: ModelName,
+    T: ModelInfo,
 {
     let exists = handle_result::<bool, T>(repository_result)?;
     match exists {
@@ -119,7 +119,7 @@ pub(super) fn handle_not_found_result<T>(
     repository_result: Result<bool, RepositoryError>,
 ) -> Result<(), ApiErrors>
 where
-    T: ModelName,
+    T: ModelInfo,
 {
     let exists = handle_result::<bool, T>(repository_result)?;
     match exists {
@@ -137,7 +137,7 @@ pub(super) async fn create_merged<E, T, N, I, GF, CF>(
     create_function: impl FnOnce(E) -> CF,
 ) -> Result<T, ApiErrors>
 where
-    T: From<E> + Merge<N> + Default + ModelName,
+    T: From<E> + Merge<N> + Default + ModelInfo,
     E: From<T>,
     GF: Future<Output = Result<T, ApiErrors>>,
     CF: Future<Output = Result<I, ApiErrors>>,
@@ -161,7 +161,7 @@ pub(super) async fn update_merged<E, T, N, GF, UF>(
     update_function: impl FnOnce(E) -> UF,
 ) -> Result<T, ApiErrors>
 where
-    T: From<E> + Merge<N> + ModelName,
+    T: From<E> + Merge<N> + ModelInfo,
     E: From<T>,
     GF: Future<Output = Result<T, ApiErrors>>,
     UF: Future<Output = Result<(), ApiErrors>>,
@@ -181,11 +181,31 @@ where
     })
 }
 
-pub(super) fn handle_query_mapping<T, S>(search: SearchDTO) -> Result<S, ApiErrors>
+pub(super) fn handle_query_mapping<T, S>(
+    mut search: SearchDTO,
+    quicksearch: Option<String>,
+) -> Result<S, ApiErrors>
 where
-    T: ModelName,
+    T: ModelInfo,
     S: TryFrom<SearchDTO, Error = FieldMappingError>,
 {
+    if let Some(quicksearch_value) = quicksearch {
+        let mut quicksearch_filters: Vec<FilterDTO> = T::UNIQUE_FIELDS
+            .iter()
+            .map(move |field| crate::models::FilterDTO {
+                field: field.to_string(),
+                operator: crate::models::OperatorType::Contains,
+                value: crate::models::SearchValue::Value(quicksearch_value.clone()),
+                chain_operator: Some(crate::models::ChainOperatorType::Or),
+            })
+            .collect();
+
+        if let Some(mut filters) = search.filter {
+            quicksearch_filters.append(&mut filters)
+        }
+        search.filter = Some(quicksearch_filters);
+    }
+
     S::try_from(search).map_err(|err| {
         ApiErrors::InvalidParameter(error_message_builder::field_not_found(
             T::MODEL_NAME,

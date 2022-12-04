@@ -2,7 +2,7 @@ use chrono::{NaiveDate, NaiveDateTime};
 use serde::{Deserialize, Serialize};
 use utoipa::ToSchema;
 
-use super::{GameStatus, Merge, ModelName, SearchResultDTO};
+use super::{GameStatus, Merge, ModelInfo, SearchResultDTO};
 
 pub type GameSearchResult = SearchResultDTO<GameDTO>;
 
@@ -67,7 +67,7 @@ impl Merge<NewGameDTO> for GameDTO {
     }
 }
 
-impl ModelName for GameDTO {
+impl ModelInfo for GameDTO {
     const MODEL_NAME: &'static str = "Game";
     const ID_FIELDS: &'static [&'static str] = &["id"];
     const UNIQUE_FIELDS: &'static [&'static str] = &["name", "edition"];
@@ -110,7 +110,7 @@ pub struct GameAvailableDTO {
     pub backup: bool,
 }
 
-impl ModelName for GameAvailableDTO {
+impl ModelInfo for GameAvailableDTO {
     const MODEL_NAME: &'static str = "Relation of Game and Platform";
     const ID_FIELDS: &'static [&'static str] = &["game id", "platform id"];
     const UNIQUE_FIELDS: &'static [&'static str] = GameAvailableDTO::ID_FIELDS;
