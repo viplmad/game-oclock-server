@@ -5,6 +5,15 @@ use crate::entities::{DLCFinishIden, DLCIden};
 
 use super::dlc_query;
 
+pub fn select_one_by_user_id_and_dlc_id_order_by_date_asc(user_id: i32, dlc_id: i32) -> impl QueryStatementWriter {
+    let mut select = select_all_by_user_id_and_dlc_id(user_id, dlc_id);
+
+    select.order_by(DLCFinishIden::Date, Order::Asc);
+    select.limit(1);
+
+    select
+}
+
 pub fn select_all_by_user_id_and_dlc_id(user_id: i32, dlc_id: i32) -> SelectStatement {
     let mut select = Query::select();
 
@@ -14,7 +23,7 @@ pub fn select_all_by_user_id_and_dlc_id(user_id: i32, dlc_id: i32) -> SelectStat
     select
 }
 
-pub fn select_all_dlcs_order_by_date(user_id: i32) -> SelectStatement {
+pub fn select_all_dlcs_order_by_date_desc(user_id: i32) -> SelectStatement {
     let mut select = dlc_query::select_all(user_id);
 
     join_dlc_finish(&mut select);
@@ -23,25 +32,16 @@ pub fn select_all_dlcs_order_by_date(user_id: i32) -> SelectStatement {
     select
 }
 
-pub fn select_all_dlcs_by_date_gte_and_date_lte_order_by_date(
+pub fn select_all_dlcs_by_date_gte_and_date_lte_order_by_date_desc(
     user_id: i32,
     start_date: NaiveDate,
     end_date: NaiveDate,
 ) -> impl QueryStatementWriter {
-    let mut select = select_all_dlcs_order_by_date(user_id);
+    let mut select = select_all_dlcs_order_by_date_desc(user_id);
 
     select
         .and_where(Expr::col((DLCFinishIden::Table, DLCFinishIden::Date)).gte(start_date))
         .and_where(Expr::col((DLCFinishIden::Table, DLCFinishIden::Date)).lte(end_date));
-
-    select
-}
-
-pub fn select_first_by_user_id_and_dlc_id(user_id: i32, dlc_id: i32) -> impl QueryStatementWriter {
-    let mut select = select_all_by_user_id_and_dlc_id(user_id, dlc_id);
-
-    select.order_by(DLCFinishIden::Date, Order::Asc);
-    select.limit(1);
 
     select
 }

@@ -7,9 +7,20 @@ use crate::repository::game_finish_repository;
 
 use super::base::{
     handle_action_result, handle_already_exists_result, handle_get_list_result_raw,
-    handle_not_found_result,
+    handle_get_result_raw, handle_not_found_result,
 };
 use super::games_service;
+
+pub async fn get_first_game_finish(
+    pool: &PgPool,
+    user_id: i32,
+    game_id: i32,
+) -> Result<NaiveDate, ApiErrors> {
+    games_service::exists_game(pool, user_id, game_id).await?;
+
+    let find_result = game_finish_repository::find_first_by_game_id(pool, user_id, game_id).await;
+    handle_get_result_raw::<NaiveDate, GameFinish>(find_result)
+}
 
 pub async fn get_game_finishes(
     pool: &PgPool,

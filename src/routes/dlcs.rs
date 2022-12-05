@@ -70,6 +70,34 @@ async fn get_dlc_base_game(
 
 #[utoipa::path(
     get,
+    path = "/api/v1/dlcs/{id}/first-finish",
+    tag = "DLCs",
+    params(
+        ("id" = i32, Path, description = "DLC id"),
+    ),
+    responses(
+        (status = 200, description = "First finish obtained", body = String, content_type = "application/json"),
+        (status = 401, description = "Unauthorized", body = ErrorMessage, content_type = "application/json"),
+        (status = 404, description = "DLC or finish not found", body = ErrorMessage, content_type = "application/json"),
+        (status = 500, description = "Internal server error", body = ErrorMessage, content_type = "application/json"),
+    ),
+    security(
+        ("bearer_token" = [])
+    )
+)]
+#[get("/dlcs/{id}/first-finish")]
+async fn get_first_dlc_finish(
+    pool: web::Data<PgPool>,
+    path: web::Path<ItemId>,
+    logged_user: LoggedUser,
+) -> impl Responder {
+    let ItemId(id) = path.into_inner();
+    let get_result = dlc_finishes_service::get_first_dlc_finish(&pool, logged_user.id, id).await;
+    handle_get_result(get_result)
+}
+
+#[utoipa::path(
+    get,
     path = "/api/v1/dlcs/{id}/finishes",
     tag = "DLCs",
     params(

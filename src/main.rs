@@ -117,6 +117,7 @@ async fn run(
         paths(
             // Games
             routes::get_game,
+            routes::get_first_game_finish,
             routes::get_game_finishes,
             routes::get_game_logs,
             routes::get_game_dlcs,
@@ -138,8 +139,9 @@ async fn run(
             routes::unlink_game_platform,
             // DLCs
             routes::get_dlc,
-            routes::get_dlc_finishes,
             routes::get_dlc_base_game,
+            routes::get_first_dlc_finish,
+            routes::get_dlc_finishes,
             routes::get_dlc_platforms,
             routes::get_dlcs,
             routes::post_dlc,
@@ -248,6 +250,7 @@ async fn run(
                         // TODO finish and log in different scopes
                         // Games
                         .service(routes::get_game)
+                        .service(routes::get_first_game_finish)
                         .service(routes::get_game_finishes)
                         .service(routes::get_game_logs)
                         .service(routes::get_game_dlcs)
@@ -269,6 +272,7 @@ async fn run(
                         // DLCs
                         .service(routes::get_dlc)
                         .service(routes::get_dlc_base_game)
+                        .service(routes::get_first_dlc_finish)
                         .service(routes::get_dlc_finishes)
                         .service(routes::get_dlc_platforms)
                         .service(routes::get_dlcs)

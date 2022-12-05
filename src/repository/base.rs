@@ -92,6 +92,19 @@ where
         .map_err(|err| RepositoryError(err.to_string()))
 }
 
+pub(super) async fn fetch_optional_single<'c, X, T>(
+    executor: X,
+    query: impl QueryStatementWriter,
+) -> Result<Option<T>, RepositoryError>
+where
+    X: sqlx::Executor<'c, Database = Postgres>,
+    T: for<'r> sqlx::Decode<'r, Postgres> + sqlx::Type<Postgres> + Send + Unpin,
+{
+    fetch_optional(executor, query)
+        .await
+        .map(|optional_tuple: Option<(T,)>| optional_tuple.map(|tuple| tuple.0))
+}
+
 pub(super) async fn fetch_all<'c, X, T>(
     executor: X,
     query: impl QueryStatementWriter,
@@ -106,6 +119,19 @@ where
         .fetch_all(executor)
         .await
         .map_err(|err| RepositoryError(err.to_string()))
+}
+
+pub(super) async fn fetch_all_single<'c, X, T>(
+    executor: X,
+    query: impl QueryStatementWriter,
+) -> Result<Vec<T>, RepositoryError>
+where
+    X: sqlx::Executor<'c, Database = Postgres>,
+    T: for<'r> sqlx::Decode<'r, Postgres> + sqlx::Type<Postgres> + Send + Unpin,
+{
+    fetch_all(executor, query)
+        .await
+        .map(|list: Vec<(T,)>| list.into_iter().map(|tuple| tuple.0).collect())
 }
 
 pub(super) async fn fetch_all_search<'c, X, T>(
@@ -123,19 +149,6 @@ where
             page: search_query.page,
             size: search_query.size,
         })
-}
-
-pub(super) async fn fetch_all_single<'c, X, T>(
-    executor: X,
-    query: impl QueryStatementWriter,
-) -> Result<Vec<T>, RepositoryError>
-where
-    X: sqlx::Executor<'c, Database = Postgres>,
-    T: for<'r> sqlx::Decode<'r, Postgres> + sqlx::Type<Postgres> + Send + Unpin,
-{
-    fetch_all(executor, query)
-        .await
-        .map(|list: Vec<(T,)>| list.into_iter().map(|tuple| tuple.0).collect())
 }
 
 pub(super) async fn exists_id<'c, X>(

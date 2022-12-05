@@ -7,9 +7,20 @@ use crate::repository::dlc_finish_repository;
 
 use super::base::{
     handle_action_result, handle_already_exists_result, handle_get_list_result_raw,
-    handle_not_found_result,
+    handle_get_result_raw, handle_not_found_result,
 };
 use super::dlcs_service;
+
+pub async fn get_first_dlc_finish(
+    pool: &PgPool,
+    user_id: i32,
+    dlc_id: i32,
+) -> Result<NaiveDate, ApiErrors> {
+    dlcs_service::exists_dlc(pool, user_id, dlc_id).await?;
+
+    let find_result = dlc_finish_repository::find_first_by_dlc_id(pool, user_id, dlc_id).await;
+    handle_get_result_raw::<NaiveDate, DLCFinish>(find_result)
+}
 
 pub async fn get_dlc_finishes(
     pool: &PgPool,

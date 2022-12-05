@@ -5,6 +5,18 @@ use crate::entities::{GameFinishIden, GameIden};
 
 use super::game_query;
 
+pub fn select_one_by_user_id_and_game_id_order_by_date_asc(
+    user_id: i32,
+    game_id: i32,
+) -> impl QueryStatementWriter {
+    let mut select = select_all_by_user_id_and_game_id(user_id, game_id);
+
+    select.order_by(GameFinishIden::Date, Order::Asc);
+    select.limit(1);
+
+    select
+}
+
 pub fn select_all_by_user_id_and_game_id(user_id: i32, game_id: i32) -> SelectStatement {
     let mut select = Query::select();
 
@@ -14,7 +26,7 @@ pub fn select_all_by_user_id_and_game_id(user_id: i32, game_id: i32) -> SelectSt
     select
 }
 
-pub fn select_all_games_order_by_date(user_id: i32) -> SelectStatement {
+pub fn select_all_games_order_by_date_desc(user_id: i32) -> SelectStatement {
     let mut select = game_query::select_all(user_id);
 
     join_game_finish(&mut select);
@@ -23,28 +35,16 @@ pub fn select_all_games_order_by_date(user_id: i32) -> SelectStatement {
     select
 }
 
-pub fn select_all_games_by_date_gte_and_date_lte_order_by_date(
+pub fn select_all_games_by_date_gte_and_date_lte_order_by_date_desc(
     user_id: i32,
     start_date: NaiveDate,
     end_date: NaiveDate,
 ) -> impl QueryStatementWriter {
-    let mut select = select_all_games_order_by_date(user_id);
+    let mut select = select_all_games_order_by_date_desc(user_id);
 
     select
         .and_where(Expr::col((GameFinishIden::Table, GameFinishIden::Date)).gte(start_date))
         .and_where(Expr::col((GameFinishIden::Table, GameFinishIden::Date)).lte(end_date));
-
-    select
-}
-
-pub fn select_first_by_user_id_and_game_id(
-    user_id: i32,
-    game_id: i32,
-) -> impl QueryStatementWriter {
-    let mut select = select_all_by_user_id_and_game_id(user_id, game_id);
-
-    select.order_by(GameFinishIden::Date, Order::Asc);
-    select.limit(1);
 
     select
 }

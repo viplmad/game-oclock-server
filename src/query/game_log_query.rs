@@ -14,7 +14,7 @@ pub fn select_all_by_user_id_and_game_id(user_id: i32, game_id: i32) -> impl Que
     select
 }
 
-pub fn select_all_games_order_by_datetime(user_id: i32) -> SelectStatement {
+pub fn select_all_games_order_by_datetime_desc(user_id: i32) -> SelectStatement {
     let mut select = game_query::select_all(user_id);
 
     join_game_log(&mut select);
@@ -23,12 +23,12 @@ pub fn select_all_games_order_by_datetime(user_id: i32) -> SelectStatement {
     select
 }
 
-pub fn select_all_games_by_datetime_gte_and_datetime_lte_order_by_datetime(
+pub fn select_all_games_by_datetime_gte_and_datetime_lte_order_by_datetime_desc(
     user_id: i32,
     start_datetime: NaiveDateTime,
     end_datetime: NaiveDateTime,
 ) -> SelectStatement {
-    let mut select = select_all_games_order_by_datetime(user_id);
+    let mut select = select_all_games_order_by_datetime_desc(user_id);
 
     select
         .and_where(Expr::col((GameLogIden::Table, GameLogIden::DateTime)).gte(start_datetime))
@@ -37,12 +37,12 @@ pub fn select_all_games_by_datetime_gte_and_datetime_lte_order_by_datetime(
     select
 }
 
-pub fn select_all_games_log_by_datetime_gte_and_datetime_lte(
+pub fn select_all_games_log_by_datetime_gte_and_datetime_lte_order_by_datetime_desc(
     user_id: i32,
     start_datetime: NaiveDateTime,
     end_datetime: NaiveDateTime,
 ) -> impl QueryStatementWriter {
-    let mut select = select_all_games_by_datetime_gte_and_datetime_lte_order_by_datetime(
+    let mut select = select_all_games_by_datetime_gte_and_datetime_lte_order_by_datetime_desc(
         user_id,
         start_datetime,
         end_datetime,
