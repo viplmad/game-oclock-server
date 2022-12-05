@@ -1,16 +1,29 @@
 use chrono::NaiveDateTime;
+use sqlx::postgres::types::PgInterval;
 use sqlx::PgPool;
 
 use crate::entities::GameLog;
 use crate::errors::ApiErrors;
-use crate::models::GameLogDTO;
+use crate::models::{DurationDef, GameLogDTO};
 use crate::repository::game_log_repository;
 
 use super::base::{
     handle_action_result, handle_already_exists_result, handle_get_list_result,
-    handle_not_found_result,
+    handle_not_found_result, handle_result,
 };
 use super::games_service;
+
+pub async fn get_sum_game_logs(
+    pool: &PgPool,
+    user_id: i32,
+    game_id: i32,
+) -> Result<DurationDef, ApiErrors> {
+    games_service::exists_game(pool, user_id, game_id).await?;
+
+    let find_result = game_log_repository::find_sum_time_by_game_id(pool, user_id, game_id).await;
+    let duration = handle_result::<PgInterval, GameLogDTO>(find_result)?;
+    Ok(DurationDef::from(duration))
+}
 
 pub async fn get_game_logs(
     pool: &PgPool,

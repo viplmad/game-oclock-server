@@ -4,7 +4,7 @@ use crate::entities::SearchResult;
 use crate::errors::{error_message_builder, ApiErrors, FieldMappingError, RepositoryError};
 use crate::models::{FilterDTO, Merge, ModelInfo, SearchDTO, SearchResultDTO};
 
-fn handle_result<E, T>(repository_result: Result<E, RepositoryError>) -> Result<E, ApiErrors>
+pub fn handle_result<E, T>(repository_result: Result<E, RepositoryError>) -> Result<E, ApiErrors>
 where
     T: ModelInfo,
 {
@@ -36,7 +36,7 @@ pub(super) fn handle_get_result<E, T>(
 where
     T: From<E> + ModelInfo,
 {
-    let entity: E = handle_get_result_raw::<E, T>(repository_result)?;
+    let entity = handle_get_result_raw::<E, T>(repository_result)?;
     Ok(T::from(entity))
 }
 
@@ -55,7 +55,7 @@ pub(super) fn handle_get_list_result<E, T>(
 where
     T: From<E> + ModelInfo,
 {
-    let entity_list: Vec<E> = handle_get_list_result_raw::<E, T>(repository_result)?;
+    let entity_list = handle_get_list_result_raw::<E, T>(repository_result)?;
     Ok(entity_list.into_iter().map(T::from).collect())
 }
 
@@ -142,10 +142,10 @@ where
     GF: Future<Output = Result<T, ApiErrors>>,
     CF: Future<Output = Result<I, ApiErrors>>,
 {
-    let merged_new: T = T::merge_with_default(new);
-    let entity_to_create: E = E::from(merged_new);
+    let merged_new = T::merge_with_default(new);
+    let entity_to_create = E::from(merged_new);
 
-    let created_id: I = create_function(entity_to_create).await?;
+    let created_id = create_function(entity_to_create).await?;
 
     get_function(created_id).await.map_err(|err| match err {
         ApiErrors::NotFound(_) => {
@@ -166,10 +166,10 @@ where
     GF: Future<Output = Result<T, ApiErrors>>,
     UF: Future<Output = Result<(), ApiErrors>>,
 {
-    let current: T = get_function().await?;
+    let current = get_function().await?;
 
-    let merged_update: T = T::merge(current, update);
-    let entity_to_update: E = E::from(merged_update);
+    let merged_update = T::merge(current, update);
+    let entity_to_update = E::from(merged_update);
 
     update_function(entity_to_update).await?;
 

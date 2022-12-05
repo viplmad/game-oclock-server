@@ -70,7 +70,7 @@ async fn get_dlc_base_game(
 
 #[utoipa::path(
     get,
-    path = "/api/v1/dlcs/{id}/first-finish",
+    path = "/api/v1/dlcs/{id}/finishes/first",
     tag = "DLCs",
     params(
         ("id" = i32, Path, description = "DLC id"),
@@ -85,7 +85,7 @@ async fn get_dlc_base_game(
         ("bearer_token" = [])
     )
 )]
-#[get("/dlcs/{id}/first-finish")]
+#[get("/dlcs/{id}/finishes/first")]
 async fn get_first_dlc_finish(
     pool: web::Data<PgPool>,
     path: web::Path<ItemId>,

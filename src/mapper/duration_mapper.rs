@@ -4,7 +4,7 @@ use crate::models::DurationDef;
 
 impl From<DurationDef> for PgInterval {
     fn from(duration: DurationDef) -> Self {
-        PgInterval {
+        Self {
             months: 0,
             days: 0,
             microseconds: i64::try_from(duration.micros).expect("Time was not within valid range"),

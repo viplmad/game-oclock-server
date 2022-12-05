@@ -45,7 +45,7 @@ async fn get_game(
 
 #[utoipa::path(
     get,
-    path = "/api/v1/games/{id}/first-finish",
+    path = "/api/v1/games/{id}/finishes/first",
     tag = "Games",
     params(
         ("id" = i32, Path, description = "Game id"),
@@ -60,7 +60,7 @@ async fn get_game(
         ("bearer_token" = [])
     )
 )]
-#[get("/games/{id}/first-finish")]
+#[get("/games/{id}/finishes/first")]
 async fn get_first_game_finish(
     pool: web::Data<PgPool>,
     path: web::Path<ItemId>,
@@ -96,6 +96,34 @@ async fn get_game_finishes(
 ) -> impl Responder {
     let ItemId(id) = path.into_inner();
     let get_result = game_finishes_service::get_game_finishes(&pool, logged_user.id, id).await;
+    handle_get_result(get_result)
+}
+
+#[utoipa::path(
+    get,
+    path = "/api/v1/games/{id}/logs/total",
+    tag = "Games",
+    params(
+        ("id" = i32, Path, description = "Game id"),
+    ),
+    responses(
+        (status = 200, description = "Total logs time obtained", body = String, content_type = "application/json"),
+        (status = 401, description = "Unauthorized", body = ErrorMessage, content_type = "application/json"),
+        (status = 404, description = "Game not found", body = ErrorMessage, content_type = "application/json"),
+        (status = 500, description = "Internal server error", body = ErrorMessage, content_type = "application/json"),
+    ),
+    security(
+        ("bearer_token" = [])
+    )
+)]
+#[get("/games/{id}/logs/total")]
+async fn get_total_game_logs(
+    pool: web::Data<PgPool>,
+    path: web::Path<ItemId>,
+    logged_user: LoggedUser,
+) -> impl Responder {
+    let ItemId(id) = path.into_inner();
+    let get_result = game_logs_service::get_sum_game_logs(&pool, logged_user.id, id).await;
     handle_get_result(get_result)
 }
 

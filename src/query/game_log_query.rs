@@ -1,9 +1,24 @@
 use chrono::NaiveDateTime;
-use sea_query::{Expr, Order, Query, QueryStatementWriter, SelectStatement};
+use sea_query::{Expr, Func, Order, Query, QueryStatementWriter, SelectStatement};
 
 use crate::entities::{GameIden, GameLog, GameLogIden};
 
 use super::game_query;
+
+pub fn select_sum_time_by_user_id_and_game_id(
+    user_id: i32,
+    game_id: i32,
+) -> impl QueryStatementWriter {
+    let mut select = Query::select();
+
+    from_and_where_user_id_and_game_id(&mut select, user_id, game_id);
+    select.expr(Func::coalesce([
+        Expr::col((GameLogIden::Table, GameLogIden::Time)).sum(),
+        Expr::val("0 seconds").into(), // TODO
+    ]));
+
+    select
+}
 
 pub fn select_all_by_user_id_and_game_id(user_id: i32, game_id: i32) -> impl QueryStatementWriter {
     let mut select = Query::select();
@@ -49,18 +64,6 @@ pub fn select_all_games_log_by_datetime_gte_and_datetime_lte_order_by_datetime_d
     );
 
     add_datetime_and_time_fields(&mut select);
-
-    select
-}
-
-pub fn select_sum_time_by_user_id_and_game_id(
-    user_id: i32,
-    game_id: i32,
-) -> impl QueryStatementWriter {
-    let mut select = Query::select();
-
-    from_and_where_user_id_and_game_id(&mut select, user_id, game_id);
-    select.expr(Expr::col((GameLogIden::Table, GameLogIden::Time)).sum());
 
     select
 }

@@ -5,7 +5,10 @@ use crate::entities::{DLCFinishIden, DLCIden};
 
 use super::dlc_query;
 
-pub fn select_one_by_user_id_and_dlc_id_order_by_date_asc(user_id: i32, dlc_id: i32) -> impl QueryStatementWriter {
+pub fn select_one_by_user_id_and_dlc_id_order_by_date_asc(
+    user_id: i32,
+    dlc_id: i32,
+) -> impl QueryStatementWriter {
     let mut select = select_all_by_user_id_and_dlc_id(user_id, dlc_id);
 
     select.order_by(DLCFinishIden::Date, Order::Asc);

@@ -9,6 +9,7 @@ const MICROS_PER_SEC: u64 = 1_000_000;
 const SECONDS_PER_HOUR: u64 = 3600;
 const SECONDS_PER_MINUTE: u64 = 60;
 
+#[derive(Default)]
 pub struct DurationDef {
     pub micros: u64,
 }
@@ -62,7 +63,7 @@ impl Display for DurationDef {
 
         let mut hours: u32 = 0;
         let mut minutes: u32 = 0;
-        let mut seconds: u32 = secs as u32;
+        let mut seconds: u32 = 0;
         if secs > 0 {
             hours = (secs / SECONDS_PER_HOUR) as u32;
             if hours > 0 {
@@ -70,11 +71,15 @@ impl Display for DurationDef {
                 minutes = remainder_seconds / (SECONDS_PER_MINUTE as u32);
                 if minutes > 0 {
                     seconds = remainder_seconds % (SECONDS_PER_MINUTE as u32);
+                } else {
+                    seconds = remainder_seconds;
                 }
             } else {
                 minutes = (secs / SECONDS_PER_MINUTE) as u32;
                 if minutes > 0 {
                     seconds = (secs % SECONDS_PER_MINUTE) as u32;
+                } else {
+                    seconds = secs as u32;
                 }
             }
         }
