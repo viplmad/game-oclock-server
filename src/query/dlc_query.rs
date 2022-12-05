@@ -1,5 +1,4 @@
-use chrono::Utc;
-use sea_query::{Expr, Query, QueryStatementWriter, SelectStatement};
+use sea_query::{Expr, Query, QueryStatementWriter, SelectStatement, SimpleExpr};
 
 use crate::entities::{DLCIden, DLCSearch, SearchQuery, DLC};
 use crate::errors::RepositoryError;
@@ -64,8 +63,8 @@ pub fn insert(user_id: i32, dlc: &DLC) -> impl QueryStatementWriter {
             dlc.base_game_id.into(),
             dlc.release_year.into(),
             dlc.cover_filename.clone().into(),
-            Utc::now().naive_utc().into(),
-            Utc::now().naive_utc().into(),
+            crate::utils::now().into(),
+            crate::utils::now().into(),
         ])
         .returning(Query::returning().columns([DLCIden::Id]));
 
@@ -73,22 +72,16 @@ pub fn insert(user_id: i32, dlc: &DLC) -> impl QueryStatementWriter {
 }
 
 pub fn update_by_id(user_id: i32, id: i32, dlc: &DLC) -> impl QueryStatementWriter {
-    let mut update = Query::update();
-
-    update
-        .table(DLCIden::Table)
-        .values(vec![
+    update_values_by_id(
+        user_id,
+        id,
+        vec![
             (DLCIden::Name, dlc.name.clone().into()),
             (DLCIden::BaseGameId, dlc.base_game_id.into()),
             (DLCIden::ReleaseYear, dlc.release_year.into()),
             (DLCIden::CoverFilename, dlc.cover_filename.clone().into()),
-            (DLCIden::UpdatedDateTime, Utc::now().naive_utc().into()),
-        ])
-        .and_where(Expr::col(DLCIden::UserId).eq(user_id))
-        .and_where(Expr::col(DLCIden::Id).eq(id))
-        .returning(Query::returning().columns([DLCIden::Id]));
-
-    update
+        ],
+    )
 }
 
 pub fn update_base_game_id_by_id(
@@ -96,11 +89,36 @@ pub fn update_base_game_id_by_id(
     id: i32,
     base_game_id: Option<i32>,
 ) -> impl QueryStatementWriter {
+    update_values_by_id(
+        user_id,
+        id,
+        vec![(DLCIden::BaseGameId, base_game_id.into())],
+    )
+}
+
+pub fn update_cover_filename_by_id(
+    user_id: i32,
+    id: i32,
+    cover_filename: &str,
+) -> impl QueryStatementWriter {
+    update_values_by_id(
+        user_id,
+        id,
+        vec![(DLCIden::CoverFilename, cover_filename.into())],
+    )
+}
+
+fn update_values_by_id(
+    user_id: i32,
+    id: i32,
+    mut values: Vec<(DLCIden, SimpleExpr)>,
+) -> impl QueryStatementWriter {
     let mut update = Query::update();
 
+    values.push((DLCIden::UpdatedDateTime, crate::utils::now().into()));
     update
         .table(DLCIden::Table)
-        .values(vec![(DLCIden::BaseGameId, base_game_id.into())])
+        .values(values)
         .and_where(Expr::col(DLCIden::UserId).eq(user_id))
         .and_where(Expr::col(DLCIden::Id).eq(id))
         .returning(Query::returning().columns([DLCIden::Id]));
@@ -129,7 +147,7 @@ pub fn exists_by_id(user_id: i32, id: i32) -> impl QueryStatementWriter {
     select
 }
 
-pub fn exists_by_name(user_id: i32, name: &str) -> impl QueryStatementWriter {
+pub fn exists_by_name(user_id: i32, name: &str) -> SelectStatement {
     let mut select = Query::select();
 
     from_and_where_user_id(&mut select, user_id);
@@ -140,13 +158,9 @@ pub fn exists_by_name(user_id: i32, name: &str) -> impl QueryStatementWriter {
 }
 
 pub fn exists_by_name_and_id_not(user_id: i32, name: &str, id: i32) -> impl QueryStatementWriter {
-    let mut select = Query::select();
+    let mut select = exists_by_name(user_id, name);
 
-    from_and_where_user_id(&mut select, user_id);
-    add_id_field(&mut select);
-    select
-        .and_where(Expr::col(DLCIden::Name).eq(name))
-        .and_where(Expr::col(DLCIden::Id).ne(id));
+    select.and_where(Expr::col(DLCIden::Id).ne(id));
 
     select
 }

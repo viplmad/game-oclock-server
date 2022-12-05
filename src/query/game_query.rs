@@ -1,5 +1,4 @@
-use chrono::Utc;
-use sea_query::{Expr, Query, QueryStatementWriter, SelectStatement};
+use sea_query::{Expr, Query, QueryStatementWriter, SelectStatement, SimpleExpr};
 
 use crate::entities::{Game, GameIden, GameSearch, GameUserInfoIden, SearchQuery};
 use crate::errors::RepositoryError;
@@ -56,8 +55,8 @@ pub fn insert(user_id: i32, game: &Game) -> impl QueryStatementWriter {
             game.edition.clone().into(),
             game.release_year.into(),
             game.cover_filename.clone().into(),
-            Utc::now().naive_utc().into(),
-            Utc::now().naive_utc().into(),
+            crate::utils::now().into(),
+            crate::utils::now().into(),
         ])
         .returning(Query::returning().columns([GameIden::Id]));
 
@@ -90,8 +89,8 @@ pub fn insert_user_info(user_id: i32, game_id: i32, game: &Game) -> impl QuerySt
             game.save_folder.clone().into(),
             game.screenshot_folder.clone().into(),
             game.backup.into(),
-            Utc::now().naive_utc().into(),
-            Utc::now().naive_utc().into(),
+            crate::utils::now().into(),
+            crate::utils::now().into(),
         ])
         .returning(
             Query::returning().columns([GameUserInfoIden::UserId, GameUserInfoIden::GameId]),
@@ -101,17 +100,41 @@ pub fn insert_user_info(user_id: i32, game_id: i32, game: &Game) -> impl QuerySt
 }
 
 pub fn update_by_id(user_id: i32, id: i32, game: &Game) -> impl QueryStatementWriter {
-    let mut update = Query::update();
-
-    update
-        .table(GameIden::Table)
-        .values(vec![
+    update_values_by_id(
+        user_id,
+        id,
+        vec![
             (GameIden::Name, game.name.clone().into()),
             (GameIden::Edition, game.edition.clone().into()),
             (GameIden::ReleaseYear, game.release_year.into()),
             (GameIden::CoverFilename, game.cover_filename.clone().into()),
-            (GameIden::UpdatedDateTime, Utc::now().naive_utc().into()),
-        ])
+        ],
+    )
+}
+
+pub fn update_cover_filename_by_id(
+    user_id: i32,
+    id: i32,
+    cover_filename: &str,
+) -> impl QueryStatementWriter {
+    update_values_by_id(
+        user_id,
+        id,
+        vec![(GameIden::CoverFilename, cover_filename.into())],
+    )
+}
+
+fn update_values_by_id(
+    user_id: i32,
+    id: i32,
+    mut values: Vec<(GameIden, SimpleExpr)>,
+) -> impl QueryStatementWriter {
+    let mut update = Query::update();
+
+    values.push((GameIden::UpdatedDateTime, crate::utils::now().into()));
+    update
+        .table(GameIden::Table)
+        .values(values)
         .and_where(Expr::col(GameIden::UserId).eq(user_id))
         .and_where(Expr::col(GameIden::Id).eq(id))
         .returning(Query::returning().columns([GameIden::Id]));
@@ -124,11 +147,10 @@ pub fn update_user_info_by_id(
     game_id: i32,
     game: &Game,
 ) -> impl QueryStatementWriter {
-    let mut update = Query::update();
-
-    update
-        .table(GameUserInfoIden::Table)
-        .values(vec![
+    update_user_info_values_by_id(
+        user_id,
+        game_id,
+        vec![
             (GameUserInfoIden::Status, game.status.into()),
             (GameUserInfoIden::Rating, game.rating.into()),
             (GameUserInfoIden::Notes, game.notes.clone().into()),
@@ -141,11 +163,24 @@ pub fn update_user_info_by_id(
                 game.screenshot_folder.clone().into(),
             ),
             (GameUserInfoIden::Backup, game.backup.into()),
-            (
-                GameUserInfoIden::UpdatedDateTime,
-                Utc::now().naive_utc().into(),
-            ),
-        ])
+        ],
+    )
+}
+
+fn update_user_info_values_by_id(
+    user_id: i32,
+    game_id: i32,
+    mut values: Vec<(GameUserInfoIden, SimpleExpr)>,
+) -> impl QueryStatementWriter {
+    let mut update = Query::update();
+
+    values.push((
+        GameUserInfoIden::UpdatedDateTime,
+        crate::utils::now().into(),
+    ));
+    update
+        .table(GameUserInfoIden::Table)
+        .values(values)
         .and_where(Expr::col(GameUserInfoIden::UserId).eq(user_id))
         .and_where(Expr::col(GameUserInfoIden::GameId).eq(game_id))
         .returning(
@@ -187,11 +222,7 @@ pub fn exists_by_id(user_id: i32, id: i32) -> impl QueryStatementWriter {
     select
 }
 
-pub fn exists_by_name_and_edition(
-    user_id: i32,
-    name: &str,
-    edition: &str,
-) -> impl QueryStatementWriter {
+pub fn exists_by_name_and_edition(user_id: i32, name: &str, edition: &str) -> SelectStatement {
     let mut select = Query::select();
 
     from_and_where_user_id(&mut select, user_id);
@@ -203,21 +234,15 @@ pub fn exists_by_name_and_edition(
     select
 }
 
-// TODO same as above but with notequal
 pub fn exists_by_name_and_edition_and_id_not(
     user_id: i32,
     name: &str,
     edition: &str,
     id: i32,
 ) -> impl QueryStatementWriter {
-    let mut select = Query::select();
+    let mut select = exists_by_name_and_edition(user_id, name, edition);
 
-    from_and_where_user_id(&mut select, user_id);
-    add_id_field(&mut select);
-    select
-        .and_where(Expr::col(GameIden::Name).eq(name))
-        .and_where(Expr::col(GameIden::Edition).eq(edition))
-        .and_where(Expr::col(GameIden::Id).ne(id));
+    select.and_where(Expr::col(GameIden::Id).ne(id));
 
     select
 }

@@ -1,5 +1,4 @@
-use chrono::Utc;
-use sea_query::{Expr, Query, QueryStatementWriter, SelectStatement};
+use sea_query::{Expr, Query, QueryStatementWriter, SelectStatement, SimpleExpr};
 
 use crate::entities::{SearchQuery, Tag, TagIden, TagSearch};
 use crate::errors::RepositoryError;
@@ -48,8 +47,8 @@ pub fn insert(user_id: i32, tag: &Tag) -> impl QueryStatementWriter {
         .values_panic([
             user_id.into(),
             tag.name.clone().into(),
-            Utc::now().naive_utc().into(),
-            Utc::now().naive_utc().into(),
+            crate::utils::now().into(),
+            crate::utils::now().into(),
         ])
         .returning(Query::returning().columns([TagIden::Id]));
 
@@ -57,14 +56,20 @@ pub fn insert(user_id: i32, tag: &Tag) -> impl QueryStatementWriter {
 }
 
 pub fn update_by_id(user_id: i32, id: i32, tag: &Tag) -> impl QueryStatementWriter {
+    update_values_by_id(user_id, id, vec![(TagIden::Name, tag.name.clone().into())])
+}
+
+fn update_values_by_id(
+    user_id: i32,
+    id: i32,
+    mut values: Vec<(TagIden, SimpleExpr)>,
+) -> impl QueryStatementWriter {
     let mut update = Query::update();
 
+    values.push((TagIden::UpdatedDateTime, crate::utils::now().into()));
     update
         .table(TagIden::Table)
-        .values(vec![
-            (TagIden::Name, tag.name.clone().into()),
-            (TagIden::UpdatedDateTime, Utc::now().naive_utc().into()),
-        ])
+        .values(values)
         .and_where(Expr::col(TagIden::UserId).eq(user_id))
         .and_where(Expr::col(TagIden::Id).eq(id))
         .returning(Query::returning().columns([TagIden::Id]));
@@ -93,7 +98,7 @@ pub fn exists_by_id(user_id: i32, id: i32) -> impl QueryStatementWriter {
     select
 }
 
-pub fn exists_by_name(user_id: i32, name: &str) -> impl QueryStatementWriter {
+pub fn exists_by_name(user_id: i32, name: &str) -> SelectStatement {
     let mut select = Query::select();
 
     from_and_where_user_id(&mut select, user_id);
@@ -104,13 +109,9 @@ pub fn exists_by_name(user_id: i32, name: &str) -> impl QueryStatementWriter {
 }
 
 pub fn exists_by_name_and_id_not(user_id: i32, name: &str, id: i32) -> impl QueryStatementWriter {
-    let mut select = Query::select();
+    let mut select = exists_by_name(user_id, name);
 
-    from_and_where_user_id(&mut select, user_id);
-    add_id_field(&mut select);
-    select
-        .and_where(Expr::col(TagIden::Name).eq(name))
-        .and_where(Expr::col(TagIden::Id).ne(id));
+    select.and_where(Expr::col(TagIden::Id).ne(id));
 
     select
 }

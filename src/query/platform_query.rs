@@ -1,5 +1,4 @@
-use chrono::Utc;
-use sea_query::{Expr, Query, QueryStatementWriter, SelectStatement};
+use sea_query::{Expr, Query, QueryStatementWriter, SelectStatement, SimpleExpr};
 
 use crate::entities::{Platform, PlatformIden, PlatformSearch, SearchQuery};
 use crate::errors::RepositoryError;
@@ -52,8 +51,8 @@ pub fn insert(user_id: i32, platform: &Platform) -> impl QueryStatementWriter {
             platform.name.clone().into(),
             platform.ptype.into(),
             platform.icon_filename.clone().into(),
-            Utc::now().naive_utc().into(),
-            Utc::now().naive_utc().into(),
+            crate::utils::now().into(),
+            crate::utils::now().into(),
         ])
         .returning(Query::returning().columns([PlatformIden::Id]));
 
@@ -61,19 +60,43 @@ pub fn insert(user_id: i32, platform: &Platform) -> impl QueryStatementWriter {
 }
 
 pub fn update_by_id(user_id: i32, id: i32, platform: &Platform) -> impl QueryStatementWriter {
-    let mut update = Query::update();
-
-    update
-        .table(PlatformIden::Table)
-        .values(vec![
+    update_values_by_id(
+        user_id,
+        id,
+        vec![
             (PlatformIden::Name, platform.name.clone().into()),
             (PlatformIden::Type, platform.ptype.into()),
             (
                 PlatformIden::IconFilename,
                 platform.icon_filename.clone().into(),
             ),
-            (PlatformIden::UpdatedDateTime, Utc::now().naive_utc().into()),
-        ])
+        ],
+    )
+}
+
+pub fn update_icon_filename_by_id(
+    user_id: i32,
+    id: i32,
+    cover_filename: &str,
+) -> impl QueryStatementWriter {
+    update_values_by_id(
+        user_id,
+        id,
+        vec![(PlatformIden::IconFilename, cover_filename.into())],
+    )
+}
+
+fn update_values_by_id(
+    user_id: i32,
+    id: i32,
+    mut values: Vec<(PlatformIden, SimpleExpr)>,
+) -> impl QueryStatementWriter {
+    let mut update = Query::update();
+
+    values.push((PlatformIden::UpdatedDateTime, crate::utils::now().into()));
+    update
+        .table(PlatformIden::Table)
+        .values(values)
         .and_where(Expr::col(PlatformIden::UserId).eq(user_id))
         .and_where(Expr::col(PlatformIden::Id).eq(id))
         .returning(Query::returning().columns([PlatformIden::Id]));
@@ -102,7 +125,7 @@ pub fn exists_by_id(user_id: i32, id: i32) -> impl QueryStatementWriter {
     select
 }
 
-pub fn exists_by_name(user_id: i32, name: &str) -> impl QueryStatementWriter {
+pub fn exists_by_name(user_id: i32, name: &str) -> SelectStatement {
     let mut select = Query::select();
 
     from_and_where_user_id(&mut select, user_id);
@@ -113,13 +136,9 @@ pub fn exists_by_name(user_id: i32, name: &str) -> impl QueryStatementWriter {
 }
 
 pub fn exists_by_name_and_id_not(user_id: i32, name: &str, id: i32) -> impl QueryStatementWriter {
-    let mut select = Query::select();
+    let mut select = exists_by_name(user_id, name);
 
-    from_and_where_user_id(&mut select, user_id);
-    add_id_field(&mut select);
-    select
-        .and_where(Expr::col(PlatformIden::Name).eq(name))
-        .and_where(Expr::col(PlatformIden::Id).ne(id));
+    select.and_where(Expr::col(PlatformIden::Id).ne(id));
 
     select
 }
