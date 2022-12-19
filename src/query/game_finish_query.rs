@@ -90,11 +90,11 @@ pub fn exists_by_id(user_id: i32, game_id: i32, date: NaiveDate) -> impl QuerySt
 fn join_game_finish(select: &mut SelectStatement) {
     select.left_join(
         GameFinishIden::Table,
-        Expr::tbl(GameIden::Table, GameIden::UserId)
-            .equals(GameFinishIden::Table, GameFinishIden::UserId)
+        Expr::col((GameIden::Table, GameIden::UserId))
+            .equals((GameFinishIden::Table, GameFinishIden::UserId))
             .and(
-                Expr::tbl(GameIden::Table, GameIden::Id)
-                    .equals(GameFinishIden::Table, GameFinishIden::GameId),
+                Expr::col((GameIden::Table, GameIden::Id))
+                    .equals((GameFinishIden::Table, GameFinishIden::GameId)),
             ),
     );
 }

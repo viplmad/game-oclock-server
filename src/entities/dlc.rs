@@ -36,7 +36,7 @@ impl TableIden for DLCIden {
 
 #[derive(FromRow)]
 pub struct DLC {
-    pub id: i32,
+    pub id: i32, // TODO Use uuid v7
     pub user_id: i32,
     pub name: String,
     pub base_game_id: Option<i32>,

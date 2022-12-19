@@ -124,11 +124,11 @@ pub fn exists_by_id(
 fn join_game_log(select: &mut SelectStatement) {
     select.left_join(
         GameLogIden::Table,
-        Expr::tbl(GameIden::Table, GameIden::UserId)
-            .equals(GameLogIden::Table, GameLogIden::UserId)
+        Expr::col((GameIden::Table, GameIden::UserId))
+            .equals((GameLogIden::Table, GameLogIden::UserId))
             .and(
-                Expr::tbl(GameIden::Table, GameIden::Id)
-                    .equals(GameLogIden::Table, GameLogIden::GameId),
+                Expr::col((GameIden::Table, GameIden::Id))
+                    .equals((GameLogIden::Table, GameLogIden::GameId)),
             ),
     );
 }

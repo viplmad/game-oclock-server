@@ -80,11 +80,11 @@ fn join_game_available_by_platform_id(select: &mut SelectStatement, platform_id:
     select
         .left_join(
             GameAvailableIden::Table,
-            Expr::tbl(GameIden::Table, GameIden::UserId)
-                .equals(GameAvailableIden::Table, GameAvailableIden::UserId)
+            Expr::col((GameIden::Table, GameIden::UserId))
+                .equals((GameAvailableIden::Table, GameAvailableIden::UserId))
                 .and(
-                    Expr::tbl(GameIden::Table, GameIden::Id)
-                        .equals(GameAvailableIden::Table, GameAvailableIden::GameId),
+                    Expr::col((GameIden::Table, GameIden::Id))
+                        .equals((GameAvailableIden::Table, GameAvailableIden::GameId)),
                 ),
         )
         .and_where(
@@ -96,11 +96,11 @@ fn join_game_available_by_game_id(select: &mut SelectStatement, game_id: i32) {
     select
         .left_join(
             GameAvailableIden::Table,
-            Expr::tbl(PlatformIden::Table, PlatformIden::UserId)
-                .equals(GameAvailableIden::Table, GameAvailableIden::UserId)
+            Expr::col((PlatformIden::Table, PlatformIden::UserId))
+                .equals((GameAvailableIden::Table, GameAvailableIden::UserId))
                 .and(
-                    Expr::tbl(PlatformIden::Table, PlatformIden::Id)
-                        .equals(GameAvailableIden::Table, GameAvailableIden::PlatformId),
+                    Expr::col((PlatformIden::Table, PlatformIden::Id))
+                        .equals((GameAvailableIden::Table, GameAvailableIden::PlatformId)),
                 ),
         )
         .and_where(Expr::col((GameAvailableIden::Table, GameAvailableIden::GameId)).eq(game_id));

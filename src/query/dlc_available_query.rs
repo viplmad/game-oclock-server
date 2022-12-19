@@ -77,11 +77,11 @@ fn join_dlc_available_by_platform_id(select: &mut SelectStatement, platform_id: 
     select
         .left_join(
             DLCAvailableIden::Table,
-            Expr::tbl(DLCIden::Table, DLCIden::UserId)
-                .equals(DLCAvailableIden::Table, DLCAvailableIden::UserId)
+            Expr::col((DLCIden::Table, DLCIden::UserId))
+                .equals((DLCAvailableIden::Table, DLCAvailableIden::UserId))
                 .and(
-                    Expr::tbl(DLCIden::Table, DLCIden::Id)
-                        .equals(DLCAvailableIden::Table, DLCAvailableIden::DLCId),
+                    Expr::col((DLCIden::Table, DLCIden::Id))
+                        .equals((DLCAvailableIden::Table, DLCAvailableIden::DLCId)),
                 ),
         )
         .and_where(
@@ -93,11 +93,11 @@ fn join_dlc_available_by_dlc_id(select: &mut SelectStatement, dlc_id: i32) {
     select
         .left_join(
             DLCAvailableIden::Table,
-            Expr::tbl(PlatformIden::Table, PlatformIden::UserId)
-                .equals(DLCAvailableIden::Table, DLCAvailableIden::UserId)
+            Expr::col((PlatformIden::Table, PlatformIden::UserId))
+                .equals((DLCAvailableIden::Table, DLCAvailableIden::UserId))
                 .and(
-                    Expr::tbl(PlatformIden::Table, PlatformIden::Id)
-                        .equals(DLCAvailableIden::Table, DLCAvailableIden::PlatformId),
+                    Expr::col((PlatformIden::Table, PlatformIden::Id))
+                        .equals((DLCAvailableIden::Table, DLCAvailableIden::PlatformId)),
                 ),
         )
         .and_where(Expr::col((DLCAvailableIden::Table, DLCAvailableIden::DLCId)).eq(dlc_id));

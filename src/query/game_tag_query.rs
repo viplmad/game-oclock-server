@@ -59,11 +59,11 @@ fn join_game_tag_by_tag_id(select: &mut SelectStatement, tag_id: i32) {
     select
         .left_join(
             GameTagIden::Table,
-            Expr::tbl(GameIden::Table, GameIden::UserId)
-                .equals(GameTagIden::Table, GameTagIden::UserId)
+            Expr::col((GameIden::Table, GameIden::UserId))
+                .equals((GameTagIden::Table, GameTagIden::UserId))
                 .and(
-                    Expr::tbl(GameIden::Table, GameIden::Id)
-                        .equals(GameTagIden::Table, GameTagIden::GameId),
+                    Expr::col((GameIden::Table, GameIden::Id))
+                        .equals((GameTagIden::Table, GameTagIden::GameId)),
                 ),
         )
         .and_where(Expr::col((GameTagIden::Table, GameTagIden::TagId)).eq(tag_id));
@@ -73,11 +73,11 @@ fn join_game_tag_by_game_id(select: &mut SelectStatement, game_id: i32) {
     select
         .left_join(
             GameTagIden::Table,
-            Expr::tbl(TagIden::Table, TagIden::UserId)
-                .equals(GameTagIden::Table, GameTagIden::UserId)
+            Expr::col((TagIden::Table, TagIden::UserId))
+                .equals((GameTagIden::Table, GameTagIden::UserId))
                 .and(
-                    Expr::tbl(TagIden::Table, TagIden::Id)
-                        .equals(GameTagIden::Table, GameTagIden::TagId),
+                    Expr::col((TagIden::Table, TagIden::Id))
+                        .equals((GameTagIden::Table, GameTagIden::TagId)),
                 ),
         )
         .and_where(Expr::col((GameTagIden::Table, GameTagIden::GameId)).eq(game_id));

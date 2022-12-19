@@ -90,11 +90,11 @@ pub fn exists_by_id(user_id: i32, dlc_id: i32, date: NaiveDate) -> impl QuerySta
 fn join_dlc_finish(select: &mut SelectStatement) {
     select.left_join(
         DLCFinishIden::Table,
-        Expr::tbl(DLCIden::Table, DLCIden::UserId)
-            .equals(DLCFinishIden::Table, DLCFinishIden::UserId)
+        Expr::col((DLCIden::Table, DLCIden::UserId))
+            .equals((DLCFinishIden::Table, DLCFinishIden::UserId))
             .and(
-                Expr::tbl(DLCIden::Table, DLCIden::Id)
-                    .equals(DLCFinishIden::Table, DLCFinishIden::DLCId),
+                Expr::col((DLCIden::Table, DLCIden::Id))
+                    .equals((DLCFinishIden::Table, DLCFinishIden::DLCId)),
             ),
     );
 }

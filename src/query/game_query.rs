@@ -55,8 +55,8 @@ pub fn insert(user_id: i32, game: &Game) -> impl QueryStatementWriter {
             game.edition.clone().into(),
             game.release_year.into(),
             game.cover_filename.clone().into(),
-            crate::utils::now().into(),
-            crate::utils::now().into(),
+            crate::date_utils::now().into(),
+            crate::date_utils::now().into(),
         ])
         .returning(Query::returning().columns([GameIden::Id]));
 
@@ -89,8 +89,8 @@ pub fn insert_user_info(user_id: i32, game_id: i32, game: &Game) -> impl QuerySt
             game.save_folder.clone().into(),
             game.screenshot_folder.clone().into(),
             game.backup.into(),
-            crate::utils::now().into(),
-            crate::utils::now().into(),
+            crate::date_utils::now().into(),
+            crate::date_utils::now().into(),
         ])
         .returning(
             Query::returning().columns([GameUserInfoIden::UserId, GameUserInfoIden::GameId]),
@@ -131,7 +131,7 @@ fn update_values_by_id(
 ) -> impl QueryStatementWriter {
     let mut update = Query::update();
 
-    values.push((GameIden::UpdatedDateTime, crate::utils::now().into()));
+    values.push((GameIden::UpdatedDateTime, crate::date_utils::now().into()));
     update
         .table(GameIden::Table)
         .values(values)
@@ -176,7 +176,7 @@ fn update_user_info_values_by_id(
 
     values.push((
         GameUserInfoIden::UpdatedDateTime,
-        crate::utils::now().into(),
+        crate::date_utils::now().into(),
     ));
     update
         .table(GameUserInfoIden::Table)
@@ -260,11 +260,11 @@ fn where_id(select: &mut SelectStatement, id: i32) {
 fn join_user_info(select: &mut SelectStatement) {
     select.left_join(
         GameUserInfoIden::Table,
-        Expr::tbl(GameIden::Table, GameIden::UserId)
-            .equals(GameUserInfoIden::Table, GameUserInfoIden::UserId)
+        Expr::col((GameIden::Table, GameIden::UserId))
+            .equals((GameUserInfoIden::Table, GameUserInfoIden::UserId))
             .and(
-                Expr::tbl(GameIden::Table, GameIden::Id)
-                    .equals(GameUserInfoIden::Table, GameUserInfoIden::GameId),
+                Expr::col((GameIden::Table, GameIden::Id))
+                    .equals((GameUserInfoIden::Table, GameUserInfoIden::GameId)),
             ),
     );
 }

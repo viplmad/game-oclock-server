@@ -46,7 +46,6 @@ impl From<GameAvailable> for GameAvailableDTO {
     fn from(game: GameAvailable) -> Self {
         Self {
             id: game.id,
-            available_date: game.available_date,
             name: game.name,
             edition: game.edition,
             release_year: game.release_year,
@@ -59,6 +58,7 @@ impl From<GameAvailable> for GameAvailableDTO {
             save_folder: game.save_folder,
             screenshot_folder: game.screenshot_folder,
             backup: game.backup,
+            available_date: game.available_date,
         }
     }
 }

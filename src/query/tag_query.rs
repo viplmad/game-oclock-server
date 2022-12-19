@@ -47,8 +47,8 @@ pub fn insert(user_id: i32, tag: &Tag) -> impl QueryStatementWriter {
         .values_panic([
             user_id.into(),
             tag.name.clone().into(),
-            crate::utils::now().into(),
-            crate::utils::now().into(),
+            crate::date_utils::now().into(),
+            crate::date_utils::now().into(),
         ])
         .returning(Query::returning().columns([TagIden::Id]));
 
@@ -66,7 +66,7 @@ fn update_values_by_id(
 ) -> impl QueryStatementWriter {
     let mut update = Query::update();
 
-    values.push((TagIden::UpdatedDateTime, crate::utils::now().into()));
+    values.push((TagIden::UpdatedDateTime, crate::date_utils::now().into()));
     update
         .table(TagIden::Table)
         .values(values)

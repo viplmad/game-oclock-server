@@ -90,8 +90,6 @@ pub struct NewGameDTO {
 #[derive(Serialize, ToSchema)]
 pub struct GameAvailableDTO {
     pub id: i32,
-    #[schema(value_type = String)]
-    pub available_date: NaiveDate,
     pub name: String,
     pub edition: String,
     #[serde(skip_serializing_if = "Option::is_none")]
@@ -108,6 +106,8 @@ pub struct GameAvailableDTO {
     pub save_folder: String,
     pub screenshot_folder: String,
     pub backup: bool,
+    #[schema(value_type = String)]
+    pub available_date: NaiveDate,
 }
 
 impl ModelInfo for GameAvailableDTO {

@@ -4,10 +4,11 @@ use sqlx::PgPool;
 
 use crate::models::{
     GameLogDTO, ItemId, ItemIdAndRelatedId, LoggedUser, NewGameDTO, QuicksearchQuery, SearchDTO,
+    StartEndDateQuery,
 };
 use crate::services::{
     dlcs_service, game_available_service, game_finishes_service, game_logs_service,
-    game_tags_service, games_service,
+    game_tags_service, game_with_logs_service, games_service,
 };
 
 use super::base::{
@@ -236,6 +237,38 @@ async fn get_game_platforms(
 ) -> impl Responder {
     let ItemId(id) = path.into_inner();
     let get_result = game_available_service::get_game_platforms(&pool, logged_user.id, id).await;
+    handle_get_result(get_result)
+}
+
+#[utoipa::path(
+    post,
+    path = "/api/v1/games/played",
+    tag = "Games",
+    params(
+        StartEndDateQuery,
+    ),
+    responses(
+        (status = 200, description = "Game with logs obtained", body = [GameWithLogsDTO], content_type = "application/json"),
+        (status = 401, description = "Unauthorized", body = ErrorMessage, content_type = "application/json"),
+        (status = 500, description = "Internal server error", body = ErrorMessage, content_type = "application/json"),
+    ),
+    security(
+        ("bearer_token" = [])
+    )
+)]
+#[post("/games/played")]
+async fn get_played_games(
+    pool: web::Data<PgPool>,
+    query: web::Query<StartEndDateQuery>,
+    logged_user: LoggedUser,
+) -> impl Responder {
+    let get_result = game_with_logs_service::get_game_with_logs(
+        &pool,
+        logged_user.id,
+        query.start_date,
+        query.end_date,
+    )
+    .await;
     handle_get_result(get_result)
 }
 

@@ -51,8 +51,8 @@ pub fn insert(user_id: i32, platform: &Platform) -> impl QueryStatementWriter {
             platform.name.clone().into(),
             platform.ptype.into(),
             platform.icon_filename.clone().into(),
-            crate::utils::now().into(),
-            crate::utils::now().into(),
+            crate::date_utils::now().into(),
+            crate::date_utils::now().into(),
         ])
         .returning(Query::returning().columns([PlatformIden::Id]));
 
@@ -93,7 +93,10 @@ fn update_values_by_id(
 ) -> impl QueryStatementWriter {
     let mut update = Query::update();
 
-    values.push((PlatformIden::UpdatedDateTime, crate::utils::now().into()));
+    values.push((
+        PlatformIden::UpdatedDateTime,
+        crate::date_utils::now().into(),
+    ));
     update
         .table(PlatformIden::Table)
         .values(values)

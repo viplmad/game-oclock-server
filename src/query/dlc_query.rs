@@ -63,8 +63,8 @@ pub fn insert(user_id: i32, dlc: &DLC) -> impl QueryStatementWriter {
             dlc.base_game_id.into(),
             dlc.release_year.into(),
             dlc.cover_filename.clone().into(),
-            crate::utils::now().into(),
-            crate::utils::now().into(),
+            crate::date_utils::now().into(),
+            crate::date_utils::now().into(),
         ])
         .returning(Query::returning().columns([DLCIden::Id]));
 
@@ -115,7 +115,7 @@ fn update_values_by_id(
 ) -> impl QueryStatementWriter {
     let mut update = Query::update();
 
-    values.push((DLCIden::UpdatedDateTime, crate::utils::now().into()));
+    values.push((DLCIden::UpdatedDateTime, crate::date_utils::now().into()));
     update
         .table(DLCIden::Table)
         .values(values)

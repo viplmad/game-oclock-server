@@ -36,8 +36,8 @@ pub fn insert(user: &User, password: &str) -> impl QueryStatementWriter {
         .values_panic([
             user.username.clone().into(),
             password.into(),
-            crate::utils::now().into(),
-            crate::utils::now().into(),
+            crate::date_utils::now().into(),
+            crate::date_utils::now().into(),
         ])
         .returning(Query::returning().columns([UserIden::Id]));
 
@@ -54,7 +54,7 @@ fn update_values_by_id(
 ) -> impl QueryStatementWriter {
     let mut update = Query::update();
 
-    values.push((UserIden::UpdatedDateTime, crate::utils::now().into()));
+    values.push((UserIden::UpdatedDateTime, crate::date_utils::now().into()));
     update
         .table(UserIden::Table)
         .values(values)

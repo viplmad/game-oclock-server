@@ -16,13 +16,13 @@ pub async fn get_token(
 ) -> Result<TokenResponse, TokenErrors> {
     match token_request.grant_type {
         GrantType::Password => {
-            if crate::utils::optional_string_is_none_or_blank(&token_request.username) {
+            if crate::string_utils::optional_string_is_none_or_blank(&token_request.username) {
                 return Err(TokenErrors::InvalidRequest(String::from(
                     "Request was missing the 'username' parameter.",
                 )));
             }
 
-            if crate::utils::optional_string_is_none_or_blank(&token_request.password) {
+            if crate::string_utils::optional_string_is_none_or_blank(&token_request.password) {
                 return Err(TokenErrors::InvalidRequest(String::from(
                     "Request was missing the 'password' parameter.",
                 )));
@@ -37,7 +37,7 @@ pub async fn get_token(
             .await
         }
         GrantType::RefreshToken => {
-            if crate::utils::optional_string_is_none_or_blank(&token_request.refresh_token) {
+            if crate::string_utils::optional_string_is_none_or_blank(&token_request.refresh_token) {
                 return Err(TokenErrors::InvalidRequest(String::from(
                     "Request was missing the 'refresh_token' parameter.",
                 )));
