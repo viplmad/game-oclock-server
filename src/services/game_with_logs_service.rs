@@ -18,7 +18,7 @@ pub async fn get_game_with_logs(
 ) -> Result<Vec<GameWithLogsDTO>, ApiErrors> {
     let start_datetime = crate::date_utils::date_at_start_of_day(start_date);
     let end_datetime = crate::date_utils::date_at_midnight(end_date);
-    let find_result = game_with_log_repository::find_with_log_by_datetime(
+    let find_result = game_with_log_repository::find_all_by_datetime_between(
         pool,
         user_id,
         start_datetime,

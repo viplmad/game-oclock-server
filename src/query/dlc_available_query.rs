@@ -110,9 +110,8 @@ fn from_and_where_user_id(select: &mut SelectStatement, user_id: i32) {
 }
 
 fn add_fields(select: &mut SelectStatement) {
-    select.column((
-        DLCAvailableIden::Table,
-        DLCAvailableIden::AddedDate,
+    select.expr_as(
+        Expr::col((DLCAvailableIden::Table, DLCAvailableIden::AddedDate)),
         Alias::new(AVAILABLE_DATE_ALIAS),
-    ));
+    );
 }

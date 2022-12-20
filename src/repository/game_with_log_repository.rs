@@ -7,7 +7,7 @@ use crate::query::game_log_query;
 
 use super::base::fetch_all;
 
-pub async fn find_with_log_by_datetime(
+pub async fn find_all_by_datetime_between(
     pool: &PgPool,
     user_id: i32,
     start_datetime: NaiveDateTime,

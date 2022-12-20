@@ -1,5 +1,7 @@
 use sea_query::Iden;
 
+use super::TableIden;
+
 #[derive(Iden)]
 #[iden = "DLCFinish"]
 pub enum DLCFinishIden {
@@ -10,4 +12,8 @@ pub enum DLCFinishIden {
     DLCId,
     #[iden = "date"]
     Date,
+}
+
+impl TableIden for DLCFinishIden {
+    const TABLE: Self = Self::Table;
 }

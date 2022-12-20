@@ -56,7 +56,6 @@ pub struct Game {
 pub struct GameAvailable {
     pub id: i32,
     pub user_id: i32,
-    pub available_date: NaiveDate,
     pub name: String,
     pub edition: String,
     pub release_year: Option<i32>,
@@ -69,39 +68,44 @@ pub struct GameAvailable {
     pub save_folder: String,
     pub screenshot_folder: String,
     pub backup: bool,
+    pub available_date: NaiveDate,
 }
 
 impl FromStr for FieldIden<GameIden> {
     type Err = ();
 
     fn from_str(field: &str) -> Result<Self, Self::Err> {
-        match field {
-            "id" => Ok(FieldIden::new(GameIden::Id, FieldType::Integer)),
-            "name" => Ok(FieldIden::new(GameIden::Name, FieldType::String)),
-            "edition" => Ok(FieldIden::new(GameIden::Edition, FieldType::String)),
-            "release_year" => Ok(FieldIden::new(GameIden::ReleaseYear, FieldType::Integer)),
-            "cover_filename" => Ok(FieldIden::new(GameIden::CoverFilename, FieldType::String)),
-            "status" => Ok(FieldIden::new(
-                GameUserInfoIden::Status,
-                FieldType::GameStatus,
-            )),
-            "rating" => Ok(FieldIden::new(GameUserInfoIden::Rating, FieldType::Integer)),
-            "notes" => Ok(FieldIden::new(GameUserInfoIden::Notes, FieldType::String)),
-            "save_folder" => Ok(FieldIden::new(
-                GameUserInfoIden::SaveFolder,
-                FieldType::String,
-            )),
-            "screenshot_folder" => Ok(FieldIden::new(
-                GameUserInfoIden::ScreenshotFolder,
-                FieldType::String,
-            )),
-            "backup" => Ok(FieldIden::new(GameUserInfoIden::Backup, FieldType::Boolean)),
-            "added_datetime" => Ok(FieldIden::new(GameIden::AddedDateTime, FieldType::DateTime)),
-            "updated_datetime" => Ok(FieldIden::new(
-                GameIden::UpdatedDateTime,
-                FieldType::DateTime,
-            )),
-            _ => Err(()),
-        }
+        convert_game_field(field)
+    }
+}
+
+#[allow(clippy::result_unit_err)] pub fn convert_game_field<I: TableIden>(field: &str) -> Result<FieldIden<I>, ()> {
+    match field {
+        "id" => Ok(FieldIden::new(GameIden::Id, FieldType::Integer)),
+        "name" => Ok(FieldIden::new(GameIden::Name, FieldType::String)),
+        "edition" => Ok(FieldIden::new(GameIden::Edition, FieldType::String)),
+        "release_year" => Ok(FieldIden::new(GameIden::ReleaseYear, FieldType::Integer)),
+        "cover_filename" => Ok(FieldIden::new(GameIden::CoverFilename, FieldType::String)),
+        "status" => Ok(FieldIden::new(
+            GameUserInfoIden::Status,
+            FieldType::GameStatus,
+        )),
+        "rating" => Ok(FieldIden::new(GameUserInfoIden::Rating, FieldType::Integer)),
+        "notes" => Ok(FieldIden::new(GameUserInfoIden::Notes, FieldType::String)),
+        "save_folder" => Ok(FieldIden::new(
+            GameUserInfoIden::SaveFolder,
+            FieldType::String,
+        )),
+        "screenshot_folder" => Ok(FieldIden::new(
+            GameUserInfoIden::ScreenshotFolder,
+            FieldType::String,
+        )),
+        "backup" => Ok(FieldIden::new(GameUserInfoIden::Backup, FieldType::Boolean)),
+        "added_datetime" => Ok(FieldIden::new(GameIden::AddedDateTime, FieldType::DateTime)),
+        "updated_datetime" => Ok(FieldIden::new(
+            GameIden::UpdatedDateTime,
+            FieldType::DateTime,
+        )),
+        _ => Err(()),
     }
 }

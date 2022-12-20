@@ -2,6 +2,8 @@ use chrono::NaiveDateTime;
 use sea_query::Iden;
 use sqlx::{postgres::types::PgInterval, FromRow};
 
+use super::TableIden;
+
 #[derive(Iden)]
 #[iden = "GameLog"]
 pub enum GameLogIden {
@@ -14,6 +16,10 @@ pub enum GameLogIden {
     DateTime,
     #[iden = "time"]
     Time,
+}
+
+impl TableIden for GameLogIden {
+    const TABLE: Self = Self::Table;
 }
 
 #[derive(FromRow)]

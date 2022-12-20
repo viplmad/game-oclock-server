@@ -50,13 +50,13 @@ pub struct DLC {
 pub struct DLCAvailable {
     pub id: i32,
     pub user_id: i32,
-    pub available_date: NaiveDate,
     pub name: String,
     pub base_game_id: Option<i32>,
     pub release_year: Option<i32>,
     pub cover_filename: Option<String>,
     pub added_datetime: NaiveDateTime,
     pub updated_datetime: NaiveDateTime,
+    pub available_date: NaiveDate,
 }
 
 impl FromStr for FieldIden<DLCIden> {

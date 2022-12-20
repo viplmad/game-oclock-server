@@ -8,7 +8,7 @@ use crate::models::{
 };
 use crate::services::{
     dlcs_service, game_available_service, game_finishes_service, game_logs_service,
-    game_tags_service, game_with_logs_service, games_service,
+    game_tags_service, game_with_finish_service, game_with_logs_service, games_service,
 };
 
 use super::base::{
@@ -267,6 +267,44 @@ async fn get_played_games(
         logged_user.id,
         query.start_date,
         query.end_date,
+    )
+    .await;
+    handle_get_result(get_result)
+}
+
+#[utoipa::path(
+    post,
+    path = "/api/v1/games/finished",
+    tag = "Games",
+    params(
+        StartEndDateQuery,
+        QuicksearchQuery,
+    ),
+    request_body(content = SearchDTO, description = "Query", content_type = "application/json"),
+    responses(
+        (status = 200, description = "Games obtained", body = [GameDTO], content_type = "application/json"), // TODO GameWithDate ??
+        (status = 401, description = "Unauthorized", body = ErrorMessage, content_type = "application/json"),
+        (status = 500, description = "Internal server error", body = ErrorMessage, content_type = "application/json"),
+    ),
+    security(
+        ("bearer_token" = [])
+    )
+)]
+#[post("/games/finished")]
+async fn get_finished_games(
+    pool: web::Data<PgPool>,
+    query: web::Query<StartEndDateQuery>,
+    quick_query: web::Query<QuicksearchQuery>,
+    body: web::Json<SearchDTO>,
+    logged_user: LoggedUser,
+) -> impl Responder {
+    let get_result = game_with_finish_service::search_finished_games(
+        &pool,
+        logged_user.id,
+        query.start_date,
+        query.end_date,
+        body.0,
+        quick_query.0.q,
     )
     .await;
     handle_get_result(get_result)

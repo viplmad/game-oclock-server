@@ -1,5 +1,7 @@
 use sea_query::Iden;
 
+use super::TableIden;
+
 #[derive(Iden)]
 #[iden = "GameFinish"]
 pub enum GameFinishIden {
@@ -10,4 +12,8 @@ pub enum GameFinishIden {
     GameId,
     #[iden = "date"]
     Date,
+}
+
+impl TableIden for GameFinishIden {
+    const TABLE: Self = Self::Table;
 }

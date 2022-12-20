@@ -113,9 +113,8 @@ fn from_and_where_user_id(select: &mut SelectStatement, user_id: i32) {
 }
 
 fn add_fields(select: &mut SelectStatement) {
-    select.column((
-        GameAvailableIden::Table,
-        GameAvailableIden::AddedDate,
+    select.expr_as(
+        Expr::col((GameAvailableIden::Table, GameAvailableIden::AddedDate)),
         Alias::new(AVAILABLE_DATE_ALIAS),
-    ));
+    );
 }

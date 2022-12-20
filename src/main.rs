@@ -122,6 +122,7 @@ async fn run(
             routes::get_total_game_logs,
             routes::get_game_logs,
             routes::get_played_games,
+            routes::get_finished_games,
             routes::get_game_dlcs,
             routes::get_game_tags,
             routes::get_game_platforms,
@@ -258,6 +259,7 @@ async fn run(
                         .service(routes::get_total_game_logs)
                         .service(routes::get_game_logs)
                         .service(routes::get_played_games)
+                        .service(routes::get_finished_games)
                         .service(routes::get_game_dlcs)
                         .service(routes::get_game_tags)
                         .service(routes::get_game_platforms)

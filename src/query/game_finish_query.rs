@@ -1,9 +1,11 @@
 use chrono::NaiveDate;
-use sea_query::{Expr, Order, Query, QueryStatementWriter, SelectStatement};
+use sea_query::{Alias, Expr, Order, Query, QueryStatementWriter, SelectStatement};
 
-use crate::entities::{GameFinishIden, GameIden};
+use crate::entities::{GameFinishIden, GameIden, GameWithFinishSearch, SearchQuery};
+use crate::errors::RepositoryError;
 
 use super::game_query;
+use super::search::apply_search;
 
 pub fn select_one_by_user_id_and_game_id_order_by_date_asc(
     user_id: i32,
@@ -35,18 +37,20 @@ pub fn select_all_games_order_by_date_desc(user_id: i32) -> SelectStatement {
     select
 }
 
-pub fn select_all_games_by_date_gte_and_date_lte_order_by_date_desc(
+pub fn search_all_games_finish_with_search_by_date_gte_and_date_lte_order_by_date_desc(
     user_id: i32,
     start_date: NaiveDate,
     end_date: NaiveDate,
-) -> impl QueryStatementWriter {
+    search: GameWithFinishSearch,
+) -> Result<SearchQuery, RepositoryError> {
     let mut select = select_all_games_order_by_date_desc(user_id);
 
+    add_date_field(&mut select);
     select
         .and_where(Expr::col((GameFinishIden::Table, GameFinishIden::Date)).gte(start_date))
         .and_where(Expr::col((GameFinishIden::Table, GameFinishIden::Date)).lte(end_date));
 
-    select
+    apply_search(select, search)
 }
 
 pub fn insert(user_id: i32, game_id: i32, date: NaiveDate) -> impl QueryStatementWriter {
@@ -107,5 +111,8 @@ fn from_and_where_user_id_and_game_id(select: &mut SelectStatement, user_id: i32
 }
 
 fn add_date_field(select: &mut SelectStatement) {
-    select.column((GameFinishIden::Table, GameFinishIden::Date));
+    select.expr_as(
+        Expr::col((GameFinishIden::Table, GameFinishIden::Date)),
+        Alias::new("finish_date"),
+    );
 }
