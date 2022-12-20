@@ -47,7 +47,7 @@ pub struct DLC {
 }
 
 #[derive(FromRow)]
-pub struct DLCAvailable {
+pub struct DLCWithDate {
     pub id: i32,
     pub user_id: i32,
     pub name: String,
@@ -56,7 +56,7 @@ pub struct DLCAvailable {
     pub cover_filename: Option<String>,
     pub added_datetime: NaiveDateTime,
     pub updated_datetime: NaiveDateTime,
-    pub available_date: NaiveDate,
+    pub query_date: NaiveDate,
 }
 
 impl FromStr for FieldIden<DLCIden> {

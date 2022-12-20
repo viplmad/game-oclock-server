@@ -1,7 +1,7 @@
 use chrono::NaiveDate;
 use sea_query::{Alias, Expr, Query, QueryStatementWriter, SelectStatement};
 
-use crate::entities::{GameAvailableIden, GameIden, PlatformIden, AVAILABLE_DATE_ALIAS};
+use crate::entities::{GameAvailableIden, GameIden, PlatformIden, QUERY_DATE_ALIAS};
 
 use super::{game_query, platform_query};
 
@@ -115,6 +115,6 @@ fn from_and_where_user_id(select: &mut SelectStatement, user_id: i32) {
 fn add_fields(select: &mut SelectStatement) {
     select.expr_as(
         Expr::col((GameAvailableIden::Table, GameAvailableIden::AddedDate)),
-        Alias::new(AVAILABLE_DATE_ALIAS),
+        Alias::new(QUERY_DATE_ALIAS),
     );
 }

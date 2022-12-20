@@ -1,8 +1,8 @@
-use crate::entities::GameWithFinish;
+use crate::entities::GameWithDate;
 use crate::models::{GameStatus, GameWithFinishDTO};
 
-impl From<GameWithFinish> for GameWithFinishDTO {
-    fn from(game: GameWithFinish) -> Self {
+impl From<GameWithDate> for GameWithFinishDTO {
+    fn from(game: GameWithDate) -> Self {
         Self {
             id: game.id,
             name: game.name,
@@ -17,7 +17,7 @@ impl From<GameWithFinish> for GameWithFinishDTO {
             save_folder: game.save_folder,
             screenshot_folder: game.screenshot_folder,
             backup: game.backup,
-            finish_date: game.finish_date,
+            finish_date: game.query_date,
         }
     }
 }

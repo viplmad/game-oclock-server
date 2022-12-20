@@ -8,6 +8,8 @@ use super::{FieldIden, FieldType, GameUserInfoIden, Search, TableIden};
 
 pub type GameSearch = Search<GameIden>;
 
+pub const QUERY_DATE_ALIAS: &str = "query_date";
+
 #[derive(Clone, Copy, Iden)]
 #[iden = "Game"]
 pub enum GameIden {
@@ -53,7 +55,7 @@ pub struct Game {
 }
 
 #[derive(FromRow)]
-pub struct GameAvailable {
+pub struct GameWithDate {
     pub id: i32,
     pub user_id: i32,
     pub name: String,
@@ -68,7 +70,7 @@ pub struct GameAvailable {
     pub save_folder: String,
     pub screenshot_folder: String,
     pub backup: bool,
-    pub available_date: NaiveDate,
+    pub query_date: NaiveDate,
 }
 
 impl FromStr for FieldIden<GameIden> {
@@ -79,7 +81,8 @@ impl FromStr for FieldIden<GameIden> {
     }
 }
 
-#[allow(clippy::result_unit_err)] pub fn convert_game_field<I: TableIden>(field: &str) -> Result<FieldIden<I>, ()> {
+#[allow(clippy::result_unit_err)]
+pub fn convert_game_field<I: TableIden>(field: &str) -> Result<FieldIden<I>, ()> {
     match field {
         "id" => Ok(FieldIden::new(GameIden::Id, FieldType::Integer)),
         "name" => Ok(FieldIden::new(GameIden::Name, FieldType::String)),

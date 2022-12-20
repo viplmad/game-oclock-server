@@ -1,7 +1,9 @@
 use chrono::NaiveDate;
 use sea_query::{Alias, Expr, Order, Query, QueryStatementWriter, SelectStatement};
 
-use crate::entities::{GameFinishIden, GameIden, GameWithFinishSearch, SearchQuery};
+use crate::entities::{
+    GameFinishIden, GameIden, GameWithFinishSearch, SearchQuery, QUERY_DATE_ALIAS,
+};
 use crate::errors::RepositoryError;
 
 use super::game_query;
@@ -113,6 +115,6 @@ fn from_and_where_user_id_and_game_id(select: &mut SelectStatement, user_id: i32
 fn add_date_field(select: &mut SelectStatement) {
     select.expr_as(
         Expr::col((GameFinishIden::Table, GameFinishIden::Date)),
-        Alias::new("finish_date"),
+        Alias::new(QUERY_DATE_ALIAS),
     );
 }

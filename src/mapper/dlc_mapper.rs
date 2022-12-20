@@ -1,4 +1,4 @@
-use crate::entities::{DLCAvailable, DLC};
+use crate::entities::{DLCWithDate, DLC};
 use crate::models::{DLCAvailableDTO, DLCDTO};
 
 impl From<DLC> for DLCDTO {
@@ -30,17 +30,17 @@ impl From<DLCDTO> for DLC {
     }
 }
 
-impl From<DLCAvailable> for DLCAvailableDTO {
-    fn from(dlc: DLCAvailable) -> Self {
+impl From<DLCWithDate> for DLCAvailableDTO {
+    fn from(dlc: DLCWithDate) -> Self {
         Self {
             id: dlc.id,
-            available_date: dlc.available_date,
             name: dlc.name,
             base_game_id: dlc.base_game_id,
             release_year: dlc.release_year,
             cover_filename: dlc.cover_filename,
             added_datetime: dlc.added_datetime,
             updated_datetime: dlc.updated_datetime,
+            available_date: dlc.query_date,
         }
     }
 }

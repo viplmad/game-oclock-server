@@ -1,7 +1,7 @@
 use chrono::NaiveDate;
 use sqlx::PgPool;
 
-use crate::entities::{DLCAvailable, PlatformAvailable};
+use crate::entities::{DLCWithDate, PlatformAvailable};
 use crate::errors::RepositoryError;
 use crate::query::dlc_available_query;
 
@@ -11,7 +11,7 @@ pub async fn find_all_dlcs_with_platform(
     pool: &PgPool,
     user_id: i32,
     platform_id: i32,
-) -> Result<Vec<DLCAvailable>, RepositoryError> {
+) -> Result<Vec<DLCWithDate>, RepositoryError> {
     // TODO Add query
     let query = dlc_available_query::select_all_dlcs_by_platform_id(user_id, platform_id);
     fetch_all(pool, query).await

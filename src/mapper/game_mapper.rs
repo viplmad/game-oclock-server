@@ -1,4 +1,4 @@
-use crate::entities::{Game, GameAvailable};
+use crate::entities::{Game, GameWithDate};
 use crate::models::{GameAvailableDTO, GameDTO, GameStatus};
 
 impl From<Game> for GameDTO {
@@ -42,8 +42,8 @@ impl From<GameDTO> for Game {
     }
 }
 
-impl From<GameAvailable> for GameAvailableDTO {
-    fn from(game: GameAvailable) -> Self {
+impl From<GameWithDate> for GameAvailableDTO {
+    fn from(game: GameWithDate) -> Self {
         Self {
             id: game.id,
             name: game.name,
@@ -58,7 +58,7 @@ impl From<GameAvailable> for GameAvailableDTO {
             save_folder: game.save_folder,
             screenshot_folder: game.screenshot_folder,
             backup: game.backup,
-            available_date: game.available_date,
+            available_date: game.query_date,
         }
     }
 }
