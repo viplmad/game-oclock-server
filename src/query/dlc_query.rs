@@ -43,6 +43,14 @@ pub(super) fn select_all(user_id: i32) -> SelectStatement {
     select
 }
 
+pub(super) fn select_all_group_by_id(user_id: i32) -> SelectStatement {
+    let mut select = select_all(user_id);
+
+    select.group_by_col((DLCIden::Table, DLCIden::Id));
+
+    select
+}
+
 pub fn insert(user_id: i32, dlc: &DLC) -> impl QueryStatementWriter {
     let mut insert = Query::insert();
 

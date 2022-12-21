@@ -11,8 +11,7 @@ pub async fn find_first_by_dlc_id(
     user_id: i32,
     dlc_id: i32,
 ) -> Result<Option<NaiveDate>, RepositoryError> {
-    let query =
-        dlc_finish_query::select_one_by_user_id_and_dlc_id_order_by_date_asc(user_id, dlc_id);
+    let query = dlc_finish_query::select_max_by_user_id_and_dlc_id(user_id, dlc_id);
     fetch_optional_single(pool, query).await
 }
 

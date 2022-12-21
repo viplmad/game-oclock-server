@@ -11,8 +11,7 @@ pub async fn find_first_by_game_id(
     user_id: i32,
     game_id: i32,
 ) -> Result<Option<NaiveDate>, RepositoryError> {
-    let query =
-        game_finish_query::select_one_by_user_id_and_game_id_order_by_date_asc(user_id, game_id);
+    let query = game_finish_query::select_max_date_by_user_id_and_game_id(user_id, game_id);
     fetch_optional_single(pool, query).await
 }
 

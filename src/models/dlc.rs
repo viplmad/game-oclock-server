@@ -67,8 +67,6 @@ pub struct NewDLCDTO {
 #[derive(Serialize, ToSchema)]
 pub struct DLCAvailableDTO {
     pub id: i32,
-    #[schema(value_type = String)]
-    pub available_date: NaiveDate,
     pub name: String,
     #[serde(skip_serializing_if = "Option::is_none")]
     pub base_game_id: Option<i32>,
@@ -80,6 +78,8 @@ pub struct DLCAvailableDTO {
     pub added_datetime: NaiveDateTime,
     #[schema(value_type = String)]
     pub updated_datetime: NaiveDateTime,
+    #[schema(value_type = String)]
+    pub available_date: NaiveDate,
 }
 
 impl ModelInfo for DLCAvailableDTO {

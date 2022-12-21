@@ -35,6 +35,17 @@ pub(super) fn select_all(user_id: i32) -> SelectStatement {
     select
 }
 
+pub(super) fn select_all_group_by_id(user_id: i32) -> SelectStatement {
+    let mut select = select_all(user_id);
+
+    select
+        .group_by_col((GameIden::Table, GameIden::Id))
+        .group_by_col((GameUserInfoIden::Table, GameUserInfoIden::UserId))
+        .group_by_col((GameUserInfoIden::Table, GameUserInfoIden::GameId));
+
+    select
+}
+
 pub fn insert(user_id: i32, game: &Game) -> impl QueryStatementWriter {
     let mut insert = Query::insert();
 

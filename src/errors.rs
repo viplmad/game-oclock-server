@@ -38,13 +38,13 @@ pub mod error_message_builder {
     }
 
     pub fn not_found(model_name: &str, parameters: &[&str]) -> String {
-        let parameters_join_comma = parameters.join("-");
-        format!("{model_name} with specified {parameters_join_comma} does not exist.")
+        let parameters_join = parameters.join("-");
+        format!("{model_name} with specified {parameters_join} does not exist.")
     }
 
     pub fn already_exists(model_name: &str, parameters: &[&str]) -> String {
-        let parameters_join_comma = parameters.join("-");
-        format!("{model_name} with specified {parameters_join_comma} already exists.")
+        let parameters_join = parameters.join("-");
+        format!("{model_name} with specified {parameters_join} already exists.")
     }
 
     pub fn inner_error(msg: &str, inner_msg: &str) -> String {

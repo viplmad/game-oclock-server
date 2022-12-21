@@ -1,22 +1,20 @@
 use chrono::NaiveDate;
 use sea_query::{Alias, Expr, Order, Query, QueryStatementWriter, SelectStatement};
 
-use crate::entities::{
-    GameFinishIden, GameIden, GameWithFinishSearch, SearchQuery, QUERY_DATE_ALIAS,
-};
+use crate::entities::{GameFinishIden, GameIden, GameSearch, SearchQuery, QUERY_DATE_ALIAS};
 use crate::errors::RepositoryError;
 
 use super::game_query;
 use super::search::apply_search;
 
-pub fn select_one_by_user_id_and_game_id_order_by_date_asc(
+pub fn select_max_date_by_user_id_and_game_id(
     user_id: i32,
     game_id: i32,
 ) -> impl QueryStatementWriter {
-    let mut select = select_all_by_user_id_and_game_id(user_id, game_id);
+    let mut select = Query::select();
 
-    select.order_by(GameFinishIden::Date, Order::Asc);
-    select.limit(1);
+    from_and_where_user_id_and_game_id(&mut select, user_id, game_id);
+    add_max_date_field(&mut select);
 
     select
 }
@@ -30,28 +28,69 @@ pub fn select_all_by_user_id_and_game_id(user_id: i32, game_id: i32) -> SelectSt
     select
 }
 
-pub fn select_all_games_order_by_date_desc(user_id: i32) -> SelectStatement {
-    let mut select = game_query::select_all(user_id);
+fn select_all_game_with_finish_by_date_gte_and_date_lte(
+    user_id: i32,
+    start_date: Option<NaiveDate>,
+    end_date: Option<NaiveDate>,
+) -> SelectStatement {
+    let mut select = game_query::select_all_group_by_id(user_id);
 
     join_game_finish(&mut select);
-    select.order_by((GameFinishIden::Table, GameFinishIden::Date), Order::Desc);
+
+    if let Some(start) = start_date {
+        select.and_where(Expr::col((GameFinishIden::Table, GameFinishIden::Date)).gte(start));
+    }
+
+    if let Some(end) = end_date {
+        select.and_where(Expr::col((GameFinishIden::Table, GameFinishIden::Date)).lte(end));
+    }
 
     select
 }
 
-pub fn search_all_games_finish_with_search_by_date_gte_and_date_lte_order_by_date_desc(
+pub fn select_first_game_with_finish_with_search_by_date_gte_and_date_lte_order_by_date_asc(
     user_id: i32,
-    start_date: NaiveDate,
-    end_date: NaiveDate,
-    search: GameWithFinishSearch,
+    start_date: Option<NaiveDate>,
+    end_date: Option<NaiveDate>,
+    mut search: GameSearch,
 ) -> Result<SearchQuery, RepositoryError> {
-    let mut select = select_all_games_order_by_date_desc(user_id);
+    let mut select =
+        select_all_game_with_finish_by_date_gte_and_date_lte(user_id, start_date, end_date);
 
-    add_date_field(&mut select);
-    select
-        .and_where(Expr::col((GameFinishIden::Table, GameFinishIden::Date)).gte(start_date))
-        .and_where(Expr::col((GameFinishIden::Table, GameFinishIden::Date)).lte(end_date));
+    select.expr_as(
+        Expr::col((GameFinishIden::Table, GameFinishIden::Date)).min(),
+        Alias::new(QUERY_DATE_ALIAS),
+    );
+    select.order_by_expr(
+        Expr::col((GameFinishIden::Table, GameFinishIden::Date)).min(),
+        Order::Asc,
+    );
 
+    // Ignore sort, might conflict with date ordering
+    search.sort = None;
+    apply_search(select, search)
+}
+
+pub fn select_last_game_with_finish_with_search_by_date_gte_and_date_lte_order_by_date_desc(
+    user_id: i32,
+    start_date: Option<NaiveDate>,
+    end_date: Option<NaiveDate>,
+    mut search: GameSearch,
+) -> Result<SearchQuery, RepositoryError> {
+    let mut select =
+        select_all_game_with_finish_by_date_gte_and_date_lte(user_id, start_date, end_date);
+
+    select.expr_as(
+        Expr::col((GameFinishIden::Table, GameFinishIden::Date)).max(),
+        Alias::new(QUERY_DATE_ALIAS),
+    );
+    select.order_by_expr(
+        Expr::col((GameFinishIden::Table, GameFinishIden::Date)).max(),
+        Order::Desc,
+    );
+
+    // Ignore sort, might conflict with date ordering
+    search.sort = None;
     apply_search(select, search)
 }
 
@@ -112,9 +151,10 @@ fn from_and_where_user_id_and_game_id(select: &mut SelectStatement, user_id: i32
         .and_where(Expr::col((GameFinishIden::Table, GameFinishIden::GameId)).eq(game_id));
 }
 
+fn add_max_date_field(select: &mut SelectStatement) {
+    select.expr(Expr::col((GameFinishIden::Table, GameFinishIden::Date)).max());
+}
+
 fn add_date_field(select: &mut SelectStatement) {
-    select.expr_as(
-        Expr::col((GameFinishIden::Table, GameFinishIden::Date)),
-        Alias::new(QUERY_DATE_ALIAS),
-    );
+    select.column((GameFinishIden::Table, GameFinishIden::Date));
 }

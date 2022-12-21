@@ -265,8 +265,8 @@ async fn get_played_games(
     let get_result = game_with_logs_service::get_game_with_logs(
         &pool,
         logged_user.id,
-        query.start_date,
-        query.end_date,
+        query.start_date.unwrap(), // TODO
+        query.end_date.unwrap(),   // TODO
     )
     .await;
     handle_get_result(get_result)
@@ -274,7 +274,7 @@ async fn get_played_games(
 
 #[utoipa::path(
     post,
-    path = "/api/v1/games/finished",
+    path = "/api/v1/games/finished/first",
     tag = "Games",
     params(
         StartEndDateQuery,
@@ -282,7 +282,7 @@ async fn get_played_games(
     ),
     request_body(content = SearchDTO, description = "Query", content_type = "application/json"),
     responses(
-        (status = 200, description = "Games obtained", body = [GameDTO], content_type = "application/json"), // TODO GameWithDate ??
+        (status = 200, description = "Games obtained", body = [GameWithFinishDTO], content_type = "application/json"),
         (status = 401, description = "Unauthorized", body = ErrorMessage, content_type = "application/json"),
         (status = 500, description = "Internal server error", body = ErrorMessage, content_type = "application/json"),
     ),
@@ -290,15 +290,53 @@ async fn get_played_games(
         ("bearer_token" = [])
     )
 )]
-#[post("/games/finished")]
-async fn get_finished_games(
+#[post("/games/finished/first")]
+async fn get_first_finished_games(
     pool: web::Data<PgPool>,
     query: web::Query<StartEndDateQuery>,
     quick_query: web::Query<QuicksearchQuery>,
     body: web::Json<SearchDTO>,
     logged_user: LoggedUser,
 ) -> impl Responder {
-    let get_result = game_with_finish_service::search_finished_games(
+    let get_result = game_with_finish_service::search_first_finished_games(
+        &pool,
+        logged_user.id,
+        query.start_date,
+        query.end_date,
+        body.0,
+        quick_query.0.q,
+    )
+    .await;
+    handle_get_result(get_result)
+}
+
+#[utoipa::path(
+    post,
+    path = "/api/v1/games/finished/last",
+    tag = "Games",
+    params(
+        StartEndDateQuery,
+        QuicksearchQuery,
+    ),
+    request_body(content = SearchDTO, description = "Query", content_type = "application/json"),
+    responses(
+        (status = 200, description = "Games obtained", body = [GameWithFinishDTO], content_type = "application/json"),
+        (status = 401, description = "Unauthorized", body = ErrorMessage, content_type = "application/json"),
+        (status = 500, description = "Internal server error", body = ErrorMessage, content_type = "application/json"),
+    ),
+    security(
+        ("bearer_token" = [])
+    )
+)]
+#[post("/games/finished/last")]
+async fn get_last_finished_games(
+    pool: web::Data<PgPool>,
+    query: web::Query<StartEndDateQuery>,
+    quick_query: web::Query<QuicksearchQuery>,
+    body: web::Json<SearchDTO>,
+    logged_user: LoggedUser,
+) -> impl Responder {
+    let get_result = game_with_finish_service::search_last_finished_games(
         &pool,
         logged_user.id,
         query.start_date,
