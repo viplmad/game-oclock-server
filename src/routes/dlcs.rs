@@ -4,8 +4,11 @@ use sqlx::PgPool;
 
 use crate::models::{
     ItemId, ItemIdAndRelatedId, LoggedUser, NewDLCDTO, QuicksearchQuery, SearchDTO,
+    StartEndDateQuery,
 };
-use crate::services::{dlc_available_service, dlc_finishes_service, dlcs_service};
+use crate::services::{
+    dlc_available_service, dlc_finishes_service, dlc_with_finish_service, dlcs_service,
+};
 
 use super::base::{
     handle_action_result, handle_create_result, handle_delete_result, handle_get_result,
@@ -149,6 +152,82 @@ async fn get_dlc_platforms(
 ) -> impl Responder {
     let ItemId(id) = path.into_inner();
     let get_result = dlc_available_service::get_dlc_platforms(&pool, logged_user.id, id).await;
+    handle_get_result(get_result)
+}
+
+#[utoipa::path(
+    post,
+    path = "/api/v1/dlcs/finished/first",
+    tag = "DLCs",
+    params(
+        StartEndDateQuery,
+        QuicksearchQuery,
+    ),
+    request_body(content = SearchDTO, description = "Query", content_type = "application/json"),
+    responses(
+        (status = 200, description = "DLCs obtained", body = [DLCWithFinishDTO], content_type = "application/json"),
+        (status = 401, description = "Unauthorized", body = ErrorMessage, content_type = "application/json"),
+        (status = 500, description = "Internal server error", body = ErrorMessage, content_type = "application/json"),
+    ),
+    security(
+        ("bearer_token" = [])
+    )
+)]
+#[post("/dlcs/finished/first")]
+async fn get_first_finished_dlcs(
+    pool: web::Data<PgPool>,
+    query: web::Query<StartEndDateQuery>,
+    quick_query: web::Query<QuicksearchQuery>,
+    body: web::Json<SearchDTO>,
+    logged_user: LoggedUser,
+) -> impl Responder {
+    let get_result = dlc_with_finish_service::search_first_finished_dlcs(
+        &pool,
+        logged_user.id,
+        query.start_date,
+        query.end_date,
+        body.0,
+        quick_query.0.q,
+    )
+    .await;
+    handle_get_result(get_result)
+}
+
+#[utoipa::path(
+    post,
+    path = "/api/v1/dlcs/finished/last",
+    tag = "DLCs",
+    params(
+        StartEndDateQuery,
+        QuicksearchQuery,
+    ),
+    request_body(content = SearchDTO, description = "Query", content_type = "application/json"),
+    responses(
+        (status = 200, description = "DLCs obtained", body = [DLCWithFinishDTO], content_type = "application/json"),
+        (status = 401, description = "Unauthorized", body = ErrorMessage, content_type = "application/json"),
+        (status = 500, description = "Internal server error", body = ErrorMessage, content_type = "application/json"),
+    ),
+    security(
+        ("bearer_token" = [])
+    )
+)]
+#[post("/dlcs/finished/last")]
+async fn get_last_finished_dlcs(
+    pool: web::Data<PgPool>,
+    query: web::Query<StartEndDateQuery>,
+    quick_query: web::Query<QuicksearchQuery>,
+    body: web::Json<SearchDTO>,
+    logged_user: LoggedUser,
+) -> impl Responder {
+    let get_result = dlc_with_finish_service::search_last_finished_dlcs(
+        &pool,
+        logged_user.id,
+        query.start_date,
+        query.end_date,
+        body.0,
+        quick_query.0.q,
+    )
+    .await;
     handle_get_result(get_result)
 }
 

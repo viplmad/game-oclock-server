@@ -121,12 +121,12 @@ async fn run(
             routes::get_game_finishes,
             routes::get_total_game_logs,
             routes::get_game_logs,
-            routes::get_played_games,
-            routes::get_first_finished_games,
-            routes::get_last_finished_games,
             routes::get_game_dlcs,
             routes::get_game_tags,
             routes::get_game_platforms,
+            routes::get_played_games,
+            routes::get_first_finished_games,
+            routes::get_last_finished_games,
             routes::get_games,
             routes::post_game,
             routes::post_game_finish,
@@ -147,6 +147,8 @@ async fn run(
             routes::get_first_dlc_finish,
             routes::get_dlc_finishes,
             routes::get_dlc_platforms,
+            routes::get_first_finished_dlcs,
+            routes::get_last_finished_dlcs,
             routes::get_dlcs,
             routes::post_dlc,
             routes::post_dlc_finish,
@@ -192,6 +194,7 @@ async fn run(
             models::DLCSearchResult,
             models::NewDLCDTO,
             models::DLCAvailableDTO,
+            models::DLCWithFinishDTO,
             models::PlatformDTO,
             models::PlatformSearchResult,
             models::NewPlatformDTO,
@@ -260,12 +263,12 @@ async fn run(
                         .service(routes::get_game_finishes)
                         .service(routes::get_total_game_logs)
                         .service(routes::get_game_logs)
-                        .service(routes::get_played_games)
-                        .service(routes::get_first_finished_games)
-                        .service(routes::get_last_finished_games)
                         .service(routes::get_game_dlcs)
                         .service(routes::get_game_tags)
                         .service(routes::get_game_platforms)
+                        .service(routes::get_played_games)
+                        .service(routes::get_first_finished_games)
+                        .service(routes::get_last_finished_games)
                         .service(routes::get_games)
                         .service(routes::post_game)
                         .service(routes::post_game_finish)
@@ -285,6 +288,8 @@ async fn run(
                         .service(routes::get_first_dlc_finish)
                         .service(routes::get_dlc_finishes)
                         .service(routes::get_dlc_platforms)
+                        .service(routes::get_first_finished_dlcs)
+                        .service(routes::get_last_finished_dlcs)
                         .service(routes::get_dlcs)
                         .service(routes::post_dlc)
                         .service(routes::post_dlc_finish)

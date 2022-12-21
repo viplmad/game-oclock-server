@@ -1,4 +1,5 @@
 mod dlc_mapper;
+mod dlc_with_finish_mapper;
 mod duration_mapper;
 mod game_log_mapper;
 mod game_mapper;
@@ -12,6 +13,7 @@ mod tag_mapper;
 mod user_mapper;
 
 pub use dlc_mapper::*;
+pub use dlc_with_finish_mapper::*;
 pub use game_log_mapper::*;
 pub use game_status_mapper::*;
 pub use game_with_finish_mapper::*;

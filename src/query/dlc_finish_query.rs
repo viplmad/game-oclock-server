@@ -1,18 +1,16 @@
 use chrono::NaiveDate;
-use sea_query::{Expr, Order, Query, QueryStatementWriter, SelectStatement};
+use sea_query::{Alias, Expr, Order, Query, QueryStatementWriter, SelectStatement};
 
-use crate::entities::{DLCFinishIden, DLCIden};
+use crate::entities::{DLCFinishIden, DLCIden, DLCSearch, SearchQuery, QUERY_DATE_ALIAS};
+use crate::errors::RepositoryError;
 
-use super::dlc_query;
+use super::{dlc_query, search::apply_search};
 
-pub fn select_one_by_user_id_and_dlc_id_order_by_date_asc(
-    user_id: i32,
-    dlc_id: i32,
-) -> impl QueryStatementWriter {
-    let mut select = select_all_by_user_id_and_dlc_id(user_id, dlc_id);
+pub fn select_max_by_user_id_and_dlc_id(user_id: i32, dlc_id: i32) -> impl QueryStatementWriter {
+    let mut select = Query::select();
 
-    select.order_by(DLCFinishIden::Date, Order::Asc);
-    select.limit(1);
+    from_and_where_user_id_and_dlc_id(&mut select, user_id, dlc_id);
+    add_max_date_field(&mut select);
 
     select
 }
@@ -26,27 +24,70 @@ pub fn select_all_by_user_id_and_dlc_id(user_id: i32, dlc_id: i32) -> SelectStat
     select
 }
 
-pub fn select_all_dlcs_order_by_date_desc(user_id: i32) -> SelectStatement {
-    let mut select = dlc_query::select_all(user_id);
+fn select_all_dlc_with_finish_by_date_gte_and_date_lte(
+    user_id: i32,
+    start_date: Option<NaiveDate>,
+    end_date: Option<NaiveDate>,
+) -> SelectStatement {
+    let mut select = dlc_query::select_all_group_by_id(user_id);
 
     join_dlc_finish(&mut select);
-    select.order_by((DLCFinishIden::Table, DLCFinishIden::Date), Order::Desc);
+
+    if let Some(start) = start_date {
+        select.and_where(Expr::col((DLCFinishIden::Table, DLCFinishIden::Date)).gte(start));
+    }
+
+    if let Some(end) = end_date {
+        select.and_where(Expr::col((DLCFinishIden::Table, DLCFinishIden::Date)).lte(end));
+    }
 
     select
 }
 
-pub fn select_all_dlcs_by_date_gte_and_date_lte_order_by_date_desc(
+pub fn select_first_dlc_with_finish_with_search_by_date_gte_and_date_lte_order_by_date_asc(
     user_id: i32,
-    start_date: NaiveDate,
-    end_date: NaiveDate,
-) -> impl QueryStatementWriter {
-    let mut select = select_all_dlcs_order_by_date_desc(user_id);
+    start_date: Option<NaiveDate>,
+    end_date: Option<NaiveDate>,
+    mut search: DLCSearch,
+) -> Result<SearchQuery, RepositoryError> {
+    let mut select =
+        select_all_dlc_with_finish_by_date_gte_and_date_lte(user_id, start_date, end_date);
 
-    select
-        .and_where(Expr::col((DLCFinishIden::Table, DLCFinishIden::Date)).gte(start_date))
-        .and_where(Expr::col((DLCFinishIden::Table, DLCFinishIden::Date)).lte(end_date));
+    select.expr_as(
+        Expr::col((DLCFinishIden::Table, DLCFinishIden::Date)).min(),
+        Alias::new(QUERY_DATE_ALIAS),
+    );
+    select.order_by_expr(
+        Expr::col((DLCFinishIden::Table, DLCFinishIden::Date)).min(),
+        Order::Asc,
+    );
 
-    select
+    // Ignore sort, might conflict with date ordering
+    search.sort = None;
+    apply_search(select, search)
+}
+
+pub fn select_last_dlc_with_finish_with_search_by_date_gte_and_date_lte_order_by_date_desc(
+    user_id: i32,
+    start_date: Option<NaiveDate>,
+    end_date: Option<NaiveDate>,
+    mut search: DLCSearch,
+) -> Result<SearchQuery, RepositoryError> {
+    let mut select =
+        select_all_dlc_with_finish_by_date_gte_and_date_lte(user_id, start_date, end_date);
+
+    select.expr_as(
+        Expr::col((DLCFinishIden::Table, DLCFinishIden::Date)).max(),
+        Alias::new(QUERY_DATE_ALIAS),
+    );
+    select.order_by_expr(
+        Expr::col((DLCFinishIden::Table, DLCFinishIden::Date)).max(),
+        Order::Desc,
+    );
+
+    // Ignore sort, might conflict with date ordering
+    search.sort = None;
+    apply_search(select, search)
 }
 
 pub fn insert(user_id: i32, dlc_id: i32, date: NaiveDate) -> impl QueryStatementWriter {
@@ -108,4 +149,8 @@ fn from_and_where_user_id_and_dlc_id(select: &mut SelectStatement, user_id: i32,
 
 fn add_date_field(select: &mut SelectStatement) {
     select.column((DLCFinishIden::Table, DLCFinishIden::Date));
+}
+
+fn add_max_date_field(select: &mut SelectStatement) {
+    select.expr(Expr::col((DLCFinishIden::Table, DLCFinishIden::Date)).max());
 }
