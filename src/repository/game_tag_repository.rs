@@ -11,7 +11,6 @@ pub async fn find_all_games_with_tag(
     user_id: i32,
     tag_id: i32,
 ) -> Result<Vec<Game>, RepositoryError> {
-    // TODO Add query
     let query = game_tag_query::select_all_games_by_tag_id(user_id, tag_id);
     fetch_all(pool, query).await
 }
@@ -21,7 +20,6 @@ pub async fn find_all_tags_with_game(
     user_id: i32,
     game_id: i32,
 ) -> Result<Vec<Tag>, RepositoryError> {
-    // TODO Add query
     let query = game_tag_query::select_all_tags_by_game_id(user_id, game_id);
     fetch_all(pool, query).await
 }

@@ -3,8 +3,8 @@ use chrono::NaiveDate;
 use sqlx::PgPool;
 
 use crate::models::{
-    ItemId, ItemIdAndRelatedId, LoggedUser, NewDLCDTO, QuicksearchQuery, SearchDTO,
-    StartEndDateQuery,
+    ItemId, ItemIdAndRelatedId, LoggedUser, NewDLCDTO, OptionalStartEndDateQuery, QuicksearchQuery,
+    SearchDTO,
 };
 use crate::services::{
     dlc_available_service, dlc_finishes_service, dlc_with_finish_service, dlcs_service,
@@ -160,12 +160,13 @@ async fn get_dlc_platforms(
     path = "/api/v1/dlcs/finished/first",
     tag = "DLCs",
     params(
-        StartEndDateQuery,
+        OptionalStartEndDateQuery,
         QuicksearchQuery,
     ),
     request_body(content = SearchDTO, description = "Query", content_type = "application/json"),
     responses(
         (status = 200, description = "DLCs obtained", body = [DLCWithFinishDTO], content_type = "application/json"),
+        (status = 400, description = "Bad request", body = ErrorMessage, content_type = "application/json"),
         (status = 401, description = "Unauthorized", body = ErrorMessage, content_type = "application/json"),
         (status = 500, description = "Internal server error", body = ErrorMessage, content_type = "application/json"),
     ),
@@ -176,7 +177,7 @@ async fn get_dlc_platforms(
 #[post("/dlcs/finished/first")]
 async fn get_first_finished_dlcs(
     pool: web::Data<PgPool>,
-    query: web::Query<StartEndDateQuery>,
+    query: web::Query<OptionalStartEndDateQuery>,
     quick_query: web::Query<QuicksearchQuery>,
     body: web::Json<SearchDTO>,
     logged_user: LoggedUser,
@@ -198,12 +199,13 @@ async fn get_first_finished_dlcs(
     path = "/api/v1/dlcs/finished/last",
     tag = "DLCs",
     params(
-        StartEndDateQuery,
+        OptionalStartEndDateQuery,
         QuicksearchQuery,
     ),
     request_body(content = SearchDTO, description = "Query", content_type = "application/json"),
     responses(
         (status = 200, description = "DLCs obtained", body = [DLCWithFinishDTO], content_type = "application/json"),
+        (status = 400, description = "Bad request", body = ErrorMessage, content_type = "application/json"),
         (status = 401, description = "Unauthorized", body = ErrorMessage, content_type = "application/json"),
         (status = 500, description = "Internal server error", body = ErrorMessage, content_type = "application/json"),
     ),
@@ -214,7 +216,7 @@ async fn get_first_finished_dlcs(
 #[post("/dlcs/finished/last")]
 async fn get_last_finished_dlcs(
     pool: web::Data<PgPool>,
-    query: web::Query<StartEndDateQuery>,
+    query: web::Query<OptionalStartEndDateQuery>,
     quick_query: web::Query<QuicksearchQuery>,
     body: web::Json<SearchDTO>,
     logged_user: LoggedUser,

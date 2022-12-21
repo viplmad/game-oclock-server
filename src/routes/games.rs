@@ -3,8 +3,8 @@ use chrono::{NaiveDate, NaiveDateTime};
 use sqlx::PgPool;
 
 use crate::models::{
-    GameLogDTO, ItemId, ItemIdAndRelatedId, LoggedUser, NewGameDTO, QuicksearchQuery, SearchDTO,
-    StartEndDateQuery,
+    GameLogDTO, ItemId, ItemIdAndRelatedId, LoggedUser, NewGameDTO, OptionalStartEndDateQuery,
+    QuicksearchQuery, SearchDTO, StartEndDateQuery,
 };
 use crate::services::{
     dlcs_service, game_available_service, game_finishes_service, game_logs_service,
@@ -265,8 +265,8 @@ async fn get_played_games(
     let get_result = game_with_logs_service::get_game_with_logs(
         &pool,
         logged_user.id,
-        query.start_date.unwrap(), // TODO
-        query.end_date.unwrap(),   // TODO
+        query.start_date,
+        query.end_date,
     )
     .await;
     handle_get_result(get_result)
@@ -277,12 +277,13 @@ async fn get_played_games(
     path = "/api/v1/games/finished/first",
     tag = "Games",
     params(
-        StartEndDateQuery,
+        OptionalStartEndDateQuery,
         QuicksearchQuery,
     ),
     request_body(content = SearchDTO, description = "Query", content_type = "application/json"),
     responses(
         (status = 200, description = "Games obtained", body = [GameWithFinishDTO], content_type = "application/json"),
+        (status = 400, description = "Bad request", body = ErrorMessage, content_type = "application/json"),
         (status = 401, description = "Unauthorized", body = ErrorMessage, content_type = "application/json"),
         (status = 500, description = "Internal server error", body = ErrorMessage, content_type = "application/json"),
     ),
@@ -293,7 +294,7 @@ async fn get_played_games(
 #[post("/games/finished/first")]
 async fn get_first_finished_games(
     pool: web::Data<PgPool>,
-    query: web::Query<StartEndDateQuery>,
+    query: web::Query<OptionalStartEndDateQuery>,
     quick_query: web::Query<QuicksearchQuery>,
     body: web::Json<SearchDTO>,
     logged_user: LoggedUser,
@@ -315,12 +316,13 @@ async fn get_first_finished_games(
     path = "/api/v1/games/finished/last",
     tag = "Games",
     params(
-        StartEndDateQuery,
+        OptionalStartEndDateQuery,
         QuicksearchQuery,
     ),
     request_body(content = SearchDTO, description = "Query", content_type = "application/json"),
     responses(
         (status = 200, description = "Games obtained", body = [GameWithFinishDTO], content_type = "application/json"),
+        (status = 400, description = "Bad request", body = ErrorMessage, content_type = "application/json"),
         (status = 401, description = "Unauthorized", body = ErrorMessage, content_type = "application/json"),
         (status = 500, description = "Internal server error", body = ErrorMessage, content_type = "application/json"),
     ),
@@ -331,12 +333,90 @@ async fn get_first_finished_games(
 #[post("/games/finished/last")]
 async fn get_last_finished_games(
     pool: web::Data<PgPool>,
-    query: web::Query<StartEndDateQuery>,
+    query: web::Query<OptionalStartEndDateQuery>,
     quick_query: web::Query<QuicksearchQuery>,
     body: web::Json<SearchDTO>,
     logged_user: LoggedUser,
 ) -> impl Responder {
     let get_result = game_with_finish_service::search_last_finished_games(
+        &pool,
+        logged_user.id,
+        query.start_date,
+        query.end_date,
+        body.0,
+        quick_query.0.q,
+    )
+    .await;
+    handle_get_result(get_result)
+}
+
+#[utoipa::path(
+    post,
+    path = "/api/v1/games/played/first",
+    tag = "Games",
+    params(
+        OptionalStartEndDateQuery,
+        QuicksearchQuery,
+    ),
+    request_body(content = SearchDTO, description = "Query", content_type = "application/json"),
+    responses(
+        (status = 200, description = "Games obtained", body = [GameWithLogDTO], content_type = "application/json"),
+        (status = 400, description = "Bad request", body = ErrorMessage, content_type = "application/json"),
+        (status = 401, description = "Unauthorized", body = ErrorMessage, content_type = "application/json"),
+        (status = 500, description = "Internal server error", body = ErrorMessage, content_type = "application/json"),
+    ),
+    security(
+        ("bearer_token" = [])
+    )
+)]
+#[post("/games/played/first")]
+async fn get_first_played_games(
+    pool: web::Data<PgPool>,
+    query: web::Query<OptionalStartEndDateQuery>,
+    quick_query: web::Query<QuicksearchQuery>,
+    body: web::Json<SearchDTO>,
+    logged_user: LoggedUser,
+) -> impl Responder {
+    let get_result = game_with_logs_service::search_first_played_games(
+        &pool,
+        logged_user.id,
+        query.start_date,
+        query.end_date,
+        body.0,
+        quick_query.0.q,
+    )
+    .await;
+    handle_get_result(get_result)
+}
+
+#[utoipa::path(
+    post,
+    path = "/api/v1/games/played/last",
+    tag = "Games",
+    params(
+        OptionalStartEndDateQuery,
+        QuicksearchQuery,
+    ),
+    request_body(content = SearchDTO, description = "Query", content_type = "application/json"),
+    responses(
+        (status = 200, description = "Games obtained", body = [GameWithLogDTO], content_type = "application/json"),
+        (status = 400, description = "Bad request", body = ErrorMessage, content_type = "application/json"),
+        (status = 401, description = "Unauthorized", body = ErrorMessage, content_type = "application/json"),
+        (status = 500, description = "Internal server error", body = ErrorMessage, content_type = "application/json"),
+    ),
+    security(
+        ("bearer_token" = [])
+    )
+)]
+#[post("/games/played/last")]
+async fn get_last_played_games(
+    pool: web::Data<PgPool>,
+    query: web::Query<OptionalStartEndDateQuery>,
+    quick_query: web::Query<QuicksearchQuery>,
+    body: web::Json<SearchDTO>,
+    logged_user: LoggedUser,
+) -> impl Responder {
+    let get_result = game_with_logs_service::search_last_played_games(
         &pool,
         logged_user.id,
         query.start_date,

@@ -1,5 +1,7 @@
 use std::future::Future;
 
+use chrono::NaiveDate;
+
 use crate::entities::SearchResult;
 use crate::errors::{error_message_builder, ApiErrors, FieldMappingError, RepositoryError};
 use crate::models::{FilterDTO, Merge, ModelInfo, SearchDTO, SearchResultDTO};
@@ -179,6 +181,23 @@ where
         }
         other => other,
     })
+}
+
+pub(super) fn check_start_end(
+    start_date: Option<NaiveDate>,
+    end_date: Option<NaiveDate>,
+) -> Result<(), ApiErrors> {
+    if start_date.is_none() && end_date.is_none() {
+        return Err(ApiErrors::InvalidParameter(String::from(
+            "Start date and end date cannot be empty",
+        )));
+    }
+    if start_date.is_some_and(|start| end_date.is_some_and(|end| start > end)) {
+        return Err(ApiErrors::InvalidParameter(String::from(
+            "Start date must be previous than end date",
+        )));
+    }
+    Ok(())
 }
 
 pub(super) fn handle_query_mapping<T, S>(

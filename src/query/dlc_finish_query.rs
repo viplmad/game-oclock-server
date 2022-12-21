@@ -10,7 +10,7 @@ pub fn select_max_by_user_id_and_dlc_id(user_id: i32, dlc_id: i32) -> impl Query
     let mut select = Query::select();
 
     from_and_where_user_id_and_dlc_id(&mut select, user_id, dlc_id);
-    add_max_date_field(&mut select);
+    select.expr(Expr::col((DLCFinishIden::Table, DLCFinishIden::Date)).max());
 
     select
 }
@@ -44,7 +44,7 @@ fn select_all_dlc_with_finish_by_date_gte_and_date_lte(
     select
 }
 
-pub fn select_first_dlc_with_finish_with_search_by_date_gte_and_date_lte_order_by_date_asc(
+pub fn select_all_first_dlc_with_finish_with_search_by_date_gte_and_date_lte_order_by_date_asc(
     user_id: i32,
     start_date: Option<NaiveDate>,
     end_date: Option<NaiveDate>,
@@ -67,7 +67,7 @@ pub fn select_first_dlc_with_finish_with_search_by_date_gte_and_date_lte_order_b
     apply_search(select, search)
 }
 
-pub fn select_last_dlc_with_finish_with_search_by_date_gte_and_date_lte_order_by_date_desc(
+pub fn select_all_last_dlc_with_finish_with_search_by_date_gte_and_date_lte_order_by_date_desc(
     user_id: i32,
     start_date: Option<NaiveDate>,
     end_date: Option<NaiveDate>,
@@ -149,8 +149,4 @@ fn from_and_where_user_id_and_dlc_id(select: &mut SelectStatement, user_id: i32,
 
 fn add_date_field(select: &mut SelectStatement) {
     select.column((DLCFinishIden::Table, DLCFinishIden::Date));
-}
-
-fn add_max_date_field(select: &mut SelectStatement) {
-    select.expr(Expr::col((DLCFinishIden::Table, DLCFinishIden::Date)).max());
 }

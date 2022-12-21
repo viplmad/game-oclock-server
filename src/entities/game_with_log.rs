@@ -1,6 +1,9 @@
 use chrono::NaiveDateTime;
 use sqlx::{postgres::types::PgInterval, FromRow};
 
+pub const LOG_DATETIME_ALIAS: &str = "log_datetime";
+pub const LOG_TIME_ALIAS: &str = "log_time";
+
 #[derive(FromRow, Clone)]
 pub struct GameWithLog {
     pub id: i32,
@@ -17,6 +20,6 @@ pub struct GameWithLog {
     pub save_folder: String,
     pub screenshot_folder: String,
     pub backup: bool,
-    pub datetime: NaiveDateTime,
-    pub time: PgInterval,
+    pub log_datetime: NaiveDateTime,
+    pub log_time: PgInterval,
 }

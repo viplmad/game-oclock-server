@@ -6,7 +6,7 @@ use crate::errors::ApiErrors;
 use crate::models::{DLCWithFinishDTO, DLCWithFinishSearchResult, SearchDTO};
 use crate::repository::dlc_with_finish_repository;
 
-use super::base::{handle_get_list_paged_result, handle_query_mapping};
+use super::base::{check_start_end, handle_get_list_paged_result, handle_query_mapping};
 
 pub async fn search_first_finished_dlcs(
     pool: &PgPool,
@@ -42,21 +42,4 @@ pub async fn search_last_finished_dlcs(
     )
     .await;
     handle_get_list_paged_result(find_result)
-}
-
-fn check_start_end(
-    start_date: Option<NaiveDate>,
-    end_date: Option<NaiveDate>,
-) -> Result<(), ApiErrors> {
-    if start_date.is_none() && end_date.is_none() {
-        return Err(ApiErrors::InvalidParameter(String::from(
-            "Start date and end date cannot be empty",
-        )));
-    }
-    if start_date.is_some_and(|start| end_date.is_some_and(|end| start > end)) {
-        return Err(ApiErrors::InvalidParameter(String::from(
-            "Start date must be previous than end date",
-        )));
-    }
-    Ok(())
 }

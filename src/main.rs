@@ -127,6 +127,8 @@ async fn run(
             routes::get_played_games,
             routes::get_first_finished_games,
             routes::get_last_finished_games,
+            routes::get_first_played_games,
+            routes::get_last_played_games,
             routes::get_games,
             routes::post_game,
             routes::post_game_finish,
@@ -187,6 +189,7 @@ async fn run(
             models::NewGameDTO,
             models::GameAvailableDTO,
             models::GameWithFinishDTO,
+            models::GameWithLogDTO,
             models::GameWithLogsDTO,
             models::GameStatus,
             models::GameLogDTO,
@@ -269,6 +272,8 @@ async fn run(
                         .service(routes::get_played_games)
                         .service(routes::get_first_finished_games)
                         .service(routes::get_last_finished_games)
+                        .service(routes::get_first_played_games)
+                        .service(routes::get_last_played_games)
                         .service(routes::get_games)
                         .service(routes::post_game)
                         .service(routes::post_game_finish)

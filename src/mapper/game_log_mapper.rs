@@ -22,10 +22,10 @@ impl From<GameLogDTO> for GameLog {
 }
 
 impl From<&GameWithLog> for GameLogDTO {
-    fn from(log: &GameWithLog) -> Self {
+    fn from(game: &GameWithLog) -> Self {
         Self {
-            datetime: log.datetime,
-            time: DurationDef::from(log.time.clone()),
+            datetime: game.log_datetime,
+            time: DurationDef::from(game.log_time.clone()),
         }
     }
 }

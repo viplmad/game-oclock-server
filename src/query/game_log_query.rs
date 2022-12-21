@@ -1,9 +1,15 @@
 use chrono::NaiveDateTime;
-use sea_query::{Expr, Func, Order, Query, QueryStatementWriter, SelectStatement};
+use sea_query::{
+    Alias, Expr, Func, FunctionCall, Order, Query, QueryStatementWriter, SelectStatement,
+};
 
-use crate::entities::{GameIden, GameLog, GameLogIden};
+use crate::entities::{
+    GameIden, GameLog, GameLogIden, GameSearch, SearchQuery, LOG_DATETIME_ALIAS, LOG_TIME_ALIAS,
+};
+use crate::errors::RepositoryError;
 
 use super::game_query;
+use super::search::apply_search;
 
 pub fn select_sum_time_by_user_id_and_game_id(
     user_id: i32,
@@ -12,10 +18,7 @@ pub fn select_sum_time_by_user_id_and_game_id(
     let mut select = Query::select();
 
     from_and_where_user_id_and_game_id(&mut select, user_id, game_id);
-    select.expr(Func::coalesce([
-        Expr::col((GameLogIden::Table, GameLogIden::Time)).sum(),
-        Expr::val("0 seconds").into(), // TODO
-    ]));
+    select.expr(coalesce_time_sum());
 
     select
 }
@@ -27,6 +30,82 @@ pub fn select_all_by_user_id_and_game_id(user_id: i32, game_id: i32) -> impl Que
     add_datetime_and_time_fields(&mut select);
 
     select
+}
+
+fn select_all_game_with_log_by_datetime_gte_and_datetime_lte(
+    user_id: i32,
+    start_datetime: Option<NaiveDateTime>,
+    end_datetime: Option<NaiveDateTime>,
+) -> SelectStatement {
+    let mut select = game_query::select_all_group_by_id(user_id);
+
+    join_game_log(&mut select);
+
+    if let Some(start) = start_datetime {
+        select.and_where(Expr::col((GameLogIden::Table, GameLogIden::DateTime)).gte(start));
+    }
+
+    if let Some(end) = end_datetime {
+        select.and_where(Expr::col((GameLogIden::Table, GameLogIden::DateTime)).lte(end));
+    }
+
+    select
+}
+
+pub fn select_all_first_game_with_log_with_search_by_datetime_gte_and_datetime_lte_order_by_datetime_desc(
+    user_id: i32,
+    start_datetime: Option<NaiveDateTime>,
+    end_datetime: Option<NaiveDateTime>,
+    mut search: GameSearch,
+) -> Result<SearchQuery, RepositoryError> {
+    let mut select = select_all_game_with_log_by_datetime_gte_and_datetime_lte(
+        user_id,
+        start_datetime,
+        end_datetime,
+    );
+
+    select
+        .expr_as(
+            Expr::col((GameLogIden::Table, GameLogIden::DateTime)).min(),
+            Alias::new(LOG_DATETIME_ALIAS),
+        )
+        .expr_as(coalesce_time_sum(), Alias::new(LOG_TIME_ALIAS));
+    select.order_by_expr(
+        Expr::col((GameLogIden::Table, GameLogIden::DateTime)).min(),
+        Order::Asc,
+    );
+
+    // Ignore sort, might conflict with date ordering
+    search.sort = None;
+    apply_search(select, search)
+}
+
+pub fn select_all_last_game_with_log_with_search_by_datetime_gte_and_datetime_lte_order_by_datetime_desc(
+    user_id: i32,
+    start_datetime: Option<NaiveDateTime>,
+    end_datetime: Option<NaiveDateTime>,
+    mut search: GameSearch,
+) -> Result<SearchQuery, RepositoryError> {
+    let mut select = select_all_game_with_log_by_datetime_gte_and_datetime_lte(
+        user_id,
+        start_datetime,
+        end_datetime,
+    );
+
+    select
+        .expr_as(
+            Expr::col((GameLogIden::Table, GameLogIden::DateTime)).max(),
+            Alias::new(LOG_DATETIME_ALIAS),
+        )
+        .expr_as(coalesce_time_sum(), Alias::new(LOG_TIME_ALIAS));
+    select.order_by_expr(
+        Expr::col((GameLogIden::Table, GameLogIden::DateTime)).max(),
+        Order::Desc,
+    );
+
+    // Ignore sort, might conflict with date ordering
+    search.sort = None;
+    apply_search(select, search)
 }
 
 pub fn select_all_games_order_by_datetime_desc(user_id: i32) -> SelectStatement {
@@ -63,7 +142,15 @@ pub fn select_all_games_log_by_datetime_gte_and_datetime_lte_order_by_datetime_d
         end_datetime,
     );
 
-    add_datetime_and_time_fields(&mut select);
+    select
+        .expr_as(
+            Expr::col((GameLogIden::Table, GameLogIden::DateTime)),
+            Alias::new(LOG_DATETIME_ALIAS),
+        )
+        .expr_as(
+            Expr::col((GameLogIden::Table, GameLogIden::Time)),
+            Alias::new(LOG_TIME_ALIAS),
+        );
 
     select
 }
@@ -144,4 +231,11 @@ fn add_datetime_and_time_fields(select: &mut SelectStatement) {
     select
         .column((GameLogIden::Table, GameLogIden::DateTime))
         .column((GameLogIden::Table, GameLogIden::Time));
+}
+
+fn coalesce_time_sum() -> FunctionCall {
+    Func::coalesce([
+        Expr::col((GameLogIden::Table, GameLogIden::Time)).sum(),
+        Expr::val("0 seconds").into(), // TODO
+    ])
 }
