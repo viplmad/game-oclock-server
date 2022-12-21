@@ -1,7 +1,7 @@
 use sqlx::PgPool;
 
 use crate::entities::User;
-use crate::errors::{error_message_builder, ApiErrors};
+use crate::errors::ApiErrors;
 use crate::models::{NewUserDTO, PasswordChangeDTO, UserDTO};
 use crate::repository::user_repository;
 
@@ -25,12 +25,8 @@ pub async fn create_user(pool: &PgPool, user: NewUserDTO) -> Result<UserDTO, Api
             let exists_result = user_repository::exists_with_unique(pool, &user_to_create).await;
             handle_already_exists_result::<UserDTO>(exists_result)?;
 
-            let password_hash = crate::auth::hash_password(&password).map_err(|err| {
-                ApiErrors::UnknownError(error_message_builder::inner_error(
-                    "Password hashing error",
-                    &err.0,
-                ))
-            })?;
+            let password_hash = crate::auth::hash_password(&password)
+                .map_err(|_| ApiErrors::UnknownError(String::from("Password hashing error.")))?;
             let create_result =
                 user_repository::create(pool, &user_to_create, &password_hash).await;
             handle_create_result::<i32, UserDTO>(create_result)
@@ -48,23 +44,12 @@ pub async fn change_user_password(
     let user = handle_get_result_raw::<User, UserDTO>(get_result)?;
 
     let verify_pass: bool =
-        crate::auth::verify_password(&password_change.current_password, &user.password).map_err(
-            |err| {
-                ApiErrors::UnknownError(error_message_builder::inner_error(
-                    "Password verification failed",
-                    &err.0,
-                ))
-            },
-        )?;
+        crate::auth::verify_password(&password_change.current_password, &user.password)
+            .map_err(|_| ApiErrors::UnknownError(String::from("Password verification failed.")))?;
 
     if verify_pass {
-        let password_hash =
-            crate::auth::hash_password(&password_change.new_password).map_err(|err| {
-                ApiErrors::UnknownError(error_message_builder::inner_error(
-                    "Password hashing error",
-                    &err.0,
-                ))
-            })?;
+        let password_hash = crate::auth::hash_password(&password_change.new_password)
+            .map_err(|_| ApiErrors::UnknownError(String::from("Password hashing error.")))?;
 
         let update_result = user_repository::update_password(pool, user_id, &password_hash).await;
         handle_update_result::<i32, UserDTO>(update_result)

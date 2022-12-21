@@ -2,7 +2,7 @@ use chrono::NaiveDate;
 use sea_query::{Alias, Expr, Order, Query, QueryStatementWriter, SelectStatement};
 
 use crate::entities::{DLCFinishIden, DLCIden, DLCSearch, SearchQuery, QUERY_DATE_ALIAS};
-use crate::errors::RepositoryError;
+use crate::errors::SearchErrors;
 
 use super::{dlc_query, search::apply_search};
 
@@ -49,7 +49,7 @@ pub fn select_all_first_dlc_with_finish_with_search_by_date_gte_and_date_lte_ord
     start_date: Option<NaiveDate>,
     end_date: Option<NaiveDate>,
     mut search: DLCSearch,
-) -> Result<SearchQuery, RepositoryError> {
+) -> Result<SearchQuery, SearchErrors> {
     let mut select =
         select_all_dlc_with_finish_by_date_gte_and_date_lte(user_id, start_date, end_date);
 
@@ -72,7 +72,7 @@ pub fn select_all_last_dlc_with_finish_with_search_by_date_gte_and_date_lte_orde
     start_date: Option<NaiveDate>,
     end_date: Option<NaiveDate>,
     mut search: DLCSearch,
-) -> Result<SearchQuery, RepositoryError> {
+) -> Result<SearchQuery, SearchErrors> {
     let mut select =
         select_all_dlc_with_finish_by_date_gte_and_date_lte(user_id, start_date, end_date);
 

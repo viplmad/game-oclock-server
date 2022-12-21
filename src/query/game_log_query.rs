@@ -6,7 +6,7 @@ use sea_query::{
 use crate::entities::{
     GameIden, GameLog, GameLogIden, GameSearch, SearchQuery, LOG_DATETIME_ALIAS, LOG_TIME_ALIAS,
 };
-use crate::errors::RepositoryError;
+use crate::errors::SearchErrors;
 
 use super::game_query;
 use super::search::apply_search;
@@ -57,7 +57,7 @@ pub fn select_all_first_game_with_log_with_search_by_datetime_gte_and_datetime_l
     start_datetime: Option<NaiveDateTime>,
     end_datetime: Option<NaiveDateTime>,
     mut search: GameSearch,
-) -> Result<SearchQuery, RepositoryError> {
+) -> Result<SearchQuery, SearchErrors> {
     let mut select = select_all_game_with_log_by_datetime_gte_and_datetime_lte(
         user_id,
         start_datetime,
@@ -85,7 +85,7 @@ pub fn select_all_last_game_with_log_with_search_by_datetime_gte_and_datetime_lt
     start_datetime: Option<NaiveDateTime>,
     end_datetime: Option<NaiveDateTime>,
     mut search: GameSearch,
-) -> Result<SearchQuery, RepositoryError> {
+) -> Result<SearchQuery, SearchErrors> {
     let mut select = select_all_game_with_log_by_datetime_gte_and_datetime_lte(
         user_id,
         start_datetime,

@@ -2,7 +2,7 @@ use jsonwebtoken::{DecodingKey, EncodingKey};
 use sqlx::PgPool;
 
 use crate::entities::User;
-use crate::errors::{error_message_builder, ApiErrors, TokenErrors};
+use crate::errors::{ApiErrors, TokenErrors};
 use crate::models::{GrantType, TokenRequest, TokenResponse};
 use crate::repository::user_repository;
 
@@ -62,21 +62,11 @@ async fn get_token_from_password(
 ) -> Result<TokenResponse, TokenErrors> {
     let user: User = user_repository::find_first_by_username(pool, username)
         .await
-        .map_err(|err| {
-            TokenErrors::UnknownError(error_message_builder::inner_error(
-                "User could not be retrieved",
-                &err.0,
-            ))
-        })?
+        .map_err(|_| TokenErrors::UnknownError(String::from("User could not be retrieved.")))?
         .ok_or_else(|| TokenErrors::InvalidRequest(String::from("User does not exist.")))?;
 
-    let verify_pass: bool =
-        crate::auth::verify_password(password, &user.password).map_err(|err| {
-            TokenErrors::UnknownError(error_message_builder::inner_error(
-                "Password verification failed",
-                &err.0,
-            ))
-        })?;
+    let verify_pass: bool = crate::auth::verify_password(password, &user.password)
+        .map_err(|_| TokenErrors::UnknownError(String::from("Password verification failed.")))?;
 
     if verify_pass {
         crate::auth::generate_token_response(user.id, encoding_key)
@@ -91,12 +81,8 @@ async fn get_token_from_refresh(
     decoding_key: &DecodingKey,
     refresh_token: &str,
 ) -> Result<TokenResponse, TokenErrors> {
-    let token_data = crate::auth::validate_token(refresh_token, decoding_key).map_err(|err| {
-        TokenErrors::InvalidRequest(error_message_builder::inner_error(
-            "Invalid refresh token",
-            &err.0,
-        ))
-    })?;
+    let token_data = crate::auth::validate_token(refresh_token, decoding_key)
+        .map_err(|_| TokenErrors::InvalidRequest(String::from("Invalid refresh token.")))?;
 
     // Ensure only refresh token is validated
     if token_data.claims.is_access() {

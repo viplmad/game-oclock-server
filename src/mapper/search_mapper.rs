@@ -7,7 +7,7 @@ use crate::entities::{
     FieldIden, FieldSearchValue, FieldSearchValues, FieldType, FieldValue, Filter, FilterOperator,
     Search, Sort, TableIden,
 };
-use crate::errors::{error_message_builder, FieldMappingError, RepositoryError};
+use crate::errors::{error_message_builder, MappingError};
 use crate::models::{
     ChainOperatorType, FilterDTO, GameStatus, OperatorType, OrderType, PlatformType, SearchDTO,
     SearchValue, SortDTO,
@@ -56,14 +56,14 @@ impl<I: TableIden> TryFrom<SearchDTO> for Search<I>
 where
     FieldIden<I>: FromStr,
 {
-    type Error = FieldMappingError;
+    type Error = MappingError;
 
     fn try_from(search: SearchDTO) -> Result<Self, Self::Error> {
         let filter_result = search.filter.map(|filters| {
             filters
                 .into_iter()
                 .map(Filter::try_from)
-                .collect::<Result<Vec<Filter<I>>, FieldMappingError>>()
+                .collect::<Result<Vec<Filter<I>>, MappingError>>()
         });
         let filter = match filter_result {
             Some(res) => Some(res?),
@@ -74,7 +74,7 @@ where
             sorts
                 .into_iter()
                 .map(Sort::try_from)
-                .collect::<Result<Vec<Sort<I>>, FieldMappingError>>()
+                .collect::<Result<Vec<Sort<I>>, MappingError>>()
         });
         let sort = match sort_result {
             Some(res) => Some(res?),
@@ -94,11 +94,11 @@ impl<I: TableIden> TryFrom<FilterDTO> for Filter<I>
 where
     FieldIden<I>: FromStr,
 {
-    type Error = FieldMappingError;
+    type Error = MappingError;
 
     fn try_from(filter: FilterDTO) -> Result<Self, Self::Error> {
         let field_iden =
-            FieldIden::<I>::from_str(&filter.field).map_err(|_| FieldMappingError(filter.field))?;
+            FieldIden::<I>::from_str(&filter.field).map_err(|_| MappingError(filter.field))?;
 
         Ok(Self::new::<I>(
             field_iden.table,
@@ -126,11 +126,11 @@ impl<I: TableIden> TryFrom<SortDTO> for Sort<I>
 where
     FieldIden<I>: FromStr,
 {
-    type Error = FieldMappingError;
+    type Error = MappingError;
 
     fn try_from(sort: SortDTO) -> Result<Self, Self::Error> {
         let field_iden =
-            FieldIden::<I>::from_str(&sort.field).map_err(|_| FieldMappingError(sort.field))?;
+            FieldIden::<I>::from_str(&sort.field).map_err(|_| MappingError(sort.field))?;
 
         Ok(Self::new::<I>(
             field_iden.table,
@@ -141,7 +141,7 @@ where
 }
 
 impl TryFrom<FieldSearchValue> for Value {
-    type Error = RepositoryError;
+    type Error = MappingError;
 
     fn try_from(search: FieldSearchValue) -> Result<Self, Self::Error> {
         let value: &str = &search.value;
@@ -179,10 +179,12 @@ impl TryFrom<FieldSearchValue> for Value {
     }
 }
 
-fn convert_with_serde<'a, T>(value: &'a str, type_string: &str) -> Result<T, RepositoryError>
+fn convert_with_serde<'a, T>(value: &'a str, type_string: &str) -> Result<T, MappingError>
 where
     T: serde::de::Deserialize<'a>,
 {
-    serde_json::from_str::<T>(value)
-        .map_err(|_| RepositoryError(error_message_builder::convert_to_error(value, type_string)))
+    serde_json::from_str::<T>(value).map_err(|err| {
+        log::error!("Error converting value. - {}", err.to_string());
+        MappingError(error_message_builder::convert_to_error(value, type_string))
+    })
 }

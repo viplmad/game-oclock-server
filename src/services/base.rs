@@ -3,19 +3,17 @@ use std::future::Future;
 use chrono::NaiveDate;
 
 use crate::entities::SearchResult;
-use crate::errors::{error_message_builder, ApiErrors, FieldMappingError, RepositoryError};
+use crate::errors::{
+    error_message_builder, ApiErrors, MappingError, RepositoryError, SearchErrors,
+};
 use crate::models::{FilterDTO, Merge, ModelInfo, SearchDTO, SearchResultDTO};
 
 pub fn handle_result<E, T>(repository_result: Result<E, RepositoryError>) -> Result<E, ApiErrors>
 where
     T: ModelInfo,
 {
-    repository_result.map_err(|err| {
-        ApiErrors::UnknownError(error_message_builder::inner_error(
-            &error_message_builder::database_error(T::MODEL_NAME),
-            &err.0,
-        ))
-    })
+    repository_result
+        .map_err(|_| ApiErrors::UnknownError(error_message_builder::database_error(T::MODEL_NAME)))
 }
 
 pub(super) fn handle_get_result_raw<E, T>(
@@ -62,12 +60,22 @@ where
 }
 
 pub(super) fn handle_get_list_paged_result<E, T>(
-    repository_result: Result<SearchResult<E>, RepositoryError>,
+    repository_result: Result<SearchResult<E>, SearchErrors>,
 ) -> Result<SearchResultDTO<T>, ApiErrors>
 where
     T: From<E> + ModelInfo,
 {
-    let entity_search = handle_result::<SearchResult<E>, T>(repository_result)?;
+    let entity_search = repository_result.map_err(|err| match err {
+        SearchErrors::Mapping(map_err) => {
+            ApiErrors::InvalidParameter(error_message_builder::inner_error(
+                &error_message_builder::database_error(T::MODEL_NAME),
+                &map_err.0,
+            ))
+        }
+        SearchErrors::Repository(_) => {
+            ApiErrors::UnknownError(error_message_builder::database_error(T::MODEL_NAME))
+        }
+    })?;
     Ok(SearchResultDTO {
         data: entity_search.data.into_iter().map(T::from).collect(),
         page: entity_search.page,
@@ -206,7 +214,7 @@ pub(super) fn handle_query_mapping<T, S>(
 ) -> Result<S, ApiErrors>
 where
     T: ModelInfo,
-    S: TryFrom<SearchDTO, Error = FieldMappingError>,
+    S: TryFrom<SearchDTO, Error = MappingError>,
 {
     add_quicksearch::<T>(&mut search, quicksearch);
 

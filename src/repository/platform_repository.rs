@@ -1,7 +1,7 @@
 use sqlx::PgPool;
 
 use crate::entities::{Platform, PlatformSearch, SearchResult};
-use crate::errors::RepositoryError;
+use crate::errors::{RepositoryError, SearchErrors};
 use crate::query::platform_query;
 
 use super::base::{execute, execute_return_id, exists_id, fetch_all_search, fetch_optional};
@@ -19,7 +19,7 @@ pub async fn search_all(
     pool: &PgPool,
     user_id: i32,
     search: PlatformSearch,
-) -> Result<SearchResult<Platform>, RepositoryError> {
+) -> Result<SearchResult<Platform>, SearchErrors> {
     let search_query = platform_query::select_all_with_search(user_id, search)?;
     fetch_all_search(pool, search_query).await
 }

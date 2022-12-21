@@ -3,16 +3,23 @@ use sea_query::{BinOper, Cond, Expr, LikeExpr, SelectStatement, Value};
 use crate::entities::{
     FieldSearchValue, FieldValue, FilterOperator, Search, SearchQuery, TableIden,
 };
-use crate::errors::RepositoryError;
+use crate::errors::{MappingError, SearchErrors};
 
 const DEFAULT_PAGE_SIZE: u64 = 500;
 const INITIAL_PAGE: u64 = 0;
 const LIKE_SYMBOL: &str = "%";
 
 pub fn apply_search<I: 'static + TableIden + Clone + Copy>(
+    select: SelectStatement,
+    search: Search<I>,
+) -> Result<SearchQuery, SearchErrors> {
+    apply_search_internal(select, search).map_err(SearchErrors::Mapping)
+}
+
+fn apply_search_internal<I: 'static + TableIden + Clone + Copy>(
     mut select: SelectStatement,
     search: Search<I>,
-) -> Result<SearchQuery, RepositoryError> {
+) -> Result<SearchQuery, MappingError> {
     if let Some(sorts) = search.sort {
         for sort in sorts {
             let table = sort.table;
@@ -56,7 +63,7 @@ pub fn apply_search<I: 'static + TableIden + Clone + Copy>(
                     FilterOperator::NotContains => {
                         col.not_like(LikeExpr::str(&format_like_contains(value)))
                     }
-                    _ => Err(RepositoryError(String::from(
+                    _ => Err(MappingError(String::from(
                         "Operator not supported with single value.",
                     )))?,
                 },
@@ -72,12 +79,12 @@ pub fn apply_search<I: 'static + TableIden + Clone + Copy>(
                             };
                             Value::try_from(field_search_value)
                         })
-                        .collect::<Result<Vec<Value>, RepositoryError>>()?;
+                        .collect::<Result<Vec<Value>, MappingError>>()?;
 
                     match filter.operator {
                         FilterOperator::In => col.is_in(in_values),
                         FilterOperator::NotIn => col.is_not_in(in_values),
-                        _ => Err(RepositoryError(String::from(
+                        _ => Err(MappingError(String::from(
                             "Operator not supported with multiple values.",
                         )))?,
                     }

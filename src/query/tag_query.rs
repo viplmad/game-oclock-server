@@ -1,7 +1,7 @@
 use sea_query::{Expr, Query, QueryStatementWriter, SelectStatement, SimpleExpr};
 
 use crate::entities::{SearchQuery, Tag, TagIden, TagSearch};
-use crate::errors::RepositoryError;
+use crate::errors::SearchErrors;
 
 use super::search::apply_search;
 
@@ -15,10 +15,7 @@ pub fn select_by_id(user_id: i32, id: i32) -> impl QueryStatementWriter {
     select
 }
 
-pub fn select_all_with_query(
-    user_id: i32,
-    search: TagSearch,
-) -> Result<SearchQuery, RepositoryError> {
+pub fn select_all_with_query(user_id: i32, search: TagSearch) -> Result<SearchQuery, SearchErrors> {
     let select = select_all(user_id);
 
     apply_search(select, search)

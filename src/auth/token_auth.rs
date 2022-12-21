@@ -1,11 +1,10 @@
 use actix_web::{dev::ServiceRequest, Error};
 use actix_web_httpauth::extractors::bearer::{BearerAuth, Config};
 use actix_web_httpauth::extractors::AuthenticationError;
-use chrono::Utc;
 use jsonwebtoken::{Algorithm, DecodingKey, EncodingKey, Header, TokenData, Validation};
 use uuid::Uuid;
 
-use crate::errors::{error_message_builder, TokenErrors, ValidationError};
+use crate::errors::{TokenErrors, ValidationError};
 use crate::models::{TokenResponse, UserClaims};
 
 const KID: &str = "075d91f0-a35b-455a-9d78-8598846805e8"; // Random UUID
@@ -47,8 +46,10 @@ pub fn validate_token(
     validation.set_issuer(&[String::from(ISSUER)]);
     validation.set_required_spec_claims(&["iss", "sub", "iat", "exp", "jti"]);
 
-    jsonwebtoken::decode::<UserClaims>(token, decoding_key, &validation)
-        .map_err(|err| ValidationError(err.to_string()))
+    jsonwebtoken::decode::<UserClaims>(token, decoding_key, &validation).map_err(|err| {
+        log::error!("Error decoding JWT. - {}", err.to_string());
+        ValidationError()
+    })
 }
 
 pub fn generate_token_response(
@@ -58,18 +59,10 @@ pub fn generate_token_response(
     let access_token_claims = create_access_token_claims(user_id);
     let refresh_token_claims = create_refresh_token_claims(user_id, &access_token_claims.jti);
 
-    let access_token = generate_token(&access_token_claims, encoding_key).map_err(|err| {
-        TokenErrors::UnknownError(error_message_builder::inner_error(
-            "Access token generation error",
-            &err.to_string(),
-        ))
-    })?;
-    let refresh_token = generate_token(&refresh_token_claims, encoding_key).map_err(|err| {
-        TokenErrors::UnknownError(error_message_builder::inner_error(
-            "Refresh token generation error",
-            &err.to_string(),
-        ))
-    })?;
+    let access_token = generate_token(&access_token_claims, encoding_key)
+        .map_err(|_| TokenErrors::UnknownError(String::from("Access token generation error.")))?;
+    let refresh_token = generate_token(&refresh_token_claims, encoding_key)
+        .map_err(|_| TokenErrors::UnknownError(String::from("Refresh token generation error.")))?;
     Ok(TokenResponse {
         access_token,
         refresh_token,
@@ -99,7 +92,7 @@ fn create_token_claims(
     expiry_seconds: i64,
     access_token_id: Option<String>,
 ) -> UserClaims {
-    let now = Utc::now().timestamp();
+    let now = crate::date_utils::now().timestamp();
     UserClaims {
         iss: String::from(ISSUER),
         sub: user_id.to_string(),
@@ -114,6 +107,9 @@ fn create_token_claims(
 fn generate_token(
     claims: &UserClaims,
     encoding_key: &EncodingKey,
-) -> Result<String, jsonwebtoken::errors::Error> {
-    jsonwebtoken::encode(&Header::default(), &claims, encoding_key)
+) -> Result<String, ValidationError> {
+    jsonwebtoken::encode(&Header::default(), &claims, encoding_key).map_err(|err| {
+        log::error!("Error encodign JWT. - {}", err.to_string());
+        ValidationError()
+    })
 }

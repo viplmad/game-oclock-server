@@ -2,23 +2,24 @@ use sea_query::{PostgresQueryBuilder, QueryStatementWriter};
 use sqlx::{PgPool, Postgres, Transaction};
 
 use crate::entities::{SearchQuery, SearchResult};
-use crate::errors::RepositoryError;
+use crate::errors::{RepositoryError, SearchErrors};
 
 pub(super) async fn begin_transaction(
     pool: &PgPool,
 ) -> Result<Transaction<Postgres>, RepositoryError> {
-    pool.begin()
-        .await
-        .map_err(|err| RepositoryError(err.to_string()))
+    pool.begin().await.map_err(|err| {
+        log::error!("Error beginning transaction. - {}", err.to_string());
+        RepositoryError()
+    })
 }
 
 pub(super) async fn commit_transaction(
     transaction: Transaction<'_, Postgres>,
 ) -> Result<(), RepositoryError> {
-    transaction
-        .commit()
-        .await
-        .map_err(|err| RepositoryError(err.to_string()))
+    transaction.commit().await.map_err(|err| {
+        log::error!("Error committing transaction. - {}", err.to_string());
+        RepositoryError()
+    })
 }
 
 pub(super) async fn execute_return<'c, X, T>(
@@ -34,7 +35,10 @@ where
     sqlx::query_as::<_, T>(&sql)
         .fetch_one(executor)
         .await
-        .map_err(|err| RepositoryError(err.to_string()))
+        .map_err(|err| {
+            log::error!("Error executing query. - {}", err.to_string());
+            RepositoryError()
+        })
 }
 
 pub(super) async fn execute_return_single<'c, X, T>(
@@ -73,7 +77,10 @@ where
         .execute(executor)
         .await
         .map(|_| ())
-        .map_err(|err| RepositoryError(err.to_string()))
+        .map_err(|err| {
+            log::error!("Error executing query. - {}", err.to_string());
+            RepositoryError()
+        })
 }
 
 pub(super) async fn fetch_optional<'c, X, T>(
@@ -89,7 +96,10 @@ where
     sqlx::query_as::<_, T>(&sql)
         .fetch_optional(executor)
         .await
-        .map_err(|err| RepositoryError(err.to_string()))
+        .map_err(|err| {
+            log::error!("Error executing query. - {}", err.to_string());
+            RepositoryError()
+        })
 }
 
 pub(super) async fn fetch_optional_single<'c, X, T>(
@@ -118,7 +128,10 @@ where
     sqlx::query_as::<_, T>(&sql)
         .fetch_all(executor)
         .await
-        .map_err(|err| RepositoryError(err.to_string()))
+        .map_err(|err| {
+            log::error!("Error executing query. - {}", err.to_string());
+            RepositoryError()
+        })
 }
 
 pub(super) async fn fetch_all_single<'c, X, T>(
@@ -137,7 +150,7 @@ where
 pub(super) async fn fetch_all_search<'c, X, T>(
     executor: X,
     search_query: SearchQuery,
-) -> Result<SearchResult<T>, RepositoryError>
+) -> Result<SearchResult<T>, SearchErrors>
 where
     X: sqlx::Executor<'c, Database = Postgres>,
     T: for<'r> sqlx::FromRow<'r, sqlx::postgres::PgRow> + Send + Unpin,
@@ -149,6 +162,7 @@ where
             page: search_query.page,
             size: search_query.size,
         })
+        .map_err(SearchErrors::Repository)
 }
 
 pub(super) async fn exists_id<'c, X>(

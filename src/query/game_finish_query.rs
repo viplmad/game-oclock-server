@@ -2,7 +2,7 @@ use chrono::NaiveDate;
 use sea_query::{Alias, Expr, Order, Query, QueryStatementWriter, SelectStatement};
 
 use crate::entities::{GameFinishIden, GameIden, GameSearch, SearchQuery, QUERY_DATE_ALIAS};
-use crate::errors::RepositoryError;
+use crate::errors::SearchErrors;
 
 use super::game_query;
 use super::search::apply_search;
@@ -53,7 +53,7 @@ pub fn select_all_first_game_with_finish_with_search_by_date_gte_and_date_lte_or
     start_date: Option<NaiveDate>,
     end_date: Option<NaiveDate>,
     mut search: GameSearch,
-) -> Result<SearchQuery, RepositoryError> {
+) -> Result<SearchQuery, SearchErrors> {
     let mut select =
         select_all_game_with_finish_by_date_gte_and_date_lte(user_id, start_date, end_date);
 
@@ -76,7 +76,7 @@ pub fn select_all_last_game_with_finish_with_search_by_date_gte_and_date_lte_ord
     start_date: Option<NaiveDate>,
     end_date: Option<NaiveDate>,
     mut search: GameSearch,
-) -> Result<SearchQuery, RepositoryError> {
+) -> Result<SearchQuery, SearchErrors> {
     let mut select =
         select_all_game_with_finish_by_date_gte_and_date_lte(user_id, start_date, end_date);
 

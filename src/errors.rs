@@ -60,13 +60,18 @@ pub mod error_message_builder {
     }
 }
 
-pub struct ValidationError(pub String);
+pub struct ValidationError();
 
-pub struct PasswordError(pub String);
+pub struct PasswordError();
 
-pub struct RepositoryError(pub String);
+pub struct RepositoryError();
 
-pub struct FieldMappingError(pub String);
+pub struct MappingError(pub String);
+
+pub enum SearchErrors {
+    Repository(RepositoryError),
+    Mapping(MappingError),
+}
 
 pub enum ApiErrors {
     InvalidParameter(String),

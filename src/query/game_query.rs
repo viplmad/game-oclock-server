@@ -1,7 +1,7 @@
 use sea_query::{Expr, Query, QueryStatementWriter, SelectStatement, SimpleExpr};
 
 use crate::entities::{Game, GameIden, GameSearch, GameUserInfoIden, SearchQuery};
-use crate::errors::RepositoryError;
+use crate::errors::SearchErrors;
 
 use super::search::apply_search;
 
@@ -19,7 +19,7 @@ pub fn select_by_id(user_id: i32, id: i32) -> impl QueryStatementWriter {
 pub fn select_all_with_search(
     user_id: i32,
     search: GameSearch,
-) -> Result<SearchQuery, RepositoryError> {
+) -> Result<SearchQuery, SearchErrors> {
     let select = select_all(user_id);
 
     apply_search(select, search)
