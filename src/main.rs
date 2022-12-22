@@ -14,7 +14,7 @@ use utoipa::{
     openapi::security::{HttpAuthScheme, HttpBuilder, SecurityScheme},
     Modify, OpenApi,
 };
-use utoipa_swagger_ui::SwaggerUi;
+use utoipa_swagger_ui::{Config, SwaggerUi};
 
 const DEFAULT_HOST: &str = "0.0.0.0";
 const DEFAULT_PORT: &str = "8080";
@@ -331,7 +331,12 @@ async fn run(
             // OpenAPI
             .service(
                 SwaggerUi::new("/api-docs/{_:.*}")
-                    .url("/api-docs/public-api.json", openapi.clone()),
+                    .url("/api-docs/public-api.json", openapi.clone())
+                    .config(
+                        Config::new(["/api-docs/public-api.json"])
+                            .doc_expansion(r#"["none"]"#)
+                            .default_models_expand_depth(0),
+                    ),
             )
     })
     .bind((host, port))?
