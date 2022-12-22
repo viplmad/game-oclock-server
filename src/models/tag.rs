@@ -2,9 +2,7 @@ use chrono::NaiveDateTime;
 use serde::{Deserialize, Serialize};
 use utoipa::ToSchema;
 
-use super::{Merge, ModelInfo, SearchResultDTO};
-
-pub type TagSearchResult = SearchResultDTO<TagDTO>;
+use super::{Merge, ModelInfo};
 
 #[derive(Serialize, ToSchema)]
 pub struct TagDTO {

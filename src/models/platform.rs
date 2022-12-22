@@ -2,9 +2,7 @@ use chrono::{NaiveDate, NaiveDateTime};
 use serde::{Deserialize, Serialize};
 use utoipa::ToSchema;
 
-use super::{Merge, ModelInfo, PlatformType, SearchResultDTO};
-
-pub type PlatformSearchResult = SearchResultDTO<PlatformDTO>;
+use super::{Merge, ModelInfo, PlatformType};
 
 #[derive(Serialize, ToSchema)]
 pub struct PlatformDTO {

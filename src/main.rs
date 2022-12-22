@@ -226,8 +226,8 @@ async fn run(
     )]
     struct ApiDoc;
 
+    // Add security scheme component
     struct SecurityAddon;
-
     impl Modify for SecurityAddon {
         fn modify(&self, openapi: &mut utoipa::openapi::OpenApi) {
             let components = openapi.components.as_mut().unwrap(); // Safe unwrap: there already are components registered.
@@ -242,6 +242,8 @@ async fn run(
             )
         }
     }
+
+    // TODO Add allOf to OpenAPI
 
     // Make instance variable of ApiDoc so all worker threads get the same instance.
     let openapi = ApiDoc::openapi();

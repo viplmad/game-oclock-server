@@ -2,9 +2,7 @@ use chrono::{NaiveDate, NaiveDateTime};
 use serde::Serialize;
 use utoipa::ToSchema;
 
-use super::{GameDTO, GameStatus, ModelInfo, SearchResultDTO};
-
-pub type GameWithFinishSearchResult = SearchResultDTO<GameWithFinishDTO>;
+use super::{GameDTO, GameStatus, ModelInfo};
 
 #[derive(Serialize, ToSchema)]
 pub struct GameWithFinishDTO {
