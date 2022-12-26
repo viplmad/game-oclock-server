@@ -8,9 +8,9 @@ use super::{Merge, ModelInfo};
 pub struct UserDTO {
     pub id: i32,
     pub username: String,
-    #[schema(value_type = String)]
+    #[schema(value_type = String, format = DateTime)]
     pub added_datetime: NaiveDateTime,
-    #[schema(value_type = String)]
+    #[schema(value_type = String, format = DateTime)]
     pub updated_datetime: NaiveDateTime,
 }
 

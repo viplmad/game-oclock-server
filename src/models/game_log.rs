@@ -6,7 +6,7 @@ use super::{DurationDef, ModelInfo};
 
 #[derive(Serialize, Deserialize, ToSchema)]
 pub struct GameLogDTO {
-    #[schema(value_type = String)]
+    #[schema(value_type = String, format = DateTime)]
     pub datetime: NaiveDateTime,
     #[schema(value_type = String)]
     pub time: DurationDef,

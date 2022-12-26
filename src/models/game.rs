@@ -13,9 +13,9 @@ pub struct GameDTO {
     pub release_year: Option<i32>,
     #[serde(skip_serializing_if = "Option::is_none")]
     pub cover_filename: Option<String>,
-    #[schema(value_type = String)]
+    #[schema(value_type = String, format = DateTime)]
     pub added_datetime: NaiveDateTime,
-    #[schema(value_type = String)]
+    #[schema(value_type = String, format = DateTime)]
     pub updated_datetime: NaiveDateTime,
     pub status: GameStatus,
     pub rating: i32,
@@ -94,9 +94,9 @@ pub struct GameAvailableDTO {
     pub release_year: Option<i32>,
     #[serde(skip_serializing_if = "Option::is_none")]
     pub cover_filename: Option<String>,
-    #[schema(value_type = String)]
+    #[schema(value_type = String, format = DateTime)]
     pub added_datetime: NaiveDateTime,
-    #[schema(value_type = String)]
+    #[schema(value_type = String, format = DateTime)]
     pub updated_datetime: NaiveDateTime,
     pub status: GameStatus,
     pub rating: i32,
@@ -104,7 +104,7 @@ pub struct GameAvailableDTO {
     pub save_folder: String,
     pub screenshot_folder: String,
     pub backup: bool,
-    #[schema(value_type = String)]
+    #[schema(value_type = String, format = DateTime)]
     pub available_date: NaiveDate,
 }
 
