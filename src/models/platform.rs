@@ -54,6 +54,8 @@ impl ModelInfo for PlatformDTO {
 #[derive(Deserialize, ToSchema)]
 pub struct NewPlatformDTO {
     pub name: Option<String>,
+    // Fix to use type reserved name
+    #[serde(rename = "type")]
     pub ptype: Option<PlatformType>,
     pub icon_filename: Option<String>,
 }
