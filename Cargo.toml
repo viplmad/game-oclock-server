@@ -4,7 +4,7 @@ version = "0.1.0"
 edition = "2021"
 
 [dependencies]
-actix-web = { version = "^4", default-features = false }
+actix-web = { version = "^4", default-features = false, features = [ "rustls" ] }
 sqlx = { version = "^0", default-features = false, features = [ "macros", "runtime-actix-native-tls", "postgres", "chrono" ] }
 sea-query = { version = "^0", default-features = false, features = [ "derive", "backend-postgres", "with-chrono" ] }
 chrono = { version = "^0", default-features = false, features = [ "serde" ] }
@@ -16,6 +16,10 @@ jsonwebtoken = { version = "^8", default-features = false }
 base64 = { version = "^0.13", default-features = false }
 uuid = { version = "^1", default-features = false, features = [ "v4" ] }
 bcrypt = { version = "^0", default-features = false, features = [ "std" ] }
+
+# TLS
+rustls = { version = "^0", default-features = false }
+rustls-pemfile = { version = "^1", default-features = false }
 
 # Serialisation/Deserialisation
 serde = { version = "^1", default-features = false }
