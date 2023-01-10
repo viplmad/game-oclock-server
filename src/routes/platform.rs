@@ -101,7 +101,7 @@ async fn get_platform_dlcs(
     ),
     request_body(content = SearchDTO, description = "Query", content_type = "application/json"),
     responses(
-        (status = 200, description = "Platforms obtained", body = PlatformSearchResult, content_type = "application/json"),
+        (status = 200, description = "Platforms obtained", body = PlatformPageResult, content_type = "application/json"),
         (status = 401, description = "Unauthorized", body = ErrorMessage, content_type = "application/json"),
         (status = 500, description = "Internal server error", body = ErrorMessage, content_type = "application/json"),
     ),

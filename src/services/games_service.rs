@@ -1,8 +1,11 @@
+use std::fs::File;
+
 use sqlx::PgPool;
 
+use crate::clients::image_client::ImageConnection;
 use crate::entities::GameSearch;
 use crate::errors::ApiErrors;
-use crate::models::{GameDTO, GameSearchResult, NewGameDTO, SearchDTO};
+use crate::models::{GameDTO, GamePageResult, NewGameDTO, SearchDTO};
 use crate::repository::game_repository;
 
 use super::base::{
@@ -21,7 +24,7 @@ pub async fn search_games(
     user_id: i32,
     search: SearchDTO,
     quicksearch: Option<String>,
-) -> Result<GameSearchResult, ApiErrors> {
+) -> Result<GamePageResult, ApiErrors> {
     let search = handle_query_mapping::<GameDTO, GameSearch>(search, quicksearch)?;
     let find_result = game_repository::search_all(pool, user_id, search).await;
     handle_get_list_paged_result(find_result)
@@ -79,6 +82,26 @@ pub async fn delete_game(pool: &PgPool, user_id: i32, game_id: i32) -> Result<()
 
     let delete_result = game_repository::delete_by_id(pool, user_id, game_id).await;
     handle_action_result::<GameDTO>(delete_result)
+}
+
+pub async fn set_game_cover(
+    pool: &PgPool,
+    cloudinary_connection: &impl ImageConnection,
+    user_id: i32,
+    game_id: i32,
+    file_result: Result<File, ApiErrors>,
+) -> Result<(), ApiErrors> {
+    let file = file_result?;
+    exists_game(pool, user_id, game_id).await?;
+
+    let initial_filename = format!("{game_id}-header");
+    let filename = cloudinary_connection
+        .upload_image(file, "Game", &initial_filename)
+        .map_err(|_| ApiErrors::UnknownError(String::from("Image upload error.")))?;
+
+    let update_result =
+        game_repository::update_cover_filename_by_id(pool, user_id, game_id, &filename).await;
+    handle_action_result::<GameDTO>(update_result)
 }
 
 pub async fn exists_game(pool: &PgPool, user_id: i32, game_id: i32) -> Result<(), ApiErrors> {

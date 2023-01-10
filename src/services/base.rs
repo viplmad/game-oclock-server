@@ -2,11 +2,11 @@ use std::future::Future;
 
 use chrono::NaiveDate;
 
-use crate::entities::SearchResult;
+use crate::entities::PageResult;
 use crate::errors::{
     error_message_builder, ApiErrors, MappingError, RepositoryError, SearchErrors,
 };
-use crate::models::{FilterDTO, Merge, ModelInfo, SearchDTO, SearchResultDTO};
+use crate::models::{FilterDTO, Merge, ModelInfo, PageResultDTO, SearchDTO};
 
 pub fn handle_result<E, T>(repository_result: Result<E, RepositoryError>) -> Result<E, ApiErrors>
 where
@@ -60,8 +60,8 @@ where
 }
 
 pub(super) fn handle_get_list_paged_result<E, T>(
-    repository_result: Result<SearchResult<E>, SearchErrors>,
-) -> Result<SearchResultDTO<T>, ApiErrors>
+    repository_result: Result<PageResult<E>, SearchErrors>,
+) -> Result<PageResultDTO<T>, ApiErrors>
 where
     T: From<E> + ModelInfo,
 {
@@ -76,7 +76,7 @@ where
             ApiErrors::UnknownError(error_message_builder::database_error(T::MODEL_NAME))
         }
     })?;
-    Ok(SearchResultDTO {
+    Ok(PageResultDTO {
         data: entity_search.data.into_iter().map(T::from).collect(),
         page: entity_search.page,
         size: entity_search.size,

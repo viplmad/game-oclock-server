@@ -1,13 +1,14 @@
 use sqlx::PgPool;
 
-use crate::entities::User;
+use crate::entities::{User, UserSearch};
 use crate::errors::ApiErrors;
-use crate::models::{NewUserDTO, PasswordChangeDTO, UserDTO};
+use crate::models::{NewUserDTO, PasswordChangeDTO, SearchDTO, UserDTO, UserPageResult};
 use crate::repository::user_repository;
 
 use super::base::{
-    create_merged, handle_already_exists_result, handle_create_result, handle_get_result,
-    handle_get_result_raw, handle_update_result,
+    create_merged, handle_action_result, handle_already_exists_result, handle_create_result,
+    handle_get_list_paged_result, handle_get_result, handle_get_result_raw,
+    handle_not_found_result, handle_query_mapping, handle_update_result, update_merged,
 };
 
 pub async fn get_user(pool: &PgPool, user_id: i32) -> Result<UserDTO, ApiErrors> {
@@ -15,9 +16,21 @@ pub async fn get_user(pool: &PgPool, user_id: i32) -> Result<UserDTO, ApiErrors>
     handle_get_result(repository_result)
 }
 
-pub async fn create_user(pool: &PgPool, user: NewUserDTO) -> Result<UserDTO, ApiErrors> {
-    let password = user.password.clone();
+pub async fn search_users(
+    pool: &PgPool,
+    search: SearchDTO,
+    quicksearch: Option<String>,
+) -> Result<UserPageResult, ApiErrors> {
+    let search = handle_query_mapping::<UserDTO, UserSearch>(search, quicksearch)?;
+    let find_result = user_repository::search_all(pool, search).await;
+    handle_get_list_paged_result(find_result)
+}
 
+pub async fn create_user(
+    pool: &PgPool,
+    user: NewUserDTO,
+    password: &str,
+) -> Result<UserDTO, ApiErrors> {
     create_merged(
         user,
         async move |created_user_id| get_user(pool, created_user_id).await,
@@ -25,11 +38,31 @@ pub async fn create_user(pool: &PgPool, user: NewUserDTO) -> Result<UserDTO, Api
             let exists_result = user_repository::exists_with_unique(pool, &user_to_create).await;
             handle_already_exists_result::<UserDTO>(exists_result)?;
 
-            let password_hash = crate::auth::hash_password(&password)
+            let password_hash = crate::auth::hash_password(password)
                 .map_err(|_| ApiErrors::UnknownError(String::from("Password hashing error.")))?;
             let create_result =
                 user_repository::create(pool, &user_to_create, &password_hash).await;
             handle_create_result::<i32, UserDTO>(create_result)
+        },
+    )
+    .await
+}
+
+pub async fn update_user(
+    pool: &PgPool,
+    user_id: i32,
+    user: NewUserDTO, // TODO exclude password
+) -> Result<UserDTO, ApiErrors> {
+    update_merged(
+        user,
+        async move || get_user(pool, user_id).await,
+        async move |user_to_update| {
+            let exists_result =
+                user_repository::exists_with_unique_except_id(pool, &user_to_update, user_id).await;
+            handle_already_exists_result::<UserDTO>(exists_result)?;
+
+            let update_result = user_repository::update_by_id(pool, user_id, &user_to_update).await;
+            handle_update_result::<i32, UserDTO>(update_result)
         },
     )
     .await
@@ -56,4 +89,16 @@ pub async fn change_user_password(
     } else {
         Err(ApiErrors::InvalidParameter(String::from("Wrong password.")))
     }
+}
+
+pub async fn delete_user(pool: &PgPool, user_id: i32) -> Result<(), ApiErrors> {
+    exists_user(pool, user_id).await?;
+
+    let delete_result = user_repository::delete_by_id(pool, user_id).await;
+    handle_action_result::<UserDTO>(delete_result)
+}
+
+pub async fn exists_user(pool: &PgPool, user_id: i32) -> Result<(), ApiErrors> {
+    let exists_result = user_repository::exists_by_id(pool, user_id).await;
+    handle_not_found_result::<UserDTO>(exists_result)
 }

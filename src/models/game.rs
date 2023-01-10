@@ -13,6 +13,8 @@ pub struct GameDTO {
     pub release_year: Option<i32>,
     #[serde(skip_serializing_if = "Option::is_none")]
     pub cover_filename: Option<String>,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub cover_url: Option<String>,
     #[schema(value_type = String, format = DateTime)]
     pub added_datetime: NaiveDateTime,
     #[schema(value_type = String, format = DateTime)]
@@ -33,6 +35,7 @@ impl Default for GameDTO {
             edition: String::default(),
             release_year: None,
             cover_filename: None,
+            cover_url: None,
             added_datetime: NaiveDateTime::default(),
             updated_datetime: NaiveDateTime::default(),
             status: GameStatus::default(),
@@ -52,7 +55,8 @@ impl Merge<NewGameDTO> for GameDTO {
             name: other.name.unwrap_or(self.name),
             edition: other.edition.unwrap_or(self.edition),
             release_year: other.release_year,
-            cover_filename: other.cover_filename,
+            cover_filename: self.cover_filename,
+            cover_url: self.cover_url,
             added_datetime: self.added_datetime,
             updated_datetime: self.updated_datetime,
             status: other.status.unwrap_or(self.status),
@@ -76,7 +80,6 @@ pub struct NewGameDTO {
     pub name: Option<String>,
     pub edition: Option<String>,
     pub release_year: Option<i32>,
-    pub cover_filename: Option<String>,
     pub status: Option<GameStatus>,
     pub rating: Option<i32>,
     pub notes: Option<String>,
@@ -94,6 +97,8 @@ pub struct GameAvailableDTO {
     pub release_year: Option<i32>,
     #[serde(skip_serializing_if = "Option::is_none")]
     pub cover_filename: Option<String>,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub cover_url: Option<String>,
     #[schema(value_type = String, format = DateTime)]
     pub added_datetime: NaiveDateTime,
     #[schema(value_type = String, format = DateTime)]

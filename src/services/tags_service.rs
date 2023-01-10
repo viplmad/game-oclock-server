@@ -2,7 +2,7 @@ use sqlx::PgPool;
 
 use crate::entities::TagSearch;
 use crate::errors::ApiErrors;
-use crate::models::{NewTagDTO, SearchDTO, TagDTO, TagSearchResult};
+use crate::models::{NewTagDTO, SearchDTO, TagDTO, TagPageResult};
 use crate::repository::tag_repository;
 
 use super::base::{
@@ -21,7 +21,7 @@ pub async fn search_tags(
     user_id: i32,
     search: SearchDTO,
     quicksearch: Option<String>,
-) -> Result<TagSearchResult, ApiErrors> {
+) -> Result<TagPageResult, ApiErrors> {
     let search = handle_query_mapping::<TagDTO, TagSearch>(search, quicksearch)?;
     let find_result = tag_repository::search_all(pool, user_id, search).await;
     handle_get_list_paged_result(find_result)

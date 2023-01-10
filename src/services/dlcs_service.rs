@@ -2,7 +2,7 @@ use sqlx::PgPool;
 
 use crate::entities::DLCSearch;
 use crate::errors::{error_message_builder, ApiErrors};
-use crate::models::{DLCSearchResult, GameDTO, NewDLCDTO, SearchDTO, DLCDTO};
+use crate::models::{DLCPageResult, GameDTO, NewDLCDTO, SearchDTO, DLCDTO};
 use crate::repository::dlc_repository;
 
 use super::base::{
@@ -45,7 +45,7 @@ pub async fn search_dlcs(
     user_id: i32,
     search: SearchDTO,
     quicksearch: Option<String>,
-) -> Result<DLCSearchResult, ApiErrors> {
+) -> Result<DLCPageResult, ApiErrors> {
     let search = handle_query_mapping::<DLCDTO, DLCSearch>(search, quicksearch)?;
     let find_result = dlc_repository::search_all(pool, user_id, search).await;
     handle_get_list_paged_result(find_result)

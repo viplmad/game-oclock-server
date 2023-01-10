@@ -1,6 +1,9 @@
 use sea_query::{Expr, Query, QueryStatementWriter, SelectStatement, SimpleExpr};
 
-use crate::entities::{User, UserIden};
+use crate::entities::{SearchQuery, User, UserIden, UserSearch};
+use crate::errors::SearchErrors;
+
+use super::search::apply_search;
 
 pub fn select_by_id(id: i32) -> impl QueryStatementWriter {
     let mut select = Query::select();
@@ -18,6 +21,21 @@ pub fn select_by_username(username: &str) -> impl QueryStatementWriter {
     from(&mut select);
     add_fields(&mut select);
     select.and_where(Expr::col(UserIden::Username).eq(username));
+
+    select
+}
+
+pub fn select_all_with_search(search: UserSearch) -> Result<SearchQuery, SearchErrors> {
+    let select = select_all();
+
+    apply_search(select, search)
+}
+
+pub(super) fn select_all() -> SelectStatement {
+    let mut select = Query::select();
+
+    from(&mut select);
+    add_fields(&mut select);
 
     select
 }
@@ -44,6 +62,10 @@ pub fn insert(user: &User, password: &str) -> impl QueryStatementWriter {
     insert
 }
 
+pub fn update_by_id(id: i32, user: &User) -> impl QueryStatementWriter {
+    update_values_by_id(id, vec![(UserIden::Username, user.username.clone().into())])
+}
+
 pub fn update_password_by_id(id: i32, password: &str) -> impl QueryStatementWriter {
     update_values_by_id(id, vec![(UserIden::Password, password.into())])
 }
@@ -64,12 +86,40 @@ fn update_values_by_id(
     update
 }
 
-pub fn exists_by_username(username: &str) -> impl QueryStatementWriter {
+pub fn delete_by_id(id: i32) -> impl QueryStatementWriter {
+    let mut delete = Query::delete();
+
+    delete
+        .from_table(UserIden::Table)
+        .and_where(Expr::col(UserIden::Id).eq(id));
+
+    delete
+}
+
+pub fn exists_by_id(id: i32) -> impl QueryStatementWriter {
+    let mut select = Query::select();
+
+    from(&mut select);
+    where_id(&mut select, id);
+    add_id_field(&mut select);
+
+    select
+}
+
+pub fn exists_by_username(username: &str) -> SelectStatement {
     let mut select = Query::select();
 
     from(&mut select);
     add_id_field(&mut select);
     select.and_where(Expr::col(UserIden::Username).eq(username));
+
+    select
+}
+
+pub fn exists_by_username_and_id_not(username: &str, id: i32) -> impl QueryStatementWriter {
+    let mut select = exists_by_username(username);
+
+    select.and_where(Expr::col(UserIden::Id).ne(id));
 
     select
 }

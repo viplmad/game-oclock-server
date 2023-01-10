@@ -2,7 +2,7 @@ use sqlx::PgPool;
 
 use crate::entities::PlatformSearch;
 use crate::errors::ApiErrors;
-use crate::models::{NewPlatformDTO, PlatformDTO, PlatformSearchResult, SearchDTO};
+use crate::models::{NewPlatformDTO, PlatformDTO, PlatformPageResult, SearchDTO};
 use crate::repository::platform_repository;
 
 use super::base::{
@@ -25,7 +25,7 @@ pub async fn search_platforms(
     user_id: i32,
     search: SearchDTO,
     quicksearch: Option<String>,
-) -> Result<PlatformSearchResult, ApiErrors> {
+) -> Result<PlatformPageResult, ApiErrors> {
     let search = handle_query_mapping::<PlatformDTO, PlatformSearch>(search, quicksearch)?;
     let find_result = platform_repository::search_all(pool, user_id, search).await;
     handle_get_list_paged_result(find_result)

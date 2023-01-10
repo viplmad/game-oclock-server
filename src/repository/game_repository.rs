@@ -1,6 +1,6 @@
 use sqlx::PgPool;
 
-use crate::entities::{Game, GameSearch, SearchResult};
+use crate::entities::{Game, GameSearch, PageResult};
 use crate::errors::{RepositoryError, SearchErrors};
 use crate::query::game_query;
 
@@ -22,7 +22,7 @@ pub async fn search_all(
     pool: &PgPool,
     user_id: i32,
     search: GameSearch,
-) -> Result<SearchResult<Game>, SearchErrors> {
+) -> Result<PageResult<Game>, SearchErrors> {
     let search_query = game_query::select_all_with_search(user_id, search)?;
     fetch_all_search(pool, search_query).await
 }
@@ -58,6 +58,16 @@ pub async fn update_by_id(
     commit_transaction(transaction).await?;
 
     Ok(id)
+}
+
+pub async fn update_cover_filename_by_id(
+    pool: &PgPool,
+    user_id: i32,
+    id: i32,
+    cover_filename: &str,
+) -> Result<(), RepositoryError> {
+    let query = game_query::update_cover_filename_by_id(user_id, id, cover_filename);
+    execute(pool, query).await
 }
 
 pub async fn delete_by_id(pool: &PgPool, user_id: i32, id: i32) -> Result<(), RepositoryError> {

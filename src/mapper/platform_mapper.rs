@@ -10,6 +10,7 @@ impl From<Platform> for PlatformDTO {
                 PlatformType::try_from(ptype).expect("Type was not within valid range")
             }),
             icon_filename: platform.icon_filename,
+            icon_url: None,
             added_datetime: platform.added_datetime,
             updated_datetime: platform.updated_datetime,
         }
@@ -40,6 +41,7 @@ impl From<PlatformAvailable> for PlatformAvailableDTO {
                 PlatformType::try_from(ptype).expect("Type was not within valid range")
             }),
             icon_filename: platform.icon_filename,
+            icon_url: None,
             added_datetime: platform.added_datetime,
             updated_datetime: platform.updated_datetime,
         }

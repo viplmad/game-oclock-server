@@ -6,7 +6,7 @@ use sqlx::PgPool;
 use crate::entities::{GameSearch, GameWithLog};
 use crate::errors::ApiErrors;
 use crate::models::{
-    GameLogDTO, GameWithLogDTO, GameWithLogSearchResult, GameWithLogsDTO, SearchDTO,
+    GameLogDTO, GameWithLogDTO, GameWithLogPageResult, GameWithLogsDTO, SearchDTO,
 };
 use crate::repository::game_with_log_repository;
 
@@ -21,7 +21,7 @@ pub async fn search_first_played_games(
     end_date: Option<NaiveDate>,
     search: SearchDTO,
     quicksearch: Option<String>,
-) -> Result<GameWithLogSearchResult, ApiErrors> {
+) -> Result<GameWithLogPageResult, ApiErrors> {
     check_start_end(start_date, end_date)?;
 
     let (start_datetime, end_datetime) = start_end_to_datetime(start_date, end_date);
@@ -44,7 +44,7 @@ pub async fn search_last_played_games(
     end_date: Option<NaiveDate>,
     search: SearchDTO,
     quicksearch: Option<String>,
-) -> Result<GameWithLogSearchResult, ApiErrors> {
+) -> Result<GameWithLogPageResult, ApiErrors> {
     check_start_end(start_date, end_date)?;
 
     let (start_datetime, end_datetime) = start_end_to_datetime(start_date, end_date);

@@ -3,7 +3,7 @@ use sqlx::PgPool;
 
 use crate::entities::GameSearch;
 use crate::errors::ApiErrors;
-use crate::models::{GameWithFinishDTO, GameWithFinishSearchResult, SearchDTO};
+use crate::models::{GameWithFinishDTO, GameWithFinishPageResult, SearchDTO};
 use crate::repository::game_with_finish_repository;
 
 use super::base::{check_start_end, handle_get_list_paged_result, handle_query_mapping};
@@ -15,7 +15,7 @@ pub async fn search_first_finished_games(
     end_date: Option<NaiveDate>,
     search: SearchDTO,
     quicksearch: Option<String>,
-) -> Result<GameWithFinishSearchResult, ApiErrors> {
+) -> Result<GameWithFinishPageResult, ApiErrors> {
     check_start_end(start_date, end_date)?;
 
     let search = handle_query_mapping::<GameWithFinishDTO, GameSearch>(search, quicksearch)?;
@@ -33,7 +33,7 @@ pub async fn search_last_finished_games(
     end_date: Option<NaiveDate>,
     search: SearchDTO,
     quicksearch: Option<String>,
-) -> Result<GameWithFinishSearchResult, ApiErrors> {
+) -> Result<GameWithFinishPageResult, ApiErrors> {
     check_start_end(start_date, end_date)?;
 
     let search = handle_query_mapping::<GameWithFinishDTO, GameSearch>(search, quicksearch)?;

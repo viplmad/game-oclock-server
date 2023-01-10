@@ -13,6 +13,8 @@ pub struct PlatformDTO {
     pub ptype: Option<PlatformType>,
     #[serde(skip_serializing_if = "Option::is_none")]
     pub icon_filename: Option<String>,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub icon_url: Option<String>,
     #[schema(value_type = String, format = DateTime)]
     pub added_datetime: NaiveDateTime,
     #[schema(value_type = String, format = DateTime)]
@@ -26,6 +28,7 @@ impl Default for PlatformDTO {
             name: String::default(),
             ptype: None,
             icon_filename: None,
+            icon_url: None,
             added_datetime: NaiveDateTime::default(),
             updated_datetime: NaiveDateTime::default(),
         }
@@ -38,7 +41,8 @@ impl Merge<NewPlatformDTO> for PlatformDTO {
             id: self.id,
             name: other.name.unwrap_or(self.name),
             ptype: other.ptype,
-            icon_filename: other.icon_filename,
+            icon_filename: self.icon_filename,
+            icon_url: self.icon_url,
             added_datetime: self.added_datetime,
             updated_datetime: self.updated_datetime,
         }
@@ -57,7 +61,6 @@ pub struct NewPlatformDTO {
     // Fix to use type reserved name
     #[serde(rename = "type")]
     pub ptype: Option<PlatformType>,
-    pub icon_filename: Option<String>,
 }
 
 #[derive(Serialize, ToSchema)]
@@ -69,6 +72,8 @@ pub struct PlatformAvailableDTO {
     pub ptype: Option<PlatformType>,
     #[serde(skip_serializing_if = "Option::is_none")]
     pub icon_filename: Option<String>,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub icon_url: Option<String>,
     #[schema(value_type = String, format = DateTime)]
     pub added_datetime: NaiveDateTime,
     #[schema(value_type = String, format = DateTime)]

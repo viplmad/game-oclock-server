@@ -2,6 +2,7 @@ use actix_web::{delete, get, post, put, web, Responder};
 use chrono::{NaiveDate, NaiveDateTime};
 use sqlx::PgPool;
 
+use crate::clients::cloudinary_client::CloudinaryConnection;
 use crate::models::{
     GameLogDTO, ItemId, ItemIdAndRelatedId, LoggedUser, NewGameDTO, OptionalStartEndDateQuery,
     QuicksearchQuery, SearchDTO, StartEndDateQuery,
@@ -282,7 +283,7 @@ async fn get_played_games(
     ),
     request_body(content = SearchDTO, description = "Query", content_type = "application/json"),
     responses(
-        (status = 200, description = "Games obtained", body = GameWithFinishSearchResult, content_type = "application/json"),
+        (status = 200, description = "Games obtained", body = GameWithFinishPageResult, content_type = "application/json"),
         (status = 400, description = "Bad request", body = ErrorMessage, content_type = "application/json"),
         (status = 401, description = "Unauthorized", body = ErrorMessage, content_type = "application/json"),
         (status = 500, description = "Internal server error", body = ErrorMessage, content_type = "application/json"),
@@ -321,7 +322,7 @@ async fn get_first_finished_games(
     ),
     request_body(content = SearchDTO, description = "Query", content_type = "application/json"),
     responses(
-        (status = 200, description = "Games obtained", body = GameWithFinishSearchResult, content_type = "application/json"),
+        (status = 200, description = "Games obtained", body = GameWithFinishPageResult, content_type = "application/json"),
         (status = 400, description = "Bad request", body = ErrorMessage, content_type = "application/json"),
         (status = 401, description = "Unauthorized", body = ErrorMessage, content_type = "application/json"),
         (status = 500, description = "Internal server error", body = ErrorMessage, content_type = "application/json"),
@@ -360,7 +361,7 @@ async fn get_last_finished_games(
     ),
     request_body(content = SearchDTO, description = "Query", content_type = "application/json"),
     responses(
-        (status = 200, description = "Games obtained", body = GameWithLogSearchResult, content_type = "application/json"),
+        (status = 200, description = "Games obtained", body = GameWithLogPageResult, content_type = "application/json"),
         (status = 400, description = "Bad request", body = ErrorMessage, content_type = "application/json"),
         (status = 401, description = "Unauthorized", body = ErrorMessage, content_type = "application/json"),
         (status = 500, description = "Internal server error", body = ErrorMessage, content_type = "application/json"),
@@ -399,7 +400,7 @@ async fn get_first_played_games(
     ),
     request_body(content = SearchDTO, description = "Query", content_type = "application/json"),
     responses(
-        (status = 200, description = "Games obtained", body = GameWithLogSearchResult, content_type = "application/json"),
+        (status = 200, description = "Games obtained", body = GameWithLogPageResult, content_type = "application/json"),
         (status = 400, description = "Bad request", body = ErrorMessage, content_type = "application/json"),
         (status = 401, description = "Unauthorized", body = ErrorMessage, content_type = "application/json"),
         (status = 500, description = "Internal server error", body = ErrorMessage, content_type = "application/json"),
@@ -437,7 +438,7 @@ async fn get_last_played_games(
     ),
     request_body(content = SearchDTO, description = "Query", content_type = "application/json"),
     responses(
-        (status = 200, description = "Games obtained", body = GameSearchResult, content_type = "application/json"),
+        (status = 200, description = "Games obtained", body = GamePageResult, content_type = "application/json"),
         (status = 401, description = "Unauthorized", body = ErrorMessage, content_type = "application/json"),
         (status = 500, description = "Internal server error", body = ErrorMessage, content_type = "application/json"),
     ),
@@ -480,6 +481,46 @@ async fn post_game(
 ) -> impl Responder {
     let create_result = games_service::create_game(&pool, logged_user.id, body.0).await;
     handle_create_result(create_result)
+}
+
+#[utoipa::path(
+    post,
+    path = "/api/v1/games/{id}/cover",
+    tag = "Games",
+    params(
+        ("id" = i32, Path, description = "Game id"),
+    ),
+    request_body(content = String, description = "Game cover to be uploaded", content_type = "multipart/form-data"),
+    responses(
+        (status = 201, description = "Game cover uploaded", body = GameDTO, content_type = "application/json"),
+        (status = 400, description = "Bad request", body = ErrorMessage, content_type = "application/json"),
+        (status = 401, description = "Unauthorized", body = ErrorMessage, content_type = "application/json"),
+        (status = 404, description = "Game not found", body = ErrorMessage, content_type = "application/json"),
+        (status = 500, description = "Internal server error", body = ErrorMessage, content_type = "application/json"),
+    ),
+    security(
+        ("bearer_token" = [])
+    )
+)]
+#[post("/games/{id}/cover")]
+async fn post_game_cover(
+    pool: web::Data<PgPool>,
+    image_connection: web::Data<CloudinaryConnection>,
+    path: web::Path<ItemId>,
+    body: actix_multipart::Multipart,
+    logged_user: LoggedUser,
+) -> impl Responder {
+    let ItemId(id) = path.into_inner();
+    let file_result = crate::multipart_utils::get_multipart_file(body).await;
+    let upload_result = games_service::set_game_cover(
+        &pool,
+        image_connection.as_ref(),
+        logged_user.id,
+        id,
+        file_result,
+    )
+    .await;
+    handle_action_result(upload_result)
 }
 
 #[utoipa::path(
