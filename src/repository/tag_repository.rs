@@ -1,6 +1,6 @@
 use sqlx::PgPool;
 
-use crate::entities::{SearchResult, Tag, TagSearch};
+use crate::entities::{PageResult, Tag, TagSearch};
 use crate::errors::{RepositoryError, SearchErrors};
 use crate::query::tag_query;
 
@@ -19,7 +19,7 @@ pub async fn search_all(
     pool: &PgPool,
     user_id: i32,
     search: TagSearch,
-) -> Result<SearchResult<Tag>, SearchErrors> {
+) -> Result<PageResult<Tag>, SearchErrors> {
     let search_query = tag_query::select_all_with_query(user_id, search)?;
     fetch_all_search(pool, search_query).await
 }

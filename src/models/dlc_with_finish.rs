@@ -14,6 +14,8 @@ pub struct DLCWithFinishDTO {
     pub release_year: Option<i32>,
     #[serde(skip_serializing_if = "Option::is_none")]
     pub cover_filename: Option<String>,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub cover_url: Option<String>,
     #[schema(value_type = String, format = DateTime)]
     pub added_datetime: NaiveDateTime,
     #[schema(value_type = String, format = DateTime)]

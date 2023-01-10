@@ -1,7 +1,7 @@
 use sea_query::{PostgresQueryBuilder, QueryStatementWriter};
 use sqlx::{PgPool, Postgres, Transaction};
 
-use crate::entities::{SearchQuery, SearchResult};
+use crate::entities::{PageResult, SearchQuery};
 use crate::errors::{RepositoryError, SearchErrors};
 
 pub(super) async fn begin_transaction(
@@ -150,14 +150,14 @@ where
 pub(super) async fn fetch_all_search<'c, X, T>(
     executor: X,
     search_query: SearchQuery,
-) -> Result<SearchResult<T>, SearchErrors>
+) -> Result<PageResult<T>, SearchErrors>
 where
     X: sqlx::Executor<'c, Database = Postgres>,
     T: for<'r> sqlx::FromRow<'r, sqlx::postgres::PgRow> + Send + Unpin,
 {
     fetch_all(executor, search_query.query)
         .await
-        .map(|list| SearchResult {
+        .map(|list| PageResult {
             data: list,
             page: search_query.page,
             size: search_query.size,

@@ -9,6 +9,7 @@ impl From<DLC> for DLCDTO {
             base_game_id: dlc.base_game_id,
             release_year: dlc.release_year,
             cover_filename: dlc.cover_filename,
+            cover_url: None,
             added_datetime: dlc.added_datetime,
             updated_datetime: dlc.updated_datetime,
         }
@@ -38,6 +39,7 @@ impl From<DLCWithDate> for DLCAvailableDTO {
             base_game_id: dlc.base_game_id,
             release_year: dlc.release_year,
             cover_filename: dlc.cover_filename,
+            cover_url: None,
             added_datetime: dlc.added_datetime,
             updated_datetime: dlc.updated_datetime,
             available_date: dlc.query_date,

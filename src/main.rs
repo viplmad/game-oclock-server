@@ -2,6 +2,10 @@ use std::{env, fs::File, io::BufReader};
 
 use actix_web_httpauth::middleware::HttpAuthentication;
 use dotenvy::dotenv;
+use game_collection_server::clients::cloudinary_client::{
+    CloudinaryConnectOptions, CloudinaryConnection,
+};
+use game_collection_server::clients::image_client::ImageConnection;
 use game_collection_server::{models, routes};
 
 use actix_web::{web, App, HttpServer};
@@ -28,41 +32,31 @@ async fn main() -> std::io::Result<()> {
     dotenv().ok();
     init_logger();
 
-    let host: String = env::var("HOST").unwrap_or_else(|_| String::from(DEFAULT_HOST));
-    let port: u16 = env::var("PORT")
+    let host = env::var("HOST").unwrap_or_else(|_| String::from(DEFAULT_HOST));
+    let port = env::var("PORT")
         .unwrap_or_else(|_| String::from(DEFAULT_HTTP_PORT))
         .parse()
         .expect("Port is not a number");
-    let tls_port: u16 = env::var("TLS_PORT")
-        .unwrap_or_else(|_| String::from(DEFAULT_HTTPS_PORT))
-        .parse()
-        .expect("TLS port is not a number");
 
-    let database_user: String = env::var("DB_USER").expect("Database user not set.");
-    let database_password: String = env::var("DB_PASSWORD").expect("Database password not set.");
-    let database_host: String = env::var("DB_HOST").expect("Database host not set.");
-    let database_port: u16 = env::var("DB_PORT")
-        .expect("Database port not set.")
-        .parse()
-        .expect("Port is not a number.");
-    let database_database: String = env::var("DB_DATABASE").expect("Database not set.");
+    // Database
+    let db_pool = get_connection_pool()
+        .await
+        .expect("Could not open database connection.");
 
-    let db_pool: PgPool = get_connection_pool(
-        database_user,
-        database_password,
-        database_host,
-        database_port,
-        database_database,
-    )
-    .await
-    .expect("Could not open database connection.");
+    let cloudinary_connection = get_cloudinary_connection();
+    // Cloudinary
 
+    // Encoding/Decoding
     let secret_key: String = env::var("SECRET_KEY").expect("Secret key not set.");
 
     let encoding_key = generate_encoding_key(&secret_key);
     let decoding_key = generate_decoding_key(&secret_key);
 
-    // Load TLS keys
+    // TLS
+    let tls_port = env::var("TLS_PORT")
+        .unwrap_or_else(|_| String::from(DEFAULT_HTTPS_PORT))
+        .parse()
+        .expect("TLS port is not a number");
     // TODO get paths from env
     let tls_config = load_tls_config(TLS_CERT_PATH, TLS_KEY_PATH);
 
@@ -70,6 +64,7 @@ async fn main() -> std::io::Result<()> {
         host,
         port,
         db_pool,
+        cloudinary_connection,
         encoding_key,
         decoding_key,
         tls_port,
@@ -85,13 +80,16 @@ fn init_logger() {
     env_logger::init();
 }
 
-async fn get_connection_pool(
-    user: String,
-    password: String,
-    host: String,
-    port: u16,
-    database: String,
-) -> Result<PgPool, sqlx::Error> {
+async fn get_connection_pool() -> Result<PgPool, sqlx::Error> {
+    let host = env::var("DB_HOST").expect("Database host not set.");
+    let port = env::var("DB_PORT")
+        .expect("Database port not set.")
+        .parse()
+        .expect("Database port is not a number.");
+    let database = env::var("DB_DATABASE").expect("Database not set.");
+    let user = env::var("DB_USER").expect("Database user not set.");
+    let password = env::var("DB_PASSWORD").expect("Database password not set.");
+
     log::info!(
         "Database connected to {}:{}@{}:{}/{}",
         user,
@@ -117,6 +115,51 @@ async fn get_connection_pool(
         .await
 }
 
+fn get_cloudinary_connection() -> Option<CloudinaryConnection> {
+    let cloud_name = match env::var("CLOUDINARY_CLOUD_NAME") {
+        Ok(val) => Some(val),
+        Err(_) => {
+            log::info!("Cloudinary cloud name not set. -> Image disabled");
+            None
+        }
+    }?;
+    let api_key = match env::var("CLOUDINARY_API_KEY") {
+        Ok(val) => match val.parse() {
+            Ok(int_val) => Some(int_val),
+            Err(_) => {
+                log::info!("Cloudinary api key is not a number. -> Image disabled");
+                None
+            }
+        },
+        Err(_) => {
+            log::info!("Cloudinary api key not set. -> Image disabled");
+            None
+        }
+    }?;
+    let api_secret = match env::var("CLOUDINARY_API_SECRET") {
+        Ok(val) => Some(val),
+        Err(_) => {
+            log::info!("Cloudinary api key not set. -> Image disabled");
+            None
+        }
+    }?;
+
+    log::info!(
+        "Cloudinary connected to {}:{}@{}",
+        api_key,
+        api_secret,
+        cloud_name
+    );
+
+    // Manually-constructed options
+    let conn = CloudinaryConnectOptions::default()
+        .cloud_name(&cloud_name)
+        .api_key(api_key)
+        .api_secret(&api_secret);
+
+    Some(CloudinaryConnection::default().connect_with(conn))
+}
+
 fn generate_encoding_key(key: &str) -> EncodingKey {
     EncodingKey::from_secret(key.as_ref())
 }
@@ -129,6 +172,7 @@ async fn run(
     host: String,
     port: u16,
     db_pool: PgPool,
+    cloudinary_connection: Option<CloudinaryConnection>,
     encoding_key: EncodingKey,
     decoding_key: DecodingKey,
     tls_port: u16,
@@ -197,9 +241,13 @@ async fn run(
             routes::put_tag,
             routes::delete_tag,
             // Users
+            routes::get_user,
             routes::get_current_user,
+            routes::get_users,
             routes::post_user,
+            routes::put_user,
             routes::change_password,
+            routes::delete_user,
             // Authentication
             routes::token,
             // Health check
@@ -207,7 +255,7 @@ async fn run(
         ),
         components(schemas(
             models::GameDTO,
-            models::GameSearchResult,
+            models::GamePageResult,
             models::NewGameDTO,
             models::GameAvailableDTO,
             models::GameWithFinishDTO,
@@ -216,20 +264,21 @@ async fn run(
             models::GameStatus,
             models::GameLogDTO,
             models::DLCDTO,
-            models::DLCSearchResult,
+            models::DLCPageResult,
             models::NewDLCDTO,
             models::DLCAvailableDTO,
             models::DLCWithFinishDTO,
             models::PlatformDTO,
-            models::PlatformSearchResult,
+            models::PlatformPageResult,
             models::NewPlatformDTO,
             models::PlatformAvailableDTO,
             models::PlatformType,
             models::TagDTO,
-            models::TagSearchResult,
+            models::TagPageResult,
             models::NewTagDTO,
             models::UserDTO,
             models::NewUserDTO,
+            models::NewPasswordDTO,
             models::PasswordChangeDTO,
             models::TokenRequest,
             models::TokenResponse,
@@ -274,6 +323,7 @@ async fn run(
 
         App::new()
             .app_data(web::Data::new(db_pool.clone())) // TODO Wrap dbpool
+            .app_data(web::Data::new(cloudinary_connection.clone()))
             .app_data(web::Data::new(encoding_key.clone()))
             .app_data(web::Data::new(decoding_key.clone()))
             .service(
@@ -342,9 +392,13 @@ async fn run(
                         .service(routes::put_tag)
                         .service(routes::delete_tag)
                         // Users
+                        .service(routes::get_user)
                         .service(routes::get_current_user)
+                        .service(routes::get_users)
                         .service(routes::post_user)
-                        .service(routes::change_password),
+                        .service(routes::put_user)
+                        .service(routes::change_password)
+                        .service(routes::delete_user),
                 ),
             )
             // Authentication

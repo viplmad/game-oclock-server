@@ -46,7 +46,11 @@ impl ModelInfo for UserDTO {
 #[derive(Deserialize, ToSchema)]
 pub struct NewUserDTO {
     pub username: String,
-    pub password: String, // TODO Secret<String>
+}
+
+#[derive(Deserialize, ToSchema)]
+pub struct NewPasswordDTO {
+    pub password: String,
 }
 
 #[derive(Deserialize, ToSchema)]

@@ -25,6 +25,12 @@ rustls-pemfile = { version = "^1", default-features = false }
 serde = { version = "^1", default-features = false }
 serde_json = { version = "^1", default-features = false }
 
+# Image
+actix-multipart = { version = "^0", default-features = false }
+futures = { version = "^0", default-features = false }
+hyper = { version= "^0", default-features = false }
+url = { version = "^2", default-features = false }
+
 # Environment variables
 dotenvy = { version = "^0", default-features = false }
 

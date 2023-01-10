@@ -66,6 +66,8 @@ pub struct PasswordError();
 
 pub struct RepositoryError();
 
+pub struct ImageClientError();
+
 pub struct MappingError(pub String);
 
 pub enum SearchErrors {

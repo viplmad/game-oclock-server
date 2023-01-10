@@ -1,6 +1,6 @@
 use sqlx::PgPool;
 
-use crate::entities::{DLCSearch, SearchResult, DLC};
+use crate::entities::{DLCSearch, PageResult, DLC};
 use crate::errors::{RepositoryError, SearchErrors};
 use crate::query::dlc_query;
 
@@ -30,7 +30,7 @@ pub async fn search_all(
     pool: &PgPool,
     user_id: i32,
     search: DLCSearch,
-) -> Result<SearchResult<DLC>, SearchErrors> {
+) -> Result<PageResult<DLC>, SearchErrors> {
     let search_query = dlc_query::select_all_with_search(user_id, search)?;
     fetch_all_search(pool, search_query).await
 }

@@ -165,7 +165,7 @@ async fn get_dlc_platforms(
     ),
     request_body(content = SearchDTO, description = "Query", content_type = "application/json"),
     responses(
-        (status = 200, description = "DLCs obtained", body = DLCWithFinishSearchResult, content_type = "application/json"),
+        (status = 200, description = "DLCs obtained", body = DLCWithFinishPageResult, content_type = "application/json"),
         (status = 400, description = "Bad request", body = ErrorMessage, content_type = "application/json"),
         (status = 401, description = "Unauthorized", body = ErrorMessage, content_type = "application/json"),
         (status = 500, description = "Internal server error", body = ErrorMessage, content_type = "application/json"),
@@ -204,7 +204,7 @@ async fn get_first_finished_dlcs(
     ),
     request_body(content = SearchDTO, description = "Query", content_type = "application/json"),
     responses(
-        (status = 200, description = "DLCs obtained", body = DLCWithFinishSearchResult, content_type = "application/json"),
+        (status = 200, description = "DLCs obtained", body = DLCWithFinishPageResult, content_type = "application/json"),
         (status = 400, description = "Bad request", body = ErrorMessage, content_type = "application/json"),
         (status = 401, description = "Unauthorized", body = ErrorMessage, content_type = "application/json"),
         (status = 500, description = "Internal server error", body = ErrorMessage, content_type = "application/json"),
@@ -242,7 +242,7 @@ async fn get_last_finished_dlcs(
     ),
     request_body(content = SearchDTO, description = "Query", content_type = "application/json"),
     responses(
-        (status = 200, description = "DLCs obtained", body = DLCSearchResult, content_type = "application/json"),
+        (status = 200, description = "DLCs obtained", body = DLCPageResult, content_type = "application/json"),
         (status = 401, description = "Unauthorized", body = ErrorMessage, content_type = "application/json"),
         (status = 500, description = "Internal server error", body = ErrorMessage, content_type = "application/json"),
     ),

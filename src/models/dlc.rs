@@ -14,6 +14,8 @@ pub struct DLCDTO {
     pub release_year: Option<i32>,
     #[serde(skip_serializing_if = "Option::is_none")]
     pub cover_filename: Option<String>,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub cover_url: Option<String>,
     #[schema(value_type = String, format = DateTime)]
     pub added_datetime: NaiveDateTime,
     #[schema(value_type = String, format = DateTime)]
@@ -28,6 +30,7 @@ impl Default for DLCDTO {
             base_game_id: None,
             release_year: None,
             cover_filename: None,
+            cover_url: None,
             added_datetime: NaiveDateTime::default(),
             updated_datetime: NaiveDateTime::default(),
         }
@@ -41,7 +44,8 @@ impl Merge<NewDLCDTO> for DLCDTO {
             name: other.name.unwrap_or(self.name),
             base_game_id: other.base_game_id,
             release_year: other.release_year,
-            cover_filename: other.cover_filename,
+            cover_filename: self.cover_filename,
+            cover_url: self.cover_url,
             added_datetime: self.added_datetime,
             updated_datetime: self.updated_datetime,
         }
@@ -59,7 +63,6 @@ pub struct NewDLCDTO {
     pub name: Option<String>,
     pub base_game_id: Option<i32>,
     pub release_year: Option<i32>,
-    pub cover_filename: Option<String>,
 }
 
 #[derive(Serialize, ToSchema)]
@@ -72,6 +75,8 @@ pub struct DLCAvailableDTO {
     pub release_year: Option<i32>,
     #[serde(skip_serializing_if = "Option::is_none")]
     pub cover_filename: Option<String>,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub cover_url: Option<String>,
     #[schema(value_type = String, format = DateTime)]
     pub added_datetime: NaiveDateTime,
     #[schema(value_type = String, format = DateTime)]
