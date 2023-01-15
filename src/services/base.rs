@@ -183,6 +183,7 @@ where
 
     update_function(entity_to_update).await?;
 
+    // TODO just return empty and remove get after update
     get_function().await.map_err(|err| match err {
         ApiErrors::NotFound(_) => {
             ApiErrors::NotFound(error_message_builder::updated_but_error_get(T::MODEL_NAME))

@@ -2,27 +2,26 @@ use std::str::FromStr;
 
 use futures::future::BoxFuture;
 
+use crate::clients::image_client::ImageClient;
 use crate::errors::ImageClientError;
-
-use super::image_client::{ImageConnectOptions, ImageConnection};
 
 const DEFAULT_API_URL: &str = "https://api.cloudinary.com/v1_1";
 const DEFAULT_ASSET_URL: &str = "https://res.cloudinary.com";
 
-/// A connection to Cloudinary.
+/// A Cloudinary client.
 #[derive(Clone, Default)]
-pub struct CloudinaryConnection {
-    pub(super) connect_options: <Self as ImageConnection>::Options,
+pub struct CloudinaryClient {
+    options: CloudinaryClientOptions,
 }
 
-impl ImageConnection for CloudinaryConnection {
-    type Options = CloudinaryConnectOptions;
-
-    fn connect_with(mut self, options: Self::Options) -> Self {
-        self.connect_options = options;
+impl CloudinaryClient {
+    pub fn connect_with(mut self, options: CloudinaryClientOptions) -> Self {
+        self.options = options;
         self
     }
+}
 
+impl ImageClient for CloudinaryClient {
     fn ping(&self) -> BoxFuture<'_, Result<(), ImageClientError>> {
         todo!(); // TODO access sample
     }
@@ -50,7 +49,7 @@ impl ImageConnection for CloudinaryConnection {
     }
 
     fn get_image_uri(&self, folder: &str, filename: &str) -> String {
-        let options = &self.connect_options;
+        let options = &self.options;
         let base_asset_url = &options.asset_url;
         let cloud_name = &options.cloud_name;
         format!("{base_asset_url}/{cloud_name}/image/upload/{folder}/{filename}")
@@ -59,7 +58,7 @@ impl ImageConnection for CloudinaryConnection {
 
 /// Connection options to Cloudinary.
 #[derive(Debug, Clone)]
-pub struct CloudinaryConnectOptions {
+pub struct CloudinaryClientOptions {
     pub(crate) api_url: String,
     pub(crate) asset_url: String,
     pub(crate) port: u16,
@@ -68,7 +67,50 @@ pub struct CloudinaryConnectOptions {
     pub(crate) api_secret: String,
 }
 
-impl CloudinaryConnectOptions {
+impl CloudinaryClientOptions {
+    pub fn try_from_env() -> Option<Self> {
+        let cloud_name = match std::env::var("CLOUDINARY_CLOUD_NAME") {
+            Ok(val) => Some(val),
+            Err(_) => {
+                log::info!("Cloudinary cloud name not set. -> Image disabled");
+                None
+            }
+        }?;
+        let api_key = match std::env::var("CLOUDINARY_API_KEY") {
+            Ok(val) => match val.parse() {
+                Ok(int_val) => Some(int_val),
+                Err(_) => {
+                    log::info!("Cloudinary api key is not a number. -> Image disabled");
+                    None
+                }
+            },
+            Err(_) => {
+                log::info!("Cloudinary api key not set. -> Image disabled");
+                None
+            }
+        }?;
+        let api_secret = match std::env::var("CLOUDINARY_API_SECRET") {
+            Ok(val) => Some(val),
+            Err(_) => {
+                log::info!("Cloudinary api key not set. -> Image disabled");
+                None
+            }
+        }?;
+
+        log::info!(
+            "Cloudinary connected to <redacted>:<redacted>@{}",
+            // Hide api key and secret from info log
+            cloud_name
+        );
+
+        Some(
+            Self::default()
+                .cloud_name(&cloud_name)
+                .api_key(api_key)
+                .api_secret(&api_secret),
+        )
+    }
+
     pub fn api_url(mut self, api_url: &str) -> Self {
         self.api_url = String::from(api_url);
         self
@@ -100,7 +142,7 @@ impl CloudinaryConnectOptions {
     }
 }
 
-impl Default for CloudinaryConnectOptions {
+impl Default for CloudinaryClientOptions {
     fn default() -> Self {
         Self {
             api_url: String::from(DEFAULT_API_URL),
@@ -113,23 +155,12 @@ impl Default for CloudinaryConnectOptions {
     }
 }
 
-impl ImageConnectOptions for CloudinaryConnectOptions {
-    type Connection = CloudinaryConnection;
-
-    fn connect(&self) -> BoxFuture<'_, Result<Self::Connection, ImageClientError>>
-    where
-        Self::Connection: Sized,
-    {
-        todo!()
-    }
-}
-
 /// Create connection options from URI cloudinary://<apiKey>:<apiSecret>@<cloudName>
-impl FromStr for CloudinaryConnectOptions {
+impl FromStr for CloudinaryClientOptions {
     type Err = ImageClientError;
 
     fn from_str(s: &str) -> Result<Self, Self::Err> {
-        let url: url::Url = s.parse().map_err(|_| ImageClientError())?; //.map_err(Error::config)?;
+        let url: url::Url = s.parse().map_err(|_| ImageClientError())?;
 
         let mut options = Self::default();
 
@@ -143,7 +174,6 @@ impl FromStr for CloudinaryConnectOptions {
         if !api_key_string.is_empty() {
             let api_key = api_key_string.parse().map_err(|_| ImageClientError())?;
             options = options.api_key(api_key);
-            //.map_err(Error::config)?;
         } else {
             return Err(ImageClientError());
         }
