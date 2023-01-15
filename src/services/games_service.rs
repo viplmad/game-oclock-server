@@ -1,8 +1,5 @@
-use std::fs::File;
-
 use sqlx::PgPool;
 
-use crate::clients::image_client::ImageConnection;
 use crate::entities::GameSearch;
 use crate::errors::ApiErrors;
 use crate::models::{GameDTO, GamePageResult, NewGameDTO, SearchDTO};
@@ -86,21 +83,12 @@ pub async fn delete_game(pool: &PgPool, user_id: i32, game_id: i32) -> Result<()
 
 pub async fn set_game_cover(
     pool: &PgPool,
-    cloudinary_connection: &impl ImageConnection,
     user_id: i32,
     game_id: i32,
-    file_result: Result<File, ApiErrors>,
+    filename: &str,
 ) -> Result<(), ApiErrors> {
-    let file = file_result?;
-    exists_game(pool, user_id, game_id).await?;
-
-    let initial_filename = format!("{game_id}-header");
-    let filename = cloudinary_connection
-        .upload_image(file, "Game", &initial_filename)
-        .map_err(|_| ApiErrors::UnknownError(String::from("Image upload error.")))?;
-
     let update_result =
-        game_repository::update_cover_filename_by_id(pool, user_id, game_id, &filename).await;
+        game_repository::update_cover_filename_by_id(pool, user_id, game_id, filename).await;
     handle_action_result::<GameDTO>(update_result)
 }
 

@@ -80,6 +80,7 @@ pub enum ApiErrors {
     AlreadyExists(String),
     NotFound(String),
     UnknownError(String),
+    NotSupported(String),
 }
 
 impl ToError for ApiErrors {
@@ -96,6 +97,9 @@ impl ToError for ApiErrors {
             }
             ApiErrors::UnknownError(msg) => {
                 HttpResponse::InternalServerError().json(ErrorMessage::new("unknown_error", msg))
+            }
+            ApiErrors::NotSupported(msg) => {
+                HttpResponse::NotImplemented().json(ErrorMessage::new("not_supported", msg))
             }
         }
     }

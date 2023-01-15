@@ -1,2 +1,2 @@
-pub mod cloudinary_client;
+pub mod cloudinary;
 pub mod image_client;

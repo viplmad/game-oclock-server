@@ -2,14 +2,15 @@ use actix_web::{delete, get, post, put, web, Responder};
 use chrono::{NaiveDate, NaiveDateTime};
 use sqlx::PgPool;
 
-use crate::clients::cloudinary_client::CloudinaryConnection;
 use crate::models::{
     GameLogDTO, ItemId, ItemIdAndRelatedId, LoggedUser, NewGameDTO, OptionalStartEndDateQuery,
     QuicksearchQuery, SearchDTO, StartEndDateQuery,
 };
+use crate::providers::ImageClientProvider;
 use crate::services::{
-    dlcs_service, game_available_service, game_finishes_service, game_logs_service,
-    game_tags_service, game_with_finish_service, game_with_logs_service, games_service,
+    dlcs_service, game_available_service, game_finishes_service, game_image_service,
+    game_logs_service, game_tags_service, game_with_finish_service, game_with_logs_service,
+    games_service,
 };
 
 use super::base::{
@@ -505,16 +506,16 @@ async fn post_game(
 #[post("/games/{id}/cover")]
 async fn post_game_cover(
     pool: web::Data<PgPool>,
-    image_connection: web::Data<CloudinaryConnection>,
+    image_client_provider: web::Data<ImageClientProvider>,
     path: web::Path<ItemId>,
     body: actix_multipart::Multipart,
     logged_user: LoggedUser,
 ) -> impl Responder {
     let ItemId(id) = path.into_inner();
     let file_result = crate::multipart_utils::get_multipart_file(body).await;
-    let upload_result = games_service::set_game_cover(
+    let upload_result = game_image_service::set_game_cover(
         &pool,
-        image_connection.as_ref(),
+        &image_client_provider,
         logged_user.id,
         id,
         file_result,
