@@ -64,7 +64,7 @@ pub async fn update_cover_filename_by_id(
     pool: &PgPool,
     user_id: i32,
     id: i32,
-    cover_filename: &str,
+    cover_filename: Option<String>,
 ) -> Result<(), RepositoryError> {
     let query = game_query::update_cover_filename_by_id(user_id, id, cover_filename);
     execute(pool, query).await

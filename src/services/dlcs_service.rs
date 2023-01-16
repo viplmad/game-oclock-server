@@ -94,17 +94,20 @@ pub async fn update_dlc(
     .await
 }
 
-pub async fn update_dlc_base_game(
+pub async fn set_dlc_base_game(
     pool: &PgPool,
     user_id: i32,
     dlc_id: i32,
-    base_game_id: i32,
+    base_game_id: Option<i32>,
 ) -> Result<(), ApiErrors> {
     exists_dlc(pool, user_id, dlc_id).await?;
-    games_service::exists_game(pool, user_id, base_game_id).await?;
+
+    if let Some(game_id) = base_game_id {
+        games_service::exists_game(pool, user_id, game_id).await?;
+    }
 
     let update_result =
-        dlc_repository::update_base_game_id(pool, user_id, dlc_id, Some(base_game_id)).await;
+        dlc_repository::update_base_game_id(pool, user_id, dlc_id, base_game_id).await;
     handle_action_result::<DLCDTO>(update_result)
 }
 
@@ -115,33 +118,30 @@ pub async fn delete_dlc(pool: &PgPool, user_id: i32, dlc_id: i32) -> Result<(), 
     handle_action_result::<DLCDTO>(delete_result)
 }
 
-pub async fn remove_dlc_base_game(
-    pool: &PgPool,
-    user_id: i32,
-    dlc_id: i32,
-    base_game_id: i32,
-) -> Result<(), ApiErrors> {
-    let dlc = get_dlc(pool, user_id, dlc_id).await?;
-    if dlc.base_game_id.is_none() {
-        return Err(ApiErrors::InvalidParameter(
-            error_message_builder::empty_param("DLC base game"),
-        ));
-    } else if dlc
-        .base_game_id
-        .is_some_and(|game_id| base_game_id != game_id)
-    {
-        return Err(ApiErrors::InvalidParameter(
-            error_message_builder::param_not_match("DLC base game"),
-        ));
-    }
-
-    let update_result = dlc_repository::update_base_game_id(pool, user_id, dlc_id, None).await;
-    handle_action_result::<DLCDTO>(update_result)
-}
-
 pub async fn exists_dlc(pool: &PgPool, user_id: i32, dlc_id: i32) -> Result<(), ApiErrors> {
     let exists_result = dlc_repository::exists_by_id(pool, user_id, dlc_id).await;
     handle_not_found_result::<DLCDTO>(exists_result)
+}
+
+pub async fn get_dlc_cover_filename(
+    pool: &PgPool,
+    user_id: i32,
+    dlc_id: i32,
+) -> Result<String, ApiErrors> {
+    let dlc = get_dlc(pool, user_id, dlc_id).await?;
+    dlc.cover_filename
+        .ok_or_else(|| ApiErrors::InvalidParameter(error_message_builder::empty_param("DLC cover")))
+}
+
+pub async fn set_dlc_cover_filename(
+    pool: &PgPool,
+    user_id: i32,
+    dlc_id: i32,
+    filename: Option<String>,
+) -> Result<(), ApiErrors> {
+    let update_result =
+        dlc_repository::update_cover_filename_by_id(pool, user_id, dlc_id, filename).await;
+    handle_action_result::<DLCDTO>(update_result)
 }
 
 async fn exists_base_game(

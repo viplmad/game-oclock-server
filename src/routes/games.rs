@@ -491,9 +491,9 @@ async fn post_game(
     params(
         ("id" = i32, Path, description = "Game id"),
     ),
-    request_body(content = String, description = "Game cover to be uploaded", content_type = "multipart/form-data"),
+    request_body(content = Image, description = "Game cover to be uploaded", content_type = "multipart/form-data"),
     responses(
-        (status = 201, description = "Game cover uploaded", body = GameDTO, content_type = "application/json"),
+        (status = 204, description = "Game cover uploaded"),
         (status = 400, description = "Bad request", body = ErrorMessage, content_type = "application/json"),
         (status = 401, description = "Unauthorized", body = ErrorMessage, content_type = "application/json"),
         (status = 404, description = "Game not found", body = ErrorMessage, content_type = "application/json"),
@@ -620,30 +620,40 @@ async fn put_game(
 
 #[utoipa::path(
     put,
-    path = "/api/v1/games/{id}/dlcs/{other_id}",
+    path = "/api/v1/games/{id}/cover",
     tag = "Games",
     params(
         ("id" = i32, Path, description = "Game id"),
-        ("other_id" = i32, Path, description = "DLC id")
     ),
+    request_body(content = String, description = "New game cover name", content_type = "application/json"),
     responses(
-        (status = 204, description = "Game and DLC linked"),
+        (status = 204, description = "Game cover renamed"),
+        (status = 400, description = "Bad request", body = ErrorMessage, content_type = "application/json"),
         (status = 401, description = "Unauthorized", body = ErrorMessage, content_type = "application/json"),
-        (status = 404, description = "Game or DLC not found", body = ErrorMessage, content_type = "application/json"),
+        (status = 404, description = "Game not found", body = ErrorMessage, content_type = "application/json"),
         (status = 500, description = "Internal server error", body = ErrorMessage, content_type = "application/json"),
     ),
     security(
         ("bearer_token" = [])
     )
 )]
-#[put("/games/{id}/dlcs/{other_id}")]
-async fn link_game_dlc(
+#[put("/games/{id}/cover")]
+async fn put_game_cover(
     pool: web::Data<PgPool>,
-    path: web::Path<ItemIdAndRelatedId>,
+    image_client_provider: web::Data<ImageClientProvider>,
+    path: web::Path<ItemId>,
+    body: web::Json<String>,
     logged_user: LoggedUser,
 ) -> impl Responder {
-    let ItemIdAndRelatedId(id, dlc_id) = path.into_inner();
-    let update_result = dlcs_service::update_dlc_base_game(&pool, logged_user.id, dlc_id, id).await;
+    let ItemId(id) = path.into_inner();
+    let update_result = game_image_service::rename_game_cover(
+        &pool,
+        &image_client_provider,
+        logged_user.id,
+        id,
+        &body.0,
+    )
+    .await;
     handle_action_result(update_result)
 }
 
@@ -746,6 +756,38 @@ async fn delete_game(
 
 #[utoipa::path(
     delete,
+    path = "/api/v1/games/{id}/cover",
+    tag = "Games",
+    params(
+        ("id" = i32, Path, description = "Game id"),
+    ),
+    responses(
+        (status = 204, description = "Game cover deleted"),
+        (status = 400, description = "Bad request", body = ErrorMessage, content_type = "application/json"),
+        (status = 401, description = "Unauthorized", body = ErrorMessage, content_type = "application/json"),
+        (status = 404, description = "Game not found", body = ErrorMessage, content_type = "application/json"),
+        (status = 500, description = "Internal server error", body = ErrorMessage, content_type = "application/json"),
+    ),
+    security(
+        ("bearer_token" = [])
+    )
+)]
+#[put("/games/{id}/cover")]
+async fn delete_game_cover(
+    pool: web::Data<PgPool>,
+    image_client_provider: web::Data<ImageClientProvider>,
+    path: web::Path<ItemId>,
+    logged_user: LoggedUser,
+) -> impl Responder {
+    let ItemId(id) = path.into_inner();
+    let delete_result =
+        game_image_service::delete_game_cover(&pool, &image_client_provider, logged_user.id, id)
+            .await;
+    handle_action_result(delete_result)
+}
+
+#[utoipa::path(
+    delete,
     path = "/api/v1/games/{id}/finishes",
     tag = "Games",
     params(
@@ -803,36 +845,6 @@ async fn delete_game_log(
     let ItemId(id) = path.into_inner();
     let delete_result = game_logs_service::delete_game_log(&pool, logged_user.id, id, body.0).await;
     handle_delete_result(delete_result)
-}
-
-#[utoipa::path(
-    delete,
-    path = "/api/v1/games/{id}/dlcs/{other_id}",
-    tag = "Games",
-    params(
-        ("id" = i32, Path, description = "Game id"),
-        ("other_id" = i32, Path, description = "DLC id")
-    ),
-    responses(
-        (status = 204, description = "Game and DLC unlinked"),
-        (status = 400, description = "Bad request", body = ErrorMessage, content_type = "application/json"),
-        (status = 401, description = "Unauthorized", body = ErrorMessage, content_type = "application/json"),
-        (status = 404, description = "DLC not found", body = ErrorMessage, content_type = "application/json"),
-        (status = 500, description = "Internal server error", body = ErrorMessage, content_type = "application/json"),
-    ),
-    security(
-        ("bearer_token" = [])
-    )
-)]
-#[delete("/games/{id}/dlcs/{other_id}")]
-async fn unlink_game_dlc(
-    pool: web::Data<PgPool>,
-    path: web::Path<ItemIdAndRelatedId>,
-    logged_user: LoggedUser,
-) -> impl Responder {
-    let ItemIdAndRelatedId(id, dlc_id) = path.into_inner();
-    let update_result = dlcs_service::remove_dlc_base_game(&pool, logged_user.id, dlc_id, id).await;
-    handle_action_result(update_result)
 }
 
 #[utoipa::path(

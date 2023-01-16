@@ -60,6 +60,16 @@ pub async fn update_base_game_id(
     execute(pool, query).await
 }
 
+pub async fn update_cover_filename_by_id(
+    pool: &PgPool,
+    user_id: i32,
+    id: i32,
+    cover_filename: Option<String>,
+) -> Result<(), RepositoryError> {
+    let query = dlc_query::update_cover_filename_by_id(user_id, id, cover_filename);
+    execute(pool, query).await
+}
+
 pub async fn delete_by_id(pool: &PgPool, user_id: i32, id: i32) -> Result<(), RepositoryError> {
     let query = dlc_query::delete_by_id(user_id, id);
     execute(pool, query).await
