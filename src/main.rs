@@ -117,10 +117,14 @@ async fn run(
     tls_port: u16,
     tls_config: Option<rustls::ServerConfig>,
 ) -> std::io::Result<()> {
+    let data_encoding_key = web::Data::new(encoding_key);
+    let data_decoding_key = web::Data::new(decoding_key);
+
     // Repository
     let database_connection_pool = get_connection_pool()
         .await
         .expect("Could not open database connection.");
+    let data_database_connection = web::Data::new(database_connection_pool);
 
     // Image client
     let image_client_provider =
@@ -129,6 +133,7 @@ async fn run(
         } else {
             ImageClientProvider::empty()
         };
+    let data_image_client = web::Data::new(image_client_provider);
 
     // OpenAPI
     let openapi = openapi::get_openapi();
@@ -137,17 +142,14 @@ async fn run(
         let auth = HttpAuthentication::bearer(game_collection_server::auth::token_validator);
 
         App::new()
-            .app_data(web::Data::new(database_connection_pool.clone()))
-            .app_data(web::Data::new(image_client_provider.clone()))
-            .app_data(web::Data::new(encoding_key.clone()))
-            .app_data(web::Data::new(decoding_key.clone()))
+            .app_data(data_database_connection.clone())
+            .app_data(data_image_client.clone())
+            .app_data(data_encoding_key.clone())
+            .app_data(data_decoding_key.clone())
             .service(
                 web::scope("/api").service(
                     web::scope("/v1")
-                        .app_data(web::Data::new(encoding_key.clone()))
-                        .app_data(web::Data::new(decoding_key.clone()))
                         .wrap(auth)
-                        // TODO finish and log in different scopes
                         // Games
                         .service(routes::get_game)
                         .service(routes::get_tag_games)
