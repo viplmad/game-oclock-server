@@ -1,6 +1,9 @@
 mod auth;
 mod base;
+mod dlc_finish;
 mod dlcs;
+mod game_finish;
+mod game_logs;
 mod games;
 mod is_alive;
 mod platform;
@@ -8,7 +11,10 @@ mod tags;
 mod users;
 
 pub use auth::*;
+pub use dlc_finish::*;
 pub use dlcs::*;
+pub use game_finish::*;
+pub use game_logs::*;
 pub use games::*;
 pub use is_alive::*;
 pub use platform::*;

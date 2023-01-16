@@ -42,57 +42,57 @@ async fn get_platform(
 
 #[utoipa::path(
     get,
-    path = "/api/v1/platforms/{id}/games",
+    path = "/api/v1/games/{id}/platforms",
     tag = "Platforms",
     params(
-        ("id" = i32, Path, description = "Platform id"),
+        ("id" = i32, Path, description = "Game id"),
     ),
     responses(
-        (status = 200, description = "Games obtained", body = [GameAvailableDTO], content_type = "application/json"),
+        (status = 200, description = "Platforms obtained", body = [PlatformAvailableDTO], content_type = "application/json"),
         (status = 401, description = "Unauthorized", body = ErrorMessage, content_type = "application/json"),
-        (status = 404, description = "Platform not found", body = ErrorMessage, content_type = "application/json"),
+        (status = 404, description = "Game not found", body = ErrorMessage, content_type = "application/json"),
         (status = 500, description = "Internal server error", body = ErrorMessage, content_type = "application/json"),
     ),
     security(
         ("bearer_token" = [])
     )
 )]
-#[get("/platforms/{id}/games")]
-async fn get_platform_games(
+#[get("/games/{id}/platforms")]
+async fn get_game_platforms(
     pool: web::Data<PgPool>,
     path: web::Path<ItemId>,
     logged_user: LoggedUser,
 ) -> impl Responder {
     let ItemId(id) = path.into_inner();
-    let get_result = game_available_service::get_platform_games(&pool, logged_user.id, id).await;
+    let get_result = game_available_service::get_game_platforms(&pool, logged_user.id, id).await;
     handle_get_result(get_result)
 }
 
 #[utoipa::path(
     get,
-    path = "/api/v1/platforms/{id}/dlcs",
+    path = "/api/v1/dlcs/{id}/platforms",
     tag = "Platforms",
     params(
-        ("id" = i32, Path, description = "Platform id"),
+        ("id" = i32, Path, description = "DLC id"),
     ),
     responses(
-        (status = 200, description = "DLCs obtained", body = [DLCAvailableDTO], content_type = "application/json"),
+        (status = 200, description = "Platforms obtained", body = [PlatformAvailableDTO], content_type = "application/json"),
         (status = 401, description = "Unauthorized", body = ErrorMessage, content_type = "application/json"),
-        (status = 404, description = "Platform not found", body = ErrorMessage, content_type = "application/json"),
+        (status = 404, description = "DLC not found", body = ErrorMessage, content_type = "application/json"),
         (status = 500, description = "Internal server error", body = ErrorMessage, content_type = "application/json"),
     ),
     security(
         ("bearer_token" = [])
     )
 )]
-#[get("/platforms/{id}/dlcs")]
-async fn get_platform_dlcs(
+#[get("/dlcs/{id}/platforms")]
+async fn get_dlc_platforms(
     pool: web::Data<PgPool>,
     path: web::Path<ItemId>,
     logged_user: LoggedUser,
 ) -> impl Responder {
     let ItemId(id) = path.into_inner();
-    let get_result = dlc_available_service::get_platform_dlcs(&pool, logged_user.id, id).await;
+    let get_result = dlc_available_service::get_dlc_platforms(&pool, logged_user.id, id).await;
     handle_get_result(get_result)
 }
 

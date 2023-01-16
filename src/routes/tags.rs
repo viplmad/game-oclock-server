@@ -38,29 +38,29 @@ async fn get_tag(
 
 #[utoipa::path(
     get,
-    path = "/api/v1/tags/{id}/games",
+    path = "/api/v1/games/{id}/tags",
     tag = "Tags",
     params(
-        ("id" = i32, Path, description = "Tag id"),
+        ("id" = i32, Path, description = "Game id"),
     ),
     responses(
-        (status = 200, description = "Games obtained", body = [GameDTO], content_type = "application/json"),
+        (status = 200, description = "Tags obtained", body = [TagDTO], content_type = "application/json"),
         (status = 401, description = "Unauthorized", body = ErrorMessage, content_type = "application/json"),
-        (status = 404, description = "Tag not found", body = ErrorMessage, content_type = "application/json"),
+        (status = 404, description = "Game not found", body = ErrorMessage, content_type = "application/json"),
         (status = 500, description = "Internal server error", body = ErrorMessage, content_type = "application/json"),
     ),
     security(
         ("bearer_token" = [])
     )
 )]
-#[get("/tags/{id}/games")]
-async fn get_tag_games(
+#[get("/games/{id}/tags")]
+async fn get_game_tags(
     pool: web::Data<PgPool>,
     path: web::Path<ItemId>,
     logged_user: LoggedUser,
 ) -> impl Responder {
     let ItemId(id) = path.into_inner();
-    let get_result = game_tags_service::get_tag_games(&pool, logged_user.id, id).await;
+    let get_result = game_tags_service::get_game_tags(&pool, logged_user.id, id).await;
     handle_get_result(get_result)
 }
 
