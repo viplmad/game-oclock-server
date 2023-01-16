@@ -77,12 +77,12 @@ pub fn update_by_id(user_id: i32, id: i32, platform: &Platform) -> impl QuerySta
 pub fn update_icon_filename_by_id(
     user_id: i32,
     id: i32,
-    cover_filename: &str,
+    icon_filename: Option<String>,
 ) -> impl QueryStatementWriter {
     update_values_by_id(
         user_id,
         id,
-        vec![(PlatformIden::IconFilename, cover_filename.into())],
+        vec![(PlatformIden::IconFilename, icon_filename.into())],
     )
 }
 

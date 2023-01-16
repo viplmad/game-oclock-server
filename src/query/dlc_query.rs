@@ -107,7 +107,7 @@ pub fn update_base_game_id_by_id(
 pub fn update_cover_filename_by_id(
     user_id: i32,
     id: i32,
-    cover_filename: &str,
+    cover_filename: Option<String>,
 ) -> impl QueryStatementWriter {
     update_values_by_id(
         user_id,

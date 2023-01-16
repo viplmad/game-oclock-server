@@ -2,19 +2,20 @@ use std::fs::File;
 
 use sqlx::PgPool;
 
-use crate::clients::image_client::ImageClient;
 use crate::errors::ApiErrors;
 use crate::models::GameDTO;
 use crate::providers::ImageClientProvider;
 
+use super::base::{build_image_filename, handle_image_client_provider};
 use super::games_service;
 
-const IMAGE_FOLDER_GAME: &str = "Game";
+const GAME_FOLDER: &str = "Game";
+const GAME_HEADER_SUFFIX: &str = "header";
 
-pub fn add_game_cover(provider: &ImageClientProvider, game: &mut GameDTO) {
+pub fn populate_game_cover(provider: &ImageClientProvider, game: &mut GameDTO) {
     if let Ok(client) = handle_image_client_provider(provider) {
         if let Some(cover_filename) = &game.cover_filename {
-            game.cover_url = Some(client.get_image_uri(IMAGE_FOLDER_GAME, cover_filename));
+            game.cover_url = Some(client.get_image_uri(GAME_FOLDER, cover_filename));
         }
     }
 }
@@ -31,26 +32,50 @@ pub async fn set_game_cover(
 
     games_service::exists_game(pool, user_id, game_id).await?;
 
-    let initial_filename = build_header_filename(game_id);
+    let format_filename = build_game_cover_filename(user_id, game_id, Option::<String>::None);
     let filename = image_client
-        .upload_image(file, IMAGE_FOLDER_GAME, &initial_filename)
+        .upload_image(file, GAME_FOLDER, &format_filename)
         .map_err(|_| ApiErrors::UnknownError(String::from("Image upload error.")))?;
 
-    games_service::set_game_cover(pool, user_id, game_id, &filename).await
+    games_service::set_game_cover_filename(pool, user_id, game_id, Some(filename)).await
 }
 
-fn handle_image_client_provider(
-    provider: &ImageClientProvider,
-) -> Result<&dyn ImageClient, ApiErrors> {
-    if let Some(client) = provider.get_client() {
-        Ok(client)
-    } else {
-        Err(ApiErrors::InvalidParameter(String::from(
-            "Image client not set",
-        )))
-    }
+pub async fn rename_game_cover(
+    pool: &PgPool,
+    image_client_provider: &ImageClientProvider,
+    user_id: i32,
+    game_id: i32,
+    new_name: &str,
+) -> Result<(), ApiErrors> {
+    let image_client = handle_image_client_provider(image_client_provider)?;
+
+    let old_filename = games_service::get_game_cover_filename(pool, user_id, game_id).await?;
+
+    let format_filename = build_game_cover_filename(user_id, game_id, Some(String::from(new_name)));
+    let filename = image_client
+        .rename_image(GAME_FOLDER, &old_filename, &format_filename)
+        .map_err(|_| ApiErrors::UnknownError(String::from("Image rename error.")))?;
+
+    games_service::set_game_cover_filename(pool, user_id, game_id, Some(filename)).await
 }
 
-fn build_header_filename(game_id: i32) -> String {
-    format!("{game_id}-header")
+pub async fn delete_game_cover(
+    pool: &PgPool,
+    image_client_provider: &ImageClientProvider,
+    user_id: i32,
+    game_id: i32,
+) -> Result<(), ApiErrors> {
+    let image_client = handle_image_client_provider(image_client_provider)?;
+
+    let filename = games_service::get_game_cover_filename(pool, user_id, game_id).await?;
+
+    image_client
+        .delete_image(GAME_FOLDER, &filename)
+        .map_err(|_| ApiErrors::UnknownError(String::from("Image delete error.")))?;
+
+    games_service::set_game_cover_filename(pool, user_id, game_id, Option::<String>::None).await
+}
+
+fn build_game_cover_filename(user_id: i32, game_id: i32, name: Option<String>) -> String {
+    build_image_filename(user_id, game_id, GAME_HEADER_SUFFIX, name)
 }

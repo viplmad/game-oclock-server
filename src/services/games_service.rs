@@ -1,7 +1,7 @@
 use sqlx::PgPool;
 
 use crate::entities::GameSearch;
-use crate::errors::ApiErrors;
+use crate::errors::{error_message_builder, ApiErrors};
 use crate::models::{GameDTO, GamePageResult, NewGameDTO, SearchDTO};
 use crate::repository::game_repository;
 
@@ -81,11 +81,22 @@ pub async fn delete_game(pool: &PgPool, user_id: i32, game_id: i32) -> Result<()
     handle_action_result::<GameDTO>(delete_result)
 }
 
-pub async fn set_game_cover(
+pub async fn get_game_cover_filename(
     pool: &PgPool,
     user_id: i32,
     game_id: i32,
-    filename: &str,
+) -> Result<String, ApiErrors> {
+    let game = get_game(pool, user_id, game_id).await?;
+    game.cover_filename.ok_or_else(|| {
+        ApiErrors::InvalidParameter(error_message_builder::empty_param("Game cover"))
+    })
+}
+
+pub async fn set_game_cover_filename(
+    pool: &PgPool,
+    user_id: i32,
+    game_id: i32,
+    filename: Option<String>,
 ) -> Result<(), ApiErrors> {
     let update_result =
         game_repository::update_cover_filename_by_id(pool, user_id, game_id, filename).await;

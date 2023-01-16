@@ -43,6 +43,16 @@ pub async fn update_by_id(
     execute_return_id(pool, query).await
 }
 
+pub async fn update_icon_filename_by_id(
+    pool: &PgPool,
+    user_id: i32,
+    id: i32,
+    icon_filename: Option<String>,
+) -> Result<(), RepositoryError> {
+    let query = platform_query::update_icon_filename_by_id(user_id, id, icon_filename);
+    execute(pool, query).await
+}
+
 pub async fn delete_by_id(pool: &PgPool, user_id: i32, id: i32) -> Result<(), RepositoryError> {
     let query = platform_query::delete_by_id(user_id, id);
     execute(pool, query).await

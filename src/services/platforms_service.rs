@@ -1,7 +1,7 @@
 use sqlx::PgPool;
 
 use crate::entities::PlatformSearch;
-use crate::errors::ApiErrors;
+use crate::errors::{error_message_builder, ApiErrors};
 use crate::models::{NewPlatformDTO, PlatformDTO, PlatformPageResult, SearchDTO};
 use crate::repository::platform_repository;
 
@@ -89,6 +89,28 @@ pub async fn delete_platform(
 
     let delete_result = platform_repository::delete_by_id(pool, user_id, platform_id).await;
     handle_action_result::<PlatformDTO>(delete_result)
+}
+
+pub async fn get_platform_icon_filename(
+    pool: &PgPool,
+    user_id: i32,
+    platform_id: i32,
+) -> Result<String, ApiErrors> {
+    let platform = get_platform(pool, user_id, platform_id).await?;
+    platform.icon_filename.ok_or_else(|| {
+        ApiErrors::InvalidParameter(error_message_builder::empty_param("Platform icon"))
+    })
+}
+
+pub async fn set_platform_icon_filename(
+    pool: &PgPool,
+    user_id: i32,
+    platform_id: i32,
+    filename: Option<String>,
+) -> Result<(), ApiErrors> {
+    let update_result =
+        platform_repository::update_icon_filename_by_id(pool, user_id, platform_id, filename).await;
+    handle_action_result::<PlatformDTO>(update_result)
 }
 
 pub async fn exists_platform(
