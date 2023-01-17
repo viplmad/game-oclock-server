@@ -13,7 +13,7 @@ use super::base::{handle_action_result, handle_delete_result, handle_get_result}
 #[utoipa::path(
     get,
     path = "/api/v1/games/{id}/logs",
-    tag = "Games",
+    tag = "GameLogs",
     params(
         ("id" = i32, Path, description = "Game id"),
     ),
@@ -41,7 +41,7 @@ async fn get_game_logs(
 #[utoipa::path(
     get,
     path = "/api/v1/games/{id}/logs/total",
-    tag = "Games",
+    tag = "GameLogs",
     params(
         ("id" = i32, Path, description = "Game id"),
     ),
@@ -69,7 +69,7 @@ async fn get_total_game_logs(
 #[utoipa::path(
     post,
     path = "/api/v1/games/played",
-    tag = "Games",
+    tag = "GameLogs",
     params(
         StartEndDateQuery,
     ),
@@ -101,7 +101,7 @@ async fn get_played_games(
 #[utoipa::path(
     post,
     path = "/api/v1/games/played/first",
-    tag = "Games",
+    tag = "GameLogs",
     params(
         OptionalStartEndDateQuery,
         QuicksearchQuery,
@@ -140,7 +140,7 @@ async fn get_first_played_games(
 #[utoipa::path(
     post,
     path = "/api/v1/games/played/last",
-    tag = "Games",
+    tag = "GameLogs",
     params(
         OptionalStartEndDateQuery,
         QuicksearchQuery,
@@ -179,7 +179,7 @@ async fn get_last_played_games(
 #[utoipa::path(
     post,
     path = "/api/v1/games/{id}/logs",
-    tag = "Games",
+    tag = "GameLogs",
     params(
         ("id" = i32, Path, description = "Game id"),
     ),
@@ -210,7 +210,7 @@ async fn post_game_log(
 #[utoipa::path(
     delete,
     path = "/api/v1/games/{id}/logs",
-    tag = "Games",
+    tag = "GameLogs",
     params(
         ("id" = i32, Path, description = "Game id"),
     ),
