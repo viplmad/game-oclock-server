@@ -12,12 +12,8 @@ RUN cargo build --target x86_64-unknown-linux-musl --release
 
 FROM alpine:3.17
 
-COPY entrypoint.sh /usr/local/bin/entrypoint.sh
-RUN chmod +x /usr/local/bin/entrypoint.sh
 COPY sql /sql
 COPY --from=builder /target/x86_64-unknown-linux-musl/release/game-collection-server /usr/local/bin
-
-#ENTRYPOINT ["/usr/local/bin/entrypoint.sh"]
 
 WORKDIR /usr/local/bin
 CMD ["game-collection-server"]
