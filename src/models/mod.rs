@@ -1,4 +1,5 @@
 mod auth;
+mod date;
 mod dlc;
 mod dlc_finish;
 mod dlc_with_finish;
@@ -23,6 +24,7 @@ mod tag;
 mod user;
 
 pub use auth::*;
+pub use date::*;
 pub use dlc::*;
 pub use dlc_finish::*;
 pub use dlc_with_finish::*;

@@ -1,10 +1,9 @@
 use actix_web::{delete, get, post, web, Responder};
-use chrono::NaiveDateTime;
 use sqlx::PgPool;
 
 use crate::models::{
-    GameLogDTO, ItemId, LoggedUser, OptionalStartEndDateQuery, QuicksearchQuery, SearchDTO,
-    StartEndDateQuery,
+    DateTimeDTO, GameLogDTO, ItemId, LoggedUser, OptionalStartEndDateQuery, QuicksearchQuery,
+    SearchDTO, StartEndDateQuery,
 };
 use crate::services::{game_logs_service, game_with_logs_service};
 
@@ -214,7 +213,7 @@ async fn post_game_log(
     params(
         ("id" = i32, Path, description = "Game id"),
     ),
-    request_body(content = String, description = "Game log datetime to be deleted", content_type = "application/json"),
+    request_body(content = DateTimeDTO, description = "Game log datetime to be deleted", content_type = "application/json"),
     responses(
         (status = 204, description = "Game log deleted"),
         (status = 401, description = "Unauthorized", body = ErrorMessage, content_type = "application/json"),
@@ -229,10 +228,11 @@ async fn post_game_log(
 async fn delete_game_log(
     pool: web::Data<PgPool>,
     path: web::Path<ItemId>,
-    body: web::Json<NaiveDateTime>,
+    body: web::Json<DateTimeDTO>,
     logged_user: LoggedUser,
 ) -> impl Responder {
     let ItemId(id) = path.into_inner();
-    let delete_result = game_logs_service::delete_game_log(&pool, logged_user.id, id, body.0).await;
+    let delete_result =
+        game_logs_service::delete_game_log(&pool, logged_user.id, id, body.datetime).await;
     handle_delete_result(delete_result)
 }

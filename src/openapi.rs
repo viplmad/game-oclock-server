@@ -124,6 +124,8 @@ pub fn get_openapi() -> utoipa::openapi::OpenApi {
             models::TokenResponse,
             models::GrantType,
             models::ErrorMessage,
+            models::DateDTO,
+            models::DateTimeDTO,
 
             models::SearchDTO,
             models::FilterDTO,
