@@ -1,8 +1,9 @@
 use actix_web::{delete, get, post, web, Responder};
-use chrono::NaiveDate;
 use sqlx::PgPool;
 
-use crate::models::{ItemId, LoggedUser, OptionalStartEndDateQuery, QuicksearchQuery, SearchDTO};
+use crate::models::{
+    DateDTO, ItemId, LoggedUser, OptionalStartEndDateQuery, QuicksearchQuery, SearchDTO,
+};
 use crate::services::{dlc_finishes_service, dlc_with_finish_service};
 
 use super::base::{handle_action_result, handle_delete_result, handle_get_result};
@@ -148,7 +149,7 @@ async fn get_last_finished_dlcs(
     params(
         ("id" = i32, Path, description = "DLC id"),
     ),
-    request_body(content = String, description = "DLC finish date to be added", content_type = "application/json"),
+    request_body(content = DateDTO, description = "DLC finish date to be added", content_type = "application/json"),
     responses(
         (status = 204, description = "DLC finish added"),
         (status = 400, description = "Bad request", body = ErrorMessage, content_type = "application/json"),
@@ -164,12 +165,12 @@ async fn get_last_finished_dlcs(
 async fn post_dlc_finish(
     pool: web::Data<PgPool>,
     path: web::Path<ItemId>,
-    body: web::Json<NaiveDate>,
+    body: web::Json<DateDTO>,
     logged_user: LoggedUser,
 ) -> impl Responder {
     let ItemId(id) = path.into_inner();
     let create_result =
-        dlc_finishes_service::create_dlc_finish(&pool, logged_user.id, id, body.0).await;
+        dlc_finishes_service::create_dlc_finish(&pool, logged_user.id, id, body.date).await;
     handle_action_result(create_result)
 }
 
@@ -180,7 +181,7 @@ async fn post_dlc_finish(
     params(
         ("id" = i32, Path, description = "DLC id"),
     ),
-    request_body(content = String, description = "DLC finish date to be deleted", content_type = "application/json"),
+    request_body(content = DateDTO, description = "DLC finish date to be deleted", content_type = "application/json"),
     responses(
         (status = 204, description = "DLC finish date deleted"),
         (status = 401, description = "Unauthorized", body = ErrorMessage, content_type = "application/json"),
@@ -195,11 +196,11 @@ async fn post_dlc_finish(
 async fn delete_dlc_finish(
     pool: web::Data<PgPool>,
     path: web::Path<ItemId>,
-    body: web::Json<NaiveDate>,
+    body: web::Json<DateDTO>,
     logged_user: LoggedUser,
 ) -> impl Responder {
     let ItemId(id) = path.into_inner();
     let delete_result =
-        dlc_finishes_service::delete_dlc_finish(&pool, logged_user.id, id, body.0).await;
+        dlc_finishes_service::delete_dlc_finish(&pool, logged_user.id, id, body.date).await;
     handle_delete_result(delete_result)
 }

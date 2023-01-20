@@ -1,9 +1,8 @@
 use actix_web::{delete, get, post, put, web, Responder};
-use chrono::NaiveDate;
 use sqlx::PgPool;
 
 use crate::models::{
-    ItemId, ItemIdAndRelatedId, LoggedUser, NewGameDTO, QuicksearchQuery, SearchDTO,
+    DateDTO, ItemId, ItemIdAndRelatedId, LoggedUser, NewGameDTO, QuicksearchQuery, SearchDTO,
 };
 use crate::providers::ImageClientProvider;
 use crate::services::{
@@ -301,7 +300,7 @@ async fn link_game_tag(
         ("id" = i32, Path, description = "Game id"),
         ("other_id" = i32, Path, description = "Platform id")
     ),
-    request_body(content = String, description = "Available date", content_type = "application/json"),
+    request_body(content = DateDTO, description = "Available date", content_type = "application/json"),
     responses(
         (status = 204, description = "Game and Platform linked"),
         (status = 400, description = "Bad request", body = ErrorMessage, content_type = "application/json"),
@@ -317,7 +316,7 @@ async fn link_game_tag(
 async fn link_game_platform(
     pool: web::Data<PgPool>,
     path: web::Path<ItemIdAndRelatedId>,
-    body: web::Json<NaiveDate>,
+    body: web::Json<DateDTO>,
     logged_user: LoggedUser,
 ) -> impl Responder {
     let ItemIdAndRelatedId(id, platform_id) = path.into_inner();
@@ -326,7 +325,7 @@ async fn link_game_platform(
         logged_user.id,
         id,
         platform_id,
-        body.0,
+        body.date,
     )
     .await;
     handle_action_result(create_result)
