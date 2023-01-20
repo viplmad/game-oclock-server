@@ -1,4 +1,4 @@
-use sea_query::{BinOper, Cond, Expr, LikeExpr, SelectStatement, Value};
+use sea_query::{BinOper, Cond, Expr, Func, LikeExpr, SelectStatement, Value};
 
 use crate::entities::{
     FieldSearchValue, FieldValue, FilterOperator, Search, SearchQuery, TableIden,
@@ -47,22 +47,22 @@ fn apply_search_internal<I: 'static + TableIden + Clone + Copy>(
                         FilterOperator::SmallerThan => col.lt(Value::try_from(value)?),
                         FilterOperator::SmallerThanOrEqual => col.lte(Value::try_from(value)?),
                         FilterOperator::StartsWith => {
-                            col.like(LikeExpr::str(&format_like_starts_with(value)))
+                            to_lower(col).like(LikeExpr::str(&format_like_starts_with(value)))
                         }
                         FilterOperator::NotStartsWith => {
-                            col.not_like(LikeExpr::str(&format_like_starts_with(value)))
+                            to_lower(col).not_like(LikeExpr::str(&format_like_starts_with(value)))
                         }
                         FilterOperator::EndsWith => {
-                            col.like(LikeExpr::str(&format_like_ends_with(value)))
+                            to_lower(col).like(LikeExpr::str(&format_like_ends_with(value)))
                         }
                         FilterOperator::NotEndsWith => {
-                            col.not_like(LikeExpr::str(&format_like_ends_with(value)))
+                            to_lower(col).not_like(LikeExpr::str(&format_like_ends_with(value)))
                         }
                         FilterOperator::Contains => {
-                            col.like(LikeExpr::str(&format_like_contains(value)))
+                            to_lower(col).like(LikeExpr::str(&format_like_contains(value)))
                         }
                         FilterOperator::NotContains => {
-                            col.not_like(LikeExpr::str(&format_like_contains(value)))
+                            to_lower(col).not_like(LikeExpr::str(&format_like_contains(value)))
                         }
                         _ => Err(MappingError(String::from(
                             "Operator not supported with single value.",
@@ -120,17 +120,21 @@ fn apply_search_internal<I: 'static + TableIden + Clone + Copy>(
     })
 }
 
+fn to_lower(col: Expr) -> Expr {
+    Expr::expr(Func::lower(col))
+}
+
 fn format_like_starts_with(search: FieldSearchValue) -> String {
-    let value: &str = &search.value;
+    let value: &str = &search.value.to_lowercase();
     format!("{value}{LIKE_SYMBOL}")
 }
 
 fn format_like_ends_with(search: FieldSearchValue) -> String {
-    let value: &str = &search.value;
+    let value: &str = &search.value.to_lowercase();
     format!("{LIKE_SYMBOL}{value}")
 }
 
 fn format_like_contains(search: FieldSearchValue) -> String {
-    let value: &str = &search.value;
+    let value: &str = &search.value.to_lowercase();
     format!("{LIKE_SYMBOL}{value}{LIKE_SYMBOL}")
 }

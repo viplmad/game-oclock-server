@@ -1,4 +1,4 @@
-use crate::entities::{Platform, PlatformAvailable};
+use crate::entities::{Platform, PlatformWithDate};
 use crate::models::{PlatformAvailableDTO, PlatformDTO, PlatformType};
 
 impl From<Platform> for PlatformDTO {
@@ -31,11 +31,11 @@ impl From<PlatformDTO> for Platform {
     }
 }
 
-impl From<PlatformAvailable> for PlatformAvailableDTO {
-    fn from(platform: PlatformAvailable) -> Self {
+impl From<PlatformWithDate> for PlatformAvailableDTO {
+    fn from(platform: PlatformWithDate) -> Self {
         Self {
             id: platform.id,
-            available_date: platform.available_date,
+            available_date: platform.query_date,
             name: platform.name,
             ptype: platform.ptype.map(|ptype| {
                 PlatformType::try_from(ptype).expect("Type was not within valid range")

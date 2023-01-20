@@ -45,10 +45,10 @@ pub struct Platform {
 }
 
 #[derive(FromRow)]
-pub struct PlatformAvailable {
+pub struct PlatformWithDate {
     pub id: i32,
     pub user_id: i32,
-    pub available_date: NaiveDate,
+    pub query_date: NaiveDate,
     pub name: String,
     #[sqlx(rename = "type")] // Fix to use type reserved name
     pub ptype: Option<i16>,

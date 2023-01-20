@@ -1,7 +1,7 @@
 use chrono::NaiveDate;
 use sqlx::PgPool;
 
-use crate::entities::{GameWithDate, PlatformAvailable};
+use crate::entities::{GameWithDate, PlatformWithDate};
 use crate::errors::RepositoryError;
 use crate::query::game_available_query;
 
@@ -20,7 +20,7 @@ pub async fn find_all_platforms_with_game(
     pool: &PgPool,
     user_id: i32,
     game_id: i32,
-) -> Result<Vec<PlatformAvailable>, RepositoryError> {
+) -> Result<Vec<PlatformWithDate>, RepositoryError> {
     let query = game_available_query::select_all_platforms_by_game_id(user_id, game_id);
     fetch_all(pool, query).await
 }
