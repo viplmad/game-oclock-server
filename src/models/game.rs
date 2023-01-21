@@ -109,7 +109,7 @@ pub struct GameAvailableDTO {
     pub save_folder: String,
     pub screenshot_folder: String,
     pub backup: bool,
-    #[schema(value_type = String, format = DateTime)]
+    #[schema(value_type = String, format = Date)]
     pub available_date: NaiveDate,
 }
 

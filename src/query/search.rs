@@ -99,8 +99,12 @@ fn apply_search_internal<I: 'static + TableIden + Clone + Copy>(
                 };
             }
 
-            select.cond_where(ands);
-            select.cond_where(ors);
+            if !ands.is_empty() {
+                select.cond_where(ands);
+            }
+            if !ors.is_empty() {
+                select.cond_where(ors);
+            }
         }
     }
 
