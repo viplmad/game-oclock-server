@@ -35,6 +35,7 @@ pub async fn set_dlc_cover(
     let format_filename = build_dlc_cover_filename(user_id, dlc_id, Option::<String>::None);
     let filename = image_client
         .upload_image(file, DLC_FOLDER, &format_filename)
+        .await
         .map_err(|_| ApiErrors::UnknownError(String::from("Image upload error.")))?;
 
     dlcs_service::set_dlc_cover_filename(pool, user_id, dlc_id, Some(filename)).await
@@ -54,6 +55,7 @@ pub async fn rename_dlc_cover(
     let format_filename = build_dlc_cover_filename(user_id, dlc_id, Some(String::from(new_name)));
     let filename = image_client
         .rename_image(DLC_FOLDER, &old_filename, &format_filename)
+        .await
         .map_err(|_| ApiErrors::UnknownError(String::from("Image rename error.")))?;
 
     dlcs_service::set_dlc_cover_filename(pool, user_id, dlc_id, Some(filename)).await
@@ -71,6 +73,7 @@ pub async fn delete_dlc_cover(
 
     image_client
         .delete_image(DLC_FOLDER, &filename)
+        .await
         .map_err(|_| ApiErrors::UnknownError(String::from("Image delete error.")))?;
 
     dlcs_service::set_dlc_cover_filename(pool, user_id, dlc_id, Option::<String>::None).await

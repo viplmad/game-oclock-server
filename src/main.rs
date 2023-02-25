@@ -3,7 +3,7 @@ use std::{env, fs::File, io::BufReader};
 use actix_web_httpauth::middleware::HttpAuthentication;
 use dotenvy::dotenv;
 use game_collection_server::{
-    clients::cloudinary::{CloudinaryClient, CloudinaryClientOptions},
+    clients::cloudinary::{CloudinaryClient, CloudinaryClientBuilder},
     openapi,
     providers::ImageClientProvider,
     routes,
@@ -97,8 +97,8 @@ async fn get_connection_pool() -> Result<PgPool, sqlx::Error> {
 }
 
 fn get_cloudinary_client_provider() -> Option<CloudinaryClient> {
-    CloudinaryClientOptions::try_from_env()
-        .map(|options| -> CloudinaryClient { CloudinaryClient::default().connect_with(options) })
+    CloudinaryClientBuilder::try_from_env()
+        .map(|client| CloudinaryClient::default().connect_with(client))
 }
 
 fn generate_encoding_key(key: &str) -> EncodingKey {

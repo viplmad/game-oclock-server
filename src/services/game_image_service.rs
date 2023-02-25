@@ -35,6 +35,7 @@ pub async fn set_game_cover(
     let format_filename = build_game_cover_filename(user_id, game_id, Option::<String>::None);
     let filename = image_client
         .upload_image(file, GAME_FOLDER, &format_filename)
+        .await
         .map_err(|_| ApiErrors::UnknownError(String::from("Image upload error.")))?;
 
     games_service::set_game_cover_filename(pool, user_id, game_id, Some(filename)).await
@@ -54,6 +55,7 @@ pub async fn rename_game_cover(
     let format_filename = build_game_cover_filename(user_id, game_id, Some(String::from(new_name)));
     let filename = image_client
         .rename_image(GAME_FOLDER, &old_filename, &format_filename)
+        .await
         .map_err(|_| ApiErrors::UnknownError(String::from("Image rename error.")))?;
 
     games_service::set_game_cover_filename(pool, user_id, game_id, Some(filename)).await
@@ -71,6 +73,7 @@ pub async fn delete_game_cover(
 
     image_client
         .delete_image(GAME_FOLDER, &filename)
+        .await
         .map_err(|_| ApiErrors::UnknownError(String::from("Image delete error.")))?;
 
     games_service::set_game_cover_filename(pool, user_id, game_id, Option::<String>::None).await

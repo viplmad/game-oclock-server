@@ -26,10 +26,10 @@ serde = { version = "^1", default-features = false }
 serde_json = { version = "^1", default-features = false }
 
 # Image
+cloudinary = { git = "https://github.com/viplmad/cloudinary_rs" }
 actix-multipart = { version = "^0", default-features = false }
 futures = { version = "^0", default-features = false }
-hyper = { version= "^0", default-features = false }
-url = { version = "^2", default-features = false }
+async-trait = { version = "^0", default-features = false }
 
 # Environment variables
 dotenvy = { version = "^0", default-features = false }

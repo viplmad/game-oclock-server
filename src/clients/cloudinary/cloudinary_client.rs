@@ -1,74 +1,124 @@
-use std::str::FromStr;
+use std::fs::File;
 
+use chrono::Utc;
+use cloudinary::result::CloudinaryResult;
+use cloudinary::upload::UploadOptions;
+use cloudinary::Cloudinary;
 use futures::future::BoxFuture;
 
 use crate::clients::image_client::ImageClient;
 use crate::errors::ImageClientError;
 
-const DEFAULT_API_URL: &str = "https://api.cloudinary.com/v1_1";
-const DEFAULT_ASSET_URL: &str = "https://res.cloudinary.com";
+const ASSET_URL: &str = "https://res.cloudinary.com";
 
 /// A Cloudinary client.
 #[derive(Clone, Default)]
 pub struct CloudinaryClient {
-    options: CloudinaryClientOptions,
+    client: Cloudinary,
 }
 
 impl CloudinaryClient {
-    pub fn connect_with(mut self, options: CloudinaryClientOptions) -> Self {
-        self.options = options;
+    pub fn connect_with(mut self, client: Cloudinary) -> Self {
+        self.client = client;
         self
     }
 }
 
+#[async_trait::async_trait]
 impl ImageClient for CloudinaryClient {
     fn ping(&self) -> BoxFuture<'_, Result<(), ImageClientError>> {
         todo!(); // TODO access sample
     }
 
-    fn upload_image(
+    async fn upload_image(
         &self,
-        file: std::fs::File,
+        file: File,
         folder: &str,
         filename: &str,
     ) -> Result<String, ImageClientError> {
-        todo!()
+        let timestamp = Utc::now().timestamp_millis().to_string();
+        let public_id = format!("{filename}_{timestamp}");
+
+        let options = UploadOptions::new()
+            .set_public_id(public_id)
+            .set_folder(String::from(folder));
+
+        let result = self
+            .client
+            .upload_image(file, filename, &options)
+            .await
+            .map_err(|err| {
+                log::error!("{}", err.0);
+                ImageClientError()
+            })?;
+
+        match result {
+            CloudinaryResult::Succes(res) => get_filename(res),
+            CloudinaryResult::Error(err) => {
+                log::info!("{}", err.error.message);
+                Err(ImageClientError())
+            }
+        }
     }
 
-    fn rename_image(
+    async fn rename_image(
         &self,
         folder: &str,
         old_filename: &str,
         new_filename: &str,
     ) -> Result<String, ImageClientError> {
-        todo!()
+        let public_id = format!("{folder}/{old_filename}");
+
+        let timestamp = Utc::now().timestamp_millis().to_string();
+        let new_public_id = format!("{folder}/{new_filename}_{timestamp}");
+
+        let result = self
+            .client
+            .rename_image(&public_id, &new_public_id)
+            .await
+            .map_err(|err| {
+                log::error!("{}", err.0);
+                ImageClientError()
+            })?;
+
+        match result {
+            CloudinaryResult::Succes(res) => get_filename(res),
+            CloudinaryResult::Error(err) => {
+                log::info!("{}", err.error.message);
+                Err(ImageClientError())
+            }
+        }
     }
 
-    fn delete_image(&self, folder: &str, filename: &str) -> Result<String, ImageClientError> {
-        todo!()
+    async fn delete_image(&self, folder: &str, filename: &str) -> Result<String, ImageClientError> {
+        let public_id = format!("{folder}/{filename}");
+
+        let result = self.client.delete_image(&public_id).await.map_err(|err| {
+            log::error!("{}", err.0);
+            ImageClientError()
+        })?;
+
+        match result {
+            CloudinaryResult::Succes(res) => get_filename(res),
+            CloudinaryResult::Error(err) => {
+                log::info!("{}", err.error.message);
+                Err(ImageClientError())
+            }
+        }
     }
 
     fn get_image_uri(&self, folder: &str, filename: &str) -> String {
-        let options = &self.options;
-        let base_asset_url = &options.asset_url;
-        let cloud_name = &options.cloud_name;
-        format!("{base_asset_url}/{cloud_name}/image/upload/{folder}/{filename}")
+        let cloud_name = &self.client.cloud_name;
+        format!("{ASSET_URL}/{cloud_name}/image/upload/{folder}/{filename}")
     }
 }
 
 /// Connection options to Cloudinary.
-#[derive(Debug, Clone)]
-pub struct CloudinaryClientOptions {
-    pub(crate) api_url: String,
-    pub(crate) asset_url: String,
-    pub(crate) port: u16,
-    pub(crate) cloud_name: String,
-    pub(crate) api_key: i32,
-    pub(crate) api_secret: String,
-}
+#[derive(Debug)]
+pub struct CloudinaryClientBuilder;
 
-impl CloudinaryClientOptions {
-    pub fn try_from_env() -> Option<Self> {
+impl CloudinaryClientBuilder {
+    pub fn try_from_env() -> Option<Cloudinary> {
         let cloud_name = match std::env::var("CLOUDINARY_CLOUD_NAME") {
             Ok(val) => Some(val),
             Err(_) => {
@@ -77,7 +127,7 @@ impl CloudinaryClientOptions {
             }
         }?;
         let api_key = match std::env::var("CLOUDINARY_API_KEY") {
-            Ok(val) => match val.parse() {
+            Ok(val) => match val.parse::<i64>() {
                 Ok(int_val) => Some(int_val),
                 Err(_) => {
                     log::info!("Cloudinary api key is not a number. -> Image disabled");
@@ -103,87 +153,15 @@ impl CloudinaryClientOptions {
             cloud_name
         );
 
-        Some(
-            Self::default()
-                .cloud_name(&cloud_name)
-                .api_key(api_key)
-                .api_secret(&api_secret),
-        )
-    }
-
-    pub fn api_url(mut self, api_url: &str) -> Self {
-        self.api_url = String::from(api_url);
-        self
-    }
-
-    pub fn asset_url(mut self, asset_url: &str) -> Self {
-        self.asset_url = String::from(asset_url);
-        self
-    }
-
-    pub fn port(mut self, port: u16) -> Self {
-        self.port = port;
-        self
-    }
-
-    pub fn cloud_name(mut self, cloud_name: &str) -> Self {
-        self.cloud_name = String::from(cloud_name);
-        self
-    }
-
-    pub fn api_key(mut self, api_key: i32) -> Self {
-        self.api_key = api_key;
-        self
-    }
-
-    pub fn api_secret(mut self, api_secret: &str) -> Self {
-        self.api_secret = String::from(api_secret);
-        self
+        Some(Cloudinary::new(&cloud_name, api_key, &api_secret))
     }
 }
 
-impl Default for CloudinaryClientOptions {
-    fn default() -> Self {
-        Self {
-            api_url: String::from(DEFAULT_API_URL),
-            asset_url: String::from(DEFAULT_ASSET_URL),
-            port: 80,
-            cloud_name: String::default(),
-            api_key: i32::default(),
-            api_secret: String::default(),
-        }
+fn get_filename(result: Box<cloudinary::result::Response>) -> Result<String, ImageClientError> {
+    if let Some(value) = result.public_id.split('/').last() {
+        let format = result.format;
+        return Ok(format!("{value}{format}"));
     }
-}
 
-/// Create connection options from URI cloudinary://<apiKey>:<apiSecret>@<cloudName>
-impl FromStr for CloudinaryClientOptions {
-    type Err = ImageClientError;
-
-    fn from_str(s: &str) -> Result<Self, Self::Err> {
-        let url: url::Url = s.parse().map_err(|_| ImageClientError())?;
-
-        let mut options = Self::default();
-
-        if let Some(cloud_name) = url.host_str() {
-            options = options.cloud_name(cloud_name);
-        } else {
-            return Err(ImageClientError());
-        }
-
-        let api_key_string = url.username();
-        if !api_key_string.is_empty() {
-            let api_key = api_key_string.parse().map_err(|_| ImageClientError())?;
-            options = options.api_key(api_key);
-        } else {
-            return Err(ImageClientError());
-        }
-
-        if let Some(api_secret) = url.password() {
-            options = options.api_secret(api_secret);
-        } else {
-            return Err(ImageClientError());
-        }
-
-        Ok(options)
-    }
+    Err(ImageClientError())
 }
