@@ -36,6 +36,7 @@ pub async fn set_platform_icon(
         build_platform_icon_filename(user_id, platform_id, Option::<String>::None);
     let filename = image_client
         .upload_image(file, PLATFORM_FOLDER, &format_filename)
+        .await
         .map_err(|_| ApiErrors::UnknownError(String::from("Image upload error.")))?;
 
     platforms_service::set_platform_icon_filename(pool, user_id, platform_id, Some(filename)).await
@@ -57,6 +58,7 @@ pub async fn rename_platform_icon(
         build_platform_icon_filename(user_id, platform_id, Some(String::from(new_name)));
     let filename = image_client
         .rename_image(PLATFORM_FOLDER, &old_filename, &format_filename)
+        .await
         .map_err(|_| ApiErrors::UnknownError(String::from("Image rename error.")))?;
 
     platforms_service::set_platform_icon_filename(pool, user_id, platform_id, Some(filename)).await
@@ -75,6 +77,7 @@ pub async fn delete_platform_icon(
 
     image_client
         .delete_image(PLATFORM_FOLDER, &filename)
+        .await
         .map_err(|_| ApiErrors::UnknownError(String::from("Image delete error.")))?;
 
     platforms_service::set_platform_icon_filename(

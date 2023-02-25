@@ -269,6 +269,6 @@ pub(super) fn build_image_filename(
     suffix: &str,
     name: Option<String>,
 ) -> String {
-    let name = name.unwrap_or(String::default());
+    let name = name.unwrap_or_default();
     format!("{user_id}-{id}-{name}{suffix}")
 }
