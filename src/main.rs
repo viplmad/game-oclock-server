@@ -160,6 +160,7 @@ async fn run(
                         .service(routes::put_game)
                         .service(routes::put_game_cover)
                         .service(routes::link_game_platform)
+                        .service(routes::link_game_tag)
                         .service(routes::delete_game)
                         .service(routes::delete_game_cover)
                         .service(routes::unlink_game_tag)
