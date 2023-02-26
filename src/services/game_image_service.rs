@@ -3,7 +3,9 @@ use std::fs::File;
 use sqlx::PgPool;
 
 use crate::errors::ApiErrors;
-use crate::models::GameDTO;
+use crate::models::{
+    GameAvailableDTO, GameDTO, GameWithFinishDTO, GameWithLogDTO, GameWithLogsDTO,
+};
 use crate::providers::ImageClientProvider;
 
 use super::base::{build_image_filename, handle_image_client_provider};
@@ -16,6 +18,68 @@ pub fn populate_game_cover(provider: &ImageClientProvider, game: &mut GameDTO) {
     if let Ok(client) = handle_image_client_provider(provider) {
         if let Some(cover_filename) = &game.cover_filename {
             game.cover_url = Some(client.get_image_uri(GAME_FOLDER, cover_filename));
+        }
+    }
+}
+
+pub fn populate_games_cover(provider: &ImageClientProvider, games: &mut Vec<GameDTO>) {
+    if let Ok(client) = handle_image_client_provider(provider) {
+        for game in games {
+            if let Some(cover_filename) = &game.cover_filename {
+                game.cover_url = Some(client.get_image_uri(GAME_FOLDER, cover_filename));
+            }
+        }
+    }
+}
+
+pub fn populate_games_available_cover(
+    provider: &ImageClientProvider,
+    games: &mut Vec<GameAvailableDTO>,
+) {
+    if let Ok(client) = handle_image_client_provider(provider) {
+        for game in games {
+            if let Some(cover_filename) = &game.cover_filename {
+                game.cover_url = Some(client.get_image_uri(GAME_FOLDER, cover_filename));
+            }
+        }
+    }
+}
+
+pub fn populate_games_with_finish_cover(
+    provider: &ImageClientProvider,
+    games: &mut Vec<GameWithFinishDTO>,
+) {
+    if let Ok(client) = handle_image_client_provider(provider) {
+        for game in games {
+            if let Some(cover_filename) = &game.cover_filename {
+                game.cover_url = Some(client.get_image_uri(GAME_FOLDER, cover_filename));
+            }
+        }
+    }
+}
+
+pub fn populate_games_with_log_cover(
+    provider: &ImageClientProvider,
+    games: &mut Vec<GameWithLogDTO>,
+) {
+    if let Ok(client) = handle_image_client_provider(provider) {
+        for game in games {
+            if let Some(cover_filename) = &game.cover_filename {
+                game.cover_url = Some(client.get_image_uri(GAME_FOLDER, cover_filename));
+            }
+        }
+    }
+}
+
+pub fn populate_games_with_logs_cover(
+    provider: &ImageClientProvider,
+    games: &mut Vec<GameWithLogsDTO>,
+) {
+    if let Ok(client) = handle_image_client_provider(provider) {
+        for game in games {
+            if let Some(cover_filename) = &game.cover_filename {
+                game.cover_url = Some(client.get_image_uri(GAME_FOLDER, cover_filename));
+            }
         }
     }
 }

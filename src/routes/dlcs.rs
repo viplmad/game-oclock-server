@@ -5,11 +5,11 @@ use crate::models::{
     DateDTO, ItemId, ItemIdAndRelatedId, LoggedUser, NewDLCDTO, QuicksearchQuery, SearchDTO,
 };
 use crate::providers::ImageClientProvider;
-use crate::services::{dlc_available_service, dlc_image_service, dlcs_service};
+use crate::services::{dlc_available_service, dlc_image_service, dlcs_service, game_image_service};
 
 use super::base::{
     handle_action_result, handle_create_result, handle_delete_result, handle_get_result,
-    handle_update_result,
+    handle_update_result, populate_get_page_result, populate_get_result,
 };
 
 #[utoipa::path(
@@ -32,11 +32,15 @@ use super::base::{
 #[get("/dlcs/{id}")]
 async fn get_dlc(
     pool: web::Data<PgPool>,
+    image_client_provider: web::Data<ImageClientProvider>,
     path: web::Path<ItemId>,
     logged_user: LoggedUser,
 ) -> impl Responder {
     let ItemId(id) = path.into_inner();
-    let get_result = dlcs_service::get_dlc(&pool, logged_user.id, id).await;
+    let mut get_result = dlcs_service::get_dlc(&pool, logged_user.id, id).await;
+    populate_get_result(&mut get_result, |dlc| {
+        dlc_image_service::populate_dlc_cover(&image_client_provider, dlc)
+    });
     handle_get_result(get_result)
 }
 
@@ -60,11 +64,15 @@ async fn get_dlc(
 #[get("/dlcs/{id}/base-game")]
 async fn get_dlc_base_game(
     pool: web::Data<PgPool>,
+    image_client_provider: web::Data<ImageClientProvider>,
     path: web::Path<ItemId>,
     logged_user: LoggedUser,
 ) -> impl Responder {
     let ItemId(id) = path.into_inner();
-    let get_result = dlcs_service::get_dlc_base_game(&pool, logged_user.id, id).await;
+    let mut get_result = dlcs_service::get_dlc_base_game(&pool, logged_user.id, id).await;
+    populate_get_result(&mut get_result, |game| {
+        game_image_service::populate_game_cover(&image_client_provider, game)
+    });
     handle_get_result(get_result)
 }
 
@@ -88,11 +96,15 @@ async fn get_dlc_base_game(
 #[get("/games/{id}/dlcs")]
 async fn get_game_dlcs(
     pool: web::Data<PgPool>,
+    image_client_provider: web::Data<ImageClientProvider>,
     path: web::Path<ItemId>,
     logged_user: LoggedUser,
 ) -> impl Responder {
     let ItemId(id) = path.into_inner();
-    let get_result = dlcs_service::get_game_dlcs(&pool, logged_user.id, id).await;
+    let mut get_result = dlcs_service::get_game_dlcs(&pool, logged_user.id, id).await;
+    populate_get_result(&mut get_result, |dlcs| {
+        dlc_image_service::populate_dlcs_cover(&image_client_provider, dlcs)
+    });
     handle_get_result(get_result)
 }
 
@@ -116,11 +128,15 @@ async fn get_game_dlcs(
 #[get("/platforms/{id}/dlcs")]
 async fn get_platform_dlcs(
     pool: web::Data<PgPool>,
+    image_client_provider: web::Data<ImageClientProvider>,
     path: web::Path<ItemId>,
     logged_user: LoggedUser,
 ) -> impl Responder {
     let ItemId(id) = path.into_inner();
-    let get_result = dlc_available_service::get_platform_dlcs(&pool, logged_user.id, id).await;
+    let mut get_result = dlc_available_service::get_platform_dlcs(&pool, logged_user.id, id).await;
+    populate_get_result(&mut get_result, |dlcs| {
+        dlc_image_service::populate_dlcs_available_cover(&image_client_provider, dlcs)
+    });
     handle_get_result(get_result)
 }
 
@@ -144,11 +160,16 @@ async fn get_platform_dlcs(
 #[post("/dlcs/list")]
 async fn get_dlcs(
     pool: web::Data<PgPool>,
+    image_client_provider: web::Data<ImageClientProvider>,
     query: web::Query<QuicksearchQuery>,
     body: web::Json<SearchDTO>,
     logged_user: LoggedUser,
 ) -> impl Responder {
-    let search_result = dlcs_service::search_dlcs(&pool, logged_user.id, body.0, query.0.q).await;
+    let mut search_result =
+        dlcs_service::search_dlcs(&pool, logged_user.id, body.0, query.0.q).await;
+    populate_get_page_result(&mut search_result, |dlcs| {
+        dlc_image_service::populate_dlcs_cover(&image_client_provider, dlcs)
+    });
     handle_get_result(search_result)
 }
 

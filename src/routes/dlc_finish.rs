@@ -4,9 +4,12 @@ use sqlx::PgPool;
 use crate::models::{
     DateDTO, ItemId, LoggedUser, OptionalStartEndDateQuery, QuicksearchQuery, SearchDTO,
 };
-use crate::services::{dlc_finishes_service, dlc_with_finish_service};
+use crate::providers::ImageClientProvider;
+use crate::services::{dlc_finishes_service, dlc_image_service, dlc_with_finish_service};
 
-use super::base::{handle_action_result, handle_delete_result, handle_get_result};
+use super::base::{
+    handle_action_result, handle_delete_result, handle_get_result, populate_get_page_result,
+};
 
 #[utoipa::path(
     get,
@@ -86,12 +89,13 @@ async fn get_first_dlc_finish(
 #[post("/dlcs/finished/first")]
 async fn get_first_finished_dlcs(
     pool: web::Data<PgPool>,
+    image_client_provider: web::Data<ImageClientProvider>,
     query: web::Query<OptionalStartEndDateQuery>,
     quick_query: web::Query<QuicksearchQuery>,
     body: web::Json<SearchDTO>,
     logged_user: LoggedUser,
 ) -> impl Responder {
-    let get_result = dlc_with_finish_service::search_first_finished_dlcs(
+    let mut get_result = dlc_with_finish_service::search_first_finished_dlcs(
         &pool,
         logged_user.id,
         query.start_date,
@@ -100,6 +104,9 @@ async fn get_first_finished_dlcs(
         quick_query.0.q,
     )
     .await;
+    populate_get_page_result(&mut get_result, |dlc| {
+        dlc_image_service::populate_dlcs_with_finish_cover(&image_client_provider, dlc)
+    });
     handle_get_result(get_result)
 }
 
@@ -125,12 +132,13 @@ async fn get_first_finished_dlcs(
 #[post("/dlcs/finished/last")]
 async fn get_last_finished_dlcs(
     pool: web::Data<PgPool>,
+    image_client_provider: web::Data<ImageClientProvider>,
     query: web::Query<OptionalStartEndDateQuery>,
     quick_query: web::Query<QuicksearchQuery>,
     body: web::Json<SearchDTO>,
     logged_user: LoggedUser,
 ) -> impl Responder {
-    let get_result = dlc_with_finish_service::search_last_finished_dlcs(
+    let mut get_result = dlc_with_finish_service::search_last_finished_dlcs(
         &pool,
         logged_user.id,
         query.start_date,
@@ -139,6 +147,9 @@ async fn get_last_finished_dlcs(
         quick_query.0.q,
     )
     .await;
+    populate_get_page_result(&mut get_result, |dlc| {
+        dlc_image_service::populate_dlcs_with_finish_cover(&image_client_provider, dlc)
+    });
     handle_get_result(get_result)
 }
 

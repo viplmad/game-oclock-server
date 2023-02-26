@@ -3,7 +3,7 @@ use std::fs::File;
 use sqlx::PgPool;
 
 use crate::errors::ApiErrors;
-use crate::models::PlatformDTO;
+use crate::models::{PlatformAvailableDTO, PlatformDTO};
 use crate::providers::ImageClientProvider;
 
 use super::base::{build_image_filename, handle_image_client_provider};
@@ -16,6 +16,29 @@ pub fn populate_platform_icon(provider: &ImageClientProvider, platform: &mut Pla
     if let Ok(client) = handle_image_client_provider(provider) {
         if let Some(icon_filename) = &platform.icon_filename {
             platform.icon_url = Some(client.get_image_uri(PLATFORM_FOLDER, icon_filename));
+        }
+    }
+}
+
+pub fn populate_platforms_icon(provider: &ImageClientProvider, platforms: &mut Vec<PlatformDTO>) {
+    if let Ok(client) = handle_image_client_provider(provider) {
+        for platform in platforms {
+            if let Some(icon_filename) = &platform.icon_filename {
+                platform.icon_url = Some(client.get_image_uri(PLATFORM_FOLDER, icon_filename));
+            }
+        }
+    }
+}
+
+pub fn populate_platforms_available_icon(
+    provider: &ImageClientProvider,
+    platforms: &mut Vec<PlatformAvailableDTO>,
+) {
+    if let Ok(client) = handle_image_client_provider(provider) {
+        for platform in platforms {
+            if let Some(icon_filename) = &platform.icon_filename {
+                platform.icon_url = Some(client.get_image_uri(PLATFORM_FOLDER, icon_filename));
+            }
         }
     }
 }
