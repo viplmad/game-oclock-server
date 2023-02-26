@@ -3,7 +3,7 @@ use std::fs::File;
 use sqlx::PgPool;
 
 use crate::errors::ApiErrors;
-use crate::models::DLCDTO;
+use crate::models::{DLCAvailableDTO, DLCWithFinishDTO, DLCDTO};
 use crate::providers::ImageClientProvider;
 
 use super::base::{build_image_filename, handle_image_client_provider};
@@ -16,6 +16,42 @@ pub fn populate_dlc_cover(provider: &ImageClientProvider, dlc: &mut DLCDTO) {
     if let Ok(client) = handle_image_client_provider(provider) {
         if let Some(cover_filename) = &dlc.cover_filename {
             dlc.cover_url = Some(client.get_image_uri(DLC_FOLDER, cover_filename));
+        }
+    }
+}
+
+pub fn populate_dlcs_cover(provider: &ImageClientProvider, dlcs: &mut Vec<DLCDTO>) {
+    if let Ok(client) = handle_image_client_provider(provider) {
+        for dlc in dlcs {
+            if let Some(cover_filename) = &dlc.cover_filename {
+                dlc.cover_url = Some(client.get_image_uri(DLC_FOLDER, cover_filename));
+            }
+        }
+    }
+}
+
+pub fn populate_dlcs_available_cover(
+    provider: &ImageClientProvider,
+    dlcs: &mut Vec<DLCAvailableDTO>,
+) {
+    if let Ok(client) = handle_image_client_provider(provider) {
+        for dlc in dlcs {
+            if let Some(cover_filename) = &dlc.cover_filename {
+                dlc.cover_url = Some(client.get_image_uri(DLC_FOLDER, cover_filename));
+            }
+        }
+    }
+}
+
+pub fn populate_dlcs_with_finish_cover(
+    provider: &ImageClientProvider,
+    dlcs: &mut Vec<DLCWithFinishDTO>,
+) {
+    if let Ok(client) = handle_image_client_provider(provider) {
+        for dlc in dlcs {
+            if let Some(cover_filename) = &dlc.cover_filename {
+                dlc.cover_url = Some(client.get_image_uri(DLC_FOLDER, cover_filename));
+            }
         }
     }
 }

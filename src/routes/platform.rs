@@ -10,6 +10,7 @@ use crate::services::{
 
 use super::base::{
     handle_create_result, handle_delete_result, handle_get_result, handle_update_result,
+    populate_get_page_result, populate_get_result,
 };
 
 #[utoipa::path(
@@ -32,11 +33,15 @@ use super::base::{
 #[get("/platforms/{id}")]
 async fn get_platform(
     pool: web::Data<PgPool>,
+    image_client_provider: web::Data<ImageClientProvider>,
     path: web::Path<ItemId>,
     logged_user: LoggedUser,
 ) -> impl Responder {
     let ItemId(id) = path.into_inner();
-    let get_result = platforms_service::get_platform(&pool, logged_user.id, id).await;
+    let mut get_result = platforms_service::get_platform(&pool, logged_user.id, id).await;
+    populate_get_result(&mut get_result, |platform| {
+        platform_image_service::populate_platform_icon(&image_client_provider, platform)
+    });
     handle_get_result(get_result)
 }
 
@@ -60,11 +65,16 @@ async fn get_platform(
 #[get("/games/{id}/platforms")]
 async fn get_game_platforms(
     pool: web::Data<PgPool>,
+    image_client_provider: web::Data<ImageClientProvider>,
     path: web::Path<ItemId>,
     logged_user: LoggedUser,
 ) -> impl Responder {
     let ItemId(id) = path.into_inner();
-    let get_result = game_available_service::get_game_platforms(&pool, logged_user.id, id).await;
+    let mut get_result =
+        game_available_service::get_game_platforms(&pool, logged_user.id, id).await;
+    populate_get_result(&mut get_result, |platform| {
+        platform_image_service::populate_platforms_available_icon(&image_client_provider, platform)
+    });
     handle_get_result(get_result)
 }
 
@@ -88,11 +98,15 @@ async fn get_game_platforms(
 #[get("/dlcs/{id}/platforms")]
 async fn get_dlc_platforms(
     pool: web::Data<PgPool>,
+    image_client_provider: web::Data<ImageClientProvider>,
     path: web::Path<ItemId>,
     logged_user: LoggedUser,
 ) -> impl Responder {
     let ItemId(id) = path.into_inner();
-    let get_result = dlc_available_service::get_dlc_platforms(&pool, logged_user.id, id).await;
+    let mut get_result = dlc_available_service::get_dlc_platforms(&pool, logged_user.id, id).await;
+    populate_get_result(&mut get_result, |platform| {
+        platform_image_service::populate_platforms_available_icon(&image_client_provider, platform)
+    });
     handle_get_result(get_result)
 }
 
@@ -116,12 +130,16 @@ async fn get_dlc_platforms(
 #[post("/platforms/list")]
 async fn get_platforms(
     pool: web::Data<PgPool>,
+    image_client_provider: web::Data<ImageClientProvider>,
     query: web::Query<QuicksearchQuery>,
     body: web::Json<SearchDTO>,
     logged_user: LoggedUser,
 ) -> impl Responder {
-    let search_result =
+    let mut search_result =
         platforms_service::search_platforms(&pool, logged_user.id, body.0, query.0.q).await;
+    populate_get_page_result(&mut search_result, |platform| {
+        platform_image_service::populate_platforms_icon(&image_client_provider, platform)
+    });
     handle_get_result(search_result)
 }
 

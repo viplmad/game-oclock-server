@@ -4,9 +4,12 @@ use sqlx::PgPool;
 use crate::models::{
     DateDTO, ItemId, LoggedUser, OptionalStartEndDateQuery, QuicksearchQuery, SearchDTO,
 };
-use crate::services::{game_finishes_service, game_with_finish_service};
+use crate::providers::ImageClientProvider;
+use crate::services::{game_finishes_service, game_image_service, game_with_finish_service};
 
-use super::base::{handle_action_result, handle_delete_result, handle_get_result};
+use super::base::{
+    handle_action_result, handle_delete_result, handle_get_result, populate_get_page_result,
+};
 
 #[utoipa::path(
     get,
@@ -86,12 +89,13 @@ async fn get_first_game_finish(
 #[post("/games/finished/first")]
 async fn get_first_finished_games(
     pool: web::Data<PgPool>,
+    image_client_provider: web::Data<ImageClientProvider>,
     query: web::Query<OptionalStartEndDateQuery>,
     quick_query: web::Query<QuicksearchQuery>,
     body: web::Json<SearchDTO>,
     logged_user: LoggedUser,
 ) -> impl Responder {
-    let get_result = game_with_finish_service::search_first_finished_games(
+    let mut get_result = game_with_finish_service::search_first_finished_games(
         &pool,
         logged_user.id,
         query.start_date,
@@ -100,6 +104,9 @@ async fn get_first_finished_games(
         quick_query.0.q,
     )
     .await;
+    populate_get_page_result(&mut get_result, |game| {
+        game_image_service::populate_games_with_finish_cover(&image_client_provider, game)
+    });
     handle_get_result(get_result)
 }
 
@@ -125,12 +132,13 @@ async fn get_first_finished_games(
 #[post("/games/finished/last")]
 async fn get_last_finished_games(
     pool: web::Data<PgPool>,
+    image_client_provider: web::Data<ImageClientProvider>,
     query: web::Query<OptionalStartEndDateQuery>,
     quick_query: web::Query<QuicksearchQuery>,
     body: web::Json<SearchDTO>,
     logged_user: LoggedUser,
 ) -> impl Responder {
-    let get_result = game_with_finish_service::search_last_finished_games(
+    let mut get_result = game_with_finish_service::search_last_finished_games(
         &pool,
         logged_user.id,
         query.start_date,
@@ -139,6 +147,9 @@ async fn get_last_finished_games(
         quick_query.0.q,
     )
     .await;
+    populate_get_page_result(&mut get_result, |game| {
+        game_image_service::populate_games_with_finish_cover(&image_client_provider, game)
+    });
     handle_get_result(get_result)
 }
 

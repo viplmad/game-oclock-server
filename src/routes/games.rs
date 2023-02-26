@@ -11,7 +11,7 @@ use crate::services::{
 
 use super::base::{
     handle_action_result, handle_create_result, handle_delete_result, handle_get_result,
-    handle_update_result,
+    handle_update_result, populate_get_page_result, populate_get_result,
 };
 
 #[utoipa::path(
@@ -34,11 +34,15 @@ use super::base::{
 #[get("/games/{id}")]
 async fn get_game(
     pool: web::Data<PgPool>,
+    image_client_provider: web::Data<ImageClientProvider>,
     path: web::Path<ItemId>,
     logged_user: LoggedUser,
 ) -> impl Responder {
     let ItemId(id) = path.into_inner();
-    let get_result = games_service::get_game(&pool, logged_user.id, id).await;
+    let mut get_result = games_service::get_game(&pool, logged_user.id, id).await;
+    populate_get_result(&mut get_result, |game| {
+        game_image_service::populate_game_cover(&image_client_provider, game)
+    });
     handle_get_result(get_result)
 }
 
@@ -62,11 +66,15 @@ async fn get_game(
 #[get("/tags/{id}/games")]
 async fn get_tag_games(
     pool: web::Data<PgPool>,
+    image_client_provider: web::Data<ImageClientProvider>,
     path: web::Path<ItemId>,
     logged_user: LoggedUser,
 ) -> impl Responder {
     let ItemId(id) = path.into_inner();
-    let get_result = game_tags_service::get_tag_games(&pool, logged_user.id, id).await;
+    let mut get_result = game_tags_service::get_tag_games(&pool, logged_user.id, id).await;
+    populate_get_result(&mut get_result, |games| {
+        game_image_service::populate_games_cover(&image_client_provider, games)
+    });
     handle_get_result(get_result)
 }
 
@@ -90,11 +98,16 @@ async fn get_tag_games(
 #[get("/platforms/{id}/games")]
 async fn get_platform_games(
     pool: web::Data<PgPool>,
+    image_client_provider: web::Data<ImageClientProvider>,
     path: web::Path<ItemId>,
     logged_user: LoggedUser,
 ) -> impl Responder {
     let ItemId(id) = path.into_inner();
-    let get_result = game_available_service::get_platform_games(&pool, logged_user.id, id).await;
+    let mut get_result =
+        game_available_service::get_platform_games(&pool, logged_user.id, id).await;
+    populate_get_result(&mut get_result, |games| {
+        game_image_service::populate_games_available_cover(&image_client_provider, games)
+    });
     handle_get_result(get_result)
 }
 
@@ -118,11 +131,16 @@ async fn get_platform_games(
 #[post("/games/list")]
 async fn get_games(
     pool: web::Data<PgPool>,
+    image_client_provider: web::Data<ImageClientProvider>,
     query: web::Query<QuicksearchQuery>,
     body: web::Json<SearchDTO>,
     logged_user: LoggedUser,
 ) -> impl Responder {
-    let search_result = games_service::search_games(&pool, logged_user.id, body.0, query.0.q).await;
+    let mut search_result =
+        games_service::search_games(&pool, logged_user.id, body.0, query.0.q).await;
+    populate_get_page_result(&mut search_result, |games| {
+        game_image_service::populate_games_cover(&image_client_provider, games)
+    });
     handle_get_result(search_result)
 }
 
