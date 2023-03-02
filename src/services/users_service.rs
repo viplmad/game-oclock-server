@@ -51,7 +51,7 @@ pub async fn create_user(
 pub async fn update_user(
     pool: &PgPool,
     user_id: i32,
-    user: NewUserDTO, // TODO exclude password
+    user: NewUserDTO,
 ) -> Result<UserDTO, ApiErrors> {
     update_merged(
         user,

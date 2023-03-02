@@ -132,6 +132,7 @@ CREATE TABLE IF NOT EXISTS "User" (
     id integer NOT NULL,
     username text NOT NULL,
     password text NOT NULL,
+    admin boolean DEFAULT false NOT NULL,
     added_datetime timestamp without time zone NOT NULL,
     updated_datetime timestamp without time zone NOT NULL
 );
@@ -277,5 +278,5 @@ ALTER TABLE ONLY "GameUserInfo"
     ADD CONSTRAINT "GameUserInfo_fk1" FOREIGN KEY (user_id) REFERENCES "User"(id) ON DELETE CASCADE;
 
 
-INSERT INTO "User" (username, password, added_datetime, updated_datetime)
-VALUES ('admin', '$2a$12$4PiH98/.9OiLpkXPIdqwu.rwzkjacoAZt1UCGwY8bujuYxLSR.wG6', NOW(), NOW());
+INSERT INTO "User" (username, password, admin, added_datetime, updated_datetime)
+VALUES ('admin', '$2a$12$4PiH98/.9OiLpkXPIdqwu.rwzkjacoAZt1UCGwY8bujuYxLSR.wG6', TRUE, NOW(), NOW());

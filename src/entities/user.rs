@@ -18,6 +18,8 @@ pub enum UserIden {
     Username,
     #[iden = "password"]
     Password,
+    #[iden = "admin"]
+    Admin,
     #[iden = "added_datetime"]
     AddedDateTime,
     #[iden = "updated_datetime"]
@@ -33,6 +35,7 @@ pub struct User {
     pub id: i32,
     pub username: String,
     pub password: String,
+    pub admin: bool,
     pub added_datetime: NaiveDateTime,
     pub updated_datetime: NaiveDateTime,
 }
@@ -44,6 +47,7 @@ impl FromStr for FieldIden<UserIden> {
         match field {
             "id" => Ok(FieldIden::new(UserIden::Id, FieldType::Integer)),
             "name" => Ok(FieldIden::new(UserIden::Username, FieldType::String)),
+            "admin" => Ok(FieldIden::new(UserIden::Admin, FieldType::Boolean)),
             "added_datetime" => Ok(FieldIden::new(UserIden::AddedDateTime, FieldType::DateTime)),
             "updated_datetime" => Ok(FieldIden::new(
                 UserIden::UpdatedDateTime,
