@@ -171,7 +171,7 @@ pub(super) async fn update_merged<E, T, N, GF, UF>(
     update: N,
     get_function: impl Fn() -> GF,
     update_function: impl FnOnce(E) -> UF,
-) -> Result<T, ApiErrors>
+) -> Result<(), ApiErrors>
 where
     T: From<E> + Merge<N> + ModelInfo,
     E: From<T>,
@@ -183,15 +183,7 @@ where
     let merged_update = T::merge(current, update);
     let entity_to_update = E::from(merged_update);
 
-    update_function(entity_to_update).await?;
-
-    // TODO just return empty and remove get after update
-    get_function().await.map_err(|err| match err {
-        ApiErrors::NotFound(_) => {
-            ApiErrors::NotFound(error_message_builder::updated_but_error_get(T::MODEL_NAME))
-        }
-        other => other,
-    })
+    update_function(entity_to_update).await
 }
 
 pub(super) fn check_start_end(

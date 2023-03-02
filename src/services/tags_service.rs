@@ -48,7 +48,7 @@ pub async fn update_tag(
     user_id: i32,
     tag_id: i32,
     tag: NewTagDTO,
-) -> Result<TagDTO, ApiErrors> {
+) -> Result<(), ApiErrors> {
     update_merged(
         tag,
         async move || get_tag(pool, user_id, tag_id).await,

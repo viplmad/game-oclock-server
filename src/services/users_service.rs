@@ -48,11 +48,7 @@ pub async fn create_user(
     .await
 }
 
-pub async fn update_user(
-    pool: &PgPool,
-    user_id: i32,
-    user: NewUserDTO,
-) -> Result<UserDTO, ApiErrors> {
+pub async fn update_user(pool: &PgPool, user_id: i32, user: NewUserDTO) -> Result<(), ApiErrors> {
     update_merged(
         user,
         async move || get_user(pool, user_id).await,
@@ -96,6 +92,7 @@ pub async fn promote_user(pool: &PgPool, user_id: i32) -> Result<(), ApiErrors> 
 }
 
 pub async fn demote_user(pool: &PgPool, user_id: i32) -> Result<(), ApiErrors> {
+    // TODO Check not last with admin
     change_user_admin(pool, user_id, false).await
 }
 

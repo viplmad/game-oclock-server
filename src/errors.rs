@@ -33,10 +33,6 @@ pub mod error_message_builder {
         format!("{model_name} was created but cannot be retrieved.")
     }
 
-    pub fn updated_but_error_get(model_name: &str) -> String {
-        format!("{model_name} was updated but cannot be retrieved.")
-    }
-
     pub fn not_found(model_name: &str, parameters: &[&str]) -> String {
         let parameters_join = parameters.join("-");
         format!("{model_name} with specified {parameters_join} does not exist.")
