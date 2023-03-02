@@ -70,6 +70,10 @@ pub fn update_password_by_id(id: i32, password: &str) -> impl QueryStatementWrit
     update_values_by_id(id, vec![(UserIden::Password, password.into())])
 }
 
+pub fn update_admin_by_id(id: i32, admin: bool) -> impl QueryStatementWriter {
+    update_values_by_id(id, vec![(UserIden::Admin, admin.into())])
+}
+
 fn update_values_by_id(
     id: i32,
     mut values: Vec<(UserIden, SimpleExpr)>,
@@ -141,6 +145,7 @@ fn add_fields(select: &mut SelectStatement) {
     select
         .column((UserIden::Table, UserIden::Username))
         .column((UserIden::Table, UserIden::Password))
+        .column((UserIden::Table, UserIden::Admin))
         .column((UserIden::Table, UserIden::AddedDateTime))
         .column((UserIden::Table, UserIden::UpdatedDateTime));
 }

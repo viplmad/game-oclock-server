@@ -87,6 +87,8 @@ pub fn get_openapi() -> utoipa::openapi::OpenApi {
             routes::post_user,
             routes::put_user,
             routes::change_password,
+            routes::promote_user,
+            routes::demote_user,
             routes::delete_user,
             // Authentication
             routes::token,

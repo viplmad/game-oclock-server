@@ -1,9 +1,13 @@
 use std::{future::Future, pin::Pin};
 
-use actix_web::{Error, FromRequest};
+use actix_web::{web, Error, FromRequest};
 use actix_web_httpauth::extractors::bearer::BearerAuth;
+use sqlx::PgPool;
 
-use crate::models::{LoggedUser, UserClaims};
+use crate::{
+    models::{LoggedUser, UserClaims},
+    services::users_service,
+};
 
 /// Takes the result of a rsplit and ensure we only get 2 parts
 /// Errors if we don't
@@ -16,13 +20,14 @@ macro_rules! expect_two {
 
 impl FromRequest for LoggedUser {
     type Error = Error;
-    type Future = Pin<Box<dyn Future<Output = Result<Self, Error>>>>;
+    type Future = Pin<Box<dyn Future<Output = Result<Self, Self::Error>>>>;
 
     fn from_request(
         req: &actix_web::HttpRequest,
         _payload: &mut actix_web::dev::Payload,
     ) -> Self::Future {
         let request = req.clone();
+
         Box::pin(async move {
             let bearer_auth = BearerAuth::extract(&request).await.unwrap();
             let token = bearer_auth.token();
@@ -32,9 +37,14 @@ impl FromRequest for LoggedUser {
             let decoded = b64_decode(payload).unwrap();
             let claims: UserClaims = serde_json::from_slice(&decoded).unwrap();
 
+            let user_id = claims.sub_as_user_id();
+
+            let pool = &request.app_data::<web::Data<PgPool>>().unwrap();
+            let user = users_service::get_user(pool, user_id).await.unwrap();
+
             Ok(LoggedUser {
-                id: claims.sub_as_user_id(),
-                admin: false, // TODO obtain from claims
+                id: user_id,
+                admin: user.admin,
             })
         })
     }

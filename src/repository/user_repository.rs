@@ -46,6 +46,11 @@ pub async fn update_password(
     execute_return_id(pool, query).await
 }
 
+pub async fn update_admin(pool: &PgPool, id: i32, admin: bool) -> Result<i32, RepositoryError> {
+    let query = user_query::update_admin_by_id(id, admin);
+    execute_return_id(pool, query).await
+}
+
 pub async fn delete_by_id(pool: &PgPool, id: i32) -> Result<(), RepositoryError> {
     let query = user_query::delete_by_id(id);
     execute(pool, query).await
