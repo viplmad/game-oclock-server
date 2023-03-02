@@ -22,11 +22,9 @@ pub(super) fn handle_create_result(
     }
 }
 
-pub(super) fn handle_update_result(
-    service_result: Result<impl Serialize, impl ToError>,
-) -> HttpResponse {
+pub(super) fn handle_update_result(service_result: Result<(), impl ToError>) -> HttpResponse {
     match service_result {
-        Ok(data) => HttpResponse::Ok().json(data), // TODO no devolver con update
+        Ok(_) => HttpResponse::NoContent().finish(),
         Err(error) => error.to_error(),
     }
 }

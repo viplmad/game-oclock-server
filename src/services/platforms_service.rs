@@ -57,7 +57,7 @@ pub async fn update_platform(
     user_id: i32,
     platform_id: i32,
     platform: NewPlatformDTO,
-) -> Result<PlatformDTO, ApiErrors> {
+) -> Result<(), ApiErrors> {
     update_merged(
         platform,
         async move || get_platform(pool, user_id, platform_id).await,

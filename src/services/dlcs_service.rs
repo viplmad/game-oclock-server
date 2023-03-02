@@ -74,7 +74,7 @@ pub async fn update_dlc(
     user_id: i32,
     dlc_id: i32,
     dlc: NewDLCDTO,
-) -> Result<DLCDTO, ApiErrors> {
+) -> Result<(), ApiErrors> {
     update_merged(
         dlc,
         async move || get_dlc(pool, user_id, dlc_id).await,

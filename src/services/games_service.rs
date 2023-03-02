@@ -52,7 +52,7 @@ pub async fn update_game(
     user_id: i32,
     game_id: i32,
     game: NewGameDTO,
-) -> Result<GameDTO, ApiErrors> {
+) -> Result<(), ApiErrors> {
     update_merged(
         game,
         async move || get_game(pool, user_id, game_id).await,
