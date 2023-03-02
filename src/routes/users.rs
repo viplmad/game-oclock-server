@@ -196,8 +196,16 @@ async fn change_password(
         ("bearer_token" = [])
     )
 )]
-#[put("/users/{id}")]
-async fn promote_user(pool: web::Data<PgPool>, path: web::Path<ItemId>) -> impl Responder {
+#[put("/users/{id}/promote")]
+async fn promote_user(
+    pool: web::Data<PgPool>,
+    path: web::Path<ItemId>,
+    logged_user: LoggedUser,
+) -> impl Responder {
+    if let Err(error) = require_admin(logged_user) {
+        return error;
+    }
+
     let ItemId(id) = path.into_inner();
     let update_result = users_service::promote_user(&pool, id).await;
     handle_update_result(update_result)
@@ -222,8 +230,16 @@ async fn promote_user(pool: web::Data<PgPool>, path: web::Path<ItemId>) -> impl 
         ("bearer_token" = [])
     )
 )]
-#[put("/users/{id}")]
-async fn demote_user(pool: web::Data<PgPool>, path: web::Path<ItemId>) -> impl Responder {
+#[put("/users/{id}/demote")]
+async fn demote_user(
+    pool: web::Data<PgPool>,
+    path: web::Path<ItemId>,
+    logged_user: LoggedUser,
+) -> impl Responder {
+    if let Err(error) = require_admin(logged_user) {
+        return error;
+    }
+
     let ItemId(id) = path.into_inner();
     let update_result = users_service::demote_user(&pool, id).await;
     handle_update_result(update_result)
