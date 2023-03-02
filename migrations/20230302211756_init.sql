@@ -1,3 +1,4 @@
+-- Add migration script here
 CREATE TABLE IF NOT EXISTS "DLC" (
     id integer NOT NULL,
     user_id integer NOT NULL,

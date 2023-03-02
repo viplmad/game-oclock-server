@@ -1,4 +1,4 @@
-use std::{env, fs::File, io::BufReader};
+use std::{env, fs::File, io::BufReader, path::Path};
 
 use actix_web_httpauth::middleware::HttpAuthentication;
 use dotenvy::dotenv;
@@ -96,6 +96,18 @@ async fn get_connection_pool() -> Result<PgPool, sqlx::Error> {
         })
 }
 
+async fn apply_migrations(pool: &PgPool) {
+    let migrator = sqlx::migrate::Migrator::new(Path::new("./migrations"))
+        .await
+        .expect("Could not load database migrations.");
+    migrator
+        .run(pool)
+        .await
+        .expect("Could not apply database migrations.");
+
+    log::info!("Database migrations applied.");
+}
+
 fn get_cloudinary_client_provider() -> Option<CloudinaryClient> {
     CloudinaryClientBuilder::try_from_env()
         .map(|client| CloudinaryClient::default().connect_with(client))
@@ -124,6 +136,8 @@ async fn run(
     let database_connection_pool = get_connection_pool()
         .await
         .expect("Could not open database connection.");
+    apply_migrations(&database_connection_pool).await;
+
     let data_database_connection = web::Data::new(database_connection_pool);
 
     // Image client
