@@ -4,6 +4,7 @@
 pub mod auth;
 pub mod clients;
 pub mod entities;
+pub mod extractors;
 pub mod mapper;
 pub mod models;
 pub mod query;

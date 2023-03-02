@@ -4,11 +4,11 @@ use sqlx::PgPool;
 use crate::models::{
     ItemId, LoggedUser, NewPasswordDTO, NewUserDTO, PasswordChangeDTO, QuicksearchQuery, SearchDTO,
 };
-use crate::routes::base::handle_update_result;
 use crate::services::users_service;
 
 use super::base::{
     handle_action_result, handle_create_result, handle_delete_result, handle_get_result,
+    handle_update_result, require_admin,
 };
 
 #[utoipa::path(
@@ -21,6 +21,7 @@ use super::base::{
     responses(
         (status = 200, description = "User obtained", body = UserDTO, content_type = "application/json"),
         (status = 401, description = "Unauthorized", body = ErrorMessage, content_type = "application/json"),
+        (status = 403, description = "Forbidden", body = ErrorMessage, content_type = "application/json"),
         (status = 404, description = "User not found", body = ErrorMessage, content_type = "application/json"),
         (status = 500, description = "Internal server error", body = ErrorMessage, content_type = "application/json"),
     ),
@@ -42,6 +43,7 @@ async fn get_user(pool: web::Data<PgPool>, path: web::Path<ItemId>) -> impl Resp
     responses(
         (status = 200, description = "User obtained", body = UserDTO, content_type = "application/json"),
         (status = 401, description = "Unauthorized", body = ErrorMessage, content_type = "application/json"),
+        (status = 403, description = "Forbidden", body = ErrorMessage, content_type = "application/json"),
         (status = 404, description = "User not found", body = ErrorMessage, content_type = "application/json"),
         (status = 500, description = "Internal server error", body = ErrorMessage, content_type = "application/json"),
     ),
@@ -66,6 +68,7 @@ async fn get_current_user(pool: web::Data<PgPool>, logged_user: LoggedUser) -> i
     responses(
         (status = 200, description = "Users obtained", body = UserPageResult, content_type = "application/json"),
         (status = 401, description = "Unauthorized", body = ErrorMessage, content_type = "application/json"),
+        (status = 403, description = "Forbidden", body = ErrorMessage, content_type = "application/json"),
         (status = 500, description = "Internal server error", body = ErrorMessage, content_type = "application/json"),
     ),
     security(
@@ -82,16 +85,17 @@ async fn get_users(
     handle_get_result(search_result)
 }
 
-// TODO Restrict to admin
 #[utoipa::path(
     post,
     path = "/api/v1/users",
     tag = "Users",
     request_body(content = NewUserDTO, description = "User to be created", content_type = "application/json"),
+    request_body(content = NewPasswordDTO, description = "Password to be used", content_type = "application/x-www-form-urlencoded"),
     responses(
         (status = 201, description = "User created", body = UserDTO, content_type = "application/json"),
         (status = 400, description = "Bad request", body = ErrorMessage, content_type = "application/json"),
         (status = 401, description = "Unauthorized", body = ErrorMessage, content_type = "application/json"),
+        (status = 403, description = "Forbidden", body = ErrorMessage, content_type = "application/json"),
         (status = 404, description = "User not found", body = ErrorMessage, content_type = "application/json"),
         (status = 500, description = "Internal server error", body = ErrorMessage, content_type = "application/json"),
     ),
@@ -104,7 +108,12 @@ async fn post_user(
     pool: web::Data<PgPool>,
     body: web::Json<NewUserDTO>,
     form: web::Form<NewPasswordDTO>,
+    logged_user: LoggedUser,
 ) -> impl Responder {
+    if let Err(error) = require_admin(logged_user) {
+        return error;
+    }
+
     let create_result = users_service::create_user(&pool, body.0, &form.0.password).await;
     handle_create_result(create_result)
 }
@@ -121,6 +130,7 @@ async fn post_user(
         (status = 200, description = "User updated", body = UserDTO, content_type = "application/json"),
         (status = 400, description = "Bad request", body = ErrorMessage, content_type = "application/json"),
         (status = 401, description = "Unauthorized", body = ErrorMessage, content_type = "application/json"),
+        (status = 403, description = "Forbidden", body = ErrorMessage, content_type = "application/json"),
         (status = 404, description = "User not found", body = ErrorMessage, content_type = "application/json"),
         (status = 500, description = "Internal server error", body = ErrorMessage, content_type = "application/json"),
     ),
@@ -143,11 +153,12 @@ async fn put_user(
     put,
     path = "/api/v1/myself/change-password",
     tag = "Users",
-    request_body(content = PasswordChangeDTO, description = "Password change request", content_type = "application/json"),
+    request_body(content = PasswordChangeDTO, description = "Password change request", content_type = "application/x-www-form-urlencoded"),
     responses(
         (status = 204, description = "Password changed"),
         (status = 400, description = "Bad request", body = ErrorMessage, content_type = "application/json"),
         (status = 401, description = "Unauthorized", body = ErrorMessage, content_type = "application/json"),
+        (status = 403, description = "Forbidden", body = ErrorMessage, content_type = "application/json"),
         (status = 404, description = "User not found", body = ErrorMessage, content_type = "application/json"),
         (status = 500, description = "Internal server error", body = ErrorMessage, content_type = "application/json"),
     ),
@@ -176,6 +187,7 @@ async fn change_password(
     responses(
         (status = 204, description = "User deleted"),
         (status = 401, description = "Unauthorized", body = ErrorMessage, content_type = "application/json"),
+        (status = 403, description = "Forbidden", body = ErrorMessage, content_type = "application/json"),
         (status = 404, description = "User not found", body = ErrorMessage, content_type = "application/json"),
         (status = 500, description = "Internal server error", body = ErrorMessage, content_type = "application/json"),
     ),
@@ -184,7 +196,15 @@ async fn change_password(
     )
 )]
 #[delete("/users/{id}")]
-async fn delete_user(pool: web::Data<PgPool>, path: web::Path<ItemId>) -> impl Responder {
+async fn delete_user(
+    pool: web::Data<PgPool>,
+    path: web::Path<ItemId>,
+    logged_user: LoggedUser,
+) -> impl Responder {
+    if let Err(error) = require_admin(logged_user) {
+        return error;
+    }
+
     let ItemId(id) = path.into_inner();
     let delete_result = users_service::delete_user(&pool, id).await;
     handle_delete_result(delete_result)

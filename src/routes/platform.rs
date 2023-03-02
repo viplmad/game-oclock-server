@@ -3,14 +3,13 @@ use sqlx::PgPool;
 
 use crate::models::{ItemId, LoggedUser, NewPlatformDTO, QuicksearchQuery, SearchDTO};
 use crate::providers::ImageClientProvider;
-use crate::routes::base::handle_action_result;
 use crate::services::{
     dlc_available_service, game_available_service, platform_image_service, platforms_service,
 };
 
 use super::base::{
-    handle_create_result, handle_delete_result, handle_get_result, handle_update_result,
-    populate_get_page_result, populate_get_result,
+    handle_action_result, handle_create_result, handle_delete_result, handle_get_result,
+    handle_update_result, populate_get_page_result, populate_get_result,
 };
 
 #[utoipa::path(
@@ -23,6 +22,7 @@ use super::base::{
     responses(
         (status = 200, description = "Platform obtained", body = PlatformDTO, content_type = "application/json"),
         (status = 401, description = "Unauthorized", body = ErrorMessage, content_type = "application/json"),
+        (status = 403, description = "Forbidden", body = ErrorMessage, content_type = "application/json"),
         (status = 404, description = "Platform not found", body = ErrorMessage, content_type = "application/json"),
         (status = 500, description = "Internal server error", body = ErrorMessage, content_type = "application/json"),
     ),
@@ -55,6 +55,7 @@ async fn get_platform(
     responses(
         (status = 200, description = "Platforms obtained", body = [PlatformAvailableDTO], content_type = "application/json"),
         (status = 401, description = "Unauthorized", body = ErrorMessage, content_type = "application/json"),
+        (status = 403, description = "Forbidden", body = ErrorMessage, content_type = "application/json"),
         (status = 404, description = "Game not found", body = ErrorMessage, content_type = "application/json"),
         (status = 500, description = "Internal server error", body = ErrorMessage, content_type = "application/json"),
     ),
@@ -88,6 +89,7 @@ async fn get_game_platforms(
     responses(
         (status = 200, description = "Platforms obtained", body = [PlatformAvailableDTO], content_type = "application/json"),
         (status = 401, description = "Unauthorized", body = ErrorMessage, content_type = "application/json"),
+        (status = 403, description = "Forbidden", body = ErrorMessage, content_type = "application/json"),
         (status = 404, description = "DLC not found", body = ErrorMessage, content_type = "application/json"),
         (status = 500, description = "Internal server error", body = ErrorMessage, content_type = "application/json"),
     ),
@@ -121,6 +123,7 @@ async fn get_dlc_platforms(
     responses(
         (status = 200, description = "Platforms obtained", body = PlatformPageResult, content_type = "application/json"),
         (status = 401, description = "Unauthorized", body = ErrorMessage, content_type = "application/json"),
+        (status = 403, description = "Forbidden", body = ErrorMessage, content_type = "application/json"),
         (status = 500, description = "Internal server error", body = ErrorMessage, content_type = "application/json"),
     ),
     security(
@@ -152,6 +155,7 @@ async fn get_platforms(
         (status = 201, description = "Platform created", body = PlatformDTO, content_type = "application/json"),
         (status = 400, description = "Bad request", body = ErrorMessage, content_type = "application/json"),
         (status = 401, description = "Unauthorized", body = ErrorMessage, content_type = "application/json"),
+        (status = 403, description = "Forbidden", body = ErrorMessage, content_type = "application/json"),
         (status = 404, description = "Platform not found", body = ErrorMessage, content_type = "application/json"),
         (status = 500, description = "Internal server error", body = ErrorMessage, content_type = "application/json"),
     ),
@@ -181,6 +185,7 @@ async fn post_platform(
         (status = 204, description = "Platform icon uploaded"),
         (status = 400, description = "Bad request", body = ErrorMessage, content_type = "application/json"),
         (status = 401, description = "Unauthorized", body = ErrorMessage, content_type = "application/json"),
+        (status = 403, description = "Forbidden", body = ErrorMessage, content_type = "application/json"),
         (status = 404, description = "Platform not found", body = ErrorMessage, content_type = "application/json"),
         (status = 500, description = "Internal server error", body = ErrorMessage, content_type = "application/json"),
     ),
@@ -221,6 +226,7 @@ async fn post_platform_icon(
         (status = 200, description = "Platform updated", body = PlatformDTO, content_type = "application/json"),
         (status = 400, description = "Bad request", body = ErrorMessage, content_type = "application/json"),
         (status = 401, description = "Unauthorized", body = ErrorMessage, content_type = "application/json"),
+        (status = 403, description = "Forbidden", body = ErrorMessage, content_type = "application/json"),
         (status = 404, description = "Platform not found", body = ErrorMessage, content_type = "application/json"),
         (status = 500, description = "Internal server error", body = ErrorMessage, content_type = "application/json"),
     ),
@@ -252,6 +258,7 @@ async fn put_platform(
         (status = 204, description = "Platform icon renamed"),
         (status = 400, description = "Bad request", body = ErrorMessage, content_type = "application/json"),
         (status = 401, description = "Unauthorized", body = ErrorMessage, content_type = "application/json"),
+        (status = 403, description = "Forbidden", body = ErrorMessage, content_type = "application/json"),
         (status = 404, description = "Platform not found", body = ErrorMessage, content_type = "application/json"),
         (status = 500, description = "Internal server error", body = ErrorMessage, content_type = "application/json"),
     ),
@@ -289,6 +296,7 @@ async fn put_platform_icon(
     responses(
         (status = 204, description = "Platform deleted"),
         (status = 401, description = "Unauthorized", body = ErrorMessage, content_type = "application/json"),
+        (status = 403, description = "Forbidden", body = ErrorMessage, content_type = "application/json"),
         (status = 404, description = "Platform not found", body = ErrorMessage, content_type = "application/json"),
         (status = 500, description = "Internal server error", body = ErrorMessage, content_type = "application/json"),
     ),
@@ -318,6 +326,7 @@ async fn delete_platform(
         (status = 204, description = "Platform icon deleted"),
         (status = 400, description = "Bad request", body = ErrorMessage, content_type = "application/json"),
         (status = 401, description = "Unauthorized", body = ErrorMessage, content_type = "application/json"),
+        (status = 403, description = "Forbidden", body = ErrorMessage, content_type = "application/json"),
         (status = 404, description = "Platform not found", body = ErrorMessage, content_type = "application/json"),
         (status = 500, description = "Internal server error", body = ErrorMessage, content_type = "application/json"),
     ),

@@ -8,6 +8,7 @@ use super::{Merge, ModelInfo};
 pub struct UserDTO {
     pub id: i32,
     pub username: String,
+    pub admin: bool,
     #[schema(value_type = String, format = DateTime)]
     pub added_datetime: NaiveDateTime,
     #[schema(value_type = String, format = DateTime)]
@@ -19,6 +20,7 @@ impl Default for UserDTO {
         Self {
             id: -1,
             username: String::default(),
+            admin: false,
             added_datetime: NaiveDateTime::default(),
             updated_datetime: NaiveDateTime::default(),
         }
@@ -31,6 +33,7 @@ impl Merge<NewUserDTO> for UserDTO {
         Self {
             id: self.id,
             username: other.username,
+            admin: self.admin,
             added_datetime: self.added_datetime,
             updated_datetime: self.updated_datetime,
         }

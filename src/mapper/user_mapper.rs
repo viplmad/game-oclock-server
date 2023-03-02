@@ -6,6 +6,7 @@ impl From<User> for UserDTO {
         Self {
             id: user.id,
             username: user.username,
+            admin: user.admin,
             added_datetime: user.added_datetime,
             updated_datetime: user.updated_datetime,
         }
@@ -18,6 +19,7 @@ impl From<UserDTO> for User {
             id: user.id,
             username: user.username,
             password: String::default(),
+            admin: user.admin,
             added_datetime: user.added_datetime,
             updated_datetime: user.updated_datetime,
         }

@@ -105,6 +105,13 @@ impl ToError for ApiErrors {
     }
 }
 
+pub fn forbidden_error() -> HttpResponse {
+    HttpResponse::Forbidden().json(ErrorMessage::new(
+        "forbidden",
+        "Not enough user permissions",
+    ))
+}
+
 pub enum TokenErrors {
     InvalidRequest(String),
     InvalidGrant(String),
