@@ -228,6 +228,8 @@ async fn run(
                         .service(routes::post_user)
                         .service(routes::put_user)
                         .service(routes::change_password)
+                        .service(routes::promote_user)
+                        .service(routes::demote_user)
                         .service(routes::delete_user),
                 ),
             )

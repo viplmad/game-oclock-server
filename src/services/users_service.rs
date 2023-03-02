@@ -91,6 +91,21 @@ pub async fn change_user_password(
     }
 }
 
+pub async fn promote_user(pool: &PgPool, user_id: i32) -> Result<(), ApiErrors> {
+    change_user_admin(pool, user_id, true).await
+}
+
+pub async fn demote_user(pool: &PgPool, user_id: i32) -> Result<(), ApiErrors> {
+    change_user_admin(pool, user_id, false).await
+}
+
+async fn change_user_admin(pool: &PgPool, user_id: i32, admin: bool) -> Result<(), ApiErrors> {
+    exists_user(pool, user_id).await?;
+
+    let update_result = user_repository::update_admin(pool, user_id, admin).await;
+    handle_update_result::<i32, UserDTO>(update_result)
+}
+
 pub async fn delete_user(pool: &PgPool, user_id: i32) -> Result<(), ApiErrors> {
     exists_user(pool, user_id).await?;
 

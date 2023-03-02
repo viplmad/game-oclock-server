@@ -178,6 +178,58 @@ async fn change_password(
 }
 
 #[utoipa::path(
+    put,
+    path = "/api/v1/users/{id}/promote",
+    tag = "Users",
+    params(
+        ("id" = i32, Path, description = "User id"),
+    ),
+    responses(
+        (status = 200, description = "User updated", body = UserDTO, content_type = "application/json"),
+        (status = 400, description = "Bad request", body = ErrorMessage, content_type = "application/json"),
+        (status = 401, description = "Unauthorized", body = ErrorMessage, content_type = "application/json"),
+        (status = 403, description = "Forbidden", body = ErrorMessage, content_type = "application/json"),
+        (status = 404, description = "User not found", body = ErrorMessage, content_type = "application/json"),
+        (status = 500, description = "Internal server error", body = ErrorMessage, content_type = "application/json"),
+    ),
+    security(
+        ("bearer_token" = [])
+    )
+)]
+#[put("/users/{id}")]
+async fn promote_user(pool: web::Data<PgPool>, path: web::Path<ItemId>) -> impl Responder {
+    let ItemId(id) = path.into_inner();
+    let update_result = users_service::promote_user(&pool, id).await;
+    handle_update_result(update_result)
+}
+
+#[utoipa::path(
+    put,
+    path = "/api/v1/users/{id}/demote",
+    tag = "Users",
+    params(
+        ("id" = i32, Path, description = "User id"),
+    ),
+    responses(
+        (status = 200, description = "User updated", body = UserDTO, content_type = "application/json"),
+        (status = 400, description = "Bad request", body = ErrorMessage, content_type = "application/json"),
+        (status = 401, description = "Unauthorized", body = ErrorMessage, content_type = "application/json"),
+        (status = 403, description = "Forbidden", body = ErrorMessage, content_type = "application/json"),
+        (status = 404, description = "User not found", body = ErrorMessage, content_type = "application/json"),
+        (status = 500, description = "Internal server error", body = ErrorMessage, content_type = "application/json"),
+    ),
+    security(
+        ("bearer_token" = [])
+    )
+)]
+#[put("/users/{id}")]
+async fn demote_user(pool: web::Data<PgPool>, path: web::Path<ItemId>) -> impl Responder {
+    let ItemId(id) = path.into_inner();
+    let update_result = users_service::demote_user(&pool, id).await;
+    handle_update_result(update_result)
+}
+
+#[utoipa::path(
     delete,
     path = "/api/v1/users/{id}",
     tag = "Users",

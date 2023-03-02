@@ -75,6 +75,7 @@ pub enum SearchErrors {
     Mapping(MappingError),
 }
 
+#[derive(Debug)]
 pub enum ApiErrors {
     InvalidParameter(String),
     AlreadyExists(String),
