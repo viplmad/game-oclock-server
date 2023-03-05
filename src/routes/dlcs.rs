@@ -255,7 +255,7 @@ async fn post_dlc_cover(
     ),
     request_body(content = NewDLCDTO, description = "DLC to be updated", content_type = "application/json"),
     responses(
-        (status = 200, description = "DLC updated", body = DLCDTO, content_type = "application/json"),
+        (status = 204, description = "DLC updated"),
         (status = 400, description = "Bad request", body = ErrorMessage, content_type = "application/json"),
         (status = 401, description = "Unauthorized", body = ErrorMessage, content_type = "application/json"),
         (status = 403, description = "Forbidden", body = ErrorMessage, content_type = "application/json"),
