@@ -127,7 +127,7 @@ async fn post_user(
     ),
     request_body(content = NewUserDTO, description = "User to be updated", content_type = "application/json"),
     responses(
-        (status = 200, description = "User updated", body = UserDTO, content_type = "application/json"),
+        (status = 204, description = "User updated"),
         (status = 400, description = "Bad request", body = ErrorMessage, content_type = "application/json"),
         (status = 401, description = "Unauthorized", body = ErrorMessage, content_type = "application/json"),
         (status = 403, description = "Forbidden", body = ErrorMessage, content_type = "application/json"),
@@ -185,7 +185,7 @@ async fn change_password(
         ("id" = i32, Path, description = "User id"),
     ),
     responses(
-        (status = 200, description = "User updated", body = UserDTO, content_type = "application/json"),
+        (status = 204, description = "User updated"),
         (status = 400, description = "Bad request", body = ErrorMessage, content_type = "application/json"),
         (status = 401, description = "Unauthorized", body = ErrorMessage, content_type = "application/json"),
         (status = 403, description = "Forbidden", body = ErrorMessage, content_type = "application/json"),
@@ -219,7 +219,7 @@ async fn promote_user(
         ("id" = i32, Path, description = "User id"),
     ),
     responses(
-        (status = 200, description = "User updated", body = UserDTO, content_type = "application/json"),
+        (status = 204, description = "User updated"),
         (status = 400, description = "Bad request", body = ErrorMessage, content_type = "application/json"),
         (status = 401, description = "Unauthorized", body = ErrorMessage, content_type = "application/json"),
         (status = 403, description = "Forbidden", body = ErrorMessage, content_type = "application/json"),

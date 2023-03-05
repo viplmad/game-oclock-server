@@ -223,7 +223,7 @@ async fn post_platform_icon(
     ),
     request_body(content = NewPlatformDTO, description = "Platform to be updated", content_type = "application/json"),
     responses(
-        (status = 200, description = "Platform updated", body = PlatformDTO, content_type = "application/json"),
+        (status = 204, description = "Platform updated"),
         (status = 400, description = "Bad request", body = ErrorMessage, content_type = "application/json"),
         (status = 401, description = "Unauthorized", body = ErrorMessage, content_type = "application/json"),
         (status = 403, description = "Forbidden", body = ErrorMessage, content_type = "application/json"),

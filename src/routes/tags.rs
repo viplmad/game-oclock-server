@@ -131,7 +131,7 @@ async fn post_tag(
     ),
     request_body(content = NewTagDTO, description = "Tag to be updated", content_type = "application/json"),
     responses(
-        (status = 200, description = "Tag updated", body = TagDTO, content_type = "application/json"),
+        (status = 204, description = "Tag updated"),
         (status = 400, description = "Bad request", body = ErrorMessage, content_type = "application/json"),
         (status = 401, description = "Unauthorized", body = ErrorMessage, content_type = "application/json"),
         (status = 403, description = "Forbidden", body = ErrorMessage, content_type = "application/json"),

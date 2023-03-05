@@ -225,7 +225,7 @@ async fn post_game_cover(
     ),
     request_body(content = NewGameDTO, description = "Game to be updated", content_type = "application/json"),
     responses(
-        (status = 200, description = "Game updated", body = GameDTO, content_type = "application/json"),
+        (status = 204, description = "Game updated"),
         (status = 400, description = "Bad request", body = ErrorMessage, content_type = "application/json"),
         (status = 401, description = "Unauthorized", body = ErrorMessage, content_type = "application/json"),
         (status = 403, description = "Forbidden", body = ErrorMessage, content_type = "application/json"),
