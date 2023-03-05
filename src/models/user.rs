@@ -1,6 +1,6 @@
 use chrono::NaiveDateTime;
 use serde::{Deserialize, Serialize};
-use utoipa::ToSchema;
+use utoipa::{IntoParams, ToSchema};
 
 use super::{Merge, ModelInfo};
 
@@ -51,8 +51,8 @@ pub struct NewUserDTO {
     pub username: String,
 }
 
-#[derive(Deserialize, ToSchema)]
-pub struct NewPasswordDTO {
+#[derive(Deserialize, IntoParams)]
+pub struct PasswordQuery {
     pub password: String,
 }
 

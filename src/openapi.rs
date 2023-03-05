@@ -120,7 +120,6 @@ pub fn get_openapi() -> utoipa::openapi::OpenApi {
             models::NewTagDTO,
             models::UserDTO,
             models::NewUserDTO,
-            models::NewPasswordDTO,
             models::PasswordChangeDTO,
             models::TokenRequest,
             models::TokenResponse,
