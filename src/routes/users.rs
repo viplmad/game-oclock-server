@@ -2,7 +2,7 @@ use actix_web::{delete, get, post, put, web, Responder};
 use sqlx::PgPool;
 
 use crate::models::{
-    ItemId, LoggedUser, NewPasswordDTO, NewUserDTO, PasswordChangeDTO, QuicksearchQuery, SearchDTO,
+    ItemId, LoggedUser, NewUserDTO, PasswordChangeDTO, PasswordQuery, QuicksearchQuery, SearchDTO,
 };
 use crate::services::users_service;
 
@@ -89,8 +89,10 @@ async fn get_users(
     post,
     path = "/api/v1/users",
     tag = "Users",
+    params(
+        PasswordQuery,
+    ),
     request_body(content = NewUserDTO, description = "User to be created", content_type = "application/json"),
-    request_body(content = NewPasswordDTO, description = "Password to be used", content_type = "application/x-www-form-urlencoded"),
     responses(
         (status = 201, description = "User created", body = UserDTO, content_type = "application/json"),
         (status = 400, description = "Bad request", body = ErrorMessage, content_type = "application/json"),
@@ -106,15 +108,15 @@ async fn get_users(
 #[post("/users")]
 async fn post_user(
     pool: web::Data<PgPool>,
+    query: web::Query<PasswordQuery>,
     body: web::Json<NewUserDTO>,
-    form: web::Form<NewPasswordDTO>,
     logged_user: LoggedUser,
 ) -> impl Responder {
     if let Err(error) = require_admin(logged_user) {
         return error;
     }
 
-    let create_result = users_service::create_user(&pool, body.0, &form.0.password).await;
+    let create_result = users_service::create_user(&pool, body.0, &query.0.password).await;
     handle_create_result(create_result)
 }
 
