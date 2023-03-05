@@ -17,15 +17,12 @@ jobs:
     runs-on: ubuntu-latest
     steps:
 
-      - uses: actions/checkout@v3
+      - uses: actions/checkout@v3.3.0
 
       # Setup the rust environment
-      - uses: actions-rs/toolchain@v1
+      - uses: actions-rs/toolchain@v1.0.6
         with:
           profile: minimal
-          toolchain: nightly
-          components: rustfmt, clippy
-          override: true
 
       # Analyse
       - run: cargo clippy
@@ -36,14 +33,12 @@ jobs:
     runs-on: ubuntu-latest
     steps:
 
-      - uses: actions/checkout@v3
+      - uses: actions/checkout@v3.3.0
 
       # Setup the rust environment
-      - uses: actions-rs/toolchain@v1
+      - uses: actions-rs/toolchain@v1.0.6
         with:
-          toolchain: nightly
-          components: rustfmt, clippy
-          override: true
+          profile: minimal
 
       # Build
       - run: cargo build --release
