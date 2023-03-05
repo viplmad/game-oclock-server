@@ -8,7 +8,8 @@ use crate::repository::user_repository;
 use super::base::{
     create_merged, handle_action_result, handle_already_exists_result, handle_create_result,
     handle_get_list_paged_result, handle_get_result, handle_get_result_raw,
-    handle_not_found_result, handle_query_mapping, handle_update_result, update_merged,
+    handle_not_found_result, handle_query_mapping, handle_result, handle_update_result,
+    update_merged,
 };
 
 pub async fn get_user(pool: &PgPool, user_id: i32) -> Result<UserDTO, ApiErrors> {
@@ -92,7 +93,16 @@ pub async fn promote_user(pool: &PgPool, user_id: i32) -> Result<(), ApiErrors> 
 }
 
 pub async fn demote_user(pool: &PgPool, user_id: i32) -> Result<(), ApiErrors> {
-    // TODO Check not last with admin
+    // First check if there would be admins left
+    let exists_more_admins_result =
+        user_repository::exists_with_admin_except_id(pool, user_id).await;
+    let exists_more_admins = handle_result::<bool, UserDTO>(exists_more_admins_result)?;
+    if !exists_more_admins {
+        return Err(ApiErrors::InvalidParameter(String::from(
+            "Cannot demote only admin left",
+        )));
+    }
+
     change_user_admin(pool, user_id, false).await
 }
 

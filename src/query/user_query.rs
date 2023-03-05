@@ -128,6 +128,17 @@ pub fn exists_by_username_and_id_not(username: &str, id: i32) -> impl QueryState
     select
 }
 
+pub fn exists_by_admin_and_id_not(id: i32) -> impl QueryStatementWriter {
+    let mut select = Query::select();
+
+    from(&mut select);
+    add_id_field(&mut select);
+    select.and_where(Expr::col(UserIden::Admin).eq(true));
+    select.and_where(Expr::col(UserIden::Id).ne(id));
+
+    select
+}
+
 fn from(select: &mut SelectStatement) {
     select.from(UserIden::Table);
 }

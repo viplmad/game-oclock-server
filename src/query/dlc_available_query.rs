@@ -1,24 +1,32 @@
 use chrono::NaiveDate;
-use sea_query::{Alias, Expr, Query, QueryStatementWriter, SelectStatement};
+use sea_query::{Alias, Expr, Order, Query, QueryStatementWriter, SelectStatement};
 
 use crate::entities::{DLCAvailableIden, DLCIden, PlatformIden, QUERY_DATE_ALIAS};
 
 use super::{dlc_query, platform_query};
 
-pub fn select_all_dlcs_by_platform_id(user_id: i32, platform_id: i32) -> impl QueryStatementWriter {
+pub fn select_all_dlcs_by_platform_id_order_by_added_date(
+    user_id: i32,
+    platform_id: i32,
+) -> impl QueryStatementWriter {
     let mut select = dlc_query::select_all(user_id);
 
     join_dlc_available_by_platform_id(&mut select, platform_id);
     add_fields(&mut select);
+    add_order_by_added_date(&mut select);
 
     select
 }
 
-pub fn select_all_platforms_by_dlc_id(user_id: i32, dlc_id: i32) -> impl QueryStatementWriter {
+pub fn select_all_platforms_by_dlc_id_order_by_added_date(
+    user_id: i32,
+    dlc_id: i32,
+) -> impl QueryStatementWriter {
     let mut select = platform_query::select_all(user_id);
 
     join_dlc_available_by_dlc_id(&mut select, dlc_id);
     add_fields(&mut select);
+    add_order_by_added_date(&mut select);
 
     select
 }
@@ -113,5 +121,12 @@ fn add_fields(select: &mut SelectStatement) {
     select.expr_as(
         Expr::col((DLCAvailableIden::Table, DLCAvailableIden::AddedDate)),
         Alias::new(QUERY_DATE_ALIAS),
+    );
+}
+
+fn add_order_by_added_date(select: &mut SelectStatement) {
+    select.order_by(
+        (DLCAvailableIden::Table, DLCAvailableIden::AddedDate),
+        Order::Asc,
     );
 }
