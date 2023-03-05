@@ -1,11 +1,11 @@
 use chrono::NaiveDate;
-use sea_query::{Alias, Expr, Query, QueryStatementWriter, SelectStatement};
+use sea_query::{Alias, Expr, Order, Query, QueryStatementWriter, SelectStatement};
 
 use crate::entities::{GameAvailableIden, GameIden, PlatformIden, QUERY_DATE_ALIAS};
 
 use super::{game_query, platform_query};
 
-pub fn select_all_games_by_platform_id(
+pub fn select_all_games_by_platform_id_order_by_added_date(
     user_id: i32,
     platform_id: i32,
 ) -> impl QueryStatementWriter {
@@ -13,15 +13,20 @@ pub fn select_all_games_by_platform_id(
 
     join_game_available_by_platform_id(&mut select, platform_id);
     add_fields(&mut select);
+    add_order_by_added_date(&mut select);
 
     select
 }
 
-pub fn select_all_platforms_by_game_id(user_id: i32, game_id: i32) -> impl QueryStatementWriter {
+pub fn select_all_platforms_by_game_id_order_by_added_date(
+    user_id: i32,
+    game_id: i32,
+) -> impl QueryStatementWriter {
     let mut select = platform_query::select_all(user_id);
 
     join_game_available_by_game_id(&mut select, game_id);
     add_fields(&mut select);
+    add_order_by_added_date(&mut select);
 
     select
 }
@@ -116,5 +121,12 @@ fn add_fields(select: &mut SelectStatement) {
     select.expr_as(
         Expr::col((GameAvailableIden::Table, GameAvailableIden::AddedDate)),
         Alias::new(QUERY_DATE_ALIAS),
+    );
+}
+
+fn add_order_by_added_date(select: &mut SelectStatement) {
+    select.order_by(
+        (GameAvailableIden::Table, GameAvailableIden::AddedDate),
+        Order::Asc,
     );
 }

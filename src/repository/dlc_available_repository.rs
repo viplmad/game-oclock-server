@@ -12,7 +12,10 @@ pub async fn find_all_dlcs_with_platform(
     user_id: i32,
     platform_id: i32,
 ) -> Result<Vec<DLCWithDate>, RepositoryError> {
-    let query = dlc_available_query::select_all_dlcs_by_platform_id(user_id, platform_id);
+    let query = dlc_available_query::select_all_dlcs_by_platform_id_order_by_added_date(
+        user_id,
+        platform_id,
+    );
     fetch_all(pool, query).await
 }
 
@@ -21,7 +24,8 @@ pub async fn find_all_platforms_with_dlc(
     user_id: i32,
     dlc_id: i32,
 ) -> Result<Vec<PlatformWithDate>, RepositoryError> {
-    let query = dlc_available_query::select_all_platforms_by_dlc_id(user_id, dlc_id); // TODO order by date
+    let query =
+        dlc_available_query::select_all_platforms_by_dlc_id_order_by_added_date(user_id, dlc_id);
     fetch_all(pool, query).await
 }
 

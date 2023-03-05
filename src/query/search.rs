@@ -109,13 +109,10 @@ fn apply_search_internal<I: 'static + TableIden + Clone + Copy>(
     }
 
     let size = search.size.unwrap_or(DEFAULT_PAGE_SIZE);
+    select.limit(size);
+
     let page = search.page.unwrap_or(INITIAL_PAGE);
-    if size > 0 {
-        select.limit(size);
-        if page > 0 {
-            select.offset(page * size);
-        }
-    }
+    select.offset(page * size);
 
     Ok(SearchQuery {
         query: select,

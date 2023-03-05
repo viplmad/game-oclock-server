@@ -12,7 +12,10 @@ pub async fn find_all_games_with_platform(
     user_id: i32,
     platform_id: i32,
 ) -> Result<Vec<GameWithDate>, RepositoryError> {
-    let query = game_available_query::select_all_games_by_platform_id(user_id, platform_id);
+    let query = game_available_query::select_all_games_by_platform_id_order_by_added_date(
+        user_id,
+        platform_id,
+    );
     fetch_all(pool, query).await
 }
 
@@ -21,7 +24,8 @@ pub async fn find_all_platforms_with_game(
     user_id: i32,
     game_id: i32,
 ) -> Result<Vec<PlatformWithDate>, RepositoryError> {
-    let query = game_available_query::select_all_platforms_by_game_id(user_id, game_id);
+    let query =
+        game_available_query::select_all_platforms_by_game_id_order_by_added_date(user_id, game_id);
     fetch_all(pool, query).await
 }
 
