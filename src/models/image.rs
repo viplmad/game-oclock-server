@@ -1,5 +1,7 @@
 use utoipa::ToSchema;
 
 #[derive(ToSchema)]
-#[schema(format = Binary)]
-pub struct Image(String);
+pub struct Image {
+    #[schema(value_type = String, format = Binary)]
+    pub file: String,
+}
