@@ -304,7 +304,7 @@ async fn put_platform_icon(
         ("bearer_token" = [])
     )
 )]
-#[delete("/platform/{id}")]
+#[delete("/platforms/{id}")]
 async fn delete_platform(
     pool: web::Data<PgPool>,
     path: web::Path<ItemId>,
