@@ -264,3 +264,7 @@ pub(super) fn build_image_filename(
     let name = name.unwrap_or_default();
     format!("{user_id}-{id}-{name}{suffix}")
 }
+
+pub(super) fn extract_image_name(filename: &str) -> &str {
+    filename.split_once('.').unwrap().0 // TODO Fix unwrap
+}

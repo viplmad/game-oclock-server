@@ -1,5 +1,3 @@
-use std::fs::File;
-
 use sqlx::PgPool;
 
 use crate::errors::ApiErrors;
@@ -8,7 +6,7 @@ use crate::models::{
 };
 use crate::providers::ImageClientProvider;
 
-use super::base::{build_image_filename, handle_image_client_provider};
+use super::base::{build_image_filename, extract_image_name, handle_image_client_provider};
 use super::games_service;
 
 const GAME_FOLDER: &str = "Game";
@@ -89,16 +87,15 @@ pub async fn set_game_cover(
     image_client_provider: &ImageClientProvider,
     user_id: i32,
     game_id: i32,
-    file_result: Result<File, ApiErrors>,
+    file_path: &str,
 ) -> Result<(), ApiErrors> {
     let image_client = handle_image_client_provider(image_client_provider)?;
-    let file = file_result?;
 
     games_service::exists_game(pool, user_id, game_id).await?;
 
     let format_filename = build_game_cover_filename(user_id, game_id, Option::<String>::None);
     let filename = image_client
-        .upload_image(file, GAME_FOLDER, &format_filename)
+        .upload_image(file_path, GAME_FOLDER, &format_filename)
         .await
         .map_err(|_| ApiErrors::UnknownError(String::from("Image upload error.")))?;
 
@@ -134,9 +131,10 @@ pub async fn delete_game_cover(
     let image_client = handle_image_client_provider(image_client_provider)?;
 
     let filename = games_service::get_game_cover_filename(pool, user_id, game_id).await?;
+    let name = extract_image_name(&filename);
 
     image_client
-        .delete_image(GAME_FOLDER, &filename)
+        .delete_image(GAME_FOLDER, name)
         .await
         .map_err(|_| ApiErrors::UnknownError(String::from("Image delete error.")))?;
 

@@ -1,7 +1,5 @@
-use std::fs::File;
-
 use chrono::Utc;
-use cloudinary::result::CloudinaryResult;
+use cloudinary::result::{CloudinaryDeleteResult, CloudinaryUploadResult};
 use cloudinary::upload::UploadOptions;
 use cloudinary::Cloudinary;
 use futures::future::BoxFuture;
@@ -32,7 +30,7 @@ impl ImageClient for CloudinaryClient {
 
     async fn upload_image(
         &self,
-        file: File,
+        file_path: &str,
         folder: &str,
         filename: &str,
     ) -> Result<String, ImageClientError> {
@@ -45,7 +43,7 @@ impl ImageClient for CloudinaryClient {
 
         let result = self
             .client
-            .upload_image(file, filename, &options)
+            .upload_image(file_path, &options)
             .await
             .map_err(|err| {
                 log::error!("{}", err.0);
@@ -53,8 +51,8 @@ impl ImageClient for CloudinaryClient {
             })?;
 
         match result {
-            CloudinaryResult::Succes(res) => get_filename(res),
-            CloudinaryResult::Error(err) => {
+            CloudinaryUploadResult::Succes(res) => get_filename(res),
+            CloudinaryUploadResult::Error(err) => {
                 log::info!("{}", err.error.message);
                 Err(ImageClientError())
             }
@@ -82,15 +80,15 @@ impl ImageClient for CloudinaryClient {
             })?;
 
         match result {
-            CloudinaryResult::Succes(res) => get_filename(res),
-            CloudinaryResult::Error(err) => {
+            CloudinaryUploadResult::Succes(res) => get_filename(res),
+            CloudinaryUploadResult::Error(err) => {
                 log::info!("{}", err.error.message);
                 Err(ImageClientError())
             }
         }
     }
 
-    async fn delete_image(&self, folder: &str, filename: &str) -> Result<String, ImageClientError> {
+    async fn delete_image(&self, folder: &str, filename: &str) -> Result<(), ImageClientError> {
         let public_id = format!("{folder}/{filename}");
 
         let result = self.client.delete_image(&public_id).await.map_err(|err| {
@@ -99,8 +97,8 @@ impl ImageClient for CloudinaryClient {
         })?;
 
         match result {
-            CloudinaryResult::Succes(res) => get_filename(res),
-            CloudinaryResult::Error(err) => {
+            CloudinaryDeleteResult::Succes(_) => Ok(()),
+            CloudinaryDeleteResult::Error(err) => {
                 log::info!("{}", err.error.message);
                 Err(ImageClientError())
             }
@@ -157,10 +155,12 @@ impl CloudinaryClientBuilder {
     }
 }
 
-fn get_filename(result: Box<cloudinary::result::Response>) -> Result<String, ImageClientError> {
+fn get_filename(
+    result: Box<cloudinary::result::UploadResponse>,
+) -> Result<String, ImageClientError> {
     if let Some(value) = result.public_id.split('/').last() {
         let format = result.format;
-        return Ok(format!("{value}{format}"));
+        return Ok(format!("{value}.{format}"));
     }
 
     Err(ImageClientError())

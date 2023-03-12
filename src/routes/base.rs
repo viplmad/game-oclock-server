@@ -40,6 +40,12 @@ pub(super) fn handle_action_result(service_result: Result<(), impl ToError>) -> 
     }
 }
 
+pub(super) fn handle_multipart_result(
+    multipart_result: Result<String, impl ToError>,
+) -> Result<String, HttpResponse> {
+    multipart_result.map_err(|err| err.to_error())
+}
+
 pub(super) fn require_admin(logged_user: LoggedUser) -> Result<(), HttpResponse> {
     if !logged_user.admin {
         return Err(forbidden_error());
