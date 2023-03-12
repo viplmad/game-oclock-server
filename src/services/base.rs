@@ -265,6 +265,9 @@ pub(super) fn build_image_filename(
     format!("{user_id}-{id}-{name}{suffix}")
 }
 
-pub(super) fn extract_image_name(filename: &str) -> &str {
-    filename.split_once('.').unwrap().0 // TODO Fix unwrap
+pub(super) fn extract_image_name(filename: &str) -> Result<String, ApiErrors> {
+    filename
+        .split_once('.')
+        .ok_or_else(|| ApiErrors::UnknownError(String::from("Error extracting name form filename")))
+        .map(|split| String::from(split.0))
 }

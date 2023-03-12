@@ -73,11 +73,12 @@ pub async fn rename_platform_icon(
 
     let old_filename =
         platforms_service::get_platform_icon_filename(pool, user_id, platform_id).await?;
+    let old_name = extract_image_name(&old_filename)?;
 
     let format_filename =
         build_platform_icon_filename(user_id, platform_id, Some(String::from(new_name)));
     let filename = image_client
-        .rename_image(PLATFORM_FOLDER, &old_filename, &format_filename)
+        .rename_image(PLATFORM_FOLDER, &old_name, &format_filename)
         .await
         .map_err(|_| ApiErrors::UnknownError(String::from("Image rename error.")))?;
 
@@ -94,10 +95,10 @@ pub async fn delete_platform_icon(
 
     let filename =
         platforms_service::get_platform_icon_filename(pool, user_id, platform_id).await?;
-    let name = extract_image_name(&filename);
+    let name = extract_image_name(&filename)?;
 
     image_client
-        .delete_image(PLATFORM_FOLDER, name)
+        .delete_image(PLATFORM_FOLDER, &name)
         .await
         .map_err(|_| ApiErrors::UnknownError(String::from("Image delete error.")))?;
 
