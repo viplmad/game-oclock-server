@@ -84,10 +84,11 @@ pub async fn rename_dlc_cover(
     let image_client = handle_image_client_provider(image_client_provider)?;
 
     let old_filename = dlcs_service::get_dlc_cover_filename(pool, user_id, dlc_id).await?;
+    let old_name = extract_image_name(&old_filename)?;
 
     let format_filename = build_dlc_cover_filename(user_id, dlc_id, Some(String::from(new_name)));
     let filename = image_client
-        .rename_image(DLC_FOLDER, &old_filename, &format_filename)
+        .rename_image(DLC_FOLDER, &old_name, &format_filename)
         .await
         .map_err(|_| ApiErrors::UnknownError(String::from("Image rename error.")))?;
 
@@ -103,10 +104,10 @@ pub async fn delete_dlc_cover(
     let image_client = handle_image_client_provider(image_client_provider)?;
 
     let filename = dlcs_service::get_dlc_cover_filename(pool, user_id, dlc_id).await?;
-    let name = extract_image_name(&filename);
+    let name = extract_image_name(&filename)?;
 
     image_client
-        .delete_image(DLC_FOLDER, name)
+        .delete_image(DLC_FOLDER, &name)
         .await
         .map_err(|_| ApiErrors::UnknownError(String::from("Image delete error.")))?;
 

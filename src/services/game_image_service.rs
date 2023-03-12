@@ -112,10 +112,11 @@ pub async fn rename_game_cover(
     let image_client = handle_image_client_provider(image_client_provider)?;
 
     let old_filename = games_service::get_game_cover_filename(pool, user_id, game_id).await?;
+    let old_name = extract_image_name(&old_filename)?;
 
     let format_filename = build_game_cover_filename(user_id, game_id, Some(String::from(new_name)));
     let filename = image_client
-        .rename_image(GAME_FOLDER, &old_filename, &format_filename)
+        .rename_image(GAME_FOLDER, &old_name, &format_filename)
         .await
         .map_err(|_| ApiErrors::UnknownError(String::from("Image rename error.")))?;
 
@@ -131,10 +132,10 @@ pub async fn delete_game_cover(
     let image_client = handle_image_client_provider(image_client_provider)?;
 
     let filename = games_service::get_game_cover_filename(pool, user_id, game_id).await?;
-    let name = extract_image_name(&filename);
+    let name = extract_image_name(&filename)?;
 
     image_client
-        .delete_image(GAME_FOLDER, name)
+        .delete_image(GAME_FOLDER, &name)
         .await
         .map_err(|_| ApiErrors::UnknownError(String::from("Image delete error.")))?;
 
