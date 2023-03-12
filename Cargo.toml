@@ -39,5 +39,5 @@ log = { version = "^0", default-features = false }
 env_logger = { version = "^0", default-features = false }
 
 # OpenAPI
-utoipa = { version = "^2", default-features = false, features = [ "actix_extras", "chrono" ] }
-utoipa-swagger-ui = { version = "^2", default-features = false, features = [ "actix-web" ] }
+utoipa = { version = "^3", default-features = false, features = [ "actix_extras", "chrono" ] }
+utoipa-swagger-ui = { version = "^3", default-features = false, features = [ "actix-web" ] }
