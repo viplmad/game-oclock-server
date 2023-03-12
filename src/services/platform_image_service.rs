@@ -1,12 +1,10 @@
-use std::fs::File;
-
 use sqlx::PgPool;
 
 use crate::errors::ApiErrors;
 use crate::models::{PlatformAvailableDTO, PlatformDTO};
 use crate::providers::ImageClientProvider;
 
-use super::base::{build_image_filename, handle_image_client_provider};
+use super::base::{build_image_filename, extract_image_name, handle_image_client_provider};
 use super::platforms_service;
 
 const PLATFORM_FOLDER: &str = "Platform";
@@ -48,17 +46,16 @@ pub async fn set_platform_icon(
     image_client_provider: &ImageClientProvider,
     user_id: i32,
     platform_id: i32,
-    file_result: Result<File, ApiErrors>,
+    file_path: &str,
 ) -> Result<(), ApiErrors> {
     let image_client = handle_image_client_provider(image_client_provider)?;
-    let file = file_result?;
 
     platforms_service::exists_platform(pool, user_id, platform_id).await?;
 
     let format_filename =
         build_platform_icon_filename(user_id, platform_id, Option::<String>::None);
     let filename = image_client
-        .upload_image(file, PLATFORM_FOLDER, &format_filename)
+        .upload_image(file_path, PLATFORM_FOLDER, &format_filename)
         .await
         .map_err(|_| ApiErrors::UnknownError(String::from("Image upload error.")))?;
 
@@ -97,9 +94,10 @@ pub async fn delete_platform_icon(
 
     let filename =
         platforms_service::get_platform_icon_filename(pool, user_id, platform_id).await?;
+    let name = extract_image_name(&filename);
 
     image_client
-        .delete_image(PLATFORM_FOLDER, &filename)
+        .delete_image(PLATFORM_FOLDER, name)
         .await
         .map_err(|_| ApiErrors::UnknownError(String::from("Image delete error.")))?;
 

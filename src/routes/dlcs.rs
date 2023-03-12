@@ -9,7 +9,7 @@ use crate::services::{dlc_available_service, dlc_image_service, dlcs_service, ga
 
 use super::base::{
     handle_action_result, handle_create_result, handle_delete_result, handle_get_result,
-    handle_update_result, populate_get_page_result, populate_get_result,
+    handle_multipart_result, handle_update_result, populate_get_page_result, populate_get_result,
 };
 
 #[utoipa::path(
@@ -234,15 +234,24 @@ async fn post_dlc_cover(
     logged_user: LoggedUser,
 ) -> impl Responder {
     let ItemId(id) = path.into_inner();
-    let file_result = crate::multipart_utils::get_multipart_file(body).await;
+
+    let file_path_result = crate::multipart_utils::get_multipart_file_path(body).await;
+    let file_path = match handle_multipart_result(file_path_result) {
+        Ok(res) => res,
+        Err(err) => return err,
+    };
+
     let upload_result = dlc_image_service::set_dlc_cover(
         &pool,
         &image_client_provider,
         logged_user.id,
         id,
-        file_result,
+        &file_path,
     )
     .await;
+
+    crate::multipart_utils::delete_temp_path(&file_path).await;
+
     handle_action_result(upload_result)
 }
 
@@ -437,7 +446,7 @@ async fn delete_dlc(
         ("bearer_token" = [])
     )
 )]
-#[put("/dlcs/{id}/cover")]
+#[delete("/dlcs/{id}/cover")]
 async fn delete_dlc_cover(
     pool: web::Data<PgPool>,
     image_client_provider: web::Data<ImageClientProvider>,

@@ -14,7 +14,7 @@ iso8601 = { version = "^0", default-features = false }
 actix-web-httpauth = { version = "^0", default-features = false }
 jsonwebtoken = { version = "^8", default-features = false }
 base64 = { version = "^0.13", default-features = false }
-uuid = { version = "^1", default-features = false, features = [ "v4" ] }
+uuid = { version = "^1", default-features = false, features = [ "v4", "v7" ] }
 bcrypt = { version = "^0", default-features = false, features = [ "std" ] }
 
 # TLS
