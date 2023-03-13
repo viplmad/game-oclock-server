@@ -53,7 +53,7 @@ pub fn validate_token(
 }
 
 pub fn generate_token_response(
-    user_id: i32,
+    user_id: &str,
     encoding_key: &EncodingKey,
 ) -> Result<TokenResponse, TokenErrors> {
     let access_token_claims = create_access_token_claims(user_id);
@@ -71,11 +71,11 @@ pub fn generate_token_response(
     })
 }
 
-fn create_access_token_claims(user_id: i32) -> UserClaims {
+fn create_access_token_claims(user_id: &str) -> UserClaims {
     create_token_claims(user_id, ONE_DAY_IN_SECONDS, None)
 }
 
-fn create_refresh_token_claims(user_id: i32, access_token_id: &str) -> UserClaims {
+fn create_refresh_token_claims(user_id: &str, access_token_id: &str) -> UserClaims {
     create_token_claims(
         user_id,
         ONE_WEEK_IN_SECONDS,
@@ -88,7 +88,7 @@ fn create_token_id() -> String {
 }
 
 fn create_token_claims(
-    user_id: i32,
+    user_id: &str,
     expiry_seconds: i64,
     access_token_id: Option<String>,
 ) -> UserClaims {

@@ -4,9 +4,9 @@ use utoipa::ToSchema;
 
 use super::{GameStatus, Merge, ModelInfo};
 
-#[derive(Serialize, ToSchema)]
+#[derive(Default, Serialize, ToSchema)]
 pub struct GameDTO {
-    pub id: i32,
+    pub id: String,
     pub name: String,
     pub edition: String,
     #[serde(skip_serializing_if = "Option::is_none")]
@@ -25,27 +25,6 @@ pub struct GameDTO {
     pub save_folder: String,
     pub screenshot_folder: String,
     pub backup: bool,
-}
-
-impl Default for GameDTO {
-    fn default() -> Self {
-        Self {
-            id: -1,
-            name: String::default(),
-            edition: String::default(),
-            release_year: None,
-            cover_filename: None,
-            cover_url: None,
-            added_datetime: NaiveDateTime::default(),
-            updated_datetime: NaiveDateTime::default(),
-            status: GameStatus::default(),
-            rating: 0,
-            notes: String::default(),
-            save_folder: String::default(),
-            screenshot_folder: String::default(),
-            backup: false,
-        }
-    }
 }
 
 impl Merge<NewGameDTO> for GameDTO {
@@ -90,7 +69,7 @@ pub struct NewGameDTO {
 
 #[derive(Serialize, ToSchema)]
 pub struct GameAvailableDTO {
-    pub id: i32,
+    pub id: String,
     pub name: String,
     pub edition: String,
     #[serde(skip_serializing_if = "Option::is_none")]

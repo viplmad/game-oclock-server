@@ -6,8 +6,8 @@ use crate::entities::{GameAvailableIden, GameIden, PlatformIden, QUERY_DATE_ALIA
 use super::{game_query, platform_query};
 
 pub fn select_all_games_by_platform_id_order_by_added_date(
-    user_id: i32,
-    platform_id: i32,
+    user_id: &str,
+    platform_id: &str,
 ) -> impl QueryStatementWriter {
     let mut select = game_query::select_all(user_id);
 
@@ -19,8 +19,8 @@ pub fn select_all_games_by_platform_id_order_by_added_date(
 }
 
 pub fn select_all_platforms_by_game_id_order_by_added_date(
-    user_id: i32,
-    game_id: i32,
+    user_id: &str,
+    game_id: &str,
 ) -> impl QueryStatementWriter {
     let mut select = platform_query::select_all(user_id);
 
@@ -32,9 +32,9 @@ pub fn select_all_platforms_by_game_id_order_by_added_date(
 }
 
 pub fn insert(
-    user_id: i32,
-    game_id: i32,
-    platform_id: i32,
+    user_id: &str,
+    game_id: &str,
+    platform_id: &str,
     added_date: NaiveDate,
 ) -> impl QueryStatementWriter {
     let mut insert = Query::insert();
@@ -57,7 +57,7 @@ pub fn insert(
     insert
 }
 
-pub fn delete_by_id(user_id: i32, game_id: i32, platform_id: i32) -> impl QueryStatementWriter {
+pub fn delete_by_id(user_id: &str, game_id: &str, platform_id: &str) -> impl QueryStatementWriter {
     let mut delete = Query::delete();
 
     delete
@@ -69,7 +69,7 @@ pub fn delete_by_id(user_id: i32, game_id: i32, platform_id: i32) -> impl QueryS
     delete
 }
 
-pub fn exists_by_id(user_id: i32, game_id: i32, platform_id: i32) -> impl QueryStatementWriter {
+pub fn exists_by_id(user_id: &str, game_id: &str, platform_id: &str) -> impl QueryStatementWriter {
     let mut select = Query::select();
 
     from_and_where_user_id(&mut select, user_id);
@@ -81,7 +81,7 @@ pub fn exists_by_id(user_id: i32, game_id: i32, platform_id: i32) -> impl QueryS
     select
 }
 
-fn join_game_available_by_platform_id(select: &mut SelectStatement, platform_id: i32) {
+fn join_game_available_by_platform_id(select: &mut SelectStatement, platform_id: &str) {
     select
         .left_join(
             GameAvailableIden::Table,
@@ -97,7 +97,7 @@ fn join_game_available_by_platform_id(select: &mut SelectStatement, platform_id:
         );
 }
 
-fn join_game_available_by_game_id(select: &mut SelectStatement, game_id: i32) {
+fn join_game_available_by_game_id(select: &mut SelectStatement, game_id: &str) {
     select
         .left_join(
             GameAvailableIden::Table,
@@ -111,7 +111,7 @@ fn join_game_available_by_game_id(select: &mut SelectStatement, game_id: i32) {
         .and_where(Expr::col((GameAvailableIden::Table, GameAvailableIden::GameId)).eq(game_id));
 }
 
-fn from_and_where_user_id(select: &mut SelectStatement, user_id: i32) {
+fn from_and_where_user_id(select: &mut SelectStatement, user_id: &str) {
     select
         .from(GameAvailableIden::Table)
         .and_where(Expr::col((GameAvailableIden::Table, GameAvailableIden::UserId)).eq(user_id));

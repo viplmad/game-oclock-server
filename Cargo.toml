@@ -5,7 +5,7 @@ edition = "2021"
 
 [dependencies]
 actix-web = { version = "^4", default-features = false, features = [ "rustls" ] }
-sqlx = { version = "^0", default-features = false, features = [ "macros", "migrate", "runtime-actix-rustls", "postgres", "chrono" ] }
+sqlx = { version = "^0", default-features = false, features = [ "macros", "migrate", "runtime-actix-rustls", "postgres", "chrono", "uuid" ] }
 sea-query = { version = "^0", default-features = false, features = [ "derive", "backend-postgres", "with-chrono" ] }
 chrono = { version = "^0", default-features = false, features = [ "serde" ] }
 iso8601 = { version = "^0", default-features = false }
@@ -14,7 +14,7 @@ iso8601 = { version = "^0", default-features = false }
 actix-web-httpauth = { version = "^0", default-features = false }
 jsonwebtoken = { version = "^8", default-features = false }
 base64 = { version = "^0.13", default-features = false }
-uuid = { version = "^1", default-features = false, features = [ "v4", "v7" ] }
+uuid = { version = "^1", default-features = false, features = [ "v4", "v7", "std" ] }
 bcrypt = { version = "^0", default-features = false, features = [ "std" ] }
 
 # TLS

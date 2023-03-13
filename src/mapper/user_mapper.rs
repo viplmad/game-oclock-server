@@ -1,10 +1,12 @@
+use sqlx::types::Uuid;
+
 use crate::entities::User;
 use crate::models::UserDTO;
 
 impl From<User> for UserDTO {
     fn from(user: User) -> Self {
         Self {
-            id: user.id,
+            id: user.id.to_string(),
             username: user.username,
             admin: user.admin,
             added_datetime: user.added_datetime,
@@ -16,7 +18,7 @@ impl From<User> for UserDTO {
 impl From<UserDTO> for User {
     fn from(user: UserDTO) -> Self {
         Self {
-            id: user.id,
+            id: Uuid::parse_str(&user.id).expect("Id was not valid Uuid"),
             username: user.username,
             password: String::default(),
             admin: user.admin,

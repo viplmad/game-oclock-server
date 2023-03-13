@@ -6,7 +6,7 @@ use crate::errors::SearchErrors;
 
 use super::{dlc_query, search::apply_search};
 
-pub fn select_max_by_user_id_and_dlc_id(user_id: i32, dlc_id: i32) -> impl QueryStatementWriter {
+pub fn select_max_by_user_id_and_dlc_id(user_id: &str, dlc_id: &str) -> impl QueryStatementWriter {
     let mut select = Query::select();
 
     from_and_where_user_id_and_dlc_id(&mut select, user_id, dlc_id);
@@ -15,7 +15,7 @@ pub fn select_max_by_user_id_and_dlc_id(user_id: i32, dlc_id: i32) -> impl Query
     select
 }
 
-pub fn select_all_by_user_id_and_dlc_id(user_id: i32, dlc_id: i32) -> SelectStatement {
+pub fn select_all_by_user_id_and_dlc_id(user_id: &str, dlc_id: &str) -> SelectStatement {
     let mut select = Query::select();
 
     from_and_where_user_id_and_dlc_id(&mut select, user_id, dlc_id);
@@ -25,7 +25,7 @@ pub fn select_all_by_user_id_and_dlc_id(user_id: i32, dlc_id: i32) -> SelectStat
 }
 
 fn select_all_dlc_with_finish_by_date_gte_and_date_lte(
-    user_id: i32,
+    user_id: &str,
     start_date: Option<NaiveDate>,
     end_date: Option<NaiveDate>,
 ) -> SelectStatement {
@@ -45,7 +45,7 @@ fn select_all_dlc_with_finish_by_date_gte_and_date_lte(
 }
 
 pub fn select_all_first_dlc_with_finish_with_search_by_date_gte_and_date_lte_order_by_date_asc(
-    user_id: i32,
+    user_id: &str,
     start_date: Option<NaiveDate>,
     end_date: Option<NaiveDate>,
     mut search: DLCSearch,
@@ -68,7 +68,7 @@ pub fn select_all_first_dlc_with_finish_with_search_by_date_gte_and_date_lte_ord
 }
 
 pub fn select_all_last_dlc_with_finish_with_search_by_date_gte_and_date_lte_order_by_date_desc(
-    user_id: i32,
+    user_id: &str,
     start_date: Option<NaiveDate>,
     end_date: Option<NaiveDate>,
     mut search: DLCSearch,
@@ -90,7 +90,7 @@ pub fn select_all_last_dlc_with_finish_with_search_by_date_gte_and_date_lte_orde
     apply_search(select, search)
 }
 
-pub fn insert(user_id: i32, dlc_id: i32, date: NaiveDate) -> impl QueryStatementWriter {
+pub fn insert(user_id: &str, dlc_id: &str, date: NaiveDate) -> impl QueryStatementWriter {
     let mut insert = Query::insert();
 
     insert
@@ -105,7 +105,7 @@ pub fn insert(user_id: i32, dlc_id: i32, date: NaiveDate) -> impl QueryStatement
     insert
 }
 
-pub fn delete_by_id(user_id: i32, dlc_id: i32, date: NaiveDate) -> impl QueryStatementWriter {
+pub fn delete_by_id(user_id: &str, dlc_id: &str, date: NaiveDate) -> impl QueryStatementWriter {
     let mut delete = Query::delete();
 
     delete
@@ -117,7 +117,7 @@ pub fn delete_by_id(user_id: i32, dlc_id: i32, date: NaiveDate) -> impl QuerySta
     delete
 }
 
-pub fn exists_by_id(user_id: i32, dlc_id: i32, date: NaiveDate) -> impl QueryStatementWriter {
+pub fn exists_by_id(user_id: &str, dlc_id: &str, date: NaiveDate) -> impl QueryStatementWriter {
     let mut select = Query::select();
 
     from_and_where_user_id_and_dlc_id(&mut select, user_id, dlc_id);
@@ -140,7 +140,7 @@ fn join_dlc_finish(select: &mut SelectStatement) {
     );
 }
 
-fn from_and_where_user_id_and_dlc_id(select: &mut SelectStatement, user_id: i32, dlc_id: i32) {
+fn from_and_where_user_id_and_dlc_id(select: &mut SelectStatement, user_id: &str, dlc_id: &str) {
     select
         .from(DLCFinishIden::Table)
         .and_where(Expr::col((DLCFinishIden::Table, DLCFinishIden::UserId)).eq(user_id))

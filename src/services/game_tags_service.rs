@@ -12,8 +12,8 @@ use super::{games_service, tags_service};
 
 pub async fn get_tag_games(
     pool: &PgPool,
-    user_id: i32,
-    tag_id: i32,
+    user_id: &str,
+    tag_id: &str,
 ) -> Result<Vec<GameDTO>, ApiErrors> {
     tags_service::exists_tag(pool, user_id, tag_id).await?;
 
@@ -23,8 +23,8 @@ pub async fn get_tag_games(
 
 pub async fn get_game_tags(
     pool: &PgPool,
-    user_id: i32,
-    game_id: i32,
+    user_id: &str,
+    game_id: &str,
 ) -> Result<Vec<TagDTO>, ApiErrors> {
     games_service::exists_game(pool, user_id, game_id).await?;
 
@@ -34,9 +34,9 @@ pub async fn get_game_tags(
 
 pub async fn create_game_tag(
     pool: &PgPool,
-    user_id: i32,
-    game_id: i32,
-    tag_id: i32,
+    user_id: &str,
+    game_id: &str,
+    tag_id: &str,
 ) -> Result<(), ApiErrors> {
     games_service::exists_game(pool, user_id, game_id).await?;
     tags_service::exists_tag(pool, user_id, tag_id).await?;
@@ -50,9 +50,9 @@ pub async fn create_game_tag(
 
 pub async fn delete_game_tag(
     pool: &PgPool,
-    user_id: i32,
-    game_id: i32,
-    tag_id: i32,
+    user_id: &str,
+    game_id: &str,
+    tag_id: &str,
 ) -> Result<(), ApiErrors> {
     exists_game_tag(pool, user_id, game_id, tag_id).await?;
 
@@ -62,9 +62,9 @@ pub async fn delete_game_tag(
 
 pub async fn exists_game_tag(
     pool: &PgPool,
-    user_id: i32,
-    game_id: i32,
-    tag_id: i32,
+    user_id: &str,
+    game_id: &str,
+    tag_id: &str,
 ) -> Result<(), ApiErrors> {
     let exists_result = game_tag_repository::exists_by_id(pool, user_id, game_id, tag_id).await;
     handle_not_found_result::<GameTag>(exists_result)

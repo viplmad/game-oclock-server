@@ -6,10 +6,10 @@ use super::{ModelInfo, DLCDTO};
 
 #[derive(Serialize, ToSchema)]
 pub struct DLCWithFinishDTO {
-    pub id: i32,
+    pub id: String,
     pub name: String,
     #[serde(skip_serializing_if = "Option::is_none")]
-    pub base_game_id: Option<i32>,
+    pub base_game_id: Option<String>,
     #[serde(skip_serializing_if = "Option::is_none")]
     pub release_year: Option<i32>,
     #[serde(skip_serializing_if = "Option::is_none")]

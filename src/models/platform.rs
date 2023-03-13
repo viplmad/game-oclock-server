@@ -4,9 +4,9 @@ use utoipa::ToSchema;
 
 use super::{Merge, ModelInfo, PlatformType};
 
-#[derive(Serialize, ToSchema)]
+#[derive(Default, Serialize, ToSchema)]
 pub struct PlatformDTO {
-    pub id: i32,
+    pub id: String,
     pub name: String,
     // Fix to use type reserved name
     #[serde(rename = "type", skip_serializing_if = "Option::is_none")]
@@ -19,20 +19,6 @@ pub struct PlatformDTO {
     pub added_datetime: NaiveDateTime,
     #[schema(value_type = String, format = DateTime)]
     pub updated_datetime: NaiveDateTime,
-}
-
-impl Default for PlatformDTO {
-    fn default() -> Self {
-        Self {
-            id: -1,
-            name: String::default(),
-            ptype: None,
-            icon_filename: None,
-            icon_url: None,
-            added_datetime: NaiveDateTime::default(),
-            updated_datetime: NaiveDateTime::default(),
-        }
-    }
 }
 
 impl Merge<NewPlatformDTO> for PlatformDTO {
@@ -65,7 +51,7 @@ pub struct NewPlatformDTO {
 
 #[derive(Serialize, ToSchema)]
 pub struct PlatformAvailableDTO {
-    pub id: i32,
+    pub id: String,
     pub name: String,
     // Fix to use type reserved name
     #[serde(rename = "type", skip_serializing_if = "Option::is_none")]

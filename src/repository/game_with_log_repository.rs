@@ -9,7 +9,7 @@ use super::base::{fetch_all, fetch_all_search};
 
 pub async fn search_first_by_datetime_between(
     pool: &PgPool,
-    user_id: i32,
+    user_id: &str,
     start_datetime: Option<NaiveDateTime>,
     end_datetime: Option<NaiveDateTime>,
     search: GameSearch,
@@ -20,7 +20,7 @@ pub async fn search_first_by_datetime_between(
 
 pub async fn search_last_by_datetime_between(
     pool: &PgPool,
-    user_id: i32,
+    user_id: &str,
     start_datetime: Option<NaiveDateTime>,
     end_datetime: Option<NaiveDateTime>,
     search: GameSearch,
@@ -31,7 +31,7 @@ pub async fn search_last_by_datetime_between(
 
 pub async fn find_all_by_datetime_between(
     pool: &PgPool,
-    user_id: i32,
+    user_id: &str,
     start_datetime: NaiveDateTime,
     end_datetime: NaiveDateTime,
 ) -> Result<Vec<GameWithLog>, RepositoryError> {

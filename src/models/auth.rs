@@ -52,12 +52,12 @@ impl UserClaims {
         !self.is_access()
     }
 
-    pub fn sub_as_user_id(&self) -> i32 {
+    pub fn sub_as_user_id(&self) -> String {
         self.sub.parse().unwrap()
     }
 }
 
 pub struct LoggedUser {
-    pub id: i32,
-    pub admin: bool,
+    pub id: String,
+    pub admin: bool, // TODO get on demand
 }

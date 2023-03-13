@@ -17,7 +17,7 @@ use super::base::{
     path = "/api/v1/dlcs/{id}",
     tag = "DLCs",
     params(
-        ("id" = i32, Path, description = "DLC id"),
+        ("id" = String, Path, description = "DLC id"),
     ),
     responses(
         (status = 200, description = "DLC obtained", body = DLCDTO, content_type = "application/json"),
@@ -38,7 +38,7 @@ async fn get_dlc(
     logged_user: LoggedUser,
 ) -> impl Responder {
     let ItemId(id) = path.into_inner();
-    let mut get_result = dlcs_service::get_dlc(&pool, logged_user.id, id).await;
+    let mut get_result = dlcs_service::get_dlc(&pool, &logged_user.id, &id).await;
     populate_get_result(&mut get_result, |dlc| {
         dlc_image_service::populate_dlc_cover(&image_client_provider, dlc)
     });
@@ -50,7 +50,7 @@ async fn get_dlc(
     path = "/api/v1/dlcs/{id}/base-game",
     tag = "DLCs",
     params(
-        ("id" = i32, Path, description = "DLC id"),
+        ("id" = String, Path, description = "DLC id"),
     ),
     responses(
         (status = 200, description = "Game obtained", body = GameDTO, content_type = "application/json"),
@@ -71,7 +71,7 @@ async fn get_dlc_base_game(
     logged_user: LoggedUser,
 ) -> impl Responder {
     let ItemId(id) = path.into_inner();
-    let mut get_result = dlcs_service::get_dlc_base_game(&pool, logged_user.id, id).await;
+    let mut get_result = dlcs_service::get_dlc_base_game(&pool, &logged_user.id, &id).await;
     populate_get_result(&mut get_result, |game| {
         game_image_service::populate_game_cover(&image_client_provider, game)
     });
@@ -83,7 +83,7 @@ async fn get_dlc_base_game(
     path = "/api/v1/games/{id}/dlcs",
     tag = "DLCs",
     params(
-        ("id" = i32, Path, description = "Game id"),
+        ("id" = String, Path, description = "Game id"),
     ),
     responses(
         (status = 200, description = "DLCs obtained", body = [DLCDTO], content_type = "application/json"),
@@ -104,7 +104,7 @@ async fn get_game_dlcs(
     logged_user: LoggedUser,
 ) -> impl Responder {
     let ItemId(id) = path.into_inner();
-    let mut get_result = dlcs_service::get_game_dlcs(&pool, logged_user.id, id).await;
+    let mut get_result = dlcs_service::get_game_dlcs(&pool, &logged_user.id, &id).await;
     populate_get_result(&mut get_result, |dlcs| {
         dlc_image_service::populate_dlcs_cover(&image_client_provider, dlcs)
     });
@@ -116,7 +116,7 @@ async fn get_game_dlcs(
     path = "/api/v1/platforms/{id}/dlcs",
     tag = "DLCs",
     params(
-        ("id" = i32, Path, description = "Platform id"),
+        ("id" = String, Path, description = "Platform id"),
     ),
     responses(
         (status = 200, description = "DLCs obtained", body = [DLCAvailableDTO], content_type = "application/json"),
@@ -137,7 +137,8 @@ async fn get_platform_dlcs(
     logged_user: LoggedUser,
 ) -> impl Responder {
     let ItemId(id) = path.into_inner();
-    let mut get_result = dlc_available_service::get_platform_dlcs(&pool, logged_user.id, id).await;
+    let mut get_result =
+        dlc_available_service::get_platform_dlcs(&pool, &logged_user.id, &id).await;
     populate_get_result(&mut get_result, |dlcs| {
         dlc_image_service::populate_dlcs_available_cover(&image_client_provider, dlcs)
     });
@@ -171,7 +172,7 @@ async fn get_dlcs(
     logged_user: LoggedUser,
 ) -> impl Responder {
     let mut search_result =
-        dlcs_service::search_dlcs(&pool, logged_user.id, body.0, query.0.q).await;
+        dlcs_service::search_dlcs(&pool, &logged_user.id, body.0, query.0.q).await;
     populate_get_page_result(&mut search_result, |dlcs| {
         dlc_image_service::populate_dlcs_cover(&image_client_provider, dlcs)
     });
@@ -201,7 +202,7 @@ async fn post_dlc(
     body: web::Json<NewDLCDTO>,
     logged_user: LoggedUser,
 ) -> impl Responder {
-    let create_result = dlcs_service::create_dlc(&pool, logged_user.id, body.0).await;
+    let create_result = dlcs_service::create_dlc(&pool, &logged_user.id, body.0).await;
     handle_create_result(create_result)
 }
 
@@ -210,7 +211,7 @@ async fn post_dlc(
     path = "/api/v1/dlcs/{id}/cover",
     tag = "DLCs",
     params(
-        ("id" = i32, Path, description = "DLC id"),
+        ("id" = String, Path, description = "DLC id"),
     ),
     request_body(content = Image, description = "DLC cover to be uploaded", content_type = "multipart/form-data"),
     responses(
@@ -244,8 +245,8 @@ async fn post_dlc_cover(
     let upload_result = dlc_image_service::set_dlc_cover(
         &pool,
         &image_client_provider,
-        logged_user.id,
-        id,
+        &logged_user.id,
+        &id,
         &file_path,
     )
     .await;
@@ -260,7 +261,7 @@ async fn post_dlc_cover(
     path = "/api/v1/dlcs/{id}",
     tag = "DLCs",
     params(
-        ("id" = i32, Path, description = "DLC id"),
+        ("id" = String, Path, description = "DLC id"),
     ),
     request_body(content = NewDLCDTO, description = "DLC to be updated", content_type = "application/json"),
     responses(
@@ -283,7 +284,7 @@ async fn put_dlc(
     logged_user: LoggedUser,
 ) -> impl Responder {
     let ItemId(id) = path.into_inner();
-    let update_result = dlcs_service::update_dlc(&pool, logged_user.id, id, body.0).await;
+    let update_result = dlcs_service::update_dlc(&pool, &logged_user.id, &id, body.0).await;
     handle_update_result(update_result)
 }
 
@@ -292,7 +293,7 @@ async fn put_dlc(
     path = "/api/v1/dlcs/{id}/cover",
     tag = "DLCs",
     params(
-        ("id" = i32, Path, description = "DLC id"),
+        ("id" = String, Path, description = "DLC id"),
     ),
     request_body(content = String, description = "New dlc cover name", content_type = "application/json"),
     responses(
@@ -319,8 +320,8 @@ async fn put_dlc_cover(
     let update_result = dlc_image_service::rename_dlc_cover(
         &pool,
         &image_client_provider,
-        logged_user.id,
-        id,
+        &logged_user.id,
+        &id,
         &body.0,
     )
     .await;
@@ -332,8 +333,8 @@ async fn put_dlc_cover(
     path = "/api/v1/dlcs/{id}/base-game/{other_id}",
     tag = "DLCs",
     params(
-        ("id" = i32, Path, description = "DLC id"),
-        ("other_id" = i32, Path, description = "Game id")
+        ("id" = String, Path, description = "DLC id"),
+        ("other_id" = String, Path, description = "Game id")
     ),
     responses(
         (status = 204, description = "DLC and Game linked"),
@@ -354,7 +355,7 @@ async fn link_dlc_game(
 ) -> impl Responder {
     let ItemIdAndRelatedId(id, game_id) = path.into_inner();
     let update_result =
-        dlcs_service::set_dlc_base_game(&pool, logged_user.id, id, Some(game_id)).await;
+        dlcs_service::set_dlc_base_game(&pool, &logged_user.id, &id, Some(game_id)).await;
     handle_action_result(update_result)
 }
 
@@ -363,8 +364,8 @@ async fn link_dlc_game(
     path = "/api/v1/dlcs/{id}/platforms/{other_id}",
     tag = "DLCs",
     params(
-        ("id" = i32, Path, description = "DLC id"),
-        ("other_id" = i32, Path, description = "Platform id")
+        ("id" = String, Path, description = "DLC id"),
+        ("other_id" = String, Path, description = "Platform id")
     ),
     request_body(content = DateDTO, description = "Available date", content_type = "application/json"),
     responses(
@@ -389,9 +390,9 @@ async fn link_dlc_platform(
     let ItemIdAndRelatedId(id, platform_id) = path.into_inner();
     let create_result = dlc_available_service::create_dlc_available(
         &pool,
-        logged_user.id,
-        id,
-        platform_id,
+        &logged_user.id,
+        &id,
+        &platform_id,
         body.date,
     )
     .await;
@@ -403,7 +404,7 @@ async fn link_dlc_platform(
     path = "/api/v1/dlcs/{id}",
     tag = "DLCs",
     params(
-        ("id" = i32, Path, description = "DLC id"),
+        ("id" = String, Path, description = "DLC id"),
     ),
     responses(
         (status = 204, description = "DLC deleted"),
@@ -423,7 +424,7 @@ async fn delete_dlc(
     logged_user: LoggedUser,
 ) -> impl Responder {
     let ItemId(id) = path.into_inner();
-    let delete_result = dlcs_service::delete_dlc(&pool, logged_user.id, id).await;
+    let delete_result = dlcs_service::delete_dlc(&pool, &logged_user.id, &id).await;
     handle_delete_result(delete_result)
 }
 
@@ -432,7 +433,7 @@ async fn delete_dlc(
     path = "/api/v1/dlcs/{id}/cover",
     tag = "DLCs",
     params(
-        ("id" = i32, Path, description = "DLC id"),
+        ("id" = String, Path, description = "DLC id"),
     ),
     responses(
         (status = 204, description = "DLC cover deleted"),
@@ -455,7 +456,7 @@ async fn delete_dlc_cover(
 ) -> impl Responder {
     let ItemId(id) = path.into_inner();
     let delete_result =
-        dlc_image_service::delete_dlc_cover(&pool, &image_client_provider, logged_user.id, id)
+        dlc_image_service::delete_dlc_cover(&pool, &image_client_provider, &logged_user.id, &id)
             .await;
     handle_action_result(delete_result)
 }
@@ -465,7 +466,7 @@ async fn delete_dlc_cover(
     path = "/api/v1/dlcs/{id}/base-game",
     tag = "DLCs",
     params(
-        ("id" = i32, Path, description = "DLC id"),
+        ("id" = String, Path, description = "DLC id"),
     ),
     responses(
         (status = 204, description = "DLC and Game unlinked"),
@@ -486,7 +487,7 @@ async fn unlink_dlc_game(
     logged_user: LoggedUser,
 ) -> impl Responder {
     let ItemId(id) = path.into_inner();
-    let update_result = dlcs_service::set_dlc_base_game(&pool, logged_user.id, id, None).await;
+    let update_result = dlcs_service::set_dlc_base_game(&pool, &logged_user.id, &id, None).await;
     handle_action_result(update_result)
 }
 
@@ -495,8 +496,8 @@ async fn unlink_dlc_game(
     path = "/api/v1/dlcs/{id}/platforms/{other_id}",
     tag = "DLCs",
     params(
-        ("id" = i32, Path, description = "DLC id"),
-        ("other_id" = i32, Path, description = "Platform id")
+        ("id" = String, Path, description = "DLC id"),
+        ("other_id" = String, Path, description = "Platform id")
     ),
     responses(
         (status = 204, description = "DLC and Platform unlinked"),
@@ -518,6 +519,7 @@ async fn unlink_dlc_platform(
 ) -> impl Responder {
     let ItemIdAndRelatedId(id, platform_id) = path.into_inner();
     let delete_result =
-        dlc_available_service::delete_dlc_available(&pool, logged_user.id, id, platform_id).await;
+        dlc_available_service::delete_dlc_available(&pool, &logged_user.id, &id, &platform_id)
+            .await;
     handle_action_result(delete_result)
 }

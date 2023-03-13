@@ -13,7 +13,7 @@ use super::base::{
     path = "/api/v1/tags/{id}",
     tag = "Tags",
     params(
-        ("id" = i32, Path, description = "Tag id"),
+        ("id" = String, Path, description = "Tag id"),
     ),
     responses(
         (status = 200, description = "Tag obtained", body = TagDTO, content_type = "application/json"),
@@ -33,7 +33,7 @@ async fn get_tag(
     logged_user: LoggedUser,
 ) -> impl Responder {
     let ItemId(id) = path.into_inner();
-    let get_result = tags_service::get_tag(&pool, logged_user.id, id).await;
+    let get_result = tags_service::get_tag(&pool, &logged_user.id, &id).await;
     handle_get_result(get_result)
 }
 
@@ -42,7 +42,7 @@ async fn get_tag(
     path = "/api/v1/games/{id}/tags",
     tag = "Tags",
     params(
-        ("id" = i32, Path, description = "Game id"),
+        ("id" = String, Path, description = "Game id"),
     ),
     responses(
         (status = 200, description = "Tags obtained", body = [TagDTO], content_type = "application/json"),
@@ -62,7 +62,7 @@ async fn get_game_tags(
     logged_user: LoggedUser,
 ) -> impl Responder {
     let ItemId(id) = path.into_inner();
-    let get_result = game_tags_service::get_game_tags(&pool, logged_user.id, id).await;
+    let get_result = game_tags_service::get_game_tags(&pool, &logged_user.id, &id).await;
     handle_get_result(get_result)
 }
 
@@ -91,7 +91,7 @@ async fn get_tags(
     body: web::Json<SearchDTO>,
     logged_user: LoggedUser,
 ) -> impl Responder {
-    let search_result = tags_service::search_tags(&pool, logged_user.id, body.0, query.0.q).await;
+    let search_result = tags_service::search_tags(&pool, &logged_user.id, body.0, query.0.q).await;
     handle_get_result(search_result)
 }
 
@@ -118,7 +118,7 @@ async fn post_tag(
     body: web::Json<NewTagDTO>,
     logged_user: LoggedUser,
 ) -> impl Responder {
-    let create_result = tags_service::create_tag(&pool, logged_user.id, body.0).await;
+    let create_result = tags_service::create_tag(&pool, &logged_user.id, body.0).await;
     handle_create_result(create_result)
 }
 
@@ -127,7 +127,7 @@ async fn post_tag(
     path = "/api/v1/tags/{id}",
     tag = "Tags",
     params(
-        ("id" = i32, Path, description = "Tag id"),
+        ("id" = String, Path, description = "Tag id"),
     ),
     request_body(content = NewTagDTO, description = "Tag to be updated", content_type = "application/json"),
     responses(
@@ -150,7 +150,7 @@ async fn put_tag(
     logged_user: LoggedUser,
 ) -> impl Responder {
     let ItemId(id) = path.into_inner();
-    let update_result = tags_service::update_tag(&pool, logged_user.id, id, body.0).await;
+    let update_result = tags_service::update_tag(&pool, &logged_user.id, &id, body.0).await;
     handle_update_result(update_result)
 }
 
@@ -159,7 +159,7 @@ async fn put_tag(
     path = "/api/v1/tags/{id}",
     tag = "Tags",
     params(
-        ("id" = i32, Path, description = "Tag id"),
+        ("id" = String, Path, description = "Tag id"),
     ),
     responses(
         (status = 204, description = "Tag deleted"),
@@ -179,6 +179,6 @@ async fn delete_tag(
     logged_user: LoggedUser,
 ) -> impl Responder {
     let ItemId(id) = path.into_inner();
-    let delete_result = tags_service::delete_tag(&pool, logged_user.id, id).await;
+    let delete_result = tags_service::delete_tag(&pool, &logged_user.id, &id).await;
     handle_delete_result(delete_result)
 }

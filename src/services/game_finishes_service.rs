@@ -13,8 +13,8 @@ use super::games_service;
 
 pub async fn get_first_game_finish(
     pool: &PgPool,
-    user_id: i32,
-    game_id: i32,
+    user_id: &str,
+    game_id: &str,
 ) -> Result<NaiveDate, ApiErrors> {
     games_service::exists_game(pool, user_id, game_id).await?;
 
@@ -24,8 +24,8 @@ pub async fn get_first_game_finish(
 
 pub async fn get_game_finishes(
     pool: &PgPool,
-    user_id: i32,
-    game_id: i32,
+    user_id: &str,
+    game_id: &str,
 ) -> Result<Vec<NaiveDate>, ApiErrors> {
     games_service::exists_game(pool, user_id, game_id).await?;
 
@@ -35,8 +35,8 @@ pub async fn get_game_finishes(
 
 pub async fn create_game_finish(
     pool: &PgPool,
-    user_id: i32,
-    game_id: i32,
+    user_id: &str,
+    game_id: &str,
     date: NaiveDate,
 ) -> Result<(), ApiErrors> {
     games_service::exists_game(pool, user_id, game_id).await?;
@@ -50,8 +50,8 @@ pub async fn create_game_finish(
 
 pub async fn delete_game_finish(
     pool: &PgPool,
-    user_id: i32,
-    game_id: i32,
+    user_id: &str,
+    game_id: &str,
     date: NaiveDate,
 ) -> Result<(), ApiErrors> {
     games_service::exists_game(pool, user_id, game_id).await?;
@@ -63,8 +63,8 @@ pub async fn delete_game_finish(
 
 pub async fn exists_game_finish(
     pool: &PgPool,
-    user_id: i32,
-    game_id: i32,
+    user_id: &str,
+    game_id: &str,
     date: NaiveDate,
 ) -> Result<(), ApiErrors> {
     let exists_result = game_finish_repository::exists_by_id(pool, user_id, game_id, date).await;

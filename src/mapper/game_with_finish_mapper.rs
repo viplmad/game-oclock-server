@@ -4,7 +4,7 @@ use crate::models::{GameStatus, GameWithFinishDTO};
 impl From<GameWithDate> for GameWithFinishDTO {
     fn from(game: GameWithDate) -> Self {
         Self {
-            id: game.id,
+            id: game.id.to_string(),
             name: game.name,
             edition: game.edition,
             release_year: game.release_year,

@@ -5,7 +5,7 @@ use crate::errors::SearchErrors;
 
 use super::search::apply_search;
 
-pub fn select_by_id(user_id: i32, id: i32) -> impl QueryStatementWriter {
+pub fn select_by_id(user_id: &str, id: &str) -> impl QueryStatementWriter {
     let mut select = Query::select();
 
     from_and_where_user_id(&mut select, user_id);
@@ -16,7 +16,7 @@ pub fn select_by_id(user_id: i32, id: i32) -> impl QueryStatementWriter {
 }
 
 pub fn select_all_with_search(
-    user_id: i32,
+    user_id: &str,
     search: PlatformSearch,
 ) -> Result<SearchQuery, SearchErrors> {
     let select = select_all(user_id);
@@ -24,7 +24,7 @@ pub fn select_all_with_search(
     apply_search(select, search)
 }
 
-pub(super) fn select_all(user_id: i32) -> SelectStatement {
+pub(super) fn select_all(user_id: &str) -> SelectStatement {
     let mut select = Query::select();
 
     from_and_where_user_id(&mut select, user_id);
@@ -33,7 +33,7 @@ pub(super) fn select_all(user_id: i32) -> SelectStatement {
     select
 }
 
-pub fn insert(user_id: i32, platform: &Platform) -> impl QueryStatementWriter {
+pub fn insert(user_id: &str, platform: &Platform) -> impl QueryStatementWriter {
     let mut insert = Query::insert();
 
     insert
@@ -59,7 +59,7 @@ pub fn insert(user_id: i32, platform: &Platform) -> impl QueryStatementWriter {
     insert
 }
 
-pub fn update_by_id(user_id: i32, id: i32, platform: &Platform) -> impl QueryStatementWriter {
+pub fn update_by_id(user_id: &str, id: &str, platform: &Platform) -> impl QueryStatementWriter {
     update_values_by_id(
         user_id,
         id,
@@ -75,8 +75,8 @@ pub fn update_by_id(user_id: i32, id: i32, platform: &Platform) -> impl QuerySta
 }
 
 pub fn update_icon_filename_by_id(
-    user_id: i32,
-    id: i32,
+    user_id: &str,
+    id: &str,
     icon_filename: Option<String>,
 ) -> impl QueryStatementWriter {
     update_values_by_id(
@@ -87,8 +87,8 @@ pub fn update_icon_filename_by_id(
 }
 
 fn update_values_by_id(
-    user_id: i32,
-    id: i32,
+    user_id: &str,
+    id: &str,
     mut values: Vec<(PlatformIden, SimpleExpr)>,
 ) -> impl QueryStatementWriter {
     let mut update = Query::update();
@@ -107,7 +107,7 @@ fn update_values_by_id(
     update
 }
 
-pub fn delete_by_id(user_id: i32, id: i32) -> impl QueryStatementWriter {
+pub fn delete_by_id(user_id: &str, id: &str) -> impl QueryStatementWriter {
     let mut delete = Query::delete();
 
     delete
@@ -118,7 +118,7 @@ pub fn delete_by_id(user_id: i32, id: i32) -> impl QueryStatementWriter {
     delete
 }
 
-pub fn exists_by_id(user_id: i32, id: i32) -> impl QueryStatementWriter {
+pub fn exists_by_id(user_id: &str, id: &str) -> impl QueryStatementWriter {
     let mut select = Query::select();
 
     from_and_where_user_id(&mut select, user_id);
@@ -128,7 +128,7 @@ pub fn exists_by_id(user_id: i32, id: i32) -> impl QueryStatementWriter {
     select
 }
 
-pub fn exists_by_name(user_id: i32, name: &str) -> SelectStatement {
+pub fn exists_by_name(user_id: &str, name: &str) -> SelectStatement {
     let mut select = Query::select();
 
     from_and_where_user_id(&mut select, user_id);
@@ -138,7 +138,7 @@ pub fn exists_by_name(user_id: i32, name: &str) -> SelectStatement {
     select
 }
 
-pub fn exists_by_name_and_id_not(user_id: i32, name: &str, id: i32) -> impl QueryStatementWriter {
+pub fn exists_by_name_and_id_not(user_id: &str, name: &str, id: &str) -> impl QueryStatementWriter {
     let mut select = exists_by_name(user_id, name);
 
     select.and_where(Expr::col(PlatformIden::Id).ne(id));
@@ -146,13 +146,13 @@ pub fn exists_by_name_and_id_not(user_id: i32, name: &str, id: i32) -> impl Quer
     select
 }
 
-fn from_and_where_user_id(select: &mut SelectStatement, user_id: i32) {
+fn from_and_where_user_id(select: &mut SelectStatement, user_id: &str) {
     select
         .from(PlatformIden::Table)
         .and_where(Expr::col((PlatformIden::Table, PlatformIden::UserId)).eq(user_id));
 }
 
-fn where_id(select: &mut SelectStatement, id: i32) {
+fn where_id(select: &mut SelectStatement, id: &str) {
     select.and_where(Expr::col((PlatformIden::Table, PlatformIden::Id)).eq(id));
 }
 

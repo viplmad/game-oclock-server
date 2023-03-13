@@ -13,8 +13,8 @@ use super::{dlcs_service, platforms_service};
 
 pub async fn get_platform_dlcs(
     pool: &PgPool,
-    user_id: i32,
-    platform_id: i32,
+    user_id: &str,
+    platform_id: &str,
 ) -> Result<Vec<DLCAvailableDTO>, ApiErrors> {
     platforms_service::exists_platform(pool, user_id, platform_id).await?;
 
@@ -25,8 +25,8 @@ pub async fn get_platform_dlcs(
 
 pub async fn get_dlc_platforms(
     pool: &PgPool,
-    user_id: i32,
-    dlc_id: i32,
+    user_id: &str,
+    dlc_id: &str,
 ) -> Result<Vec<PlatformAvailableDTO>, ApiErrors> {
     dlcs_service::exists_dlc(pool, user_id, dlc_id).await?;
 
@@ -37,9 +37,9 @@ pub async fn get_dlc_platforms(
 
 pub async fn create_dlc_available(
     pool: &PgPool,
-    user_id: i32,
-    dlc_id: i32,
-    platform_id: i32,
+    user_id: &str,
+    dlc_id: &str,
+    platform_id: &str,
     available_date: NaiveDate,
 ) -> Result<(), ApiErrors> {
     dlcs_service::exists_dlc(pool, user_id, dlc_id).await?;
@@ -56,9 +56,9 @@ pub async fn create_dlc_available(
 
 pub async fn delete_dlc_available(
     pool: &PgPool,
-    user_id: i32,
-    dlc_id: i32,
-    platform_id: i32,
+    user_id: &str,
+    dlc_id: &str,
+    platform_id: &str,
 ) -> Result<(), ApiErrors> {
     exists_dlc_available(pool, user_id, dlc_id, platform_id).await?;
 
@@ -69,9 +69,9 @@ pub async fn delete_dlc_available(
 
 pub async fn exists_dlc_available(
     pool: &PgPool,
-    user_id: i32,
-    dlc_id: i32,
-    platform_id: i32,
+    user_id: &str,
+    dlc_id: &str,
+    platform_id: &str,
 ) -> Result<(), ApiErrors> {
     let exists_result =
         dlc_available_repository::exists_by_id(pool, user_id, dlc_id, platform_id).await;

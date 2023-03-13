@@ -16,7 +16,7 @@ use super::base::{
     path = "/api/v1/dlcs/{id}/finishes",
     tag = "DLCFinish",
     params(
-        ("id" = i32, Path, description = "DLC id"),
+        ("id" = String, Path, description = "DLC id"),
     ),
     responses(
         (status = 200, description = "Finishes obtained", body = [String], content_type = "application/json"),
@@ -36,7 +36,7 @@ async fn get_dlc_finishes(
     logged_user: LoggedUser,
 ) -> impl Responder {
     let ItemId(id) = path.into_inner();
-    let get_result = dlc_finishes_service::get_dlc_finishes(&pool, logged_user.id, id).await;
+    let get_result = dlc_finishes_service::get_dlc_finishes(&pool, &logged_user.id, &id).await;
     handle_get_result(get_result)
 }
 
@@ -45,7 +45,7 @@ async fn get_dlc_finishes(
     path = "/api/v1/dlcs/{id}/finishes/first",
     tag = "DLCFinish",
     params(
-        ("id" = i32, Path, description = "DLC id"),
+        ("id" = String, Path, description = "DLC id"),
     ),
     responses(
         (status = 200, description = "First finish obtained", body = String, content_type = "application/json"),
@@ -65,7 +65,7 @@ async fn get_first_dlc_finish(
     logged_user: LoggedUser,
 ) -> impl Responder {
     let ItemId(id) = path.into_inner();
-    let get_result = dlc_finishes_service::get_first_dlc_finish(&pool, logged_user.id, id).await;
+    let get_result = dlc_finishes_service::get_first_dlc_finish(&pool, &logged_user.id, &id).await;
     handle_get_result(get_result)
 }
 
@@ -100,7 +100,7 @@ async fn get_first_finished_dlcs(
 ) -> impl Responder {
     let mut get_result = dlc_with_finish_service::search_first_finished_dlcs(
         &pool,
-        logged_user.id,
+        &logged_user.id,
         query.start_date,
         query.end_date,
         body.0,
@@ -144,7 +144,7 @@ async fn get_last_finished_dlcs(
 ) -> impl Responder {
     let mut get_result = dlc_with_finish_service::search_last_finished_dlcs(
         &pool,
-        logged_user.id,
+        &logged_user.id,
         query.start_date,
         query.end_date,
         body.0,
@@ -162,7 +162,7 @@ async fn get_last_finished_dlcs(
     path = "/api/v1/dlcs/{id}/finishes",
     tag = "DLCFinish",
     params(
-        ("id" = i32, Path, description = "DLC id"),
+        ("id" = String, Path, description = "DLC id"),
     ),
     request_body(content = DateDTO, description = "DLC finish date to be added", content_type = "application/json"),
     responses(
@@ -186,7 +186,7 @@ async fn post_dlc_finish(
 ) -> impl Responder {
     let ItemId(id) = path.into_inner();
     let create_result =
-        dlc_finishes_service::create_dlc_finish(&pool, logged_user.id, id, body.date).await;
+        dlc_finishes_service::create_dlc_finish(&pool, &logged_user.id, &id, body.date).await;
     handle_action_result(create_result)
 }
 
@@ -195,7 +195,7 @@ async fn post_dlc_finish(
     path = "/api/v1/dlcs/{id}/finishes",
     tag = "DLCFinish",
     params(
-        ("id" = i32, Path, description = "DLC id"),
+        ("id" = String, Path, description = "DLC id"),
     ),
     request_body(content = DateDTO, description = "DLC finish date to be deleted", content_type = "application/json"),
     responses(
@@ -218,6 +218,6 @@ async fn delete_dlc_finish(
 ) -> impl Responder {
     let ItemId(id) = path.into_inner();
     let delete_result =
-        dlc_finishes_service::delete_dlc_finish(&pool, logged_user.id, id, body.date).await;
+        dlc_finishes_service::delete_dlc_finish(&pool, &logged_user.id, &id, body.date).await;
     handle_delete_result(delete_result)
 }

@@ -18,7 +18,7 @@ use super::base::{
     path = "/api/v1/games/{id}/logs",
     tag = "GameLogs",
     params(
-        ("id" = i32, Path, description = "Game id"),
+        ("id" = String, Path, description = "Game id"),
     ),
     responses(
         (status = 200, description = "Logs obtained", body = [GameLogDTO], content_type = "application/json"),
@@ -38,7 +38,7 @@ async fn get_game_logs(
     logged_user: LoggedUser,
 ) -> impl Responder {
     let ItemId(id) = path.into_inner();
-    let get_result = game_logs_service::get_game_logs(&pool, logged_user.id, id).await;
+    let get_result = game_logs_service::get_game_logs(&pool, &logged_user.id, &id).await;
     handle_get_result(get_result)
 }
 
@@ -47,7 +47,7 @@ async fn get_game_logs(
     path = "/api/v1/games/{id}/logs/total",
     tag = "GameLogs",
     params(
-        ("id" = i32, Path, description = "Game id"),
+        ("id" = String, Path, description = "Game id"),
     ),
     responses(
         (status = 200, description = "Total logs time obtained", body = String, content_type = "application/json"),
@@ -67,7 +67,7 @@ async fn get_total_game_logs(
     logged_user: LoggedUser,
 ) -> impl Responder {
     let ItemId(id) = path.into_inner();
-    let get_result = game_logs_service::get_sum_game_logs(&pool, logged_user.id, id).await;
+    let get_result = game_logs_service::get_sum_game_logs(&pool, &logged_user.id, &id).await;
     handle_get_result(get_result)
 }
 
@@ -97,7 +97,7 @@ async fn get_played_games(
 ) -> impl Responder {
     let mut get_result = game_with_logs_service::get_game_with_logs(
         &pool,
-        logged_user.id,
+        &logged_user.id,
         query.start_date,
         query.end_date,
     )
@@ -139,7 +139,7 @@ async fn get_first_played_games(
 ) -> impl Responder {
     let mut get_result = game_with_logs_service::search_first_played_games(
         &pool,
-        logged_user.id,
+        &logged_user.id,
         query.start_date,
         query.end_date,
         body.0,
@@ -183,7 +183,7 @@ async fn get_last_played_games(
 ) -> impl Responder {
     let mut get_result = game_with_logs_service::search_last_played_games(
         &pool,
-        logged_user.id,
+        &logged_user.id,
         query.start_date,
         query.end_date,
         body.0,
@@ -201,7 +201,7 @@ async fn get_last_played_games(
     path = "/api/v1/games/{id}/logs",
     tag = "GameLogs",
     params(
-        ("id" = i32, Path, description = "Game id"),
+        ("id" = String, Path, description = "Game id"),
     ),
     request_body(content = GameLogDTO, description = "Game log to be added", content_type = "application/json"),
     responses(
@@ -224,7 +224,8 @@ async fn post_game_log(
     logged_user: LoggedUser,
 ) -> impl Responder {
     let ItemId(id) = path.into_inner();
-    let create_result = game_logs_service::create_game_log(&pool, logged_user.id, id, body.0).await;
+    let create_result =
+        game_logs_service::create_game_log(&pool, &logged_user.id, &id, body.0).await;
     handle_action_result(create_result)
 }
 
@@ -233,7 +234,7 @@ async fn post_game_log(
     path = "/api/v1/games/{id}/logs",
     tag = "GameLogs",
     params(
-        ("id" = i32, Path, description = "Game id"),
+        ("id" = String, Path, description = "Game id"),
     ),
     request_body(content = DateTimeDTO, description = "Game log datetime to be deleted", content_type = "application/json"),
     responses(
@@ -256,6 +257,6 @@ async fn delete_game_log(
 ) -> impl Responder {
     let ItemId(id) = path.into_inner();
     let delete_result =
-        game_logs_service::delete_game_log(&pool, logged_user.id, id, body.datetime).await;
+        game_logs_service::delete_game_log(&pool, &logged_user.id, &id, body.datetime).await;
     handle_delete_result(delete_result)
 }

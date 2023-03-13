@@ -40,7 +40,7 @@ impl FromRequest for LoggedUser {
             let user_id = claims.sub_as_user_id();
 
             let pool = &request.app_data::<web::Data<PgPool>>().unwrap();
-            let user = users_service::get_user(pool, user_id).await.unwrap();
+            let user = users_service::get_user(pool, &user_id).await.unwrap();
 
             Ok(LoggedUser {
                 id: user_id,

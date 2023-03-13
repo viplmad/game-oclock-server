@@ -6,8 +6,8 @@ use crate::entities::{DLCAvailableIden, DLCIden, PlatformIden, QUERY_DATE_ALIAS}
 use super::{dlc_query, platform_query};
 
 pub fn select_all_dlcs_by_platform_id_order_by_added_date(
-    user_id: i32,
-    platform_id: i32,
+    user_id: &str,
+    platform_id: &str,
 ) -> impl QueryStatementWriter {
     let mut select = dlc_query::select_all(user_id);
 
@@ -19,8 +19,8 @@ pub fn select_all_dlcs_by_platform_id_order_by_added_date(
 }
 
 pub fn select_all_platforms_by_dlc_id_order_by_added_date(
-    user_id: i32,
-    dlc_id: i32,
+    user_id: &str,
+    dlc_id: &str,
 ) -> impl QueryStatementWriter {
     let mut select = platform_query::select_all(user_id);
 
@@ -32,9 +32,9 @@ pub fn select_all_platforms_by_dlc_id_order_by_added_date(
 }
 
 pub fn insert(
-    user_id: i32,
-    dlc_id: i32,
-    platform_id: i32,
+    user_id: &str,
+    dlc_id: &str,
+    platform_id: &str,
     added_date: NaiveDate,
 ) -> impl QueryStatementWriter {
     let mut insert = Query::insert();
@@ -57,7 +57,7 @@ pub fn insert(
     insert
 }
 
-pub fn delete_by_id(user_id: i32, dlc_id: i32, platform_id: i32) -> impl QueryStatementWriter {
+pub fn delete_by_id(user_id: &str, dlc_id: &str, platform_id: &str) -> impl QueryStatementWriter {
     let mut delete = Query::delete();
 
     delete
@@ -69,7 +69,7 @@ pub fn delete_by_id(user_id: i32, dlc_id: i32, platform_id: i32) -> impl QuerySt
     delete
 }
 
-pub fn exists_by_id(user_id: i32, dlc_id: i32, platform_id: i32) -> impl QueryStatementWriter {
+pub fn exists_by_id(user_id: &str, dlc_id: &str, platform_id: &str) -> impl QueryStatementWriter {
     let mut select = Query::select();
 
     from_and_where_user_id(&mut select, user_id);
@@ -81,7 +81,7 @@ pub fn exists_by_id(user_id: i32, dlc_id: i32, platform_id: i32) -> impl QuerySt
     select
 }
 
-fn join_dlc_available_by_platform_id(select: &mut SelectStatement, platform_id: i32) {
+fn join_dlc_available_by_platform_id(select: &mut SelectStatement, platform_id: &str) {
     select
         .left_join(
             DLCAvailableIden::Table,
@@ -97,7 +97,7 @@ fn join_dlc_available_by_platform_id(select: &mut SelectStatement, platform_id: 
         );
 }
 
-fn join_dlc_available_by_dlc_id(select: &mut SelectStatement, dlc_id: i32) {
+fn join_dlc_available_by_dlc_id(select: &mut SelectStatement, dlc_id: &str) {
     select
         .left_join(
             DLCAvailableIden::Table,
@@ -111,7 +111,7 @@ fn join_dlc_available_by_dlc_id(select: &mut SelectStatement, dlc_id: i32) {
         .and_where(Expr::col((DLCAvailableIden::Table, DLCAvailableIden::DLCId)).eq(dlc_id));
 }
 
-fn from_and_where_user_id(select: &mut SelectStatement, user_id: i32) {
+fn from_and_where_user_id(select: &mut SelectStatement, user_id: &str) {
     select
         .from(DLCAvailableIden::Table)
         .and_where(Expr::col((DLCAvailableIden::Table, DLCAvailableIden::UserId)).eq(user_id));

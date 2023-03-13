@@ -15,8 +15,8 @@ use super::games_service;
 
 pub async fn get_sum_game_logs(
     pool: &PgPool,
-    user_id: i32,
-    game_id: i32,
+    user_id: &str,
+    game_id: &str,
 ) -> Result<DurationDef, ApiErrors> {
     games_service::exists_game(pool, user_id, game_id).await?;
 
@@ -27,8 +27,8 @@ pub async fn get_sum_game_logs(
 
 pub async fn get_game_logs(
     pool: &PgPool,
-    user_id: i32,
-    game_id: i32,
+    user_id: &str,
+    game_id: &str,
 ) -> Result<Vec<GameLogDTO>, ApiErrors> {
     games_service::exists_game(pool, user_id, game_id).await?;
 
@@ -38,8 +38,8 @@ pub async fn get_game_logs(
 
 pub async fn create_game_log(
     pool: &PgPool,
-    user_id: i32,
-    game_id: i32,
+    user_id: &str,
+    game_id: &str,
     log: GameLogDTO,
 ) -> Result<(), ApiErrors> {
     games_service::exists_game(pool, user_id, game_id).await?;
@@ -57,8 +57,8 @@ pub async fn create_game_log(
 
 pub async fn delete_game_log(
     pool: &PgPool,
-    user_id: i32,
-    game_id: i32,
+    user_id: &str,
+    game_id: &str,
     datetime: NaiveDateTime,
 ) -> Result<(), ApiErrors> {
     games_service::exists_game(pool, user_id, game_id).await?;
@@ -70,8 +70,8 @@ pub async fn delete_game_log(
 
 pub async fn exists_game_log(
     pool: &PgPool,
-    user_id: i32,
-    game_id: i32,
+    user_id: &str,
+    game_id: &str,
     datetime: NaiveDateTime,
 ) -> Result<(), ApiErrors> {
     let exists_result = game_log_repository::exists_by_id(pool, user_id, game_id, datetime).await;

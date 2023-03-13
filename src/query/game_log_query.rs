@@ -12,8 +12,8 @@ use super::game_query;
 use super::search::apply_search;
 
 pub fn select_sum_time_by_user_id_and_game_id(
-    user_id: i32,
-    game_id: i32,
+    user_id: &str,
+    game_id: &str,
 ) -> impl QueryStatementWriter {
     let mut select = Query::select();
 
@@ -23,7 +23,10 @@ pub fn select_sum_time_by_user_id_and_game_id(
     select
 }
 
-pub fn select_all_by_user_id_and_game_id(user_id: i32, game_id: i32) -> impl QueryStatementWriter {
+pub fn select_all_by_user_id_and_game_id(
+    user_id: &str,
+    game_id: &str,
+) -> impl QueryStatementWriter {
     let mut select = Query::select();
 
     from_and_where_user_id_and_game_id(&mut select, user_id, game_id);
@@ -33,7 +36,7 @@ pub fn select_all_by_user_id_and_game_id(user_id: i32, game_id: i32) -> impl Que
 }
 
 fn select_all_game_with_log_by_datetime_gte_and_datetime_lte(
-    user_id: i32,
+    user_id: &str,
     start_datetime: Option<NaiveDateTime>,
     end_datetime: Option<NaiveDateTime>,
 ) -> SelectStatement {
@@ -53,7 +56,7 @@ fn select_all_game_with_log_by_datetime_gte_and_datetime_lte(
 }
 
 pub fn select_all_first_game_with_log_with_search_by_datetime_gte_and_datetime_lte_order_by_datetime_desc(
-    user_id: i32,
+    user_id: &str,
     start_datetime: Option<NaiveDateTime>,
     end_datetime: Option<NaiveDateTime>,
     mut search: GameSearch,
@@ -81,7 +84,7 @@ pub fn select_all_first_game_with_log_with_search_by_datetime_gte_and_datetime_l
 }
 
 pub fn select_all_last_game_with_log_with_search_by_datetime_gte_and_datetime_lte_order_by_datetime_desc(
-    user_id: i32,
+    user_id: &str,
     start_datetime: Option<NaiveDateTime>,
     end_datetime: Option<NaiveDateTime>,
     mut search: GameSearch,
@@ -108,7 +111,7 @@ pub fn select_all_last_game_with_log_with_search_by_datetime_gte_and_datetime_lt
     apply_search(select, search)
 }
 
-pub fn select_all_games_order_by_datetime_desc(user_id: i32) -> SelectStatement {
+pub fn select_all_games_order_by_datetime_desc(user_id: &str) -> SelectStatement {
     let mut select = game_query::select_all(user_id);
 
     join_game_log(&mut select);
@@ -118,7 +121,7 @@ pub fn select_all_games_order_by_datetime_desc(user_id: i32) -> SelectStatement 
 }
 
 pub fn select_all_games_by_datetime_gte_and_datetime_lte_order_by_datetime_desc(
-    user_id: i32,
+    user_id: &str,
     start_datetime: NaiveDateTime,
     end_datetime: NaiveDateTime,
 ) -> SelectStatement {
@@ -132,7 +135,7 @@ pub fn select_all_games_by_datetime_gte_and_datetime_lte_order_by_datetime_desc(
 }
 
 pub fn select_all_games_log_by_datetime_gte_and_datetime_lte_order_by_datetime_desc(
-    user_id: i32,
+    user_id: &str,
     start_datetime: NaiveDateTime,
     end_datetime: NaiveDateTime,
 ) -> impl QueryStatementWriter {
@@ -155,7 +158,7 @@ pub fn select_all_games_log_by_datetime_gte_and_datetime_lte_order_by_datetime_d
     select
 }
 
-pub fn insert(user_id: i32, game_id: i32, log: &GameLog) -> impl QueryStatementWriter {
+pub fn insert(user_id: &str, game_id: &str, log: &GameLog) -> impl QueryStatementWriter {
     let mut insert = Query::insert();
 
     let secs = log.time.microseconds / 1_000_000; // TODO duplicate variable in DurationDef
@@ -178,8 +181,8 @@ pub fn insert(user_id: i32, game_id: i32, log: &GameLog) -> impl QueryStatementW
 }
 
 pub fn delete_by_id(
-    user_id: i32,
-    game_id: i32,
+    user_id: &str,
+    game_id: &str,
     datetime: NaiveDateTime,
 ) -> impl QueryStatementWriter {
     let mut delete = Query::delete();
@@ -194,8 +197,8 @@ pub fn delete_by_id(
 }
 
 pub fn exists_by_id(
-    user_id: i32,
-    game_id: i32,
+    user_id: &str,
+    game_id: &str,
     datetime: NaiveDateTime,
 ) -> impl QueryStatementWriter {
     let mut select = Query::select();
@@ -220,7 +223,7 @@ fn join_game_log(select: &mut SelectStatement) {
     );
 }
 
-fn from_and_where_user_id_and_game_id(select: &mut SelectStatement, user_id: i32, game_id: i32) {
+fn from_and_where_user_id_and_game_id(select: &mut SelectStatement, user_id: &str, game_id: &str) {
     select
         .from(GameLogIden::Table)
         .and_where(Expr::col((GameLogIden::Table, GameLogIden::UserId)).eq(user_id))
