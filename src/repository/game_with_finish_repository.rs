@@ -9,7 +9,7 @@ use super::base::fetch_all_search;
 
 pub async fn search_first_by_date_between(
     pool: &PgPool,
-    user_id: i32,
+    user_id: &str,
     start_date: Option<NaiveDate>,
     end_date: Option<NaiveDate>,
     search: GameSearch,
@@ -23,7 +23,7 @@ pub async fn search_first_by_date_between(
 
 pub async fn search_last_by_date_between(
     pool: &PgPool,
-    user_id: i32,
+    user_id: &str,
     start_date: Option<NaiveDate>,
     end_date: Option<NaiveDate>,
     search: GameSearch,

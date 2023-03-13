@@ -2,7 +2,7 @@ use std::str::FromStr;
 
 use chrono::{NaiveDate, NaiveDateTime};
 use sea_query::Iden;
-use sqlx::FromRow;
+use sqlx::{types::Uuid, FromRow};
 
 use super::{FieldIden, FieldType, GameUserInfoIden, Search, TableIden};
 
@@ -38,8 +38,8 @@ impl TableIden for GameIden {
 
 #[derive(FromRow)]
 pub struct Game {
-    pub id: i32,
-    pub user_id: i32,
+    pub id: Uuid,
+    pub user_id: Uuid,
     pub name: String,
     pub edition: String,
     pub release_year: Option<i32>,
@@ -56,8 +56,8 @@ pub struct Game {
 
 #[derive(FromRow)]
 pub struct GameWithDate {
-    pub id: i32,
-    pub user_id: i32,
+    pub id: Uuid,
+    pub user_id: Uuid,
     pub name: String,
     pub edition: String,
     pub release_year: Option<i32>,
@@ -78,7 +78,7 @@ impl FromStr for FieldIden<GameIden> {
 
     fn from_str(field: &str) -> Result<Self, Self::Err> {
         match field {
-            "id" => Ok(FieldIden::new(GameIden::Id, FieldType::Integer)),
+            "id" => Ok(FieldIden::new(GameIden::Id, FieldType::String)),
             "name" => Ok(FieldIden::new(GameIden::Name, FieldType::String)),
             "edition" => Ok(FieldIden::new(GameIden::Edition, FieldType::String)),
             "release_year" => Ok(FieldIden::new(GameIden::ReleaseYear, FieldType::Integer)),

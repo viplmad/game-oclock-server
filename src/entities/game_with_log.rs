@@ -1,13 +1,13 @@
 use chrono::NaiveDateTime;
-use sqlx::{postgres::types::PgInterval, FromRow};
+use sqlx::{postgres::types::PgInterval, types::Uuid, FromRow};
 
 pub const LOG_DATETIME_ALIAS: &str = "log_datetime";
 pub const LOG_TIME_ALIAS: &str = "log_time";
 
 #[derive(FromRow, Clone)]
 pub struct GameWithLog {
-    pub id: i32,
-    pub user_id: i32,
+    pub id: Uuid,
+    pub user_id: Uuid,
     pub name: String,
     pub edition: String,
     pub release_year: Option<i32>,

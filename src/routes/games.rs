@@ -19,7 +19,7 @@ use super::base::{
     path = "/api/v1/games/{id}",
     tag = "Games",
     params(
-        ("id" = i32, Path, description = "Game id"),
+        ("id" = String, Path, description = "Game id"),
     ),
     responses(
         (status = 200, description = "Game obtained", body = GameDTO, content_type = "application/json"),
@@ -40,7 +40,7 @@ async fn get_game(
     logged_user: LoggedUser,
 ) -> impl Responder {
     let ItemId(id) = path.into_inner();
-    let mut get_result = games_service::get_game(&pool, logged_user.id, id).await;
+    let mut get_result = games_service::get_game(&pool, &logged_user.id, &id).await;
     populate_get_result(&mut get_result, |game| {
         game_image_service::populate_game_cover(&image_client_provider, game)
     });
@@ -52,7 +52,7 @@ async fn get_game(
     path = "/api/v1/tags/{id}/games",
     tag = "Games",
     params(
-        ("id" = i32, Path, description = "Tag id"),
+        ("id" = String, Path, description = "Tag id"),
     ),
     responses(
         (status = 200, description = "Games obtained", body = [GameDTO], content_type = "application/json"),
@@ -73,7 +73,7 @@ async fn get_tag_games(
     logged_user: LoggedUser,
 ) -> impl Responder {
     let ItemId(id) = path.into_inner();
-    let mut get_result = game_tags_service::get_tag_games(&pool, logged_user.id, id).await;
+    let mut get_result = game_tags_service::get_tag_games(&pool, &logged_user.id, &id).await;
     populate_get_result(&mut get_result, |games| {
         game_image_service::populate_games_cover(&image_client_provider, games)
     });
@@ -85,7 +85,7 @@ async fn get_tag_games(
     path = "/api/v1/platforms/{id}/games",
     tag = "Games",
     params(
-        ("id" = i32, Path, description = "Platform id"),
+        ("id" = String, Path, description = "Platform id"),
     ),
     responses(
         (status = 200, description = "Games obtained", body = [GameAvailableDTO], content_type = "application/json"),
@@ -107,7 +107,7 @@ async fn get_platform_games(
 ) -> impl Responder {
     let ItemId(id) = path.into_inner();
     let mut get_result =
-        game_available_service::get_platform_games(&pool, logged_user.id, id).await;
+        game_available_service::get_platform_games(&pool, &logged_user.id, &id).await;
     populate_get_result(&mut get_result, |games| {
         game_image_service::populate_games_available_cover(&image_client_provider, games)
     });
@@ -141,7 +141,7 @@ async fn get_games(
     logged_user: LoggedUser,
 ) -> impl Responder {
     let mut search_result =
-        games_service::search_games(&pool, logged_user.id, body.0, query.0.q).await;
+        games_service::search_games(&pool, &logged_user.id, body.0, query.0.q).await;
     populate_get_page_result(&mut search_result, |games| {
         game_image_service::populate_games_cover(&image_client_provider, games)
     });
@@ -171,7 +171,7 @@ async fn post_game(
     body: web::Json<NewGameDTO>,
     logged_user: LoggedUser,
 ) -> impl Responder {
-    let create_result = games_service::create_game(&pool, logged_user.id, body.0).await;
+    let create_result = games_service::create_game(&pool, &logged_user.id, body.0).await;
     handle_create_result(create_result)
 }
 
@@ -180,7 +180,7 @@ async fn post_game(
     path = "/api/v1/games/{id}/cover",
     tag = "Games",
     params(
-        ("id" = i32, Path, description = "Game id"),
+        ("id" = String, Path, description = "Game id"),
     ),
     request_body(content = Image, description = "Game cover to be uploaded", content_type = "multipart/form-data"),
     responses(
@@ -214,8 +214,8 @@ async fn post_game_cover(
     let upload_result = game_image_service::set_game_cover(
         &pool,
         &image_client_provider,
-        logged_user.id,
-        id,
+        &logged_user.id,
+        &id,
         &file_path,
     )
     .await;
@@ -230,7 +230,7 @@ async fn post_game_cover(
     path = "/api/v1/games/{id}",
     tag = "Games",
     params(
-        ("id" = i32, Path, description = "Game id"),
+        ("id" = String, Path, description = "Game id"),
     ),
     request_body(content = NewGameDTO, description = "Game to be updated", content_type = "application/json"),
     responses(
@@ -253,7 +253,7 @@ async fn put_game(
     logged_user: LoggedUser,
 ) -> impl Responder {
     let ItemId(id) = path.into_inner();
-    let update_result = games_service::update_game(&pool, logged_user.id, id, body.0).await;
+    let update_result = games_service::update_game(&pool, &logged_user.id, &id, body.0).await;
     handle_update_result(update_result)
 }
 
@@ -262,7 +262,7 @@ async fn put_game(
     path = "/api/v1/games/{id}/cover",
     tag = "Games",
     params(
-        ("id" = i32, Path, description = "Game id"),
+        ("id" = String, Path, description = "Game id"),
     ),
     request_body(content = String, description = "New game cover name", content_type = "application/json"),
     responses(
@@ -289,8 +289,8 @@ async fn put_game_cover(
     let update_result = game_image_service::rename_game_cover(
         &pool,
         &image_client_provider,
-        logged_user.id,
-        id,
+        &logged_user.id,
+        &id,
         &body.0,
     )
     .await;
@@ -302,8 +302,8 @@ async fn put_game_cover(
     path = "/api/v1/games/{id}/tags/{other_id}",
     tag = "Games",
     params(
-        ("id" = i32, Path, description = "Game id"),
-        ("other_id" = i32, Path, description = "Tag id")
+        ("id" = String, Path, description = "Game id"),
+        ("other_id" = String, Path, description = "Tag id")
     ),
     responses(
         (status = 204, description = "Game and Tag linked"),
@@ -324,7 +324,8 @@ async fn link_game_tag(
     logged_user: LoggedUser,
 ) -> impl Responder {
     let ItemIdAndRelatedId(id, tag_id) = path.into_inner();
-    let create_result = game_tags_service::create_game_tag(&pool, logged_user.id, id, tag_id).await;
+    let create_result =
+        game_tags_service::create_game_tag(&pool, &logged_user.id, &id, &tag_id).await;
     handle_action_result(create_result)
 }
 
@@ -333,8 +334,8 @@ async fn link_game_tag(
     path = "/api/v1/games/{id}/platforms/{other_id}",
     tag = "Games",
     params(
-        ("id" = i32, Path, description = "Game id"),
-        ("other_id" = i32, Path, description = "Platform id")
+        ("id" = String, Path, description = "Game id"),
+        ("other_id" = String, Path, description = "Platform id")
     ),
     request_body(content = DateDTO, description = "Available date", content_type = "application/json"),
     responses(
@@ -359,9 +360,9 @@ async fn link_game_platform(
     let ItemIdAndRelatedId(id, platform_id) = path.into_inner();
     let create_result = game_available_service::create_game_available(
         &pool,
-        logged_user.id,
-        id,
-        platform_id,
+        &logged_user.id,
+        &id,
+        &platform_id,
         body.date,
     )
     .await;
@@ -373,7 +374,7 @@ async fn link_game_platform(
     path = "/api/v1/games/{id}",
     tag = "Games",
     params(
-        ("id" = i32, Path, description = "Game id"),
+        ("id" = String, Path, description = "Game id"),
     ),
     responses(
         (status = 204, description = "Game deleted"),
@@ -393,7 +394,7 @@ async fn delete_game(
     logged_user: LoggedUser,
 ) -> impl Responder {
     let ItemId(id) = path.into_inner();
-    let delete_result = games_service::delete_game(&pool, logged_user.id, id).await;
+    let delete_result = games_service::delete_game(&pool, &logged_user.id, &id).await;
     handle_delete_result(delete_result)
 }
 
@@ -402,7 +403,7 @@ async fn delete_game(
     path = "/api/v1/games/{id}/cover",
     tag = "Games",
     params(
-        ("id" = i32, Path, description = "Game id"),
+        ("id" = String, Path, description = "Game id"),
     ),
     responses(
         (status = 204, description = "Game cover deleted"),
@@ -425,7 +426,7 @@ async fn delete_game_cover(
 ) -> impl Responder {
     let ItemId(id) = path.into_inner();
     let delete_result =
-        game_image_service::delete_game_cover(&pool, &image_client_provider, logged_user.id, id)
+        game_image_service::delete_game_cover(&pool, &image_client_provider, &logged_user.id, &id)
             .await;
     handle_action_result(delete_result)
 }
@@ -435,8 +436,8 @@ async fn delete_game_cover(
     path = "/api/v1/games/{id}/tags/{other_id}",
     tag = "Games",
     params(
-        ("id" = i32, Path, description = "Game id"),
-        ("other_id" = i32, Path, description = "Tag id")
+        ("id" = String, Path, description = "Game id"),
+        ("other_id" = String, Path, description = "Tag id")
     ),
     responses(
         (status = 204, description = "Game and Tag unlinked"),
@@ -457,7 +458,8 @@ async fn unlink_game_tag(
     logged_user: LoggedUser,
 ) -> impl Responder {
     let ItemIdAndRelatedId(id, tag_id) = path.into_inner();
-    let delete_result = game_tags_service::delete_game_tag(&pool, logged_user.id, id, tag_id).await;
+    let delete_result =
+        game_tags_service::delete_game_tag(&pool, &logged_user.id, &id, &tag_id).await;
     handle_action_result(delete_result)
 }
 
@@ -466,8 +468,8 @@ async fn unlink_game_tag(
     path = "/api/v1/games/{id}/platforms/{other_id}",
     tag = "Games",
     params(
-        ("id" = i32, Path, description = "Game id"),
-        ("other_id" = i32, Path, description = "Platform id")
+        ("id" = String, Path, description = "Game id"),
+        ("other_id" = String, Path, description = "Platform id")
     ),
     responses(
         (status = 204, description = "Game and Platform unlinked"),
@@ -489,6 +491,7 @@ async fn unlink_game_platform(
 ) -> impl Responder {
     let ItemIdAndRelatedId(id, platform_id) = path.into_inner();
     let delete_result =
-        game_available_service::delete_game_available(&pool, logged_user.id, id, platform_id).await;
+        game_available_service::delete_game_available(&pool, &logged_user.id, &id, &platform_id)
+            .await;
     handle_action_result(delete_result)
 }

@@ -13,8 +13,8 @@ use super::dlcs_service;
 
 pub async fn get_first_dlc_finish(
     pool: &PgPool,
-    user_id: i32,
-    dlc_id: i32,
+    user_id: &str,
+    dlc_id: &str,
 ) -> Result<NaiveDate, ApiErrors> {
     dlcs_service::exists_dlc(pool, user_id, dlc_id).await?;
 
@@ -24,8 +24,8 @@ pub async fn get_first_dlc_finish(
 
 pub async fn get_dlc_finishes(
     pool: &PgPool,
-    user_id: i32,
-    dlc_id: i32,
+    user_id: &str,
+    dlc_id: &str,
 ) -> Result<Vec<NaiveDate>, ApiErrors> {
     dlcs_service::exists_dlc(pool, user_id, dlc_id).await?;
 
@@ -35,8 +35,8 @@ pub async fn get_dlc_finishes(
 
 pub async fn create_dlc_finish(
     pool: &PgPool,
-    user_id: i32,
-    dlc_id: i32,
+    user_id: &str,
+    dlc_id: &str,
     date: NaiveDate,
 ) -> Result<(), ApiErrors> {
     dlcs_service::exists_dlc(pool, user_id, dlc_id).await?;
@@ -50,8 +50,8 @@ pub async fn create_dlc_finish(
 
 pub async fn delete_dlc_finish(
     pool: &PgPool,
-    user_id: i32,
-    dlc_id: i32,
+    user_id: &str,
+    dlc_id: &str,
     date: NaiveDate,
 ) -> Result<(), ApiErrors> {
     dlcs_service::exists_dlc(pool, user_id, dlc_id).await?;
@@ -63,8 +63,8 @@ pub async fn delete_dlc_finish(
 
 pub async fn exists_dlc_finish(
     pool: &PgPool,
-    user_id: i32,
-    dlc_id: i32,
+    user_id: &str,
+    dlc_id: &str,
     date: NaiveDate,
 ) -> Result<(), ApiErrors> {
     let exists_result = dlc_finish_repository::exists_by_id(pool, user_id, dlc_id, date).await;

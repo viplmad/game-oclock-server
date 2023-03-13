@@ -13,8 +13,8 @@ use super::{games_service, platforms_service};
 
 pub async fn get_platform_games(
     pool: &PgPool,
-    user_id: i32,
-    platform_id: i32,
+    user_id: &str,
+    platform_id: &str,
 ) -> Result<Vec<GameAvailableDTO>, ApiErrors> {
     platforms_service::exists_platform(pool, user_id, platform_id).await?;
 
@@ -25,8 +25,8 @@ pub async fn get_platform_games(
 
 pub async fn get_game_platforms(
     pool: &PgPool,
-    user_id: i32,
-    game_id: i32,
+    user_id: &str,
+    game_id: &str,
 ) -> Result<Vec<PlatformAvailableDTO>, ApiErrors> {
     games_service::exists_game(pool, user_id, game_id).await?;
 
@@ -37,9 +37,9 @@ pub async fn get_game_platforms(
 
 pub async fn create_game_available(
     pool: &PgPool,
-    user_id: i32,
-    game_id: i32,
-    platform_id: i32,
+    user_id: &str,
+    game_id: &str,
+    platform_id: &str,
     available_date: NaiveDate,
 ) -> Result<(), ApiErrors> {
     games_service::exists_game(pool, user_id, game_id).await?;
@@ -57,9 +57,9 @@ pub async fn create_game_available(
 
 pub async fn delete_game_available(
     pool: &PgPool,
-    user_id: i32,
-    game_id: i32,
-    platform_id: i32,
+    user_id: &str,
+    game_id: &str,
+    platform_id: &str,
 ) -> Result<(), ApiErrors> {
     exists_game_available(pool, user_id, game_id, platform_id).await?;
 
@@ -70,9 +70,9 @@ pub async fn delete_game_available(
 
 pub async fn exists_game_available(
     pool: &PgPool,
-    user_id: i32,
-    game_id: i32,
-    platform_id: i32,
+    user_id: &str,
+    game_id: &str,
+    platform_id: &str,
 ) -> Result<(), ApiErrors> {
     let exists_result =
         game_available_repository::exists_by_id(pool, user_id, game_id, platform_id).await;

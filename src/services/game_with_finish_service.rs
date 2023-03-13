@@ -10,7 +10,7 @@ use super::base::{check_start_end, handle_get_list_paged_result, handle_query_ma
 
 pub async fn search_first_finished_games(
     pool: &PgPool,
-    user_id: i32,
+    user_id: &str,
     start_date: Option<NaiveDate>,
     end_date: Option<NaiveDate>,
     search: SearchDTO,
@@ -28,7 +28,7 @@ pub async fn search_first_finished_games(
 
 pub async fn search_last_finished_games(
     pool: &PgPool,
-    user_id: i32,
+    user_id: &str,
     start_date: Option<NaiveDate>,
     end_date: Option<NaiveDate>,
     search: SearchDTO,

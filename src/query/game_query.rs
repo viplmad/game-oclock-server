@@ -5,7 +5,7 @@ use crate::errors::SearchErrors;
 
 use super::search::apply_search;
 
-pub fn select_by_id(user_id: i32, id: i32) -> impl QueryStatementWriter {
+pub fn select_by_id(user_id: &str, id: &str) -> impl QueryStatementWriter {
     let mut select = Query::select();
 
     from_and_where_user_id(&mut select, user_id);
@@ -17,7 +17,7 @@ pub fn select_by_id(user_id: i32, id: i32) -> impl QueryStatementWriter {
 }
 
 pub fn select_all_with_search(
-    user_id: i32,
+    user_id: &str,
     search: GameSearch,
 ) -> Result<SearchQuery, SearchErrors> {
     let select = select_all(user_id);
@@ -25,7 +25,7 @@ pub fn select_all_with_search(
     apply_search(select, search)
 }
 
-pub(super) fn select_all(user_id: i32) -> SelectStatement {
+pub(super) fn select_all(user_id: &str) -> SelectStatement {
     let mut select = Query::select();
 
     from_and_where_user_id(&mut select, user_id);
@@ -35,7 +35,7 @@ pub(super) fn select_all(user_id: i32) -> SelectStatement {
     select
 }
 
-pub(super) fn select_all_group_by_id(user_id: i32) -> SelectStatement {
+pub(super) fn select_all_group_by_id(user_id: &str) -> SelectStatement {
     let mut select = select_all(user_id);
 
     select
@@ -46,7 +46,7 @@ pub(super) fn select_all_group_by_id(user_id: i32) -> SelectStatement {
     select
 }
 
-pub fn insert(user_id: i32, game: &Game) -> impl QueryStatementWriter {
+pub fn insert(user_id: &str, game: &Game) -> impl QueryStatementWriter {
     let mut insert = Query::insert();
 
     insert
@@ -74,7 +74,7 @@ pub fn insert(user_id: i32, game: &Game) -> impl QueryStatementWriter {
     insert
 }
 
-pub fn insert_user_info(user_id: i32, game_id: i32, game: &Game) -> impl QueryStatementWriter {
+pub fn insert_user_info(user_id: &str, game_id: &str, game: &Game) -> impl QueryStatementWriter {
     let mut insert = Query::insert();
 
     insert
@@ -110,7 +110,7 @@ pub fn insert_user_info(user_id: i32, game_id: i32, game: &Game) -> impl QuerySt
     insert
 }
 
-pub fn update_by_id(user_id: i32, id: i32, game: &Game) -> impl QueryStatementWriter {
+pub fn update_by_id(user_id: &str, id: &str, game: &Game) -> impl QueryStatementWriter {
     update_values_by_id(
         user_id,
         id,
@@ -124,8 +124,8 @@ pub fn update_by_id(user_id: i32, id: i32, game: &Game) -> impl QueryStatementWr
 }
 
 pub fn update_cover_filename_by_id(
-    user_id: i32,
-    id: i32,
+    user_id: &str,
+    id: &str,
     cover_filename: Option<String>,
 ) -> impl QueryStatementWriter {
     update_values_by_id(
@@ -136,8 +136,8 @@ pub fn update_cover_filename_by_id(
 }
 
 fn update_values_by_id(
-    user_id: i32,
-    id: i32,
+    user_id: &str,
+    id: &str,
     mut values: Vec<(GameIden, SimpleExpr)>,
 ) -> impl QueryStatementWriter {
     let mut update = Query::update();
@@ -154,8 +154,8 @@ fn update_values_by_id(
 }
 
 pub fn update_user_info_by_id(
-    user_id: i32,
-    game_id: i32,
+    user_id: &str,
+    game_id: &str,
     game: &Game,
 ) -> impl QueryStatementWriter {
     update_user_info_values_by_id(
@@ -179,8 +179,8 @@ pub fn update_user_info_by_id(
 }
 
 fn update_user_info_values_by_id(
-    user_id: i32,
-    game_id: i32,
+    user_id: &str,
+    game_id: &str,
     mut values: Vec<(GameUserInfoIden, SimpleExpr)>,
 ) -> impl QueryStatementWriter {
     let mut update = Query::update();
@@ -201,7 +201,7 @@ fn update_user_info_values_by_id(
     update
 }
 
-pub fn delete_by_id(user_id: i32, id: i32) -> impl QueryStatementWriter {
+pub fn delete_by_id(user_id: &str, id: &str) -> impl QueryStatementWriter {
     let mut delete = Query::delete();
 
     delete
@@ -212,7 +212,7 @@ pub fn delete_by_id(user_id: i32, id: i32) -> impl QueryStatementWriter {
     delete
 }
 
-pub fn delete_user_info_by_id(user_id: i32, game_id: i32) -> impl QueryStatementWriter {
+pub fn delete_user_info_by_id(user_id: &str, game_id: &str) -> impl QueryStatementWriter {
     let mut delete = Query::delete();
 
     delete
@@ -223,7 +223,7 @@ pub fn delete_user_info_by_id(user_id: i32, game_id: i32) -> impl QueryStatement
     delete
 }
 
-pub fn exists_by_id(user_id: i32, id: i32) -> impl QueryStatementWriter {
+pub fn exists_by_id(user_id: &str, id: &str) -> impl QueryStatementWriter {
     let mut select = Query::select();
 
     from_and_where_user_id(&mut select, user_id);
@@ -233,7 +233,7 @@ pub fn exists_by_id(user_id: i32, id: i32) -> impl QueryStatementWriter {
     select
 }
 
-pub fn exists_by_name_and_edition(user_id: i32, name: &str, edition: &str) -> SelectStatement {
+pub fn exists_by_name_and_edition(user_id: &str, name: &str, edition: &str) -> SelectStatement {
     let mut select = Query::select();
 
     from_and_where_user_id(&mut select, user_id);
@@ -246,10 +246,10 @@ pub fn exists_by_name_and_edition(user_id: i32, name: &str, edition: &str) -> Se
 }
 
 pub fn exists_by_name_and_edition_and_id_not(
-    user_id: i32,
+    user_id: &str,
     name: &str,
     edition: &str,
-    id: i32,
+    id: &str,
 ) -> impl QueryStatementWriter {
     let mut select = exists_by_name_and_edition(user_id, name, edition);
 
@@ -258,13 +258,13 @@ pub fn exists_by_name_and_edition_and_id_not(
     select
 }
 
-fn from_and_where_user_id(select: &mut SelectStatement, user_id: i32) {
+fn from_and_where_user_id(select: &mut SelectStatement, user_id: &str) {
     select
         .from(GameIden::Table)
         .and_where(Expr::col((GameIden::Table, GameIden::UserId)).eq(user_id));
 }
 
-fn where_id(select: &mut SelectStatement, id: i32) {
+fn where_id(select: &mut SelectStatement, id: &str) {
     select.and_where(Expr::col((GameIden::Table, GameIden::Id)).eq(id));
 }
 

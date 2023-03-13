@@ -143,16 +143,16 @@ where
     }
 }
 
-pub(super) async fn create_merged<E, T, N, I, GF, CF>(
+pub(super) async fn create_merged<E, T, N, GF, CF>(
     new: N,
-    get_function: impl FnOnce(I) -> GF,
+    get_function: impl FnOnce(String) -> GF,
     create_function: impl FnOnce(E) -> CF,
 ) -> Result<T, ApiErrors>
 where
     T: From<E> + Merge<N> + Default + ModelInfo,
     E: From<T>,
     GF: Future<Output = Result<T, ApiErrors>>,
-    CF: Future<Output = Result<I, ApiErrors>>,
+    CF: Future<Output = Result<String, ApiErrors>>,
 {
     let merged_new = T::merge_with_default(new);
     let entity_to_create = E::from(merged_new);
@@ -256,8 +256,8 @@ pub(super) fn handle_image_client_provider(
 }
 
 pub(super) fn build_image_filename(
-    user_id: i32,
-    id: i32,
+    user_id: &str,
+    id: &str,
     suffix: &str,
     name: Option<String>,
 ) -> String {

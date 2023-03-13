@@ -4,25 +4,14 @@ use utoipa::ToSchema;
 
 use super::{Merge, ModelInfo};
 
-#[derive(Serialize, ToSchema)]
+#[derive(Default, Serialize, ToSchema)]
 pub struct TagDTO {
-    pub id: i32,
+    pub id: String,
     pub name: String,
     #[schema(value_type = String, format = DateTime)]
     pub added_datetime: NaiveDateTime,
     #[schema(value_type = String, format = DateTime)]
     pub updated_datetime: NaiveDateTime,
-}
-
-impl Default for TagDTO {
-    fn default() -> Self {
-        Self {
-            id: -1,
-            name: String::default(),
-            added_datetime: NaiveDateTime::default(),
-            updated_datetime: NaiveDateTime::default(),
-        }
-    }
 }
 
 impl Merge<NewTagDTO> for TagDTO {

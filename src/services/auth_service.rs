@@ -69,7 +69,7 @@ async fn get_token_from_password(
         .map_err(|_| TokenErrors::UnknownError(String::from("Password verification failed.")))?;
 
     if verify_pass {
-        crate::auth::generate_token_response(user.id, encoding_key)
+        crate::auth::generate_token_response(&user.id.to_string(), encoding_key)
     } else {
         Err(TokenErrors::InvalidGrant(String::from("Wrong password.")))
     }
@@ -92,7 +92,7 @@ async fn get_token_from_refresh(
     }
 
     let user_id = token_data.claims.sub_as_user_id();
-    let user = users_service::get_user(pool, user_id)
+    let user = users_service::get_user(pool, &user_id)
         .await
         .map_err(|err| match err {
             ApiErrors::NotFound(msg) => TokenErrors::InvalidRequest(msg),
@@ -100,5 +100,5 @@ async fn get_token_from_refresh(
             _ => TokenErrors::UnknownError(String::default()), // Other errors will never happen with a get call
         })?;
 
-    crate::auth::generate_token_response(user.id, encoding_key)
+    crate::auth::generate_token_response(&user.id, encoding_key)
 }

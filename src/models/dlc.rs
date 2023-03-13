@@ -4,12 +4,12 @@ use utoipa::ToSchema;
 
 use super::{Merge, ModelInfo};
 
-#[derive(Serialize, ToSchema)]
+#[derive(Default, Serialize, ToSchema)]
 pub struct DLCDTO {
-    pub id: i32,
+    pub id: String,
     pub name: String,
     #[serde(skip_serializing_if = "Option::is_none")]
-    pub base_game_id: Option<i32>,
+    pub base_game_id: Option<String>,
     #[serde(skip_serializing_if = "Option::is_none")]
     pub release_year: Option<i32>,
     #[serde(skip_serializing_if = "Option::is_none")]
@@ -20,21 +20,6 @@ pub struct DLCDTO {
     pub added_datetime: NaiveDateTime,
     #[schema(value_type = String, format = DateTime)]
     pub updated_datetime: NaiveDateTime,
-}
-
-impl Default for DLCDTO {
-    fn default() -> Self {
-        Self {
-            id: -1,
-            name: String::default(),
-            base_game_id: None,
-            release_year: None,
-            cover_filename: None,
-            cover_url: None,
-            added_datetime: NaiveDateTime::default(),
-            updated_datetime: NaiveDateTime::default(),
-        }
-    }
 }
 
 impl Merge<NewDLCDTO> for DLCDTO {
@@ -61,16 +46,16 @@ impl ModelInfo for DLCDTO {
 #[derive(Deserialize, ToSchema)]
 pub struct NewDLCDTO {
     pub name: Option<String>,
-    pub base_game_id: Option<i32>,
+    pub base_game_id: Option<String>,
     pub release_year: Option<i32>,
 }
 
 #[derive(Serialize, ToSchema)]
 pub struct DLCAvailableDTO {
-    pub id: i32,
+    pub id: String,
     pub name: String,
     #[serde(skip_serializing_if = "Option::is_none")]
-    pub base_game_id: Option<i32>,
+    pub base_game_id: Option<String>,
     #[serde(skip_serializing_if = "Option::is_none")]
     pub release_year: Option<i32>,
     #[serde(skip_serializing_if = "Option::is_none")]

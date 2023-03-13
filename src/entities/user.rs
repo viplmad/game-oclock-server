@@ -2,7 +2,7 @@ use std::str::FromStr;
 
 use chrono::NaiveDateTime;
 use sea_query::Iden;
-use sqlx::FromRow;
+use sqlx::{types::Uuid, FromRow};
 
 use super::{FieldIden, FieldType, Search, TableIden};
 
@@ -32,7 +32,7 @@ impl TableIden for UserIden {
 
 #[derive(FromRow)]
 pub struct User {
-    pub id: i32,
+    pub id: Uuid,
     pub username: String,
     pub password: String,
     pub admin: bool,
@@ -45,7 +45,7 @@ impl FromStr for FieldIden<UserIden> {
 
     fn from_str(field: &str) -> Result<Self, Self::Err> {
         match field {
-            "id" => Ok(FieldIden::new(UserIden::Id, FieldType::Integer)),
+            "id" => Ok(FieldIden::new(UserIden::Id, FieldType::String)),
             "name" => Ok(FieldIden::new(UserIden::Username, FieldType::String)),
             "admin" => Ok(FieldIden::new(UserIden::Admin, FieldType::Boolean)),
             "added_datetime" => Ok(FieldIden::new(UserIden::AddedDateTime, FieldType::DateTime)),

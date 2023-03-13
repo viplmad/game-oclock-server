@@ -13,8 +13,8 @@ use super::base::{
 
 pub async fn get_platform(
     pool: &PgPool,
-    user_id: i32,
-    platform_id: i32,
+    user_id: &str,
+    platform_id: &str,
 ) -> Result<PlatformDTO, ApiErrors> {
     let find_result = platform_repository::find_by_id(pool, user_id, platform_id).await;
     handle_get_result(find_result)
@@ -22,7 +22,7 @@ pub async fn get_platform(
 
 pub async fn search_platforms(
     pool: &PgPool,
-    user_id: i32,
+    user_id: &str,
     search: SearchDTO,
     quicksearch: Option<String>,
 ) -> Result<PlatformPageResult, ApiErrors> {
@@ -33,12 +33,12 @@ pub async fn search_platforms(
 
 pub async fn create_platform(
     pool: &PgPool,
-    user_id: i32,
+    user_id: &str,
     platform: NewPlatformDTO,
 ) -> Result<PlatformDTO, ApiErrors> {
     create_merged(
         platform,
-        async move |created_platform_id| get_platform(pool, user_id, created_platform_id).await,
+        async move |created_platform_id| get_platform(pool, user_id, &created_platform_id).await,
         async move |platform_to_create| {
             let exists_result =
                 platform_repository::exists_with_unique(pool, user_id, &platform_to_create).await;
@@ -46,7 +46,7 @@ pub async fn create_platform(
 
             let create_result =
                 platform_repository::create(pool, user_id, &platform_to_create).await;
-            handle_create_result::<i32, PlatformDTO>(create_result)
+            handle_create_result::<String, PlatformDTO>(create_result)
         },
     )
     .await
@@ -54,8 +54,8 @@ pub async fn create_platform(
 
 pub async fn update_platform(
     pool: &PgPool,
-    user_id: i32,
-    platform_id: i32,
+    user_id: &str,
+    platform_id: &str,
     platform: NewPlatformDTO,
 ) -> Result<(), ApiErrors> {
     update_merged(
@@ -74,7 +74,7 @@ pub async fn update_platform(
             let update_result =
                 platform_repository::update_by_id(pool, user_id, platform_id, &platform_to_update)
                     .await;
-            handle_update_result::<i32, PlatformDTO>(update_result)
+            handle_update_result::<String, PlatformDTO>(update_result)
         },
     )
     .await
@@ -82,8 +82,8 @@ pub async fn update_platform(
 
 pub async fn delete_platform(
     pool: &PgPool,
-    user_id: i32,
-    platform_id: i32,
+    user_id: &str,
+    platform_id: &str,
 ) -> Result<(), ApiErrors> {
     exists_platform(pool, user_id, platform_id).await?;
 
@@ -93,8 +93,8 @@ pub async fn delete_platform(
 
 pub async fn get_platform_icon_filename(
     pool: &PgPool,
-    user_id: i32,
-    platform_id: i32,
+    user_id: &str,
+    platform_id: &str,
 ) -> Result<String, ApiErrors> {
     let platform = get_platform(pool, user_id, platform_id).await?;
     platform.icon_filename.ok_or_else(|| {
@@ -104,8 +104,8 @@ pub async fn get_platform_icon_filename(
 
 pub async fn set_platform_icon_filename(
     pool: &PgPool,
-    user_id: i32,
-    platform_id: i32,
+    user_id: &str,
+    platform_id: &str,
     filename: Option<String>,
 ) -> Result<(), ApiErrors> {
     let update_result =
@@ -115,8 +115,8 @@ pub async fn set_platform_icon_filename(
 
 pub async fn exists_platform(
     pool: &PgPool,
-    user_id: i32,
-    platform_id: i32,
+    user_id: &str,
+    platform_id: &str,
 ) -> Result<(), ApiErrors> {
     let exists_result = platform_repository::exists_by_id(pool, user_id, platform_id).await;
     handle_not_found_result::<PlatformDTO>(exists_result)

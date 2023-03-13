@@ -8,8 +8,8 @@ use super::game_query;
 use super::search::apply_search;
 
 pub fn select_max_date_by_user_id_and_game_id(
-    user_id: i32,
-    game_id: i32,
+    user_id: &str,
+    game_id: &str,
 ) -> impl QueryStatementWriter {
     let mut select = Query::select();
 
@@ -19,7 +19,7 @@ pub fn select_max_date_by_user_id_and_game_id(
     select
 }
 
-pub fn select_all_by_user_id_and_game_id(user_id: i32, game_id: i32) -> SelectStatement {
+pub fn select_all_by_user_id_and_game_id(user_id: &str, game_id: &str) -> SelectStatement {
     let mut select = Query::select();
 
     from_and_where_user_id_and_game_id(&mut select, user_id, game_id);
@@ -29,7 +29,7 @@ pub fn select_all_by_user_id_and_game_id(user_id: i32, game_id: i32) -> SelectSt
 }
 
 fn select_all_game_with_finish_by_date_gte_and_date_lte(
-    user_id: i32,
+    user_id: &str,
     start_date: Option<NaiveDate>,
     end_date: Option<NaiveDate>,
 ) -> SelectStatement {
@@ -49,7 +49,7 @@ fn select_all_game_with_finish_by_date_gte_and_date_lte(
 }
 
 pub fn select_all_first_game_with_finish_with_search_by_date_gte_and_date_lte_order_by_date_asc(
-    user_id: i32,
+    user_id: &str,
     start_date: Option<NaiveDate>,
     end_date: Option<NaiveDate>,
     mut search: GameSearch,
@@ -72,7 +72,7 @@ pub fn select_all_first_game_with_finish_with_search_by_date_gte_and_date_lte_or
 }
 
 pub fn select_all_last_game_with_finish_with_search_by_date_gte_and_date_lte_order_by_date_desc(
-    user_id: i32,
+    user_id: &str,
     start_date: Option<NaiveDate>,
     end_date: Option<NaiveDate>,
     mut search: GameSearch,
@@ -94,7 +94,7 @@ pub fn select_all_last_game_with_finish_with_search_by_date_gte_and_date_lte_ord
     apply_search(select, search)
 }
 
-pub fn insert(user_id: i32, game_id: i32, date: NaiveDate) -> impl QueryStatementWriter {
+pub fn insert(user_id: &str, game_id: &str, date: NaiveDate) -> impl QueryStatementWriter {
     let mut insert = Query::insert();
 
     insert
@@ -109,7 +109,7 @@ pub fn insert(user_id: i32, game_id: i32, date: NaiveDate) -> impl QueryStatemen
     insert
 }
 
-pub fn delete_by_id(user_id: i32, game_id: i32, date: NaiveDate) -> impl QueryStatementWriter {
+pub fn delete_by_id(user_id: &str, game_id: &str, date: NaiveDate) -> impl QueryStatementWriter {
     let mut delete = Query::delete();
 
     delete
@@ -121,7 +121,7 @@ pub fn delete_by_id(user_id: i32, game_id: i32, date: NaiveDate) -> impl QuerySt
     delete
 }
 
-pub fn exists_by_id(user_id: i32, game_id: i32, date: NaiveDate) -> impl QueryStatementWriter {
+pub fn exists_by_id(user_id: &str, game_id: &str, date: NaiveDate) -> impl QueryStatementWriter {
     let mut select = Query::select();
 
     from_and_where_user_id_and_game_id(&mut select, user_id, game_id);
@@ -144,7 +144,7 @@ fn join_game_finish(select: &mut SelectStatement) {
     );
 }
 
-fn from_and_where_user_id_and_game_id(select: &mut SelectStatement, user_id: i32, game_id: i32) {
+fn from_and_where_user_id_and_game_id(select: &mut SelectStatement, user_id: &str, game_id: &str) {
     select
         .from(GameFinishIden::Table)
         .and_where(Expr::col((GameFinishIden::Table, GameFinishIden::UserId)).eq(user_id))

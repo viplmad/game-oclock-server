@@ -4,9 +4,9 @@ use utoipa::{IntoParams, ToSchema};
 
 use super::{Merge, ModelInfo};
 
-#[derive(Serialize, ToSchema)]
+#[derive(Default, Serialize, ToSchema)]
 pub struct UserDTO {
-    pub id: i32,
+    pub id: String,
     pub username: String,
     pub admin: bool,
     #[schema(value_type = String, format = DateTime)]
@@ -15,21 +15,8 @@ pub struct UserDTO {
     pub updated_datetime: NaiveDateTime,
 }
 
-impl Default for UserDTO {
-    fn default() -> Self {
-        Self {
-            id: -1,
-            username: String::default(),
-            admin: false,
-            added_datetime: NaiveDateTime::default(),
-            updated_datetime: NaiveDateTime::default(),
-        }
-    }
-}
-
 impl Merge<NewUserDTO> for UserDTO {
     fn merge(self, other: NewUserDTO) -> Self {
-        // More useful if more properties are added
         Self {
             id: self.id,
             username: other.username,

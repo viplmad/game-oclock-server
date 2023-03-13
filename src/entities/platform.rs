@@ -2,7 +2,7 @@ use std::str::FromStr;
 
 use chrono::{NaiveDate, NaiveDateTime};
 use sea_query::Iden;
-use sqlx::FromRow;
+use sqlx::{types::Uuid, FromRow};
 
 use super::{FieldIden, FieldType, Search, TableIden};
 
@@ -34,8 +34,8 @@ impl TableIden for PlatformIden {
 
 #[derive(FromRow)]
 pub struct Platform {
-    pub id: i32,
-    pub user_id: i32,
+    pub id: Uuid,
+    pub user_id: Uuid,
     pub name: String,
     #[sqlx(rename = "type")] // Fix to use type reserved name
     pub ptype: Option<i16>,
@@ -46,8 +46,8 @@ pub struct Platform {
 
 #[derive(FromRow)]
 pub struct PlatformWithDate {
-    pub id: i32,
-    pub user_id: i32,
+    pub id: Uuid,
+    pub user_id: Uuid,
     pub query_date: NaiveDate,
     pub name: String,
     #[sqlx(rename = "type")] // Fix to use type reserved name
@@ -62,7 +62,7 @@ impl FromStr for FieldIden<PlatformIden> {
 
     fn from_str(field: &str) -> Result<Self, Self::Err> {
         match field {
-            "id" => Ok(FieldIden::new(PlatformIden::Id, FieldType::Integer)),
+            "id" => Ok(FieldIden::new(PlatformIden::Id, FieldType::String)),
             "name" => Ok(FieldIden::new(PlatformIden::Name, FieldType::String)),
             "type" => Ok(FieldIden::new(PlatformIden::Type, FieldType::PlatformType)),
             "icon_filename" => Ok(FieldIden::new(

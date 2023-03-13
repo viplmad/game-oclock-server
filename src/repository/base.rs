@@ -57,7 +57,7 @@ where
 pub(super) async fn execute_return_id<'c, X>(
     executor: X,
     query: impl QueryStatementWriter,
-) -> Result<i32, RepositoryError>
+) -> Result<String, RepositoryError>
 where
     X: sqlx::Executor<'c, Database = Postgres>,
 {
@@ -174,7 +174,7 @@ where
 {
     fetch_all(executor, query)
         .await
-        .map(|res: Vec<(i32,)>| !res.is_empty())
+        .map(|res: Vec<(String,)>| !res.is_empty())
 }
 
 fn build_sql(query: impl QueryStatementWriter) -> String {

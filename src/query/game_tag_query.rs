@@ -4,7 +4,7 @@ use crate::entities::{GameIden, GameTagIden, TagIden};
 
 use super::{game_query, tag_query};
 
-pub fn select_all_games_by_tag_id(user_id: i32, tag_id: i32) -> impl QueryStatementWriter {
+pub fn select_all_games_by_tag_id(user_id: &str, tag_id: &str) -> impl QueryStatementWriter {
     let mut select = game_query::select_all(user_id);
 
     join_game_tag_by_tag_id(&mut select, tag_id);
@@ -12,7 +12,7 @@ pub fn select_all_games_by_tag_id(user_id: i32, tag_id: i32) -> impl QueryStatem
     select
 }
 
-pub fn select_all_tags_by_game_id(user_id: i32, game_id: i32) -> impl QueryStatementWriter {
+pub fn select_all_tags_by_game_id(user_id: &str, game_id: &str) -> impl QueryStatementWriter {
     let mut select = tag_query::select_all(user_id);
 
     join_game_tag_by_game_id(&mut select, game_id);
@@ -20,7 +20,7 @@ pub fn select_all_tags_by_game_id(user_id: i32, game_id: i32) -> impl QueryState
     select
 }
 
-pub fn insert(user_id: i32, game_id: i32, tag_id: i32) -> impl QueryStatementWriter {
+pub fn insert(user_id: &str, game_id: &str, tag_id: &str) -> impl QueryStatementWriter {
     let mut insert = Query::insert();
 
     insert
@@ -31,7 +31,7 @@ pub fn insert(user_id: i32, game_id: i32, tag_id: i32) -> impl QueryStatementWri
     insert
 }
 
-pub fn delete_by_id(user_id: i32, game_id: i32, tag_id: i32) -> impl QueryStatementWriter {
+pub fn delete_by_id(user_id: &str, game_id: &str, tag_id: &str) -> impl QueryStatementWriter {
     let mut delete = Query::delete();
 
     delete
@@ -43,7 +43,7 @@ pub fn delete_by_id(user_id: i32, game_id: i32, tag_id: i32) -> impl QueryStatem
     delete
 }
 
-pub fn exists_by_id(user_id: i32, game_id: i32, tag_id: i32) -> impl QueryStatementWriter {
+pub fn exists_by_id(user_id: &str, game_id: &str, tag_id: &str) -> impl QueryStatementWriter {
     let mut select = Query::select();
 
     from_and_where_user_id(&mut select, user_id);
@@ -55,7 +55,7 @@ pub fn exists_by_id(user_id: i32, game_id: i32, tag_id: i32) -> impl QueryStatem
     select
 }
 
-fn join_game_tag_by_tag_id(select: &mut SelectStatement, tag_id: i32) {
+fn join_game_tag_by_tag_id(select: &mut SelectStatement, tag_id: &str) {
     select
         .left_join(
             GameTagIden::Table,
@@ -69,7 +69,7 @@ fn join_game_tag_by_tag_id(select: &mut SelectStatement, tag_id: i32) {
         .and_where(Expr::col((GameTagIden::Table, GameTagIden::TagId)).eq(tag_id));
 }
 
-fn join_game_tag_by_game_id(select: &mut SelectStatement, game_id: i32) {
+fn join_game_tag_by_game_id(select: &mut SelectStatement, game_id: &str) {
     select
         .left_join(
             GameTagIden::Table,
@@ -83,7 +83,7 @@ fn join_game_tag_by_game_id(select: &mut SelectStatement, game_id: i32) {
         .and_where(Expr::col((GameTagIden::Table, GameTagIden::GameId)).eq(game_id));
 }
 
-fn from_and_where_user_id(select: &mut SelectStatement, user_id: i32) {
+fn from_and_where_user_id(select: &mut SelectStatement, user_id: &str) {
     select
         .from(GameTagIden::Table)
         .and_where(Expr::col((GameTagIden::Table, GameTagIden::UserId)).eq(user_id));

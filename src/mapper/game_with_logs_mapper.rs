@@ -4,7 +4,7 @@ use crate::models::{DurationDef, GameStatus, GameWithLogDTO, GameWithLogsDTO};
 impl From<GameWithLog> for GameWithLogsDTO {
     fn from(game: GameWithLog) -> Self {
         Self {
-            id: game.id,
+            id: game.id.to_string(),
             name: game.name,
             edition: game.edition,
             release_year: game.release_year,
@@ -26,7 +26,7 @@ impl From<GameWithLog> for GameWithLogsDTO {
 impl From<GameWithLog> for GameWithLogDTO {
     fn from(game: GameWithLog) -> Self {
         Self {
-            id: game.id,
+            id: game.id.to_string(),
             name: game.name,
             edition: game.edition,
             release_year: game.release_year,

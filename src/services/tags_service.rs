@@ -11,14 +11,14 @@ use super::base::{
     handle_update_result, update_merged,
 };
 
-pub async fn get_tag(pool: &PgPool, user_id: i32, tag_id: i32) -> Result<TagDTO, ApiErrors> {
+pub async fn get_tag(pool: &PgPool, user_id: &str, tag_id: &str) -> Result<TagDTO, ApiErrors> {
     let find_result = tag_repository::find_by_id(pool, user_id, tag_id).await;
     handle_get_result(find_result)
 }
 
 pub async fn search_tags(
     pool: &PgPool,
-    user_id: i32,
+    user_id: &str,
     search: SearchDTO,
     quicksearch: Option<String>,
 ) -> Result<TagPageResult, ApiErrors> {
@@ -27,17 +27,17 @@ pub async fn search_tags(
     handle_get_list_paged_result(find_result)
 }
 
-pub async fn create_tag(pool: &PgPool, user_id: i32, tag: NewTagDTO) -> Result<TagDTO, ApiErrors> {
+pub async fn create_tag(pool: &PgPool, user_id: &str, tag: NewTagDTO) -> Result<TagDTO, ApiErrors> {
     create_merged(
         tag,
-        async move |created_tag_id| get_tag(pool, user_id, created_tag_id).await,
+        async move |created_tag_id| get_tag(pool, user_id, &created_tag_id).await,
         async move |tag_to_create| {
             let exists_result =
                 tag_repository::exists_with_unique(pool, user_id, &tag_to_create).await;
             handle_already_exists_result::<TagDTO>(exists_result)?;
 
             let create_result = tag_repository::create(pool, user_id, &tag_to_create).await;
-            handle_create_result::<i32, TagDTO>(create_result)
+            handle_create_result::<String, TagDTO>(create_result)
         },
     )
     .await
@@ -45,8 +45,8 @@ pub async fn create_tag(pool: &PgPool, user_id: i32, tag: NewTagDTO) -> Result<T
 
 pub async fn update_tag(
     pool: &PgPool,
-    user_id: i32,
-    tag_id: i32,
+    user_id: &str,
+    tag_id: &str,
     tag: NewTagDTO,
 ) -> Result<(), ApiErrors> {
     update_merged(
@@ -60,20 +60,20 @@ pub async fn update_tag(
 
             let update_result =
                 tag_repository::update_by_id(pool, user_id, tag_id, &tag_to_update).await;
-            handle_update_result::<i32, TagDTO>(update_result)
+            handle_update_result::<String, TagDTO>(update_result)
         },
     )
     .await
 }
 
-pub async fn delete_tag(pool: &PgPool, user_id: i32, tag_id: i32) -> Result<(), ApiErrors> {
+pub async fn delete_tag(pool: &PgPool, user_id: &str, tag_id: &str) -> Result<(), ApiErrors> {
     exists_tag(pool, user_id, tag_id).await?;
 
     let delete_result = tag_repository::delete_by_id(pool, user_id, tag_id).await;
     handle_action_result::<TagDTO>(delete_result)
 }
 
-pub async fn exists_tag(pool: &PgPool, user_id: i32, tag_id: i32) -> Result<(), ApiErrors> {
+pub async fn exists_tag(pool: &PgPool, user_id: &str, tag_id: &str) -> Result<(), ApiErrors> {
     let exists_result = tag_repository::exists_by_id(pool, user_id, tag_id).await;
     handle_not_found_result::<TagDTO>(exists_result)
 }

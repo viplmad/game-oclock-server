@@ -16,7 +16,7 @@ use super::base::{
 
 pub async fn search_first_played_games(
     pool: &PgPool,
-    user_id: i32,
+    user_id: &str,
     start_date: Option<NaiveDate>,
     end_date: Option<NaiveDate>,
     search: SearchDTO,
@@ -39,7 +39,7 @@ pub async fn search_first_played_games(
 
 pub async fn search_last_played_games(
     pool: &PgPool,
-    user_id: i32,
+    user_id: &str,
     start_date: Option<NaiveDate>,
     end_date: Option<NaiveDate>,
     search: SearchDTO,
@@ -62,7 +62,7 @@ pub async fn search_last_played_games(
 
 pub async fn get_game_with_logs(
     pool: &PgPool,
-    user_id: i32,
+    user_id: &str,
     start_date: NaiveDate,
     end_date: NaiveDate,
 ) -> Result<Vec<GameWithLogsDTO>, ApiErrors> {
@@ -97,10 +97,10 @@ fn start_end_to_datetime(
 }
 
 fn create_unique_list(game_with_logs: Vec<GameWithLog>) -> Vec<GameWithLogsDTO> {
-    let mut map = HashMap::<i32, GameWithLogsDTO>::new();
+    let mut map = HashMap::<String, GameWithLogsDTO>::new();
 
     for game_with_log in game_with_logs {
-        let game_id = game_with_log.id;
+        let game_id = game_with_log.id.to_string();
 
         let existing_game = map.get_mut(&game_id);
         let log = GameLogDTO::from(&game_with_log);

@@ -85,8 +85,8 @@ pub fn populate_games_with_logs_cover(
 pub async fn set_game_cover(
     pool: &PgPool,
     image_client_provider: &ImageClientProvider,
-    user_id: i32,
-    game_id: i32,
+    user_id: &str,
+    game_id: &str,
     file_path: &str,
 ) -> Result<(), ApiErrors> {
     let image_client = handle_image_client_provider(image_client_provider)?;
@@ -105,8 +105,8 @@ pub async fn set_game_cover(
 pub async fn rename_game_cover(
     pool: &PgPool,
     image_client_provider: &ImageClientProvider,
-    user_id: i32,
-    game_id: i32,
+    user_id: &str,
+    game_id: &str,
     new_name: &str,
 ) -> Result<(), ApiErrors> {
     let image_client = handle_image_client_provider(image_client_provider)?;
@@ -126,8 +126,8 @@ pub async fn rename_game_cover(
 pub async fn delete_game_cover(
     pool: &PgPool,
     image_client_provider: &ImageClientProvider,
-    user_id: i32,
-    game_id: i32,
+    user_id: &str,
+    game_id: &str,
 ) -> Result<(), ApiErrors> {
     let image_client = handle_image_client_provider(image_client_provider)?;
 
@@ -142,6 +142,6 @@ pub async fn delete_game_cover(
     games_service::set_game_cover_filename(pool, user_id, game_id, Option::<String>::None).await
 }
 
-fn build_game_cover_filename(user_id: i32, game_id: i32, name: Option<String>) -> String {
+fn build_game_cover_filename(user_id: &str, game_id: &str, name: Option<String>) -> String {
     build_image_filename(user_id, game_id, GAME_HEADER_SUFFIX, name)
 }

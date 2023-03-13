@@ -16,7 +16,7 @@ use super::base::{
     path = "/api/v1/users/{id}",
     tag = "Users",
     params(
-        ("id" = i32, Path, description = "User id"),
+        ("id" = String, Path, description = "User id"),
     ),
     responses(
         (status = 200, description = "User obtained", body = UserDTO, content_type = "application/json"),
@@ -32,7 +32,7 @@ use super::base::{
 #[get("/users/{id}")]
 async fn get_user(pool: web::Data<PgPool>, path: web::Path<ItemId>) -> impl Responder {
     let ItemId(id) = path.into_inner();
-    let get_result = users_service::get_user(&pool, id).await;
+    let get_result = users_service::get_user(&pool, &id).await;
     handle_get_result(get_result)
 }
 
@@ -53,7 +53,7 @@ async fn get_user(pool: web::Data<PgPool>, path: web::Path<ItemId>) -> impl Resp
 )]
 #[get("/myself")]
 async fn get_current_user(pool: web::Data<PgPool>, logged_user: LoggedUser) -> impl Responder {
-    let get_result = users_service::get_user(&pool, logged_user.id).await;
+    let get_result = users_service::get_user(&pool, &logged_user.id).await;
     handle_get_result(get_result)
 }
 
@@ -125,7 +125,7 @@ async fn post_user(
     path = "/api/v1/users/{id}",
     tag = "Users",
     params(
-        ("id" = i32, Path, description = "User id"),
+        ("id" = String, Path, description = "User id"),
     ),
     request_body(content = NewUserDTO, description = "User to be updated", content_type = "application/json"),
     responses(
@@ -147,7 +147,7 @@ async fn put_user(
     body: web::Json<NewUserDTO>,
 ) -> impl Responder {
     let ItemId(id) = path.into_inner();
-    let update_result = users_service::update_user(&pool, id, body.0).await;
+    let update_result = users_service::update_user(&pool, &id, body.0).await;
     handle_update_result(update_result)
 }
 
@@ -175,7 +175,7 @@ async fn change_password(
     logged_user: LoggedUser,
 ) -> impl Responder {
     let change_password_result =
-        users_service::change_user_password(&pool, logged_user.id, form.0).await;
+        users_service::change_user_password(&pool, &logged_user.id, form.0).await;
     handle_action_result(change_password_result)
 }
 
@@ -184,7 +184,7 @@ async fn change_password(
     path = "/api/v1/users/{id}/promote",
     tag = "Users",
     params(
-        ("id" = i32, Path, description = "User id"),
+        ("id" = String, Path, description = "User id"),
     ),
     responses(
         (status = 204, description = "User updated"),
@@ -209,7 +209,7 @@ async fn promote_user(
     }
 
     let ItemId(id) = path.into_inner();
-    let update_result = users_service::promote_user(&pool, id).await;
+    let update_result = users_service::promote_user(&pool, &id).await;
     handle_update_result(update_result)
 }
 
@@ -218,7 +218,7 @@ async fn promote_user(
     path = "/api/v1/users/{id}/demote",
     tag = "Users",
     params(
-        ("id" = i32, Path, description = "User id"),
+        ("id" = String, Path, description = "User id"),
     ),
     responses(
         (status = 204, description = "User updated"),
@@ -243,7 +243,7 @@ async fn demote_user(
     }
 
     let ItemId(id) = path.into_inner();
-    let update_result = users_service::demote_user(&pool, id).await;
+    let update_result = users_service::demote_user(&pool, &id).await;
     handle_update_result(update_result)
 }
 
@@ -252,7 +252,7 @@ async fn demote_user(
     path = "/api/v1/users/{id}",
     tag = "Users",
     params(
-        ("id" = i32, Path, description = "User id"),
+        ("id" = String, Path, description = "User id"),
     ),
     responses(
         (status = 204, description = "User deleted"),
@@ -276,6 +276,6 @@ async fn delete_user(
     }
 
     let ItemId(id) = path.into_inner();
-    let delete_result = users_service::delete_user(&pool, id).await;
+    let delete_result = users_service::delete_user(&pool, &id).await;
     handle_delete_result(delete_result)
 }

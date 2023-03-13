@@ -6,7 +6,7 @@ use super::{GameDTO, GameStatus, ModelInfo};
 
 #[derive(Serialize, ToSchema)]
 pub struct GameWithFinishDTO {
-    pub id: i32,
+    pub id: String,
     pub name: String,
     pub edition: String,
     #[serde(skip_serializing_if = "Option::is_none")]

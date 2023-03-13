@@ -57,8 +57,8 @@ pub fn populate_dlcs_with_finish_cover(
 pub async fn set_dlc_cover(
     pool: &PgPool,
     image_client_provider: &ImageClientProvider,
-    user_id: i32,
-    dlc_id: i32,
+    user_id: &str,
+    dlc_id: &str,
     file_path: &str,
 ) -> Result<(), ApiErrors> {
     let image_client = handle_image_client_provider(image_client_provider)?;
@@ -77,8 +77,8 @@ pub async fn set_dlc_cover(
 pub async fn rename_dlc_cover(
     pool: &PgPool,
     image_client_provider: &ImageClientProvider,
-    user_id: i32,
-    dlc_id: i32,
+    user_id: &str,
+    dlc_id: &str,
     new_name: &str,
 ) -> Result<(), ApiErrors> {
     let image_client = handle_image_client_provider(image_client_provider)?;
@@ -98,8 +98,8 @@ pub async fn rename_dlc_cover(
 pub async fn delete_dlc_cover(
     pool: &PgPool,
     image_client_provider: &ImageClientProvider,
-    user_id: i32,
-    dlc_id: i32,
+    user_id: &str,
+    dlc_id: &str,
 ) -> Result<(), ApiErrors> {
     let image_client = handle_image_client_provider(image_client_provider)?;
 
@@ -114,6 +114,6 @@ pub async fn delete_dlc_cover(
     dlcs_service::set_dlc_cover_filename(pool, user_id, dlc_id, Option::<String>::None).await
 }
 
-fn build_dlc_cover_filename(user_id: i32, dlc_id: i32, name: Option<String>) -> String {
+fn build_dlc_cover_filename(user_id: &str, dlc_id: &str, name: Option<String>) -> String {
     build_image_filename(user_id, dlc_id, DLC_HEADER_SUFFIX, name)
 }

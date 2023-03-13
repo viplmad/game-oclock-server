@@ -1,10 +1,12 @@
+use sqlx::types::Uuid;
+
 use crate::entities::{Platform, PlatformWithDate};
 use crate::models::{PlatformAvailableDTO, PlatformDTO, PlatformType};
 
 impl From<Platform> for PlatformDTO {
     fn from(platform: Platform) -> Self {
         Self {
-            id: platform.id,
+            id: platform.id.to_string(),
             name: platform.name,
             ptype: platform.ptype.map(|ptype| {
                 PlatformType::try_from(ptype).expect("Type was not within valid range")
@@ -20,8 +22,8 @@ impl From<Platform> for PlatformDTO {
 impl From<PlatformDTO> for Platform {
     fn from(platform: PlatformDTO) -> Self {
         Self {
-            id: platform.id,
-            user_id: -1,
+            id: Uuid::parse_str(&platform.id).expect("Id was not valid Uuid"),
+            user_id: Uuid::default(),
             name: platform.name,
             ptype: platform.ptype.map(i16::from),
             icon_filename: platform.icon_filename,
@@ -34,7 +36,7 @@ impl From<PlatformDTO> for Platform {
 impl From<PlatformWithDate> for PlatformAvailableDTO {
     fn from(platform: PlatformWithDate) -> Self {
         Self {
-            id: platform.id,
+            id: platform.id.to_string(),
             available_date: platform.query_date,
             name: platform.name,
             ptype: platform.ptype.map(|ptype| {

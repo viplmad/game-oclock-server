@@ -17,7 +17,7 @@ use super::base::{
     path = "/api/v1/platforms/{id}",
     tag = "Platforms",
     params(
-        ("id" = i32, Path, description = "Platform id"),
+        ("id" = String, Path, description = "Platform id"),
     ),
     responses(
         (status = 200, description = "Platform obtained", body = PlatformDTO, content_type = "application/json"),
@@ -38,7 +38,7 @@ async fn get_platform(
     logged_user: LoggedUser,
 ) -> impl Responder {
     let ItemId(id) = path.into_inner();
-    let mut get_result = platforms_service::get_platform(&pool, logged_user.id, id).await;
+    let mut get_result = platforms_service::get_platform(&pool, &logged_user.id, &id).await;
     populate_get_result(&mut get_result, |platform| {
         platform_image_service::populate_platform_icon(&image_client_provider, platform)
     });
@@ -50,7 +50,7 @@ async fn get_platform(
     path = "/api/v1/games/{id}/platforms",
     tag = "Platforms",
     params(
-        ("id" = i32, Path, description = "Game id"),
+        ("id" = String, Path, description = "Game id"),
     ),
     responses(
         (status = 200, description = "Platforms obtained", body = [PlatformAvailableDTO], content_type = "application/json"),
@@ -72,7 +72,7 @@ async fn get_game_platforms(
 ) -> impl Responder {
     let ItemId(id) = path.into_inner();
     let mut get_result =
-        game_available_service::get_game_platforms(&pool, logged_user.id, id).await;
+        game_available_service::get_game_platforms(&pool, &logged_user.id, &id).await;
     populate_get_result(&mut get_result, |platform| {
         platform_image_service::populate_platforms_available_icon(&image_client_provider, platform)
     });
@@ -84,7 +84,7 @@ async fn get_game_platforms(
     path = "/api/v1/dlcs/{id}/platforms",
     tag = "Platforms",
     params(
-        ("id" = i32, Path, description = "DLC id"),
+        ("id" = String, Path, description = "DLC id"),
     ),
     responses(
         (status = 200, description = "Platforms obtained", body = [PlatformAvailableDTO], content_type = "application/json"),
@@ -105,7 +105,8 @@ async fn get_dlc_platforms(
     logged_user: LoggedUser,
 ) -> impl Responder {
     let ItemId(id) = path.into_inner();
-    let mut get_result = dlc_available_service::get_dlc_platforms(&pool, logged_user.id, id).await;
+    let mut get_result =
+        dlc_available_service::get_dlc_platforms(&pool, &logged_user.id, &id).await;
     populate_get_result(&mut get_result, |platform| {
         platform_image_service::populate_platforms_available_icon(&image_client_provider, platform)
     });
@@ -139,7 +140,7 @@ async fn get_platforms(
     logged_user: LoggedUser,
 ) -> impl Responder {
     let mut search_result =
-        platforms_service::search_platforms(&pool, logged_user.id, body.0, query.0.q).await;
+        platforms_service::search_platforms(&pool, &logged_user.id, body.0, query.0.q).await;
     populate_get_page_result(&mut search_result, |platform| {
         platform_image_service::populate_platforms_icon(&image_client_provider, platform)
     });
@@ -169,7 +170,7 @@ async fn post_platform(
     body: web::Json<NewPlatformDTO>,
     logged_user: LoggedUser,
 ) -> impl Responder {
-    let create_result = platforms_service::create_platform(&pool, logged_user.id, body.0).await;
+    let create_result = platforms_service::create_platform(&pool, &logged_user.id, body.0).await;
     handle_create_result(create_result)
 }
 
@@ -178,7 +179,7 @@ async fn post_platform(
     path = "/api/v1/platforms/{id}/icon",
     tag = "Platforms",
     params(
-        ("id" = i32, Path, description = "Platform id"),
+        ("id" = String, Path, description = "Platform id"),
     ),
     request_body(content = Image, description = "Platform icon to be uploaded", content_type = "multipart/form-data"),
     responses(
@@ -212,8 +213,8 @@ async fn post_platform_icon(
     let upload_result = platform_image_service::set_platform_icon(
         &pool,
         &image_client_provider,
-        logged_user.id,
-        id,
+        &logged_user.id,
+        &id,
         &file_path,
     )
     .await;
@@ -228,7 +229,7 @@ async fn post_platform_icon(
     path = "/api/v1/platforms/{id}",
     tag = "Platforms",
     params(
-        ("id" = i32, Path, description = "Platform id"),
+        ("id" = String, Path, description = "Platform id"),
     ),
     request_body(content = NewPlatformDTO, description = "Platform to be updated", content_type = "application/json"),
     responses(
@@ -251,7 +252,8 @@ async fn put_platform(
     logged_user: LoggedUser,
 ) -> impl Responder {
     let ItemId(id) = path.into_inner();
-    let update_result = platforms_service::update_platform(&pool, logged_user.id, id, body.0).await;
+    let update_result =
+        platforms_service::update_platform(&pool, &logged_user.id, &id, body.0).await;
     handle_update_result(update_result)
 }
 
@@ -260,7 +262,7 @@ async fn put_platform(
     path = "/api/v1/platforms/{id}/icon",
     tag = "Platforms",
     params(
-        ("id" = i32, Path, description = "Platform id"),
+        ("id" = String, Path, description = "Platform id"),
     ),
     request_body(content = String, description = "New platform filename", content_type = "application/json"),
     responses(
@@ -287,8 +289,8 @@ async fn put_platform_icon(
     let update_result = platform_image_service::rename_platform_icon(
         &pool,
         &image_client_provider,
-        logged_user.id,
-        id,
+        &logged_user.id,
+        &id,
         &body.0,
     )
     .await;
@@ -300,7 +302,7 @@ async fn put_platform_icon(
     path = "/api/v1/platforms/{id}",
     tag = "Platforms",
     params(
-        ("id" = i32, Path, description = "Platform id"),
+        ("id" = String, Path, description = "Platform id"),
     ),
     responses(
         (status = 204, description = "Platform deleted"),
@@ -320,7 +322,8 @@ async fn delete_platform(
     logged_user: LoggedUser,
 ) -> impl Responder {
     let ItemId(id) = path.into_inner();
-    let delete_result = platforms_service::delete_platform(&pool, logged_user.id, id).await;
+    let delete_result = platforms_service::delete_platform(&pool, &logged_user.id, &id).await;
+    // TODO delete image from image service
     handle_delete_result(delete_result)
 }
 
@@ -329,7 +332,7 @@ async fn delete_platform(
     path = "/api/v1/platforms/{id}/icon",
     tag = "Platforms",
     params(
-        ("id" = i32, Path, description = "Platform id"),
+        ("id" = String, Path, description = "Platform id"),
     ),
     responses(
         (status = 204, description = "Platform icon deleted"),
@@ -354,8 +357,8 @@ async fn delete_platform_icon(
     let delete_result = platform_image_service::delete_platform_icon(
         &pool,
         &image_client_provider,
-        logged_user.id,
-        id,
+        &logged_user.id,
+        &id,
     )
     .await;
     handle_action_result(delete_result)

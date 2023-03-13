@@ -5,7 +5,7 @@ use crate::errors::SearchErrors;
 
 use super::search::apply_search;
 
-pub fn select_by_id(id: i32) -> impl QueryStatementWriter {
+pub fn select_by_id(id: &str) -> impl QueryStatementWriter {
     let mut select = Query::select();
 
     from(&mut select);
@@ -62,20 +62,20 @@ pub fn insert(user: &User, password: &str) -> impl QueryStatementWriter {
     insert
 }
 
-pub fn update_by_id(id: i32, user: &User) -> impl QueryStatementWriter {
+pub fn update_by_id(id: &str, user: &User) -> impl QueryStatementWriter {
     update_values_by_id(id, vec![(UserIden::Username, user.username.clone().into())])
 }
 
-pub fn update_password_by_id(id: i32, password: &str) -> impl QueryStatementWriter {
+pub fn update_password_by_id(id: &str, password: &str) -> impl QueryStatementWriter {
     update_values_by_id(id, vec![(UserIden::Password, password.into())])
 }
 
-pub fn update_admin_by_id(id: i32, admin: bool) -> impl QueryStatementWriter {
+pub fn update_admin_by_id(id: &str, admin: bool) -> impl QueryStatementWriter {
     update_values_by_id(id, vec![(UserIden::Admin, admin.into())])
 }
 
 fn update_values_by_id(
-    id: i32,
+    id: &str,
     mut values: Vec<(UserIden, SimpleExpr)>,
 ) -> impl QueryStatementWriter {
     let mut update = Query::update();
@@ -90,7 +90,7 @@ fn update_values_by_id(
     update
 }
 
-pub fn delete_by_id(id: i32) -> impl QueryStatementWriter {
+pub fn delete_by_id(id: &str) -> impl QueryStatementWriter {
     let mut delete = Query::delete();
 
     delete
@@ -100,7 +100,7 @@ pub fn delete_by_id(id: i32) -> impl QueryStatementWriter {
     delete
 }
 
-pub fn exists_by_id(id: i32) -> impl QueryStatementWriter {
+pub fn exists_by_id(id: &str) -> impl QueryStatementWriter {
     let mut select = Query::select();
 
     from(&mut select);
@@ -120,7 +120,7 @@ pub fn exists_by_username(username: &str) -> SelectStatement {
     select
 }
 
-pub fn exists_by_username_and_id_not(username: &str, id: i32) -> impl QueryStatementWriter {
+pub fn exists_by_username_and_id_not(username: &str, id: &str) -> impl QueryStatementWriter {
     let mut select = exists_by_username(username);
 
     select.and_where(Expr::col(UserIden::Id).ne(id));
@@ -128,7 +128,7 @@ pub fn exists_by_username_and_id_not(username: &str, id: i32) -> impl QueryState
     select
 }
 
-pub fn exists_by_admin_and_id_not(id: i32) -> impl QueryStatementWriter {
+pub fn exists_by_admin_and_id_not(id: &str) -> impl QueryStatementWriter {
     let mut select = Query::select();
 
     from(&mut select);
@@ -143,7 +143,7 @@ fn from(select: &mut SelectStatement) {
     select.from(UserIden::Table);
 }
 
-fn where_id(select: &mut SelectStatement, id: i32) {
+fn where_id(select: &mut SelectStatement, id: &str) {
     select.and_where(Expr::col((UserIden::Table, UserIden::Id)).eq(id));
 }
 

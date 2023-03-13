@@ -16,7 +16,7 @@ use super::base::{
     path = "/api/v1/games/{id}/finishes",
     tag = "GameFinish",
     params(
-        ("id" = i32, Path, description = "Game id"),
+        ("id" = String, Path, description = "Game id"),
     ),
     responses(
         (status = 200, description = "Finishes obtained", body = [String], content_type = "application/json"),
@@ -36,7 +36,7 @@ async fn get_game_finishes(
     logged_user: LoggedUser,
 ) -> impl Responder {
     let ItemId(id) = path.into_inner();
-    let get_result = game_finishes_service::get_game_finishes(&pool, logged_user.id, id).await;
+    let get_result = game_finishes_service::get_game_finishes(&pool, &logged_user.id, &id).await;
     handle_get_result(get_result)
 }
 
@@ -45,7 +45,7 @@ async fn get_game_finishes(
     path = "/api/v1/games/{id}/finishes/first",
     tag = "GameFinish",
     params(
-        ("id" = i32, Path, description = "Game id"),
+        ("id" = String, Path, description = "Game id"),
     ),
     responses(
         (status = 200, description = "First finish obtained", body = String, content_type = "application/json"),
@@ -65,7 +65,8 @@ async fn get_first_game_finish(
     logged_user: LoggedUser,
 ) -> impl Responder {
     let ItemId(id) = path.into_inner();
-    let get_result = game_finishes_service::get_first_game_finish(&pool, logged_user.id, id).await;
+    let get_result =
+        game_finishes_service::get_first_game_finish(&pool, &logged_user.id, &id).await;
     handle_get_result(get_result)
 }
 
@@ -100,7 +101,7 @@ async fn get_first_finished_games(
 ) -> impl Responder {
     let mut get_result = game_with_finish_service::search_first_finished_games(
         &pool,
-        logged_user.id,
+        &logged_user.id,
         query.start_date,
         query.end_date,
         body.0,
@@ -144,7 +145,7 @@ async fn get_last_finished_games(
 ) -> impl Responder {
     let mut get_result = game_with_finish_service::search_last_finished_games(
         &pool,
-        logged_user.id,
+        &logged_user.id,
         query.start_date,
         query.end_date,
         body.0,
@@ -162,7 +163,7 @@ async fn get_last_finished_games(
     path = "/api/v1/games/{id}/finishes",
     tag = "GameFinish",
     params(
-        ("id" = i32, Path, description = "Game id"),
+        ("id" = String, Path, description = "Game id"),
     ),
     request_body(content = DateDTO, description = "Game finish date to be added", content_type = "application/json"),
     responses(
@@ -186,7 +187,7 @@ async fn post_game_finish(
 ) -> impl Responder {
     let ItemId(id) = path.into_inner();
     let create_result =
-        game_finishes_service::create_game_finish(&pool, logged_user.id, id, body.date).await;
+        game_finishes_service::create_game_finish(&pool, &logged_user.id, &id, body.date).await;
     handle_action_result(create_result)
 }
 
@@ -195,7 +196,7 @@ async fn post_game_finish(
     path = "/api/v1/games/{id}/finishes",
     tag = "GameFinish",
     params(
-        ("id" = i32, Path, description = "Game id"),
+        ("id" = String, Path, description = "Game id"),
     ),
     request_body(content = DateDTO, description = "Game finish date to be deleted", content_type = "application/json"),
     responses(
@@ -218,6 +219,6 @@ async fn delete_game_finish(
 ) -> impl Responder {
     let ItemId(id) = path.into_inner();
     let delete_result =
-        game_finishes_service::delete_game_finish(&pool, logged_user.id, id, body.date).await;
+        game_finishes_service::delete_game_finish(&pool, &logged_user.id, &id, body.date).await;
     handle_delete_result(delete_result)
 }
