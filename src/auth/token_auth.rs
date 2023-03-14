@@ -2,7 +2,6 @@ use actix_web::{dev::ServiceRequest, Error};
 use actix_web_httpauth::extractors::bearer::{BearerAuth, Config};
 use actix_web_httpauth::extractors::AuthenticationError;
 use jsonwebtoken::{Algorithm, DecodingKey, EncodingKey, Header, TokenData, Validation};
-use uuid::Uuid;
 
 use crate::errors::{TokenErrors, ValidationError};
 use crate::models::{TokenResponse, UserClaims};
@@ -83,10 +82,6 @@ fn create_refresh_token_claims(user_id: &str, access_token_id: &str) -> UserClai
     )
 }
 
-fn create_token_id() -> String {
-    Uuid::new_v4().to_string()
-}
-
 fn create_token_claims(
     user_id: &str,
     expiry_seconds: i64,
@@ -99,7 +94,7 @@ fn create_token_claims(
         iat: now,
         exp: now + expiry_seconds,
         kid: String::from(KID),
-        jti: create_token_id(),
+        jti: crate::uuid_utils::new_random_uuid(),
         ati: access_token_id,
     }
 }

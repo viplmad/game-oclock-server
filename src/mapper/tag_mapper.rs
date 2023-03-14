@@ -1,4 +1,4 @@
-use sqlx::types::Uuid;
+use uuid::Uuid;
 
 use crate::entities::Tag;
 use crate::models::TagDTO;
@@ -17,7 +17,7 @@ impl From<Tag> for TagDTO {
 impl From<TagDTO> for Tag {
     fn from(tag: TagDTO) -> Self {
         Self {
-            id: Uuid::parse_str(&tag.id).expect("Id was not valid Uuid"),
+            id: Uuid::default(),
             user_id: Uuid::default(), // TODO Possibly remove user_id field from entities
             name: tag.name,
             added_datetime: tag.added_datetime,

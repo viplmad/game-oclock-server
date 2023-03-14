@@ -40,20 +40,22 @@ pub(super) fn select_all() -> SelectStatement {
     select
 }
 
-pub fn insert(user: &User, password: &str) -> impl QueryStatementWriter {
+pub fn insert(id: &str, password: &str, user: &User) -> impl QueryStatementWriter {
     let mut insert = Query::insert();
 
     insert
         .into_table(UserIden::Table)
         .columns([
-            UserIden::Username,
+            UserIden::Id,
             UserIden::Password,
+            UserIden::Username,
             UserIden::AddedDateTime,
             UserIden::UpdatedDateTime,
         ])
         .values_panic([
-            user.username.clone().into(),
+            id.into(),
             password.into(),
+            user.username.clone().into(),
             crate::date_utils::now().into(),
             crate::date_utils::now().into(),
         ])

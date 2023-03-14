@@ -27,9 +27,10 @@ pub async fn search_all(
 pub async fn create(
     pool: &PgPool,
     user_id: &str,
+    id: &str,
     platform: &Platform,
 ) -> Result<String, RepositoryError> {
-    let query = platform_query::insert(user_id, platform);
+    let query = platform_query::insert(user_id, id, platform);
     execute_return_id(pool, query).await
 }
 

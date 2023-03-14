@@ -1,4 +1,4 @@
-use sqlx::types::Uuid;
+use uuid::Uuid;
 
 use crate::entities::{Platform, PlatformWithDate};
 use crate::models::{PlatformAvailableDTO, PlatformDTO, PlatformType};
@@ -22,7 +22,7 @@ impl From<Platform> for PlatformDTO {
 impl From<PlatformDTO> for Platform {
     fn from(platform: PlatformDTO) -> Self {
         Self {
-            id: Uuid::parse_str(&platform.id).expect("Id was not valid Uuid"),
+            id: Uuid::default(),
             user_id: Uuid::default(),
             name: platform.name,
             ptype: platform.ptype.map(i16::from),

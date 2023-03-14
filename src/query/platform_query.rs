@@ -33,13 +33,14 @@ pub(super) fn select_all(user_id: &str) -> SelectStatement {
     select
 }
 
-pub fn insert(user_id: &str, platform: &Platform) -> impl QueryStatementWriter {
+pub fn insert(user_id: &str, id: &str, platform: &Platform) -> impl QueryStatementWriter {
     let mut insert = Query::insert();
 
     insert
         .into_table(PlatformIden::Table)
         .columns([
             PlatformIden::UserId,
+            PlatformIden::Id,
             PlatformIden::Name,
             PlatformIden::Type,
             PlatformIden::IconFilename,
@@ -48,6 +49,7 @@ pub fn insert(user_id: &str, platform: &Platform) -> impl QueryStatementWriter {
         ])
         .values_panic([
             user_id.into(),
+            id.into(),
             platform.name.clone().into(),
             platform.ptype.into(),
             platform.icon_filename.clone().into(),

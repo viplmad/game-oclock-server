@@ -2,7 +2,8 @@ use std::str::FromStr;
 
 use chrono::{NaiveDate, NaiveDateTime};
 use sea_query::Iden;
-use sqlx::{types::Uuid, FromRow};
+use sqlx::FromRow;
+use uuid::Uuid;
 
 use super::{FieldIden, FieldType, GameUserInfoIden, Search, TableIden};
 

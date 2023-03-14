@@ -51,13 +51,14 @@ pub(super) fn select_all_group_by_id(user_id: &str) -> SelectStatement {
     select
 }
 
-pub fn insert(user_id: &str, dlc: &DLC) -> impl QueryStatementWriter {
+pub fn insert(user_id: &str, id: &str, dlc: &DLC) -> impl QueryStatementWriter {
     let mut insert = Query::insert();
 
     insert
         .into_table(DLCIden::Table)
         .columns([
             DLCIden::UserId,
+            DLCIden::Id,
             DLCIden::Name,
             DLCIden::BaseGameId,
             DLCIden::ReleaseYear,
@@ -67,6 +68,7 @@ pub fn insert(user_id: &str, dlc: &DLC) -> impl QueryStatementWriter {
         ])
         .values_panic([
             user_id.into(),
+            id.into(),
             dlc.name.clone().into(),
             dlc.base_game_id.map(|id| id.to_string()).into(),
             dlc.release_year.into(),

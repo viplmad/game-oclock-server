@@ -27,10 +27,15 @@ pub async fn search_all(
     fetch_all_search(pool, search_query).await
 }
 
-pub async fn create(pool: &PgPool, user_id: &str, game: &Game) -> Result<String, RepositoryError> {
+pub async fn create(
+    pool: &PgPool,
+    user_id: &str,
+    id: &str,
+    game: &Game,
+) -> Result<String, RepositoryError> {
     let mut transaction = begin_transaction(pool).await?;
 
-    let query = game_query::insert(user_id, game);
+    let query = game_query::insert(user_id, id, game);
     let game_id = execute_return_id(&mut transaction, query).await?;
 
     let user_info_query = game_query::insert_user_info(user_id, &game_id, game);
