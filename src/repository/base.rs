@@ -1,5 +1,6 @@
 use sea_query::{PostgresQueryBuilder, QueryStatementWriter};
 use sqlx::{PgPool, Postgres, Transaction};
+use uuid::Uuid;
 
 use crate::entities::{PageResult, SearchQuery};
 use crate::errors::{RepositoryError, SearchErrors};
@@ -61,7 +62,9 @@ pub(super) async fn execute_return_id<'c, X>(
 where
     X: sqlx::Executor<'c, Database = Postgres>,
 {
-    execute_return_single(executor, query).await
+    execute_return_single::<X, Uuid>(executor, query)
+        .await
+        .map(|id| id.to_string())
 }
 
 pub(super) async fn execute<'c, X>(
@@ -174,7 +177,7 @@ where
 {
     fetch_all(executor, query)
         .await
-        .map(|res: Vec<(String,)>| !res.is_empty())
+        .map(|res: Vec<(Uuid,)>| !res.is_empty())
 }
 
 fn build_sql(query: impl QueryStatementWriter) -> String {
