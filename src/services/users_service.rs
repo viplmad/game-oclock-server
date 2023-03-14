@@ -41,8 +41,13 @@ pub async fn create_user(
 
             let password_hash = crate::auth::hash_password(password)
                 .map_err(|_| ApiErrors::UnknownError(String::from("Password hashing error.")))?;
-            let create_result =
-                user_repository::create(pool, &user_to_create, &password_hash).await;
+            let create_result = user_repository::create(
+                pool,
+                &crate::uuid_utils::new_model_uuid(),
+                &password_hash,
+                &user_to_create,
+            )
+            .await;
             handle_create_result::<String, UserDTO>(create_result)
         },
     )

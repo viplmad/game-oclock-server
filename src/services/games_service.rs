@@ -40,7 +40,13 @@ pub async fn create_game(
                 game_repository::exists_with_unique(pool, user_id, &game_to_create).await;
             handle_already_exists_result::<GameDTO>(exists_result)?;
 
-            let create_result = game_repository::create(pool, user_id, &game_to_create).await;
+            let create_result = game_repository::create(
+                pool,
+                user_id,
+                &crate::uuid_utils::new_model_uuid(),
+                &game_to_create,
+            )
+            .await;
             handle_create_result::<String, GameDTO>(create_result)
         },
     )

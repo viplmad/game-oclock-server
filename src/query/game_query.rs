@@ -46,13 +46,14 @@ pub(super) fn select_all_group_by_id(user_id: &str) -> SelectStatement {
     select
 }
 
-pub fn insert(user_id: &str, game: &Game) -> impl QueryStatementWriter {
+pub fn insert(user_id: &str, id: &str, game: &Game) -> impl QueryStatementWriter {
     let mut insert = Query::insert();
 
     insert
         .into_table(GameIden::Table)
         .columns([
             GameIden::UserId,
+            GameIden::Id,
             GameIden::Name,
             GameIden::Edition,
             GameIden::ReleaseYear,
@@ -62,6 +63,7 @@ pub fn insert(user_id: &str, game: &Game) -> impl QueryStatementWriter {
         ])
         .values_panic([
             user_id.into(),
+            id.into(),
             game.name.clone().into(),
             game.edition.clone().into(),
             game.release_year.into(),

@@ -24,8 +24,13 @@ pub async fn search_all(
     fetch_all_search(pool, search_query).await
 }
 
-pub async fn create(pool: &PgPool, user_id: &str, tag: &Tag) -> Result<String, RepositoryError> {
-    let query = tag_query::insert(user_id, tag);
+pub async fn create(
+    pool: &PgPool,
+    user_id: &str,
+    id: &str,
+    tag: &Tag,
+) -> Result<String, RepositoryError> {
+    let query = tag_query::insert(user_id, id, tag);
     execute_return_id(pool, query).await
 }
 

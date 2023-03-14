@@ -35,8 +35,13 @@ pub async fn search_all(
     fetch_all_search(pool, search_query).await
 }
 
-pub async fn create(pool: &PgPool, user_id: &str, dlc: &DLC) -> Result<String, RepositoryError> {
-    let query = dlc_query::insert(user_id, dlc);
+pub async fn create(
+    pool: &PgPool,
+    user_id: &str,
+    id: &str,
+    dlc: &DLC,
+) -> Result<String, RepositoryError> {
+    let query = dlc_query::insert(user_id, id, dlc);
     execute_return_id(pool, query).await
 }
 

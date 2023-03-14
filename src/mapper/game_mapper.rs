@@ -1,4 +1,4 @@
-use sqlx::types::Uuid;
+use uuid::Uuid;
 
 use crate::entities::{Game, GameWithDate};
 use crate::models::{GameAvailableDTO, GameDTO, GameStatus};
@@ -27,7 +27,7 @@ impl From<Game> for GameDTO {
 impl From<GameDTO> for Game {
     fn from(game: GameDTO) -> Self {
         Self {
-            id: Uuid::parse_str(&game.id).expect("Id was not valid Uuid"),
+            id: Uuid::default(),
             user_id: Uuid::default(),
             name: game.name,
             edition: game.edition,

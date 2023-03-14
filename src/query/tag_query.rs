@@ -33,19 +33,21 @@ pub(super) fn select_all(user_id: &str) -> SelectStatement {
     select
 }
 
-pub fn insert(user_id: &str, tag: &Tag) -> impl QueryStatementWriter {
+pub fn insert(user_id: &str, id: &str, tag: &Tag) -> impl QueryStatementWriter {
     let mut insert = Query::insert();
 
     insert
         .into_table(TagIden::Table)
         .columns([
             TagIden::UserId,
+            TagIden::Id,
             TagIden::Name,
             TagIden::AddedDateTime,
             TagIden::UpdatedDateTime,
         ])
         .values_panic([
             user_id.into(),
+            id.into(),
             tag.name.clone().into(),
             crate::date_utils::now().into(),
             crate::date_utils::now().into(),

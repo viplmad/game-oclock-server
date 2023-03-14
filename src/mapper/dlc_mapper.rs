@@ -1,4 +1,4 @@
-use sqlx::types::Uuid;
+use uuid::Uuid;
 
 use crate::entities::{DLCWithDate, DLC};
 use crate::models::{DLCAvailableDTO, DLCDTO};
@@ -21,12 +21,12 @@ impl From<DLC> for DLCDTO {
 impl From<DLCDTO> for DLC {
     fn from(dlc: DLCDTO) -> Self {
         Self {
-            id: Uuid::parse_str(&dlc.id).expect("Id was not valid Uuid"),
+            id: Uuid::default(),
             user_id: Uuid::default(),
             name: dlc.name,
             base_game_id: dlc
                 .base_game_id
-                .map(|id| Uuid::parse_str(&id).expect("Id was not valid Uuid")),
+                .map(|id| crate::uuid_utils::parse_uuid(&id)),
             release_year: dlc.release_year,
             cover_filename: dlc.cover_filename,
             added_datetime: dlc.added_datetime,

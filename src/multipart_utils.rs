@@ -3,7 +3,6 @@ use std::io::Write;
 use actix_multipart::Multipart;
 use actix_web::web;
 use futures::{StreamExt, TryStreamExt};
-use uuid::Uuid;
 
 use crate::errors::ApiErrors;
 
@@ -24,7 +23,7 @@ pub async fn get_multipart_file_path(mut multipart: Multipart) -> Result<String,
         }
     }?;
 
-    let random_temp_folder_name = Uuid::new_v4().to_string();
+    let random_temp_folder_name = crate::uuid_utils::new_random_uuid();
     let random_temp_folder = format!("./{random_temp_folder_name}");
     web::block(|| std::fs::create_dir(random_temp_folder))
         .await
