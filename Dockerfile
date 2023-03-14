@@ -12,7 +12,7 @@ RUN cargo build --target x86_64-unknown-linux-musl --release
 
 FROM alpine:3.17
 
-COPY migrations /migrations
+COPY migrations /usr/local/bin/migrations
 COPY --from=builder /target/x86_64-unknown-linux-musl/release/game-collection-server /usr/local/bin
 
 WORKDIR /usr/local/bin

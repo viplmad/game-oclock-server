@@ -136,7 +136,7 @@ async fn run(
     let database_connection_pool = get_connection_pool()
         .await
         .expect("Could not open database connection.");
-    //apply_migrations(&database_connection_pool).await;
+    apply_migrations(&database_connection_pool).await;
 
     let data_database_connection = web::Data::new(database_connection_pool);
 
