@@ -36,13 +36,7 @@ pub async fn create_tag(pool: &PgPool, user_id: &str, tag: NewTagDTO) -> Result<
                 tag_repository::exists_with_unique(pool, user_id, &tag_to_create).await;
             handle_already_exists_result::<TagDTO>(exists_result)?;
 
-            let create_result = tag_repository::create(
-                pool,
-                user_id,
-                &crate::uuid_utils::new_model_uuid(),
-                &tag_to_create,
-            )
-            .await;
+            let create_result = tag_repository::create(pool, user_id, &tag_to_create).await;
             handle_create_result::<String, TagDTO>(create_result)
         },
     )
@@ -66,7 +60,7 @@ pub async fn update_tag(
 
             let update_result =
                 tag_repository::update_by_id(pool, user_id, tag_id, &tag_to_update).await;
-            handle_update_result::<String, TagDTO>(update_result)
+            handle_update_result::<TagDTO>(update_result)
         },
     )
     .await

@@ -55,8 +55,7 @@ pub fn insert(user_id: &str, id: &str, platform: &Platform) -> impl QueryStateme
             platform.icon_filename.clone().into(),
             crate::date_utils::now().into(),
             crate::date_utils::now().into(),
-        ])
-        .returning(Query::returning().columns([PlatformIden::Id]));
+        ]);
 
     insert
 }
@@ -103,8 +102,7 @@ fn update_values_by_id(
         .table(PlatformIden::Table)
         .values(values)
         .and_where(Expr::col(PlatformIden::UserId).eq(user_id))
-        .and_where(Expr::col(PlatformIden::Id).eq(id))
-        .returning(Query::returning().columns([PlatformIden::Id]));
+        .and_where(Expr::col(PlatformIden::Id).eq(id));
 
     update
 }

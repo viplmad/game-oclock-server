@@ -70,8 +70,7 @@ pub fn insert(user_id: &str, id: &str, game: &Game) -> impl QueryStatementWriter
             game.cover_filename.clone().into(),
             crate::date_utils::now().into(),
             crate::date_utils::now().into(),
-        ])
-        .returning(Query::returning().columns([GameIden::Id]));
+        ]);
 
     insert
 }
@@ -146,8 +145,7 @@ fn update_values_by_id(
         .table(GameIden::Table)
         .values(values)
         .and_where(Expr::col(GameIden::UserId).eq(user_id))
-        .and_where(Expr::col(GameIden::Id).eq(id))
-        .returning(Query::returning().columns([GameIden::Id]));
+        .and_where(Expr::col(GameIden::Id).eq(id));
 
     update
 }

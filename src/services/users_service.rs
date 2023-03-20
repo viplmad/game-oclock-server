@@ -41,13 +41,8 @@ pub async fn create_user(
 
             let password_hash = crate::auth::hash_password(password)
                 .map_err(|_| ApiErrors::UnknownError(String::from("Password hashing error.")))?;
-            let create_result = user_repository::create(
-                pool,
-                &crate::uuid_utils::new_model_uuid(),
-                &password_hash,
-                &user_to_create,
-            )
-            .await;
+            let create_result =
+                user_repository::create(pool, &password_hash, &user_to_create).await;
             handle_create_result::<String, UserDTO>(create_result)
         },
     )
@@ -64,7 +59,7 @@ pub async fn update_user(pool: &PgPool, user_id: &str, user: NewUserDTO) -> Resu
             handle_already_exists_result::<UserDTO>(exists_result)?;
 
             let update_result = user_repository::update_by_id(pool, user_id, &user_to_update).await;
-            handle_update_result::<String, UserDTO>(update_result)
+            handle_update_result::<UserDTO>(update_result)
         },
     )
     .await
@@ -87,7 +82,7 @@ pub async fn change_user_password(
             .map_err(|_| ApiErrors::UnknownError(String::from("Password hashing error.")))?;
 
         let update_result = user_repository::update_password(pool, user_id, &password_hash).await;
-        handle_update_result::<String, UserDTO>(update_result)
+        handle_update_result::<UserDTO>(update_result)
     } else {
         Err(ApiErrors::InvalidParameter(String::from("Wrong password.")))
     }
@@ -115,7 +110,7 @@ async fn change_user_admin(pool: &PgPool, user_id: &str, admin: bool) -> Result<
     exists_user(pool, user_id).await?;
 
     let update_result = user_repository::update_admin(pool, user_id, admin).await;
-    handle_update_result::<String, UserDTO>(update_result)
+    handle_update_result::<UserDTO>(update_result)
 }
 
 pub async fn delete_user(pool: &PgPool, user_id: &str) -> Result<(), ApiErrors> {

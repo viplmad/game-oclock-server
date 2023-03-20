@@ -4,7 +4,7 @@ use crate::entities::{PageResult, Tag, TagSearch};
 use crate::errors::{RepositoryError, SearchErrors};
 use crate::query::tag_query;
 
-use super::base::{execute, execute_return_id, exists_id, fetch_all_search, fetch_optional};
+use super::base::{execute, exists_id, fetch_all_search, fetch_optional};
 
 pub async fn find_by_id(
     pool: &PgPool,
@@ -24,14 +24,11 @@ pub async fn search_all(
     fetch_all_search(pool, search_query).await
 }
 
-pub async fn create(
-    pool: &PgPool,
-    user_id: &str,
-    id: &str,
-    tag: &Tag,
-) -> Result<String, RepositoryError> {
-    let query = tag_query::insert(user_id, id, tag);
-    execute_return_id(pool, query).await
+pub async fn create(pool: &PgPool, user_id: &str, tag: &Tag) -> Result<String, RepositoryError> {
+    let id = crate::uuid_utils::new_model_uuid();
+
+    let query = tag_query::insert(user_id, &id, tag);
+    execute(pool, query).await.map(|_| id)
 }
 
 pub async fn update_by_id(
@@ -39,9 +36,9 @@ pub async fn update_by_id(
     user_id: &str,
     id: &str,
     tag: &Tag,
-) -> Result<String, RepositoryError> {
+) -> Result<(), RepositoryError> {
     let query = tag_query::update_by_id(user_id, id, tag);
-    execute_return_id(pool, query).await
+    execute(pool, query).await
 }
 
 pub async fn delete_by_id(pool: &PgPool, user_id: &str, id: &str) -> Result<(), RepositoryError> {
