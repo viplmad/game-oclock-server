@@ -5,8 +5,8 @@ use crate::errors::{RepositoryError, SearchErrors};
 use crate::query::game_query;
 
 use super::base::{
-    begin_transaction, commit_transaction, execute, execute_return, execute_return_id, exists_id,
-    fetch_all_search, fetch_optional,
+    begin_transaction, commit_transaction, execute, execute_return_id, exists_id, fetch_all_search,
+    fetch_optional,
 };
 
 pub async fn find_by_id(
@@ -39,7 +39,7 @@ pub async fn create(
     let game_id = execute_return_id(&mut transaction, query).await?;
 
     let user_info_query = game_query::insert_user_info(user_id, &game_id, game);
-    let _user_info_id: (String, String) = execute_return(&mut transaction, user_info_query).await?;
+    execute(&mut transaction, user_info_query).await?;
 
     commit_transaction(transaction).await?;
 
@@ -52,14 +52,14 @@ pub async fn update_by_id(
     id: &str,
     game: &Game,
 ) -> Result<String, RepositoryError> {
-    // Update should not return id
+    // TODO Update should not return id
     let mut transaction = begin_transaction(pool).await?;
 
     let query = game_query::update_by_id(user_id, id, game);
     execute_return_id(&mut transaction, query).await?;
 
     let user_info_query = game_query::update_user_info_by_id(user_id, id, game);
-    let _user_info_id: (String, String) = execute_return(&mut transaction, user_info_query).await?;
+    execute(&mut transaction, user_info_query).await?;
 
     commit_transaction(transaction).await?;
 

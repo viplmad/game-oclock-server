@@ -104,10 +104,7 @@ pub fn insert_user_info(user_id: &str, game_id: &str, game: &Game) -> impl Query
             game.backup.into(),
             crate::date_utils::now().into(),
             crate::date_utils::now().into(),
-        ])
-        .returning(
-            Query::returning().columns([GameUserInfoIden::UserId, GameUserInfoIden::GameId]),
-        );
+        ]);
 
     insert
 }
@@ -195,10 +192,7 @@ fn update_user_info_values_by_id(
         .table(GameUserInfoIden::Table)
         .values(values)
         .and_where(Expr::col(GameUserInfoIden::UserId).eq(user_id))
-        .and_where(Expr::col(GameUserInfoIden::GameId).eq(game_id))
-        .returning(
-            Query::returning().columns([GameUserInfoIden::UserId, GameUserInfoIden::GameId]),
-        );
+        .and_where(Expr::col(GameUserInfoIden::GameId).eq(game_id));
 
     update
 }
