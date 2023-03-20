@@ -4,7 +4,7 @@ use crate::entities::{PageResult, User, UserSearch};
 use crate::errors::{RepositoryError, SearchErrors};
 use crate::query::user_query;
 
-use super::base::{execute, execute_return_id, exists_id, fetch_all_search, fetch_optional};
+use super::base::{execute, exists_id, fetch_all_search, fetch_optional};
 
 pub async fn find_by_id(pool: &PgPool, id: &str) -> Result<Option<User>, RepositoryError> {
     let query = user_query::select_by_id(id);
@@ -27,33 +27,30 @@ pub async fn search_all(
     fetch_all_search(pool, search_query).await
 }
 
-pub async fn create(
-    pool: &PgPool,
-    id: &str,
-    password: &str,
-    user: &User,
-) -> Result<String, RepositoryError> {
-    let query = user_query::insert(id, password, user);
-    execute_return_id(pool, query).await
+pub async fn create(pool: &PgPool, password: &str, user: &User) -> Result<String, RepositoryError> {
+    let id = crate::uuid_utils::new_model_uuid();
+
+    let query = user_query::insert(&id, password, user);
+    execute(pool, query).await.map(|_| id)
 }
 
-pub async fn update_by_id(pool: &PgPool, id: &str, user: &User) -> Result<String, RepositoryError> {
+pub async fn update_by_id(pool: &PgPool, id: &str, user: &User) -> Result<(), RepositoryError> {
     let query = user_query::update_by_id(id, user);
-    execute_return_id(pool, query).await
+    execute(pool, query).await
 }
 
 pub async fn update_password(
     pool: &PgPool,
     id: &str,
     password: &str,
-) -> Result<String, RepositoryError> {
+) -> Result<(), RepositoryError> {
     let query = user_query::update_password_by_id(id, password);
-    execute_return_id(pool, query).await
+    execute(pool, query).await
 }
 
-pub async fn update_admin(pool: &PgPool, id: &str, admin: bool) -> Result<String, RepositoryError> {
+pub async fn update_admin(pool: &PgPool, id: &str, admin: bool) -> Result<(), RepositoryError> {
     let query = user_query::update_admin_by_id(id, admin);
-    execute_return_id(pool, query).await
+    execute(pool, query).await
 }
 
 pub async fn delete_by_id(pool: &PgPool, id: &str) -> Result<(), RepositoryError> {

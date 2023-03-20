@@ -75,8 +75,7 @@ pub fn insert(user_id: &str, id: &str, dlc: &DLC) -> impl QueryStatementWriter {
             dlc.cover_filename.clone().into(),
             crate::date_utils::now().into(),
             crate::date_utils::now().into(),
-        ])
-        .returning(Query::returning().columns([DLCIden::Id]));
+        ]);
 
     insert
 }
@@ -133,8 +132,7 @@ fn update_values_by_id(
         .table(DLCIden::Table)
         .values(values)
         .and_where(Expr::col(DLCIden::UserId).eq(user_id))
-        .and_where(Expr::col(DLCIden::Id).eq(id))
-        .returning(Query::returning().columns([DLCIden::Id]));
+        .and_where(Expr::col(DLCIden::Id).eq(id));
 
     update
 }

@@ -94,13 +94,13 @@ where
     handle_result::<I, T>(repository_result)
 }
 
-pub(super) fn handle_update_result<I, T>(
-    repository_result: Result<I, RepositoryError>,
+pub(super) fn handle_update_result<T>(
+    repository_result: Result<(), RepositoryError>,
 ) -> Result<(), ApiErrors>
 where
     T: ModelInfo,
 {
-    handle_result::<I, T>(repository_result).map(|_| ())
+    handle_result::<(), T>(repository_result)
 }
 
 pub(super) fn handle_action_result<T>(

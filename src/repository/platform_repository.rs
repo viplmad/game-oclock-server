@@ -4,7 +4,7 @@ use crate::entities::{PageResult, Platform, PlatformSearch};
 use crate::errors::{RepositoryError, SearchErrors};
 use crate::query::platform_query;
 
-use super::base::{execute, execute_return_id, exists_id, fetch_all_search, fetch_optional};
+use super::base::{execute, exists_id, fetch_all_search, fetch_optional};
 
 pub async fn find_by_id(
     pool: &PgPool,
@@ -27,11 +27,12 @@ pub async fn search_all(
 pub async fn create(
     pool: &PgPool,
     user_id: &str,
-    id: &str,
     platform: &Platform,
 ) -> Result<String, RepositoryError> {
-    let query = platform_query::insert(user_id, id, platform);
-    execute_return_id(pool, query).await
+    let id = crate::uuid_utils::new_model_uuid();
+
+    let query = platform_query::insert(user_id, &id, platform);
+    execute(pool, query).await.map(|_| id)
 }
 
 pub async fn update_by_id(
@@ -39,9 +40,9 @@ pub async fn update_by_id(
     user_id: &str,
     id: &str,
     platform: &Platform,
-) -> Result<String, RepositoryError> {
+) -> Result<(), RepositoryError> {
     let query = platform_query::update_by_id(user_id, id, platform);
-    execute_return_id(pool, query).await
+    execute(pool, query).await
 }
 
 pub async fn update_icon_filename_by_id(

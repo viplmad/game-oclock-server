@@ -5,8 +5,7 @@ use crate::errors::{RepositoryError, SearchErrors};
 use crate::query::game_query;
 
 use super::base::{
-    begin_transaction, commit_transaction, execute, execute_return_id, exists_id, fetch_all_search,
-    fetch_optional,
+    begin_transaction, commit_transaction, execute, exists_id, fetch_all_search, fetch_optional,
 };
 
 pub async fn find_by_id(
@@ -27,23 +26,20 @@ pub async fn search_all(
     fetch_all_search(pool, search_query).await
 }
 
-pub async fn create(
-    pool: &PgPool,
-    user_id: &str,
-    id: &str,
-    game: &Game,
-) -> Result<String, RepositoryError> {
+pub async fn create(pool: &PgPool, user_id: &str, game: &Game) -> Result<String, RepositoryError> {
+    let id = crate::uuid_utils::new_model_uuid();
+
     let mut transaction = begin_transaction(pool).await?;
 
-    let query = game_query::insert(user_id, id, game);
-    let game_id = execute_return_id(&mut transaction, query).await?;
+    let query = game_query::insert(user_id, &id, game);
+    execute(&mut transaction, query).await?;
 
-    let user_info_query = game_query::insert_user_info(user_id, &game_id, game);
+    let user_info_query = game_query::insert_user_info(user_id, &id, game);
     execute(&mut transaction, user_info_query).await?;
 
     commit_transaction(transaction).await?;
 
-    Ok(game_id)
+    Ok(id)
 }
 
 pub async fn update_by_id(
@@ -51,19 +47,18 @@ pub async fn update_by_id(
     user_id: &str,
     id: &str,
     game: &Game,
-) -> Result<String, RepositoryError> {
-    // TODO Update should not return id
+) -> Result<(), RepositoryError> {
     let mut transaction = begin_transaction(pool).await?;
 
     let query = game_query::update_by_id(user_id, id, game);
-    execute_return_id(&mut transaction, query).await?;
+    execute(&mut transaction, query).await?;
 
     let user_info_query = game_query::update_user_info_by_id(user_id, id, game);
     execute(&mut transaction, user_info_query).await?;
 
     commit_transaction(transaction).await?;
 
-    Ok(String::from(id))
+    Ok(())
 }
 
 pub async fn update_cover_filename_by_id(

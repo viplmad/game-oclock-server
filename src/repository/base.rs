@@ -55,18 +55,6 @@ where
         .map(|tuple: (T,)| tuple.0)
 }
 
-pub(super) async fn execute_return_id<'c, X>(
-    executor: X,
-    query: impl QueryStatementWriter,
-) -> Result<String, RepositoryError>
-where
-    X: sqlx::Executor<'c, Database = Postgres>,
-{
-    execute_return_single::<X, Uuid>(executor, query)
-        .await
-        .map(|id| id.to_string())
-}
-
 pub(super) async fn execute<'c, X>(
     executor: X,
     query: impl QueryStatementWriter,

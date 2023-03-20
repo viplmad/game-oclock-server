@@ -58,8 +58,7 @@ pub fn insert(id: &str, password: &str, user: &User) -> impl QueryStatementWrite
             user.username.clone().into(),
             crate::date_utils::now().into(),
             crate::date_utils::now().into(),
-        ])
-        .returning(Query::returning().columns([UserIden::Id]));
+        ]);
 
     insert
 }
@@ -86,8 +85,7 @@ fn update_values_by_id(
     update
         .table(UserIden::Table)
         .values(values)
-        .and_where(Expr::col(UserIden::Id).eq(id))
-        .returning(Query::returning().columns([UserIden::Id]));
+        .and_where(Expr::col(UserIden::Id).eq(id));
 
     update
 }

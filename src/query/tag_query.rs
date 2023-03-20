@@ -51,8 +51,7 @@ pub fn insert(user_id: &str, id: &str, tag: &Tag) -> impl QueryStatementWriter {
             tag.name.clone().into(),
             crate::date_utils::now().into(),
             crate::date_utils::now().into(),
-        ])
-        .returning(Query::returning().columns([TagIden::Id]));
+        ]);
 
     insert
 }
@@ -73,8 +72,7 @@ fn update_values_by_id(
         .table(TagIden::Table)
         .values(values)
         .and_where(Expr::col(TagIden::UserId).eq(user_id))
-        .and_where(Expr::col(TagIden::Id).eq(id))
-        .returning(Query::returning().columns([TagIden::Id]));
+        .and_where(Expr::col(TagIden::Id).eq(id));
 
     update
 }

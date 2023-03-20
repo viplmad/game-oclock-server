@@ -44,13 +44,8 @@ pub async fn create_platform(
                 platform_repository::exists_with_unique(pool, user_id, &platform_to_create).await;
             handle_already_exists_result::<PlatformDTO>(exists_result)?;
 
-            let create_result = platform_repository::create(
-                pool,
-                user_id,
-                &crate::uuid_utils::new_model_uuid(),
-                &platform_to_create,
-            )
-            .await;
+            let create_result =
+                platform_repository::create(pool, user_id, &platform_to_create).await;
             handle_create_result::<String, PlatformDTO>(create_result)
         },
     )
@@ -79,7 +74,7 @@ pub async fn update_platform(
             let update_result =
                 platform_repository::update_by_id(pool, user_id, platform_id, &platform_to_update)
                     .await;
-            handle_update_result::<String, PlatformDTO>(update_result)
+            handle_update_result::<PlatformDTO>(update_result)
         },
     )
     .await

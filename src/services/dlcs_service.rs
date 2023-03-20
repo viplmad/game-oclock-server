@@ -67,13 +67,7 @@ pub async fn create_dlc(pool: &PgPool, user_id: &str, dlc: NewDLCDTO) -> Result<
             )
             .await?;
 
-            let create_result = dlc_repository::create(
-                pool,
-                user_id,
-                &crate::uuid_utils::new_model_uuid(),
-                &dlc_to_create,
-            )
-            .await;
+            let create_result = dlc_repository::create(pool, user_id, &dlc_to_create).await;
             handle_create_result::<String, DLCDTO>(create_result)
         },
     )
@@ -104,7 +98,7 @@ pub async fn update_dlc(
 
             let update_result =
                 dlc_repository::update_by_id(pool, user_id, dlc_id, &dlc_to_update).await;
-            handle_update_result::<String, DLCDTO>(update_result)
+            handle_update_result::<DLCDTO>(update_result)
         },
     )
     .await
