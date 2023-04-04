@@ -1,13 +1,9 @@
 use std::{future::Future, pin::Pin};
 
-use actix_web::{web, Error, FromRequest};
+use actix_web::{Error, FromRequest};
 use actix_web_httpauth::extractors::bearer::BearerAuth;
-use sqlx::PgPool;
 
-use crate::{
-    models::{LoggedUser, UserClaims},
-    services::users_service,
-};
+use crate::models::{LoggedUser, UserClaims};
 
 /// Takes the result of a rsplit and ensure we only get 2 parts
 /// Errors if we don't
@@ -39,13 +35,7 @@ impl FromRequest for LoggedUser {
 
             let user_id = claims.sub_as_user_id();
 
-            let pool = &request.app_data::<web::Data<PgPool>>().unwrap();
-            let user = users_service::get_user(pool, &user_id).await.unwrap();
-
-            Ok(LoggedUser {
-                id: user_id,
-                admin: user.admin,
-            })
+            Ok(LoggedUser { id: user_id })
         })
     }
 }

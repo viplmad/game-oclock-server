@@ -100,7 +100,7 @@ pub fn delete_by_id(id: &str) -> impl QueryStatementWriter {
     delete
 }
 
-pub fn exists_by_id(id: &str) -> impl QueryStatementWriter {
+pub fn exists_by_id(id: &str) -> SelectStatement {
     let mut select = Query::select();
 
     from(&mut select);
@@ -135,6 +135,14 @@ pub fn exists_by_admin_and_id_not(id: &str) -> impl QueryStatementWriter {
     add_id_field(&mut select);
     select.and_where(Expr::col(UserIden::Admin).eq(true));
     select.and_where(Expr::col(UserIden::Id).ne(id));
+
+    select
+}
+
+pub fn exists_by_admin_and_id(id: &str) -> impl QueryStatementWriter {
+    let mut select = exists_by_id(id);
+
+    select.and_where(Expr::col(UserIden::Admin).eq(true));
 
     select
 }

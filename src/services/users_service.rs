@@ -120,6 +120,11 @@ pub async fn delete_user(pool: &PgPool, user_id: &str) -> Result<(), ApiErrors> 
     handle_action_result::<UserDTO>(delete_result)
 }
 
+pub async fn is_user_admin(pool: &PgPool, user_id: &str) -> Result<bool, ApiErrors> {
+    let exists_result = user_repository::exists_by_id_and_admin(pool, user_id).await;
+    handle_result::<bool, UserDTO>(exists_result)
+}
+
 pub async fn exists_user(pool: &PgPool, user_id: &str) -> Result<(), ApiErrors> {
     let exists_result = user_repository::exists_by_id(pool, user_id).await;
     handle_not_found_result::<UserDTO>(exists_result)

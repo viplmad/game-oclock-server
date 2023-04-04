@@ -112,7 +112,7 @@ async fn post_user(
     body: web::Json<NewUserDTO>,
     logged_user: LoggedUser,
 ) -> impl Responder {
-    if let Err(error) = require_admin(logged_user) {
+    if let Err(error) = require_admin(&pool, &logged_user.id).await {
         return error;
     }
 
@@ -204,7 +204,7 @@ async fn promote_user(
     path: web::Path<ItemId>,
     logged_user: LoggedUser,
 ) -> impl Responder {
-    if let Err(error) = require_admin(logged_user) {
+    if let Err(error) = require_admin(&pool, &logged_user.id).await {
         return error;
     }
 
@@ -238,7 +238,7 @@ async fn demote_user(
     path: web::Path<ItemId>,
     logged_user: LoggedUser,
 ) -> impl Responder {
-    if let Err(error) = require_admin(logged_user) {
+    if let Err(error) = require_admin(&pool, &logged_user.id).await {
         return error;
     }
 
@@ -271,7 +271,7 @@ async fn delete_user(
     path: web::Path<ItemId>,
     logged_user: LoggedUser,
 ) -> impl Responder {
-    if let Err(error) = require_admin(logged_user) {
+    if let Err(error) = require_admin(&pool, &logged_user.id).await {
         return error;
     }
 

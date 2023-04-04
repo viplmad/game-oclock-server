@@ -59,5 +59,4 @@ impl UserClaims {
 
 pub struct LoggedUser {
     pub id: String,
-    pub admin: bool, // TODO get on demand
 }

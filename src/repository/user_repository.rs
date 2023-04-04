@@ -84,3 +84,8 @@ pub async fn exists_with_admin_except_id(
     let query = user_query::exists_by_admin_and_id_not(excluded_id);
     exists_id(pool, query).await
 }
+
+pub async fn exists_by_id_and_admin(pool: &PgPool, id: &str) -> Result<bool, RepositoryError> {
+    let query = user_query::exists_by_admin_and_id(id);
+    exists_id(pool, query).await
+}

@@ -1,8 +1,10 @@
 use actix_web::HttpResponse;
 use serde::Serialize;
+use sqlx::PgPool;
 
 use crate::errors::{forbidden_error, ToError};
-use crate::models::{LoggedUser, ModelInfo, PageResultDTO};
+use crate::models::{ModelInfo, PageResultDTO};
+use crate::services::users_service;
 
 pub(super) fn handle_get_result(
     service_result: Result<impl Serialize, impl ToError>,
@@ -46,11 +48,17 @@ pub(super) fn handle_multipart_result(
     multipart_result.map_err(|err| err.to_error())
 }
 
-pub(super) fn require_admin(logged_user: LoggedUser) -> Result<(), HttpResponse> {
-    if !logged_user.admin {
-        return Err(forbidden_error());
+pub(super) async fn require_admin(pool: &PgPool, user_id: &str) -> Result<(), HttpResponse> {
+    let admin_result = users_service::is_user_admin(pool, user_id).await;
+    match admin_result {
+        Ok(admin) => {
+            if !admin {
+                return Err(forbidden_error());
+            }
+            Ok(())
+        }
+        Err(_) => Err(forbidden_error()),
     }
-    Ok(())
 }
 
 pub(super) fn populate_get_result<T>(
