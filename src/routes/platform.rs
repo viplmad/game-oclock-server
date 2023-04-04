@@ -210,7 +210,7 @@ async fn post_platform_icon(
         Err(err) => return err,
     };
 
-    let upload_result = platform_image_service::set_platform_icon(
+    let upload_result = platforms_service::set_platform_icon(
         &pool,
         &image_client_provider,
         &logged_user.id,
@@ -286,7 +286,7 @@ async fn put_platform_icon(
     logged_user: LoggedUser,
 ) -> impl Responder {
     let ItemId(id) = path.into_inner();
-    let update_result = platform_image_service::rename_platform_icon(
+    let update_result = platforms_service::rename_platform_icon(
         &pool,
         &image_client_provider,
         &logged_user.id,
@@ -318,12 +318,14 @@ async fn put_platform_icon(
 #[delete("/platforms/{id}")]
 async fn delete_platform(
     pool: web::Data<PgPool>,
+    image_client_provider: web::Data<ImageClientProvider>,
     path: web::Path<ItemId>,
     logged_user: LoggedUser,
 ) -> impl Responder {
     let ItemId(id) = path.into_inner();
-    let delete_result = platforms_service::delete_platform(&pool, &logged_user.id, &id).await;
-    // TODO delete image from image service
+    let delete_result =
+        platforms_service::delete_platform(&pool, &image_client_provider, &logged_user.id, &id)
+            .await;
     handle_delete_result(delete_result)
 }
 
@@ -354,7 +356,7 @@ async fn delete_platform_icon(
     logged_user: LoggedUser,
 ) -> impl Responder {
     let ItemId(id) = path.into_inner();
-    let delete_result = platform_image_service::delete_platform_icon(
+    let delete_result = platforms_service::delete_platform_icon(
         &pool,
         &image_client_provider,
         &logged_user.id,

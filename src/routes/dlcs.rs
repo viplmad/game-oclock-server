@@ -242,7 +242,7 @@ async fn post_dlc_cover(
         Err(err) => return err,
     };
 
-    let upload_result = dlc_image_service::set_dlc_cover(
+    let upload_result = dlcs_service::set_dlc_cover(
         &pool,
         &image_client_provider,
         &logged_user.id,
@@ -317,7 +317,7 @@ async fn put_dlc_cover(
     logged_user: LoggedUser,
 ) -> impl Responder {
     let ItemId(id) = path.into_inner();
-    let update_result = dlc_image_service::rename_dlc_cover(
+    let update_result = dlcs_service::rename_dlc_cover(
         &pool,
         &image_client_provider,
         &logged_user.id,
@@ -420,11 +420,13 @@ async fn link_dlc_platform(
 #[delete("/dlcs/{id}")]
 async fn delete_dlc(
     pool: web::Data<PgPool>,
+    image_client_provider: web::Data<ImageClientProvider>,
     path: web::Path<ItemId>,
     logged_user: LoggedUser,
 ) -> impl Responder {
     let ItemId(id) = path.into_inner();
-    let delete_result = dlcs_service::delete_dlc(&pool, &logged_user.id, &id).await;
+    let delete_result =
+        dlcs_service::delete_dlc(&pool, &image_client_provider, &logged_user.id, &id).await;
     handle_delete_result(delete_result)
 }
 
@@ -456,8 +458,7 @@ async fn delete_dlc_cover(
 ) -> impl Responder {
     let ItemId(id) = path.into_inner();
     let delete_result =
-        dlc_image_service::delete_dlc_cover(&pool, &image_client_provider, &logged_user.id, &id)
-            .await;
+        dlcs_service::delete_dlc_cover(&pool, &image_client_provider, &logged_user.id, &id).await;
     handle_action_result(delete_result)
 }
 

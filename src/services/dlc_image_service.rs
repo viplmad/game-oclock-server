@@ -1,11 +1,8 @@
-use sqlx::PgPool;
-
 use crate::errors::ApiErrors;
 use crate::models::{DLCAvailableDTO, DLCWithFinishDTO, DLCDTO};
 use crate::providers::ImageClientProvider;
 
 use super::base::{build_image_filename, extract_image_name, handle_image_client_provider};
-use super::dlcs_service;
 
 const DLC_FOLDER: &str = "DLC";
 const DLC_HEADER_SUFFIX: &str = "header";
@@ -54,64 +51,51 @@ pub fn populate_dlcs_with_finish_cover(
     }
 }
 
-pub async fn set_dlc_cover(
-    pool: &PgPool,
+pub(super) async fn set_dlc_cover(
     image_client_provider: &ImageClientProvider,
     user_id: &str,
     dlc_id: &str,
     file_path: &str,
-) -> Result<(), ApiErrors> {
+) -> Result<String, ApiErrors> {
     let image_client = handle_image_client_provider(image_client_provider)?;
-
-    dlcs_service::exists_dlc(pool, user_id, dlc_id).await?;
 
     let format_filename = build_dlc_cover_filename(user_id, dlc_id, Option::<String>::None);
-    let filename = image_client
+    image_client
         .upload_image(file_path, DLC_FOLDER, &format_filename)
         .await
-        .map_err(|_| ApiErrors::UnknownError(String::from("Image upload error.")))?;
-
-    dlcs_service::set_dlc_cover_filename(pool, user_id, dlc_id, Some(filename)).await
+        .map_err(|_| ApiErrors::UnknownError(String::from("Image upload error.")))
 }
 
-pub async fn rename_dlc_cover(
-    pool: &PgPool,
+pub(super) async fn rename_dlc_cover(
     image_client_provider: &ImageClientProvider,
     user_id: &str,
     dlc_id: &str,
+    old_filename: &str,
     new_name: &str,
-) -> Result<(), ApiErrors> {
+) -> Result<String, ApiErrors> {
     let image_client = handle_image_client_provider(image_client_provider)?;
 
-    let old_filename = dlcs_service::get_dlc_cover_filename(pool, user_id, dlc_id).await?;
-    let old_name = extract_image_name(&old_filename)?;
+    let old_name = extract_image_name(old_filename)?;
 
     let format_filename = build_dlc_cover_filename(user_id, dlc_id, Some(String::from(new_name)));
-    let filename = image_client
+    image_client
         .rename_image(DLC_FOLDER, &old_name, &format_filename)
         .await
-        .map_err(|_| ApiErrors::UnknownError(String::from("Image rename error.")))?;
-
-    dlcs_service::set_dlc_cover_filename(pool, user_id, dlc_id, Some(filename)).await
+        .map_err(|_| ApiErrors::UnknownError(String::from("Image rename error.")))
 }
 
-pub async fn delete_dlc_cover(
-    pool: &PgPool,
+pub(super) async fn delete_dlc_cover(
     image_client_provider: &ImageClientProvider,
-    user_id: &str,
-    dlc_id: &str,
+    filename: &str,
 ) -> Result<(), ApiErrors> {
     let image_client = handle_image_client_provider(image_client_provider)?;
 
-    let filename = dlcs_service::get_dlc_cover_filename(pool, user_id, dlc_id).await?;
-    let name = extract_image_name(&filename)?;
+    let name = extract_image_name(filename)?;
 
     image_client
         .delete_image(DLC_FOLDER, &name)
         .await
-        .map_err(|_| ApiErrors::UnknownError(String::from("Image delete error.")))?;
-
-    dlcs_service::set_dlc_cover_filename(pool, user_id, dlc_id, Option::<String>::None).await
+        .map_err(|_| ApiErrors::UnknownError(String::from("Image delete error.")))
 }
 
 fn build_dlc_cover_filename(user_id: &str, dlc_id: &str, name: Option<String>) -> String {

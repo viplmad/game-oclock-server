@@ -3,6 +3,7 @@ use sqlx::PgPool;
 use crate::entities::GameSearch;
 use crate::errors::{error_message_builder, ApiErrors};
 use crate::models::{GameDTO, GamePageResult, NewGameDTO, SearchDTO};
+use crate::providers::ImageClientProvider;
 use crate::repository::game_repository;
 
 use super::base::{
@@ -10,6 +11,7 @@ use super::base::{
     handle_get_list_paged_result, handle_get_result, handle_not_found_result, handle_query_mapping,
     handle_update_result, update_merged,
 };
+use super::game_image_service;
 
 pub async fn get_game(pool: &PgPool, user_id: &str, game_id: &str) -> Result<GameDTO, ApiErrors> {
     let find_result = game_repository::find_by_id(pool, user_id, game_id).await;
@@ -74,14 +76,76 @@ pub async fn update_game(
     .await
 }
 
-pub async fn delete_game(pool: &PgPool, user_id: &str, game_id: &str) -> Result<(), ApiErrors> {
-    exists_game(pool, user_id, game_id).await?;
+pub async fn delete_game(
+    pool: &PgPool,
+    image_client_provider: &ImageClientProvider,
+    user_id: &str,
+    game_id: &str,
+) -> Result<(), ApiErrors> {
+    let game = get_game(pool, user_id, game_id).await?;
+
+    if let Some(cover_filename) = &game.cover_filename {
+        let delete_cover_result =
+            game_image_service::delete_game_cover(image_client_provider, cover_filename).await;
+        if delete_cover_result.is_err() {
+            log::warn!("Game deletion - Image client could not delete Game with image.")
+        }
+    }
 
     let delete_result = game_repository::delete_by_id(pool, user_id, game_id).await;
     handle_action_result::<GameDTO>(delete_result)
 }
 
-pub async fn get_game_cover_filename(
+pub async fn set_game_cover(
+    pool: &PgPool,
+    image_client_provider: &ImageClientProvider,
+    user_id: &str,
+    game_id: &str,
+    file_path: &str,
+) -> Result<(), ApiErrors> {
+    exists_game(pool, user_id, game_id).await?;
+    let filename =
+        game_image_service::set_game_cover(image_client_provider, user_id, game_id, file_path)
+            .await?;
+    set_game_cover_filename(pool, user_id, game_id, Some(filename)).await
+}
+
+pub async fn rename_game_cover(
+    pool: &PgPool,
+    image_client_provider: &ImageClientProvider,
+    user_id: &str,
+    game_id: &str,
+    new_name: &str,
+) -> Result<(), ApiErrors> {
+    let old_filename = get_game_cover_filename(pool, user_id, game_id).await?;
+    let new_filename = game_image_service::rename_game_cover(
+        image_client_provider,
+        user_id,
+        game_id,
+        &old_filename,
+        new_name,
+    )
+    .await?;
+    set_game_cover_filename(pool, user_id, game_id, Some(new_filename)).await
+}
+
+pub async fn delete_game_cover(
+    pool: &PgPool,
+    image_client_provider: &ImageClientProvider,
+    user_id: &str,
+    game_id: &str,
+) -> Result<(), ApiErrors> {
+    let filename = get_game_cover_filename(pool, user_id, game_id).await?;
+    game_image_service::delete_game_cover(image_client_provider, &filename).await?;
+    set_game_cover_filename(pool, user_id, game_id, Option::<String>::None).await
+}
+
+pub async fn exists_game(pool: &PgPool, user_id: &str, game_id: &str) -> Result<(), ApiErrors> {
+    let exists_result = game_repository::exists_by_id(pool, user_id, game_id).await;
+    handle_not_found_result::<GameDTO>(exists_result)
+}
+
+async fn get_game_cover_filename(
     pool: &PgPool,
     user_id: &str,
     game_id: &str,
@@ -92,7 +156,7 @@ pub async fn get_game_cover_filename(
     })
 }
 
-pub async fn set_game_cover_filename(
+async fn set_game_cover_filename(
     pool: &PgPool,
     user_id: &str,
     game_id: &str,
@@ -101,9 +165,4 @@ pub async fn set_game_cover_filename(
     let update_result =
         game_repository::update_cover_filename_by_id(pool, user_id, game_id, filename).await;
     handle_action_result::<GameDTO>(update_result)
-}
-
-pub async fn exists_game(pool: &PgPool, user_id: &str, game_id: &str) -> Result<(), ApiErrors> {
-    let exists_result = game_repository::exists_by_id(pool, user_id, game_id).await;
-    handle_not_found_result::<GameDTO>(exists_result)
 }
