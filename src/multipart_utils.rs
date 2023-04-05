@@ -5,9 +5,12 @@ use actix_web::web;
 use futures::{StreamExt, TryStreamExt};
 
 use crate::errors::ApiErrors;
+use crate::models::FileTempPath;
+
+const TEMP_DIR_PREFIX: &str = "img_tmp_";
 
 // https://users.rust-lang.org/t/file-upload-in-actix-web/64871/2
-pub async fn get_multipart_file_path(mut multipart: Multipart) -> Result<String, ApiErrors> {
+pub async fn get_multipart_file_path(mut multipart: Multipart) -> Result<FileTempPath, ApiErrors> {
     let mut field = match multipart.try_next().await {
         Ok(optional_field) => match optional_field {
             Some(field) => Ok(field),
@@ -23,9 +26,11 @@ pub async fn get_multipart_file_path(mut multipart: Multipart) -> Result<String,
         }
     }?;
 
-    let random_temp_folder_name = crate::uuid_utils::new_random_uuid();
-    let random_temp_folder = format!("./{random_temp_folder_name}");
-    web::block(|| std::fs::create_dir(random_temp_folder))
+    let temp_folder = build_temp_dir_name();
+    let directory_path = format!("./{temp_folder}");
+    let directory_path_copy = directory_path.clone();
+
+    web::block(|| std::fs::create_dir(directory_path_copy))
         .await
         .map_err(|err| {
             log::warn!("Temp folder could not be created. - {}", err.to_string());
@@ -36,7 +41,7 @@ pub async fn get_multipart_file_path(mut multipart: Multipart) -> Result<String,
             ApiErrors::UnknownError(String::from("Error trying to create temp folder"))
         })?;
 
-    let file_path = format!("./{random_temp_folder_name}/file");
+    let file_path = format!("./{temp_folder}/file");
     let file_path_copy = file_path.clone();
 
     // Filesystem operations are blocking, use threadpool
@@ -79,13 +84,21 @@ pub async fn get_multipart_file_path(mut multipart: Multipart) -> Result<String,
             })?;
     }
 
-    Ok(file_path)
+    Ok(FileTempPath {
+        directory_path,
+        file_path,
+    })
 }
 
-pub async fn delete_temp_path(path: &str) {
-    let file_path = String::from(path);
-    let remove_result = web::block(move || std::fs::remove_dir_all(file_path)).await;
+pub async fn delete_temp_path(directory_path: &str) {
+    let dir_path = String::from(directory_path);
+    let remove_result = web::block(move || std::fs::remove_dir_all(dir_path)).await;
     if let Err(err) = remove_result {
         log::warn!("Temp dir could not be removed. - {}", err.to_string());
     }
+}
+
+fn build_temp_dir_name() -> String {
+    let random_uuid = crate::uuid_utils::new_random_uuid();
+    format!("{TEMP_DIR_PREFIX}{random_uuid}")
 }

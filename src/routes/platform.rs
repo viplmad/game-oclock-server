@@ -1,7 +1,9 @@
 use actix_web::{delete, get, post, put, web, Responder};
 use sqlx::PgPool;
 
-use crate::models::{ItemId, LoggedUser, NewPlatformDTO, QuicksearchQuery, SearchDTO};
+use crate::models::{
+    FileTempPath, ItemId, LoggedUser, NewPlatformDTO, QuicksearchQuery, SearchDTO,
+};
 use crate::providers::ImageClientProvider;
 use crate::services::{
     dlc_available_service, game_available_service, platform_image_service, platforms_service,
@@ -205,7 +207,10 @@ async fn post_platform_icon(
     let ItemId(id) = path.into_inner();
 
     let file_path_result = crate::multipart_utils::get_multipart_file_path(body).await;
-    let file_path = match handle_multipart_result(file_path_result) {
+    let FileTempPath {
+        directory_path,
+        file_path,
+    } = match handle_multipart_result(file_path_result) {
         Ok(res) => res,
         Err(err) => return err,
     };
@@ -219,7 +224,7 @@ async fn post_platform_icon(
     )
     .await;
 
-    crate::multipart_utils::delete_temp_path(&file_path).await;
+    crate::multipart_utils::delete_temp_path(&directory_path).await;
 
     handle_action_result(upload_result)
 }

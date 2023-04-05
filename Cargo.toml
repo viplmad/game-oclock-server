@@ -18,7 +18,8 @@ uuid = { version = "^1", default-features = false, features = [ "v4", "v7", "std
 bcrypt = { version = "^0", default-features = false, features = [ "std" ] }
 
 # TLS
-rustls = { version = "^0", default-features = false }
+# Fix version because actix uses old version
+rustls = { version = "0.20.8", default-features = false }
 rustls-pemfile = { version = "^1", default-features = false }
 
 # Serialisation/Deserialisation

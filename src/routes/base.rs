@@ -3,7 +3,7 @@ use serde::Serialize;
 use sqlx::PgPool;
 
 use crate::errors::{forbidden_error, ToError};
-use crate::models::{ModelInfo, PageResultDTO};
+use crate::models::{FileTempPath, ModelInfo, PageResultDTO};
 use crate::services::users_service;
 
 pub(super) fn handle_get_result(
@@ -43,8 +43,8 @@ pub(super) fn handle_action_result(service_result: Result<(), impl ToError>) -> 
 }
 
 pub(super) fn handle_multipart_result(
-    multipart_result: Result<String, impl ToError>,
-) -> Result<String, HttpResponse> {
+    multipart_result: Result<FileTempPath, impl ToError>,
+) -> Result<FileTempPath, HttpResponse> {
     multipart_result.map_err(|err| err.to_error())
 }
 

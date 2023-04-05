@@ -2,7 +2,8 @@ use actix_web::{delete, get, post, put, web, Responder};
 use sqlx::PgPool;
 
 use crate::models::{
-    DateDTO, ItemId, ItemIdAndRelatedId, LoggedUser, NewGameDTO, QuicksearchQuery, SearchDTO,
+    DateDTO, FileTempPath, ItemId, ItemIdAndRelatedId, LoggedUser, NewGameDTO, QuicksearchQuery,
+    SearchDTO,
 };
 use crate::providers::ImageClientProvider;
 use crate::services::{
@@ -206,7 +207,10 @@ async fn post_game_cover(
     let ItemId(id) = path.into_inner();
 
     let file_path_result = crate::multipart_utils::get_multipart_file_path(body).await;
-    let file_path = match handle_multipart_result(file_path_result) {
+    let FileTempPath {
+        directory_path,
+        file_path,
+    } = match handle_multipart_result(file_path_result) {
         Ok(res) => res,
         Err(err) => return err,
     };
@@ -220,7 +224,7 @@ async fn post_game_cover(
     )
     .await;
 
-    crate::multipart_utils::delete_temp_path(&file_path).await;
+    crate::multipart_utils::delete_temp_path(&directory_path).await;
 
     handle_action_result(upload_result)
 }
