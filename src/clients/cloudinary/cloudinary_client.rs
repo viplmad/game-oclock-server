@@ -1,5 +1,5 @@
 use chrono::Utc;
-use cloudinary::result::{CloudinaryDeleteResult, CloudinaryUploadResult};
+use cloudinary::result::{CloudinaryDeleteResult, CloudinaryRenameResult, CloudinaryUploadResult};
 use cloudinary::upload::UploadOptions;
 use cloudinary::Cloudinary;
 use futures::future::BoxFuture;
@@ -51,7 +51,7 @@ impl ImageClient for CloudinaryClient {
             })?;
 
         match result {
-            CloudinaryUploadResult::Succes(res) => get_filename(res),
+            CloudinaryUploadResult::Succes(res) => get_filename(&res.public_id, &res.format),
             CloudinaryUploadResult::Error(err) => {
                 log::info!("{}", err.error.message);
                 Err(ImageClientError())
@@ -80,8 +80,8 @@ impl ImageClient for CloudinaryClient {
             })?;
 
         match result {
-            CloudinaryUploadResult::Succes(res) => get_filename(res),
-            CloudinaryUploadResult::Error(err) => {
+            CloudinaryRenameResult::Succes(res) => get_filename(&res.public_id, &res.format),
+            CloudinaryRenameResult::Error(err) => {
                 log::info!("{}", err.error.message);
                 Err(ImageClientError())
             }
@@ -155,11 +155,9 @@ impl CloudinaryClientBuilder {
     }
 }
 
-fn get_filename(
-    result: Box<cloudinary::result::UploadResponse>,
-) -> Result<String, ImageClientError> {
-    if let Some(value) = result.public_id.split('/').last() {
-        let format = result.format;
+fn get_filename(public_id: &str, format: &str) -> Result<String, ImageClientError> {
+    if let Some(value) = public_id.split('/').last() {
+        let format = format;
         return Ok(format!("{value}.{format}"));
     }
 

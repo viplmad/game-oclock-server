@@ -6,4 +6,4 @@ additionalProperties:
   pubHomepage:
   pubLibrary: n2t.game_collection.client
   pubName: game_collection_client
-  pubVersion: 0.1.0+24
+  pubVersion: 1.0.0+24
