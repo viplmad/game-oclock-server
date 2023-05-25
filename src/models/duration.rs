@@ -5,17 +5,23 @@ use std::{
 
 use serde::{de::Visitor, Deserialize, Serialize};
 
-const MICROS_PER_SEC: u64 = 1_000_000;
-const SECONDS_PER_HOUR: u64 = 3600;
-const SECONDS_PER_MINUTE: u64 = 60;
+const MICROS_PER_SEC: i64 = 1_000_000;
+const SECONDS_PER_HOUR: i64 = 3600;
+const SECONDS_PER_MINUTE: i64 = 60;
 
-#[derive(Default)]
+#[derive(Default, Clone)]
 pub struct DurationDef {
-    pub micros: u64,
+    pub micros: i64,
 }
 
 impl DurationDef {
-    fn as_secs(&self) -> u64 {
+    pub fn microseconds(microseconds: i64) -> Self {
+        Self {
+            micros: microseconds,
+        }
+    }
+
+    fn as_secs(&self) -> i64 {
         self.micros / MICROS_PER_SEC
     }
 }
@@ -110,14 +116,12 @@ impl FromStr for DurationDef {
                 second,
                 millisecond: _,
             } => {
-                let duration_secs: u64 = u64::from(
+                let duration_secs = i64::from(
                     hour * (SECONDS_PER_HOUR as u32)
                         + minute * (SECONDS_PER_MINUTE as u32)
                         + second,
                 );
-                Ok(DurationDef {
-                    micros: duration_secs * MICROS_PER_SEC,
-                })
+                Ok(DurationDef::microseconds(duration_secs * MICROS_PER_SEC))
             }
             iso8601::Duration::Weeks(_) => todo!(),
         }

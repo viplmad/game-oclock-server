@@ -1,6 +1,7 @@
 use crate::errors::ApiErrors;
 use crate::models::{
     GameAvailableDTO, GameDTO, GameWithFinishDTO, GameWithLogDTO, GameWithLogsDTO,
+    GameWithLogsExtendedDTO,
 };
 use crate::providers::ImageClientProvider;
 
@@ -69,6 +70,19 @@ pub fn populate_games_with_log_cover(
 pub fn populate_games_with_logs_cover(
     provider: &ImageClientProvider,
     games: &mut Vec<GameWithLogsDTO>,
+) {
+    if let Ok(client) = handle_image_client_provider(provider) {
+        for game in games {
+            if let Some(cover_filename) = &game.cover_filename {
+                game.cover_url = Some(client.get_image_uri(GAME_FOLDER, cover_filename));
+            }
+        }
+    }
+}
+
+pub fn populate_games_with_logs_detailed_cover(
+    provider: &ImageClientProvider,
+    games: &mut Vec<GameWithLogsExtendedDTO>,
 ) {
     if let Ok(client) = handle_image_client_provider(provider) {
         for game in games {

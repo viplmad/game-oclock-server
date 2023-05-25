@@ -198,6 +198,46 @@ async fn get_last_played_games(
 
 #[utoipa::path(
     post,
+    path = "/api/v1/games/played/detailed",
+    tag = "GameLogs",
+    params(
+        StartEndDateQuery,
+    ),
+    responses(
+        (status = 200, description = "Game with logs obtained", body = [GamesWithLogsExtendedDTO], content_type = "application/json"),
+        (status = 401, description = "Unauthorized", body = ErrorMessage, content_type = "application/json"),
+        (status = 403, description = "Forbidden", body = ErrorMessage, content_type = "application/json"),
+        (status = 500, description = "Internal server error", body = ErrorMessage, content_type = "application/json"),
+    ),
+    security(
+        ("bearer_token" = [])
+    )
+)]
+#[post("/games/played/detailed")]
+async fn get_played_games_detailed(
+    pool: web::Data<PgPool>,
+    image_client_provider: web::Data<ImageClientProvider>,
+    query: web::Query<StartEndDateQuery>,
+    logged_user: LoggedUser,
+) -> impl Responder {
+    let mut get_result = game_with_logs_service::get_detailed_game_with_logs(
+        &pool,
+        &logged_user.id,
+        query.start_date,
+        query.end_date,
+    )
+    .await;
+    populate_get_result(&mut get_result, |game| {
+        game_image_service::populate_games_with_logs_detailed_cover(
+            &image_client_provider,
+            &mut game.games_with_logs,
+        )
+    });
+    handle_get_result(get_result)
+}
+
+#[utoipa::path(
+    post,
     path = "/api/v1/games/{id}/logs",
     tag = "GameLogs",
     params(

@@ -190,6 +190,7 @@ async fn run(
                         .service(routes::get_game_logs)
                         .service(routes::get_total_game_logs)
                         .service(routes::get_played_games)
+                        .service(routes::get_played_games_detailed)
                         .service(routes::get_first_played_games)
                         .service(routes::get_last_played_games)
                         .service(routes::post_game_log)
