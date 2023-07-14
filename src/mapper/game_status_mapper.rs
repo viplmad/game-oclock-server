@@ -9,6 +9,7 @@ impl TryFrom<i16> for GameStatus {
             1 => Ok(GameStatus::NextUp),
             2 => Ok(GameStatus::Playing),
             3 => Ok(GameStatus::Played),
+            9 => Ok(GameStatus::Wishlist),
             _ => Err(()),
         }
     }
@@ -21,6 +22,7 @@ impl From<GameStatus> for i16 {
             GameStatus::NextUp => 1,
             GameStatus::Playing => 2,
             GameStatus::Played => 3,
+            GameStatus::Wishlist => 9,
         }
     }
 }

@@ -2,7 +2,7 @@ use sqlx::PgPool;
 
 use crate::entities::GameSearch;
 use crate::errors::{error_message_builder, ApiErrors};
-use crate::models::{GameDTO, GamePageResult, NewGameDTO, SearchDTO};
+use crate::models::{GameDTO, GamePageResult, GameStatus, NewGameDTO, SearchDTO};
 use crate::providers::ImageClientProvider;
 use crate::repository::game_repository;
 
@@ -11,7 +11,7 @@ use super::base::{
     handle_get_list_paged_result, handle_get_result, handle_not_found_result, handle_query_mapping,
     handle_update_result, update_merged,
 };
-use super::game_image_service;
+use super::{game_available_service, game_image_service};
 
 pub async fn get_game(pool: &PgPool, user_id: &str, game_id: &str) -> Result<GameDTO, ApiErrors> {
     let find_result = game_repository::find_by_id(pool, user_id, game_id).await;
@@ -55,6 +55,8 @@ pub async fn update_game(
     game_id: &str,
     game: NewGameDTO,
 ) -> Result<(), ApiErrors> {
+    let new_status = game.status.clone();
+
     update_merged(
         game,
         async move || get_game(pool, user_id, game_id).await,
@@ -67,6 +69,11 @@ pub async fn update_game(
             )
             .await;
             handle_already_exists_result::<GameDTO>(exists_result)?;
+
+            // TODO Check if old is not wishlist
+            if new_status.is_some_and(|status| status == GameStatus::Wishlist) {
+                game_available_service::exists_no_game_available(pool, user_id, game_id).await?
+            }
 
             let update_result =
                 game_repository::update_by_id(pool, user_id, game_id, &game_to_update).await;

@@ -2,12 +2,12 @@ use chrono::NaiveDate;
 use sqlx::PgPool;
 
 use crate::errors::ApiErrors;
-use crate::models::{GameAvailableDTO, PlatformAvailableDTO};
+use crate::models::{GameAvailableDTO, GameStatus, NewGameDTO, PlatformAvailableDTO};
 use crate::repository::game_available_repository;
 
 use super::base::{
     handle_action_result, handle_already_exists_result, handle_get_list_result,
-    handle_not_found_result,
+    handle_not_found_result, handle_result,
 };
 use super::{games_service, platforms_service};
 
@@ -42,12 +42,32 @@ pub async fn create_game_available(
     platform_id: &str,
     available_date: NaiveDate,
 ) -> Result<(), ApiErrors> {
-    games_service::exists_game(pool, user_id, game_id).await?;
+    let game = games_service::get_game(pool, user_id, game_id).await?;
     platforms_service::exists_platform(pool, user_id, platform_id).await?;
 
     let exists_result =
         game_available_repository::exists_by_id(pool, user_id, game_id, platform_id).await;
     handle_already_exists_result::<GameAvailableDTO>(exists_result)?;
+
+    if game.status == GameStatus::Wishlist {
+        games_service::update_game(
+            pool,
+            user_id,
+            game_id,
+            NewGameDTO {
+                status: Some(GameStatus::NextUp),
+                name: None,
+                edition: None,
+                release_year: None,
+                rating: None,
+                notes: None,
+                save_folder: None,
+                screenshot_folder: None,
+                backup: None,
+            },
+        )
+        .await?
+    }
 
     let create_result =
         game_available_repository::create(pool, user_id, game_id, platform_id, available_date)
@@ -77,4 +97,20 @@ pub async fn exists_game_available(
     let exists_result =
         game_available_repository::exists_by_id(pool, user_id, game_id, platform_id).await;
     handle_not_found_result::<GameAvailableDTO>(exists_result)
+}
+
+pub async fn exists_no_game_available(
+    pool: &PgPool,
+    user_id: &str,
+    game_id: &str,
+) -> Result<(), ApiErrors> {
+    let exists_result =
+        game_available_repository::exists_platforms_with_game(pool, user_id, game_id).await;
+    let exists = handle_result::<bool, GameAvailableDTO>(exists_result)?;
+    match exists {
+        true => Err(ApiErrors::AlreadyExists(String::from(
+            "Game has platforms available",
+        ))),
+        false => Ok(()),
+    }
 }

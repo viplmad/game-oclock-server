@@ -81,6 +81,17 @@ pub fn exists_by_id(user_id: &str, game_id: &str, platform_id: &str) -> impl Que
     select
 }
 
+pub fn exists_platforms_by_game_id(user_id: &str, game_id: &str) -> impl QueryStatementWriter {
+    let mut select = Query::select();
+
+    from_and_where_user_id(&mut select, user_id);
+    select
+        .column((GameAvailableIden::Table, GameAvailableIden::UserId))
+        .and_where(Expr::col(GameAvailableIden::GameId).eq(game_id));
+
+    select
+}
+
 fn join_game_available_by_platform_id(select: &mut SelectStatement, platform_id: &str) {
     select
         .left_join(

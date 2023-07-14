@@ -59,3 +59,12 @@ pub async fn exists_by_id(
     let query = game_available_query::exists_by_id(user_id, game_id, platform_id);
     exists_id(pool, query).await
 }
+
+pub async fn exists_platforms_with_game(
+    pool: &PgPool,
+    user_id: &str,
+    game_id: &str,
+) -> Result<bool, RepositoryError> {
+    let query = game_available_query::exists_platforms_by_game_id(user_id, game_id);
+    exists_id(pool, query).await
+}

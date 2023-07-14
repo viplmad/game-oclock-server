@@ -47,22 +47,22 @@ fn apply_search_internal<I: 'static + TableIden + Clone + Copy>(
                         FilterOperator::SmallerThan => col.lt(Value::try_from(value)?),
                         FilterOperator::SmallerThanOrEqual => col.lte(Value::try_from(value)?),
                         FilterOperator::StartsWith => {
-                            to_lower(col).like(LikeExpr::str(&format_like_starts_with(value)))
+                            to_lower(col).like(LikeExpr::new(format_like_starts_with(value)))
                         }
                         FilterOperator::NotStartsWith => {
-                            to_lower(col).not_like(LikeExpr::str(&format_like_starts_with(value)))
+                            to_lower(col).not_like(LikeExpr::new(format_like_starts_with(value)))
                         }
                         FilterOperator::EndsWith => {
-                            to_lower(col).like(LikeExpr::str(&format_like_ends_with(value)))
+                            to_lower(col).like(LikeExpr::new(format_like_ends_with(value)))
                         }
                         FilterOperator::NotEndsWith => {
-                            to_lower(col).not_like(LikeExpr::str(&format_like_ends_with(value)))
+                            to_lower(col).not_like(LikeExpr::new(format_like_ends_with(value)))
                         }
                         FilterOperator::Contains => {
-                            to_lower(col).like(LikeExpr::str(&format_like_contains(value)))
+                            to_lower(col).like(LikeExpr::new(format_like_contains(value)))
                         }
                         FilterOperator::NotContains => {
-                            to_lower(col).not_like(LikeExpr::str(&format_like_contains(value)))
+                            to_lower(col).not_like(LikeExpr::new(format_like_contains(value)))
                         }
                         _ => Err(MappingError(String::from(
                             "Operator not supported with single value.",
