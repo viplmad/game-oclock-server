@@ -17,4 +17,5 @@ pub mod multipart_utils;
 pub mod openapi;
 pub mod providers;
 pub mod string_utils;
+pub mod temp_file_utils;
 pub mod uuid_utils;

@@ -6,7 +6,7 @@ use game_collection_server::{
     clients::cloudinary::{CloudinaryClient, CloudinaryClientBuilder},
     openapi,
     providers::ImageClientProvider,
-    routes,
+    routes, temp_file_utils,
 };
 
 use actix_web::{web, App, HttpServer};
@@ -108,6 +108,12 @@ async fn apply_migrations(pool: &PgPool) {
     log::info!("Database migrations applied.");
 }
 
+async fn delete_old_temp_files() {
+    temp_file_utils::delete_all_temp_dirs().await;
+
+    log::info!("Old temp images deleted.");
+}
+
 fn get_cloudinary_client_provider() -> Option<CloudinaryClient> {
     CloudinaryClientBuilder::try_from_env()
         .map(|client| CloudinaryClient::default().connect_with(client))
@@ -148,6 +154,7 @@ async fn run(
             ImageClientProvider::empty()
         };
     let data_image_client = web::Data::new(image_client_provider);
+    delete_old_temp_files().await;
 
     // OpenAPI
     let openapi = openapi::get_openapi();

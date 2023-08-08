@@ -255,7 +255,7 @@ async fn post_dlc_cover(
     )
     .await;
 
-    crate::multipart_utils::delete_temp_path(&directory_path).await;
+    crate::temp_file_utils::delete_temp_dir(&directory_path).await;
 
     handle_action_result(upload_result)
 }
