@@ -157,7 +157,6 @@ impl CloudinaryClientBuilder {
 
 fn get_filename(public_id: &str, format: &str) -> Result<String, ImageClientError> {
     if let Some(value) = public_id.split('/').last() {
-        let format = format;
         return Ok(format!("{value}.{format}"));
     }
 

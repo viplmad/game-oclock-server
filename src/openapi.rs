@@ -109,6 +109,7 @@ pub fn get_openapi() -> utoipa::openapi::OpenApi {
             models::GamesStreakDTO,
             models::GamesLogDTO,
             models::GameStatus,
+            models::GameStreakDTO,
             models::GameLogDTO,
             models::DLCDTO,
             models::DLCPageResult,
