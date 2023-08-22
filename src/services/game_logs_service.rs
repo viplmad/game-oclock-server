@@ -1,4 +1,4 @@
-use chrono::NaiveDateTime;
+use chrono::{Duration, NaiveDateTime, NaiveTime};
 use sqlx::postgres::types::PgInterval;
 use sqlx::PgPool;
 
@@ -51,6 +51,21 @@ pub async fn create_game_log(
     }
 
     // TODO Split if contains different days
+    if log.start_datetime.date() != log.end_datetime.date() {
+        // If the end date is next day
+        if log.start_datetime.date() == (log.end_datetime.date() - Duration::days(1)) {
+            // If end time is not midnight
+            if log.end_datetime.time() != NaiveTime::MIN {
+                return Err(ApiErrors::InvalidParameter(String::from(
+                    "Log must be from the same day or until midnight of next day",
+                )));
+            }
+        } else {
+            return Err(ApiErrors::InvalidParameter(String::from(
+                "Log must be from the same day or until midnight of next day",
+            )));
+        }
+    }
 
     let exists_result =
         game_log_repository::exists_gap(pool, user_id, log.start_datetime, log.end_datetime).await;

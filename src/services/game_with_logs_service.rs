@@ -155,6 +155,7 @@ fn create_detailed_list(game_with_logs: Vec<GameWithLog>) -> GamesWithLogsExtend
     let mut longest_streak = GamesStreakDTO {
         games_ids: vec![],
         start_date: NaiveDate::default(),
+        end_date: NaiveDate::default(),
         days: 0,
     };
 
@@ -205,14 +206,17 @@ fn create_detailed_list(game_with_logs: Vec<GameWithLog>) -> GamesWithLogsExtend
                         // Lost the streak
                         game.streaks.push(GameStreakDTO {
                             start_date: log.start_datetime.date(),
+                            end_date: log.end_datetime.date(),
                             days: 1,
                         });
                     }
                 }
 
+                // Found longer streak
                 if streak_days > game.longest_streak.days {
                     game.longest_streak = GameStreakDTO {
                         start_date: log.start_datetime.date(),
+                        end_date: log.start_datetime.date() + Duration::days(streak_days - 1),
                         days: streak_days,
                     }
                 }
@@ -220,6 +224,7 @@ fn create_detailed_list(game_with_logs: Vec<GameWithLog>) -> GamesWithLogsExtend
                 game.total_time =
                     DurationDef::microseconds(log.time.micros + game.total_time.micros);
 
+                // Found longer global session
                 if session_time.micros > longest_session.time.micros {
                     longest_session = GamesLogDTO {
                         game_id: game_id.clone(),
@@ -248,6 +253,7 @@ fn create_detailed_list(game_with_logs: Vec<GameWithLog>) -> GamesWithLogsExtend
                         streaks.push(GamesStreakDTO {
                             games_ids: vec![game_id.clone()],
                             start_date: log.start_datetime.date(),
+                            end_date: log.end_datetime.date(),
                             days: 1,
                         });
                     } else {
@@ -257,16 +263,21 @@ fn create_detailed_list(game_with_logs: Vec<GameWithLog>) -> GamesWithLogsExtend
                         }
                     }
                 } else {
+                    // No streaks, add first
                     streaks.push(GamesStreakDTO {
                         games_ids: vec![game_id.clone()],
                         start_date: log.start_datetime.date(),
+                        end_date: log.end_datetime.date(),
                         days: 1,
                     });
                 }
+
+                // Found longer global streak
                 if streak_days > longest_streak.days {
                     longest_streak = GamesStreakDTO {
                         games_ids: streak_games_ids,
                         start_date: log.start_datetime.date(),
+                        end_date: log.start_datetime.date() + Duration::days(streak_days - 1),
                         days: streak_days,
                     }
                 }
@@ -278,11 +289,13 @@ fn create_detailed_list(game_with_logs: Vec<GameWithLog>) -> GamesWithLogsExtend
                 let mut game = GameWithLogsExtendedDTO::from(game_with_log);
                 game.streaks.push(GameStreakDTO {
                     start_date: log.start_datetime.date(),
+                    end_date: log.end_datetime.date(),
                     days: 1,
                 });
                 // TODO Implement Clone
                 game.longest_streak = GameStreakDTO {
                     start_date: log.start_datetime.date(),
+                    end_date: log.end_datetime.date(),
                     days: 1,
                 };
                 // TODO Implement Clone
@@ -295,6 +308,8 @@ fn create_detailed_list(game_with_logs: Vec<GameWithLog>) -> GamesWithLogsExtend
                 // TODO Implement add
 
                 let session_time = log.time.clone();
+
+                // Found longer global session
                 if session_time.micros > longest_session.time.micros {
                     longest_session = GamesLogDTO {
                         game_id: game_id.clone(),
@@ -303,6 +318,7 @@ fn create_detailed_list(game_with_logs: Vec<GameWithLog>) -> GamesWithLogsExtend
                         time: session_time,
                     };
                 }
+
                 let mut streak_days = 1;
                 let mut streak_games_ids = vec![game_id.clone()];
                 if let Some(last_streak) = streaks.last_mut() {
@@ -322,6 +338,7 @@ fn create_detailed_list(game_with_logs: Vec<GameWithLog>) -> GamesWithLogsExtend
                         streaks.push(GamesStreakDTO {
                             games_ids: vec![game_id.clone()],
                             start_date: log.start_datetime.date(),
+                            end_date: log.end_datetime.date(),
                             days: 1,
                         });
                     } else {
@@ -331,16 +348,21 @@ fn create_detailed_list(game_with_logs: Vec<GameWithLog>) -> GamesWithLogsExtend
                         }
                     }
                 } else {
+                    // No streaks, add first
                     streaks.push(GamesStreakDTO {
                         games_ids: vec![game_id.clone()],
                         start_date: log.start_datetime.date(),
+                        end_date: log.end_datetime.date(),
                         days: 1,
                     });
                 }
+
+                // Found longer global streak
                 if streak_days > longest_streak.days {
                     longest_streak = GamesStreakDTO {
                         games_ids: streak_games_ids,
                         start_date: log.start_datetime.date(),
+                        end_date: log.start_datetime.date() + Duration::days(streak_days - 1),
                         days: streak_days,
                     }
                 }

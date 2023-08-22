@@ -78,6 +78,7 @@ impl From<GameWithLog> for GameWithLogsExtendedDTO {
             },
             longest_streak: GameStreakDTO {
                 start_date: NaiveDate::default(),
+                end_date: NaiveDate::default(),
                 days: 0,
             },
             total_time: DurationDef::default(),

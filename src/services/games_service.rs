@@ -70,7 +70,7 @@ pub async fn update_game(
             .await;
             handle_already_exists_result::<GameDTO>(exists_result)?;
 
-            // TODO Check if old is not wishlist
+            // TODO Only check if old is not wishlist
             if new_status.is_some_and(|status| status == GameStatus::Wishlist) {
                 game_available_service::exists_no_game_available(pool, user_id, game_id).await?
             }

@@ -73,7 +73,8 @@ pub struct GameStreakDTO {
     pub days: i64,
     #[schema(value_type = String, format = Date)]
     pub start_date: NaiveDate,
-    // TODO add end_date
+    #[schema(value_type = String, format = Date)]
+    pub end_date: NaiveDate,
 }
 
 #[derive(Serialize, ToSchema)]
@@ -93,7 +94,8 @@ pub struct GamesStreakDTO {
     pub days: i64,
     #[schema(value_type = String, format = Date)]
     pub start_date: NaiveDate,
-    // TODO add end_date
+    #[schema(value_type = String, format = Date)]
+    pub end_date: NaiveDate,
 }
 
 #[derive(Serialize, ToSchema)]
