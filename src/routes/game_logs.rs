@@ -2,7 +2,7 @@ use actix_web::{delete, get, post, web, Responder};
 use sqlx::PgPool;
 
 use crate::models::{
-    DateTimeDTO, GameLogDTO, ItemId, LoggedUser, OptionalStartEndDateQuery, QuicksearchQuery,
+    DateTimeDTO, ItemId, LoggedUser, NewGameLogDTO, OptionalStartEndDateQuery, QuicksearchQuery,
     SearchDTO, StartEndDateQuery,
 };
 use crate::providers::ImageClientProvider;
@@ -243,7 +243,7 @@ async fn get_played_games_detailed(
     params(
         ("id" = String, Path, description = "Game id"),
     ),
-    request_body(content = GameLogDTO, description = "Game log to be added", content_type = "application/json"),
+    request_body(content = NewGameLogDTO, description = "Game log to be added", content_type = "application/json"),
     responses(
         (status = 204, description = "Game log added"),
         (status = 400, description = "Bad request", body = ErrorMessage, content_type = "application/json"),
@@ -260,7 +260,7 @@ async fn get_played_games_detailed(
 async fn post_game_log(
     pool: web::Data<PgPool>,
     path: web::Path<ItemId>,
-    body: web::Json<GameLogDTO>,
+    body: web::Json<NewGameLogDTO>,
     logged_user: LoggedUser,
 ) -> impl Responder {
     let ItemId(id) = path.into_inner();

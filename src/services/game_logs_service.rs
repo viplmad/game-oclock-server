@@ -2,9 +2,9 @@ use chrono::NaiveDateTime;
 use sqlx::postgres::types::PgInterval;
 use sqlx::PgPool;
 
-use crate::entities::GameLog;
+use crate::entities::{GameLog, GameLogWithTime};
 use crate::errors::ApiErrors;
-use crate::models::{DurationDef, GameLogDTO};
+use crate::models::{DurationDef, GameLogDTO, Merge, NewGameLogDTO};
 use crate::repository::game_log_repository;
 
 use super::base::{
@@ -33,24 +33,31 @@ pub async fn get_game_logs(
     games_service::exists_game(pool, user_id, game_id).await?;
 
     let find_result = game_log_repository::find_all_by_game_id(pool, user_id, game_id).await;
-    handle_get_list_result::<GameLog, GameLogDTO>(find_result)
+    handle_get_list_result::<GameLogWithTime, GameLogDTO>(find_result)
 }
 
 pub async fn create_game_log(
     pool: &PgPool,
     user_id: &str,
     game_id: &str,
-    log: GameLogDTO,
+    log: NewGameLogDTO,
 ) -> Result<(), ApiErrors> {
     games_service::exists_game(pool, user_id, game_id).await?;
 
-    // TODO check time log does not overlap
+    if log.start_datetime > log.end_datetime {
+        return Err(ApiErrors::InvalidParameter(String::from(
+            "Start date time must be previous than end date time",
+        )));
+    }
+
+    // TODO Split if contains different days
 
     let exists_result =
-        game_log_repository::exists_by_id(pool, user_id, game_id, log.datetime).await;
+        game_log_repository::exists_gap(pool, user_id, log.start_datetime, log.end_datetime).await;
     handle_already_exists_result::<GameLogDTO>(exists_result)?;
 
-    let log_to_create = GameLog::from(log);
+    let merged_log = GameLogDTO::merge_with_default(log);
+    let log_to_create = GameLog::from(merged_log);
     let create_result = game_log_repository::create(pool, user_id, game_id, &log_to_create).await;
     handle_action_result::<GameLogDTO>(create_result)
 }

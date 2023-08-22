@@ -73,13 +73,16 @@ pub struct GameStreakDTO {
     pub days: i64,
     #[schema(value_type = String, format = Date)]
     pub start_date: NaiveDate,
+    // TODO add end_date
 }
 
 #[derive(Serialize, ToSchema)]
 pub struct GamesLogDTO {
     pub game_id: String,
     #[schema(value_type = String, format = DateTime)]
-    pub datetime: NaiveDateTime,
+    pub start_datetime: NaiveDateTime,
+    #[schema(value_type = String, format = DateTime)]
+    pub end_datetime: NaiveDateTime,
     #[schema(value_type = String)]
     pub time: DurationDef,
 }
@@ -90,6 +93,7 @@ pub struct GamesStreakDTO {
     pub days: i64,
     #[schema(value_type = String, format = Date)]
     pub start_date: NaiveDate,
+    // TODO add end_date
 }
 
 #[derive(Serialize, ToSchema)]
@@ -114,7 +118,9 @@ pub struct GameWithLogDTO {
     pub screenshot_folder: String,
     pub backup: bool,
     #[schema(value_type = String, format = DateTime)]
-    pub log_datetime: NaiveDateTime,
+    pub log_start_datetime: NaiveDateTime,
+    #[schema(value_type = String, format = DateTime)]
+    pub log_end_datetime: NaiveDateTime,
     #[schema(value_type = String)]
     pub log_time: DurationDef,
 }
