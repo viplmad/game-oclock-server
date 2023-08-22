@@ -19,9 +19,6 @@ use super::base::{
     get,
     path = "/api/v1/games/{id}",
     tag = "Games",
-    params(
-        ("id" = String, Path, description = "Game id"),
-    ),
     responses(
         (status = 200, description = "Game obtained", body = GameDTO, content_type = "application/json"),
         (status = 401, description = "Unauthorized", body = ErrorMessage, content_type = "application/json"),
@@ -52,9 +49,6 @@ async fn get_game(
     get,
     path = "/api/v1/tags/{id}/games",
     tag = "Games",
-    params(
-        ("id" = String, Path, description = "Tag id"),
-    ),
     responses(
         (status = 200, description = "Games obtained", body = [GameDTO], content_type = "application/json"),
         (status = 401, description = "Unauthorized", body = ErrorMessage, content_type = "application/json"),
@@ -85,9 +79,6 @@ async fn get_tag_games(
     get,
     path = "/api/v1/platforms/{id}/games",
     tag = "Games",
-    params(
-        ("id" = String, Path, description = "Platform id"),
-    ),
     responses(
         (status = 200, description = "Games obtained", body = [GameAvailableDTO], content_type = "application/json"),
         (status = 401, description = "Unauthorized", body = ErrorMessage, content_type = "application/json"),
@@ -180,9 +171,6 @@ async fn post_game(
     post,
     path = "/api/v1/games/{id}/cover",
     tag = "Games",
-    params(
-        ("id" = String, Path, description = "Game id"),
-    ),
     request_body(content = Image, description = "Game cover to be uploaded", content_type = "multipart/form-data"),
     responses(
         (status = 204, description = "Game cover uploaded"),
@@ -233,9 +221,6 @@ async fn post_game_cover(
     put,
     path = "/api/v1/games/{id}",
     tag = "Games",
-    params(
-        ("id" = String, Path, description = "Game id"),
-    ),
     request_body(content = NewGameDTO, description = "Game to be updated", content_type = "application/json"),
     responses(
         (status = 204, description = "Game updated"),
@@ -265,9 +250,6 @@ async fn put_game(
     put,
     path = "/api/v1/games/{id}/cover",
     tag = "Games",
-    params(
-        ("id" = String, Path, description = "Game id"),
-    ),
     request_body(content = String, description = "New game cover name", content_type = "application/json"),
     responses(
         (status = 204, description = "Game cover renamed"),
@@ -305,10 +287,6 @@ async fn put_game_cover(
     put,
     path = "/api/v1/games/{id}/tags/{other_id}",
     tag = "Games",
-    params(
-        ("id" = String, Path, description = "Game id"),
-        ("other_id" = String, Path, description = "Tag id")
-    ),
     responses(
         (status = 204, description = "Game and Tag linked"),
         (status = 400, description = "Bad request", body = ErrorMessage, content_type = "application/json"),
@@ -337,10 +315,6 @@ async fn link_game_tag(
     put,
     path = "/api/v1/games/{id}/platforms/{other_id}",
     tag = "Games",
-    params(
-        ("id" = String, Path, description = "Game id"),
-        ("other_id" = String, Path, description = "Platform id")
-    ),
     request_body(content = DateDTO, description = "Available date", content_type = "application/json"),
     responses(
         (status = 204, description = "Game and Platform linked"),
@@ -377,9 +351,6 @@ async fn link_game_platform(
     delete,
     path = "/api/v1/games/{id}",
     tag = "Games",
-    params(
-        ("id" = String, Path, description = "Game id"),
-    ),
     responses(
         (status = 204, description = "Game deleted"),
         (status = 401, description = "Unauthorized", body = ErrorMessage, content_type = "application/json"),
@@ -408,9 +379,6 @@ async fn delete_game(
     delete,
     path = "/api/v1/games/{id}/cover",
     tag = "Games",
-    params(
-        ("id" = String, Path, description = "Game id"),
-    ),
     responses(
         (status = 204, description = "Game cover deleted"),
         (status = 400, description = "Bad request", body = ErrorMessage, content_type = "application/json"),
@@ -440,10 +408,6 @@ async fn delete_game_cover(
     delete,
     path = "/api/v1/games/{id}/tags/{other_id}",
     tag = "Games",
-    params(
-        ("id" = String, Path, description = "Game id"),
-        ("other_id" = String, Path, description = "Tag id")
-    ),
     responses(
         (status = 204, description = "Game and Tag unlinked"),
         (status = 400, description = "Bad request", body = ErrorMessage, content_type = "application/json"),
@@ -472,10 +436,6 @@ async fn unlink_game_tag(
     delete,
     path = "/api/v1/games/{id}/platforms/{other_id}",
     tag = "Games",
-    params(
-        ("id" = String, Path, description = "Game id"),
-        ("other_id" = String, Path, description = "Platform id")
-    ),
     responses(
         (status = 204, description = "Game and Platform unlinked"),
         (status = 400, description = "Bad request", body = ErrorMessage, content_type = "application/json"),

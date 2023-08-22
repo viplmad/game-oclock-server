@@ -15,9 +15,6 @@ use super::base::{
     get,
     path = "/api/v1/users/{id}",
     tag = "Users",
-    params(
-        ("id" = String, Path, description = "User id"),
-    ),
     responses(
         (status = 200, description = "User obtained", body = UserDTO, content_type = "application/json"),
         (status = 401, description = "Unauthorized", body = ErrorMessage, content_type = "application/json"),
@@ -124,9 +121,6 @@ async fn post_user(
     put,
     path = "/api/v1/users/{id}",
     tag = "Users",
-    params(
-        ("id" = String, Path, description = "User id"),
-    ),
     request_body(content = NewUserDTO, description = "User to be updated", content_type = "application/json"),
     responses(
         (status = 204, description = "User updated"),
@@ -183,9 +177,6 @@ async fn change_password(
     put,
     path = "/api/v1/users/{id}/promote",
     tag = "Users",
-    params(
-        ("id" = String, Path, description = "User id"),
-    ),
     responses(
         (status = 204, description = "User updated"),
         (status = 400, description = "Bad request", body = ErrorMessage, content_type = "application/json"),
@@ -217,9 +208,6 @@ async fn promote_user(
     put,
     path = "/api/v1/users/{id}/demote",
     tag = "Users",
-    params(
-        ("id" = String, Path, description = "User id"),
-    ),
     responses(
         (status = 204, description = "User updated"),
         (status = 400, description = "Bad request", body = ErrorMessage, content_type = "application/json"),
@@ -251,9 +239,6 @@ async fn demote_user(
     delete,
     path = "/api/v1/users/{id}",
     tag = "Users",
-    params(
-        ("id" = String, Path, description = "User id"),
-    ),
     responses(
         (status = 204, description = "User deleted"),
         (status = 401, description = "Unauthorized", body = ErrorMessage, content_type = "application/json"),

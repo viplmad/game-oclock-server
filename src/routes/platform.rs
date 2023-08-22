@@ -18,9 +18,6 @@ use super::base::{
     get,
     path = "/api/v1/platforms/{id}",
     tag = "Platforms",
-    params(
-        ("id" = String, Path, description = "Platform id"),
-    ),
     responses(
         (status = 200, description = "Platform obtained", body = PlatformDTO, content_type = "application/json"),
         (status = 401, description = "Unauthorized", body = ErrorMessage, content_type = "application/json"),
@@ -51,9 +48,6 @@ async fn get_platform(
     get,
     path = "/api/v1/games/{id}/platforms",
     tag = "Platforms",
-    params(
-        ("id" = String, Path, description = "Game id"),
-    ),
     responses(
         (status = 200, description = "Platforms obtained", body = [PlatformAvailableDTO], content_type = "application/json"),
         (status = 401, description = "Unauthorized", body = ErrorMessage, content_type = "application/json"),
@@ -85,9 +79,6 @@ async fn get_game_platforms(
     get,
     path = "/api/v1/dlcs/{id}/platforms",
     tag = "Platforms",
-    params(
-        ("id" = String, Path, description = "DLC id"),
-    ),
     responses(
         (status = 200, description = "Platforms obtained", body = [PlatformAvailableDTO], content_type = "application/json"),
         (status = 401, description = "Unauthorized", body = ErrorMessage, content_type = "application/json"),
@@ -180,9 +171,6 @@ async fn post_platform(
     post,
     path = "/api/v1/platforms/{id}/icon",
     tag = "Platforms",
-    params(
-        ("id" = String, Path, description = "Platform id"),
-    ),
     request_body(content = Image, description = "Platform icon to be uploaded", content_type = "multipart/form-data"),
     responses(
         (status = 204, description = "Platform icon uploaded"),
@@ -233,9 +221,6 @@ async fn post_platform_icon(
     put,
     path = "/api/v1/platforms/{id}",
     tag = "Platforms",
-    params(
-        ("id" = String, Path, description = "Platform id"),
-    ),
     request_body(content = NewPlatformDTO, description = "Platform to be updated", content_type = "application/json"),
     responses(
         (status = 204, description = "Platform updated"),
@@ -266,9 +251,6 @@ async fn put_platform(
     put,
     path = "/api/v1/platforms/{id}/icon",
     tag = "Platforms",
-    params(
-        ("id" = String, Path, description = "Platform id"),
-    ),
     request_body(content = String, description = "New platform filename", content_type = "application/json"),
     responses(
         (status = 204, description = "Platform icon renamed"),
@@ -306,9 +288,6 @@ async fn put_platform_icon(
     delete,
     path = "/api/v1/platforms/{id}",
     tag = "Platforms",
-    params(
-        ("id" = String, Path, description = "Platform id"),
-    ),
     responses(
         (status = 204, description = "Platform deleted"),
         (status = 401, description = "Unauthorized", body = ErrorMessage, content_type = "application/json"),
@@ -338,9 +317,6 @@ async fn delete_platform(
     delete,
     path = "/api/v1/platforms/{id}/icon",
     tag = "Platforms",
-    params(
-        ("id" = String, Path, description = "Platform id"),
-    ),
     responses(
         (status = 204, description = "Platform icon deleted"),
         (status = 400, description = "Bad request", body = ErrorMessage, content_type = "application/json"),

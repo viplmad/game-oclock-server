@@ -12,9 +12,6 @@ use super::base::{
     get,
     path = "/api/v1/tags/{id}",
     tag = "Tags",
-    params(
-        ("id" = String, Path, description = "Tag id"),
-    ),
     responses(
         (status = 200, description = "Tag obtained", body = TagDTO, content_type = "application/json"),
         (status = 401, description = "Unauthorized", body = ErrorMessage, content_type = "application/json"),
@@ -41,9 +38,6 @@ async fn get_tag(
     get,
     path = "/api/v1/games/{id}/tags",
     tag = "Tags",
-    params(
-        ("id" = String, Path, description = "Game id"),
-    ),
     responses(
         (status = 200, description = "Tags obtained", body = [TagDTO], content_type = "application/json"),
         (status = 401, description = "Unauthorized", body = ErrorMessage, content_type = "application/json"),
@@ -126,9 +120,6 @@ async fn post_tag(
     put,
     path = "/api/v1/tags/{id}",
     tag = "Tags",
-    params(
-        ("id" = String, Path, description = "Tag id"),
-    ),
     request_body(content = NewTagDTO, description = "Tag to be updated", content_type = "application/json"),
     responses(
         (status = 204, description = "Tag updated"),
@@ -158,9 +149,6 @@ async fn put_tag(
     delete,
     path = "/api/v1/tags/{id}",
     tag = "Tags",
-    params(
-        ("id" = String, Path, description = "Tag id"),
-    ),
     responses(
         (status = 204, description = "Tag deleted"),
         (status = 401, description = "Unauthorized", body = ErrorMessage, content_type = "application/json"),
