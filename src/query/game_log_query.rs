@@ -1,6 +1,6 @@
 use chrono::NaiveDateTime;
 use sea_query::{
-    Alias, Cond, Expr, Func, FunctionCall, Order, Query, QueryStatementWriter, SelectStatement,
+    Alias, Expr, Func, FunctionCall, Order, Query, QueryStatementWriter, SelectStatement,
     SimpleExpr,
 };
 
