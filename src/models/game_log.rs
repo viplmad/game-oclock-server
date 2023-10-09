@@ -2,7 +2,7 @@ use chrono::NaiveDateTime;
 use serde::{Deserialize, Serialize};
 use utoipa::ToSchema;
 
-use super::{DurationDef, ModelInfo, Merge};
+use super::{DurationDef, Merge, ModelInfo};
 
 #[derive(Default, Serialize, Deserialize, ToSchema)]
 pub struct GameLogDTO {

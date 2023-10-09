@@ -219,7 +219,3 @@ ALTER TABLE ONLY "GameUserInfo"
 
 ALTER TABLE ONLY "GameUserInfo"
     ADD CONSTRAINT "GameUserInfo_fk1" FOREIGN KEY (user_id) REFERENCES "User"(id) ON DELETE CASCADE;
-
-
-INSERT INTO "User" (id, username, password, admin, added_datetime, updated_datetime)
-VALUES ('0186dc6b-8dd7-7321-bbd9-d3ea1ba00d56', 'admin', '$2a$12$4PiH98/.9OiLpkXPIdqwu.rwzkjacoAZt1UCGwY8bujuYxLSR.wG6', TRUE, NOW(), NOW());

@@ -123,7 +123,7 @@ pub fn exists_by_username(username: &str) -> SelectStatement {
 pub fn exists_by_username_and_id_not(username: &str, id: &str) -> impl QueryStatementWriter {
     let mut select = exists_by_username(username);
 
-    select.and_where(Expr::col(UserIden::Id).ne(id));
+    where_id_not(&mut select, id);
 
     select
 }
@@ -133,8 +133,8 @@ pub fn exists_by_admin_and_id_not(id: &str) -> impl QueryStatementWriter {
 
     from(&mut select);
     add_id_field(&mut select);
-    select.and_where(Expr::col(UserIden::Admin).eq(true));
-    select.and_where(Expr::col(UserIden::Id).ne(id));
+    where_admin(&mut select, true);
+    where_id_not(&mut select, id);
 
     select
 }
@@ -142,7 +142,17 @@ pub fn exists_by_admin_and_id_not(id: &str) -> impl QueryStatementWriter {
 pub fn exists_by_admin_and_id(id: &str) -> impl QueryStatementWriter {
     let mut select = exists_by_id(id);
 
-    select.and_where(Expr::col(UserIden::Admin).eq(true));
+    where_admin(&mut select, true);
+
+    select
+}
+
+pub fn exists_by_admin() -> impl QueryStatementWriter {
+    let mut select = Query::select();
+
+    from(&mut select);
+    where_admin(&mut select, true);
+    add_id_field(&mut select);
 
     select
 }
@@ -153,6 +163,14 @@ fn from(select: &mut SelectStatement) {
 
 fn where_id(select: &mut SelectStatement, id: &str) {
     select.and_where(Expr::col((UserIden::Table, UserIden::Id)).eq(id));
+}
+
+fn where_admin(select: &mut SelectStatement, admin: bool) {
+    select.and_where(Expr::col((UserIden::Table, UserIden::Admin)).eq(admin));
+}
+
+fn where_id_not(select: &mut SelectStatement, id: &str) {
+    select.and_where(Expr::col((UserIden::Table, UserIden::Id)).ne(id));
 }
 
 fn add_id_field(select: &mut SelectStatement) {

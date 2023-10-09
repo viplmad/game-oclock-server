@@ -89,3 +89,8 @@ pub async fn exists_by_id_and_admin(pool: &PgPool, id: &str) -> Result<bool, Rep
     let query = user_query::exists_by_admin_and_id(id);
     exists_id(pool, query).await
 }
+
+pub async fn exists_with_admin(pool: &PgPool) -> Result<bool, RepositoryError> {
+    let query = user_query::exists_by_admin();
+    exists_id(pool, query).await
+}

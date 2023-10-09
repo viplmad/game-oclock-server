@@ -1,4 +1,4 @@
-FROM rust:1.71.0 as builder
+FROM rust:1.73.0 as builder
 
 # muslc is required in order to build the rust image.
 RUN apt-get update && apt-get -y install cmake musl-tools libssl-dev && rm -rf /var/lib/apt/lists/*

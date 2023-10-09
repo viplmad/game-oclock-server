@@ -129,3 +129,8 @@ pub async fn exists_user(pool: &PgPool, user_id: &str) -> Result<(), ApiErrors> 
     let exists_result = user_repository::exists_by_id(pool, user_id).await;
     handle_not_found_result::<UserDTO>(exists_result)
 }
+
+pub async fn exists_admin_user(pool: &PgPool) -> Result<bool, ApiErrors> {
+    let exists_result = user_repository::exists_with_admin(pool).await;
+    handle_result::<bool, UserDTO>(exists_result)
+}
