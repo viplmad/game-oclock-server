@@ -186,6 +186,7 @@ async fn run(
                         .service(routes::delete_game_log)
                         // Game Streaks
                         .service(routes::get_game_streaks)
+                        .service(routes::get_streaks)
                         // DLCs
                         .service(routes::get_dlc)
                         .service(routes::get_dlc_base_game)
