@@ -14,6 +14,7 @@ pub mod game_tags_service;
 pub mod game_with_finish_service;
 pub mod game_with_logs_service;
 pub mod games_service;
+mod logs_utils;
 pub mod platform_image_service;
 pub mod platforms_service;
 pub mod tags_service;

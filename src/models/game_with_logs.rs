@@ -1,3 +1,5 @@
+use std::collections::HashMap;
+
 use chrono::{NaiveDate, NaiveDateTime};
 use serde::Serialize;
 use utoipa::ToSchema;
@@ -31,11 +33,11 @@ pub struct GameWithLogsDTO {
 #[derive(Serialize, ToSchema)]
 pub struct GamesWithLogsExtendedDTO {
     pub count: i32,
-    pub streaks: Vec<GamesStreakDTO>,
     pub longest_streak: GamesStreakDTO,
     pub longest_session: GamesLogDTO,
     #[schema(value_type = String)]
     pub total_time: DurationDef,
+    pub total_time_grouped: HashMap<u32, DurationDef>,
     pub games_with_logs: Vec<GameWithLogsExtendedDTO>,
 }
 
@@ -60,11 +62,14 @@ pub struct GameWithLogsExtendedDTO {
     pub save_folder: String,
     pub screenshot_folder: String,
     pub backup: bool,
-    pub streaks: Vec<GameStreakDTO>,
     pub longest_streak: GameStreakDTO,
     pub longest_session: GameLogDTO,
     #[schema(value_type = String)]
     pub total_time: DurationDef,
+    pub total_time_grouped: HashMap<u32, DurationDef>,
+    #[serde(skip)]
+    pub streaks: Vec<GameStreakDTO>,
+    #[serde(skip)]
     pub logs: Vec<GameLogDTO>,
 }
 

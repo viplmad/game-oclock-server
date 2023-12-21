@@ -1,6 +1,6 @@
 use std::collections::HashMap;
 
-use chrono::{Datelike, Duration, NaiveDate};
+use chrono::NaiveDate;
 use sqlx::PgPool;
 
 use crate::entities::GameLogWithTime;
@@ -9,7 +9,7 @@ use crate::models::{DurationDef, GameLogDTO, GameStreakDTO, GamesStreakDTO};
 use crate::repository::game_log_repository;
 
 use super::base::{check_start_end, handle_result, start_end_to_datetime};
-use super::games_service;
+use super::{games_service, logs_utils};
 
 pub async fn get_game_streaks(
     pool: &PgPool,
@@ -82,31 +82,10 @@ pub async fn get_sum_game_logs_grouped_by_month(
 fn build_game_streaks(logs: Vec<GameLogWithTime>) -> Vec<GameStreakDTO> {
     let mut streaks: Vec<GameStreakDTO> = vec![];
     for log in logs {
-        match streaks.last_mut() {
-            Some(last_streak) => {
-                let previous_date = last_streak.start_date - Duration::days(1);
-                if log.datetime.date() == previous_date {
-                    // Continued the streak
-                    last_streak.start_date = log.datetime.date();
-                    last_streak.days += 1;
-                } else if log.datetime.date() < previous_date {
-                    // Lost the streak, start a new one
-                    streaks.push(GameStreakDTO {
-                        start_date: log.datetime.date(),
-                        end_date: log.end_datetime.date(),
-                        days: 1,
-                    });
-                }
-            }
-            None => {
-                // Start first streak
-                streaks.push(GameStreakDTO {
-                    start_date: log.datetime.date(),
-                    end_date: log.end_datetime.date(),
-                    days: 1,
-                })
-            }
-        }
+        let start_datetime = log.datetime;
+        let end_datetime = log.end_datetime;
+
+        logs_utils::fill_game_streaks(&mut streaks, start_datetime, end_datetime);
     }
 
     streaks
@@ -116,62 +95,48 @@ fn build_games_streaks(logs: Vec<GameLogWithTime>) -> Vec<GamesStreakDTO> {
     let mut streaks: Vec<GamesStreakDTO> = vec![];
     for log in logs {
         let game_id = log.game_id.to_string();
+        let start_datetime = log.datetime;
+        let end_datetime = log.end_datetime;
 
-        match streaks.last_mut() {
-            Some(last_streak) => {
-                let previous_date = last_streak.start_date - Duration::days(1);
-                if log.datetime.date() == previous_date {
-                    // Continued the streak
-                    if !last_streak.games_ids.contains(&game_id) {
-                        last_streak.games_ids.push(game_id.clone());
-                    }
-                    last_streak.start_date = log.datetime.date();
-                    last_streak.days += 1;
-                } else if log.datetime.date() < previous_date {
-                    // Lost the streak, start a new one
-                    streaks.push(GamesStreakDTO {
-                        games_ids: vec![game_id.clone()],
-                        start_date: log.datetime.date(),
-                        end_date: log.end_datetime.date(),
-                        days: 1,
-                    });
-                } else {
-                    // Already on a streak day, add game if necessary
-                    if !last_streak.games_ids.contains(&game_id) {
-                        last_streak.games_ids.push(game_id.clone());
-                    }
-                }
-            }
-            None => {
-                // Start first streak
-                streaks.push(GamesStreakDTO {
-                    games_ids: vec![game_id.clone()],
-                    start_date: log.datetime.date(),
-                    end_date: log.end_datetime.date(),
-                    days: 1,
-                });
-            }
-        }
+        logs_utils::fill_streaks(&mut streaks, &game_id, start_datetime, end_datetime);
     }
+
     streaks
 }
 
 fn build_sum_game_by_month(logs: Vec<GameLogWithTime>) -> HashMap<u32, DurationDef> {
     let mut sum_by_month_map = HashMap::<u32, DurationDef>::new();
     for log in logs {
-        let month = log.datetime.month();
+        let start_datetime = log.datetime;
         let time = DurationDef::from(log.query_time);
-        match sum_by_month_map.get(&month) {
-            Some(month_sum) => {
-                // Continue the month sum
-                let added_time = DurationDef::microseconds(month_sum.micros + time.micros);
-                sum_by_month_map.insert(month, added_time);
+
+        logs_utils::fill_sum_game_by_month(&mut sum_by_month_map, start_datetime, time);
+    }
+
+    sum_by_month_map
+}
+
+fn build_sum_games_by_month(
+    logs: Vec<GameLogWithTime>,
+) -> HashMap<String, HashMap<u32, DurationDef>> {
+    let mut sums_by_month_map = HashMap::<String, HashMap<u32, DurationDef>>::new();
+    for log in logs {
+        let game_id = log.game_id.to_string();
+        let start_datetime = log.datetime;
+        let time = DurationDef::from(log.query_time);
+
+        match sums_by_month_map.get_mut(&game_id) {
+            Some(sum_by_month_map) => {
+                logs_utils::fill_sum_game_by_month(sum_by_month_map, start_datetime, time);
             }
             None => {
-                // Start month sum
-                sum_by_month_map.insert(month, time);
+                // Start game month sum
+                let mut sum_by_month_map = HashMap::<u32, DurationDef>::new();
+                logs_utils::fill_sum_game_by_month(&mut sum_by_month_map, start_datetime, time);
+                sums_by_month_map.insert(game_id, sum_by_month_map);
             }
         }
     }
-    sum_by_month_map
+
+    sums_by_month_map
 }

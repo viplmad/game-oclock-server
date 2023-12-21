@@ -1,3 +1,5 @@
+use std::collections::HashMap;
+
 use chrono::{NaiveDate, NaiveDateTime};
 
 use crate::entities::GameWithLog;
@@ -82,6 +84,7 @@ impl From<GameWithLog> for GameWithLogsExtendedDTO {
                 days: 0,
             },
             total_time: DurationDef::default(),
+            total_time_grouped: HashMap::<u32, DurationDef>::new(),
         }
     }
 }
