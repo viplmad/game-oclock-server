@@ -6,7 +6,7 @@ use crate::errors::ApiErrors;
 use crate::models::{DLCWithFinishDTO, DLCWithFinishPageResult, SearchDTO};
 use crate::repository::dlc_with_finish_repository;
 
-use super::base::{check_start_end, handle_get_list_paged_result, handle_query_mapping};
+use super::base::{check_optional_start_end, handle_get_list_paged_result, handle_query_mapping};
 
 pub async fn search_first_finished_dlcs(
     pool: &PgPool,
@@ -16,7 +16,7 @@ pub async fn search_first_finished_dlcs(
     search: SearchDTO,
     quicksearch: Option<String>,
 ) -> Result<DLCWithFinishPageResult, ApiErrors> {
-    check_start_end(start_date, end_date)?;
+    check_optional_start_end(start_date, end_date)?;
 
     let search = handle_query_mapping::<DLCWithFinishDTO, DLCSearch>(search, quicksearch)?;
     let find_result = dlc_with_finish_repository::search_first_by_date_between(
@@ -34,7 +34,7 @@ pub async fn search_last_finished_dlcs(
     search: SearchDTO,
     quicksearch: Option<String>,
 ) -> Result<DLCWithFinishPageResult, ApiErrors> {
-    check_start_end(start_date, end_date)?;
+    check_optional_start_end(start_date, end_date)?;
 
     let search = handle_query_mapping::<DLCWithFinishDTO, DLCSearch>(search, quicksearch)?;
     let find_result = dlc_with_finish_repository::search_last_by_date_between(

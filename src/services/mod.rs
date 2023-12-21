@@ -9,6 +9,7 @@ pub mod game_available_service;
 pub mod game_finishes_service;
 pub mod game_image_service;
 pub mod game_logs_service;
+pub mod game_streaks_service;
 pub mod game_tags_service;
 pub mod game_with_finish_service;
 pub mod game_with_logs_service;

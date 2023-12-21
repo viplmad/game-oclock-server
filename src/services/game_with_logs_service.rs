@@ -12,7 +12,8 @@ use crate::models::{
 use crate::repository::game_with_log_repository;
 
 use super::base::{
-    check_start_end, handle_get_list_paged_result, handle_query_mapping, handle_result,
+    check_optional_start_end, check_start_end, handle_get_list_paged_result, handle_query_mapping,
+    handle_result, optional_start_end_to_datetime, start_end_to_datetime,
 };
 
 pub async fn search_first_played_games(
@@ -23,9 +24,9 @@ pub async fn search_first_played_games(
     search: SearchDTO,
     quicksearch: Option<String>,
 ) -> Result<GameWithLogPageResult, ApiErrors> {
-    check_start_end(start_date, end_date)?;
+    check_optional_start_end(start_date, end_date)?;
 
-    let (start_datetime, end_datetime) = start_end_to_datetime(start_date, end_date);
+    let (start_datetime, end_datetime) = optional_start_end_to_datetime(start_date, end_date);
     let search = handle_query_mapping::<GameWithLogDTO, GameSearch>(search, quicksearch)?;
     let find_result = game_with_log_repository::search_first_by_start_datetime_between(
         pool,
@@ -46,9 +47,9 @@ pub async fn search_last_played_games(
     search: SearchDTO,
     quicksearch: Option<String>,
 ) -> Result<GameWithLogPageResult, ApiErrors> {
-    check_start_end(start_date, end_date)?;
+    check_optional_start_end(start_date, end_date)?;
 
-    let (start_datetime, end_datetime) = start_end_to_datetime(start_date, end_date);
+    let (start_datetime, end_datetime) = optional_start_end_to_datetime(start_date, end_date);
     let search = handle_query_mapping::<GameWithLogDTO, GameSearch>(search, quicksearch)?;
     let find_result = game_with_log_repository::search_last_by_start_datetime_between(
         pool,
@@ -91,13 +92,9 @@ async fn find_game_with_logs_between(
     start_date: NaiveDate,
     end_date: NaiveDate,
 ) -> Result<Vec<GameWithLog>, ApiErrors> {
-    if start_date > end_date {
-        return Err(ApiErrors::InvalidParameter(String::from(
-            "Start date must be previous than end date",
-        )));
-    }
-    let start_datetime = crate::date_utils::date_at_start_of_day(start_date);
-    let end_datetime = crate::date_utils::date_at_midnight(end_date);
+    check_start_end(start_date, end_date)?;
+
+    let (start_datetime, end_datetime) = start_end_to_datetime(start_date, end_date);
     let find_result = game_with_log_repository::find_all_by_start_datetime_between(
         pool,
         user_id,
@@ -106,15 +103,6 @@ async fn find_game_with_logs_between(
     )
     .await;
     handle_result::<Vec<GameWithLog>, GameWithLogDTO>(find_result)
-}
-
-fn start_end_to_datetime(
-    start_date: Option<NaiveDate>,
-    end_date: Option<NaiveDate>,
-) -> (Option<NaiveDateTime>, Option<NaiveDateTime>) {
-    let start_datetime = start_date.map(crate::date_utils::date_at_start_of_day);
-    let end_datetime = end_date.map(crate::date_utils::date_at_midnight);
-    (start_datetime, end_datetime)
 }
 
 fn create_list(game_with_logs: Vec<GameWithLog>) -> Vec<GameWithLogsDTO> {

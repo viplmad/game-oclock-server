@@ -37,6 +37,39 @@ pub fn select_all_by_user_id_and_game_id(
     select
 }
 
+pub fn select_all_by_user_id_and_game_id_and_start_datetime_gte_and_start_datetime_lte_order_by_start_datetime_desc(
+    user_id: &str,
+    game_id: &str,
+    start_datetime: NaiveDateTime,
+    end_datetime: NaiveDateTime,
+) -> impl QueryStatementWriter {
+    let mut select = Query::select();
+
+    from_and_where_user_id_and_game_id(&mut select, user_id, game_id);
+    where_start_datetime_gte_and_start_datetime_lte(&mut select, start_datetime, end_datetime);
+    add_start_datetime_and_end_datetime_and_time_fields(&mut select);
+    select.column((GameLogIden::Table, GameLogIden::GameId));
+    order_by_start_datetime_desc(&mut select);
+
+    select
+}
+
+pub fn select_all_by_user_id_and_start_datetime_gte_and_start_datetime_lte_order_by_start_datetime_desc(
+    user_id: &str,
+    start_datetime: NaiveDateTime,
+    end_datetime: NaiveDateTime,
+) -> impl QueryStatementWriter {
+    let mut select = Query::select();
+
+    from_and_where_user_id(&mut select, user_id);
+    where_start_datetime_gte_and_start_datetime_lte(&mut select, start_datetime, end_datetime);
+    add_start_datetime_and_end_datetime_and_time_fields(&mut select);
+    select.column((GameLogIden::Table, GameLogIden::GameId));
+    order_by_start_datetime_desc(&mut select);
+
+    select
+}
+
 fn select_all_game_with_log_by_start_datetime_gte_and_start_datetime_lte(
     user_id: &str,
     start_datetime: Option<NaiveDateTime>,
@@ -45,14 +78,11 @@ fn select_all_game_with_log_by_start_datetime_gte_and_start_datetime_lte(
     let mut select = game_query::select_all_group_by_id(user_id);
 
     join_game_log(&mut select);
-
-    if let Some(start) = start_datetime {
-        select.and_where(Expr::col((GameLogIden::Table, GameLogIden::StartDateTime)).gte(start));
-    }
-
-    if let Some(end) = end_datetime {
-        select.and_where(Expr::col((GameLogIden::Table, GameLogIden::StartDateTime)).lte(end));
-    }
+    where_optional_start_datetime_gte_and_start_datetime_lte(
+        &mut select,
+        start_datetime,
+        end_datetime,
+    );
 
     select
 }
@@ -125,10 +155,7 @@ pub fn select_all_games_order_by_start_datetime_desc(user_id: &str) -> SelectSta
     let mut select = game_query::select_all(user_id);
 
     join_game_log(&mut select);
-    select.order_by(
-        (GameLogIden::Table, GameLogIden::StartDateTime),
-        Order::Desc,
-    );
+    order_by_start_datetime_desc(&mut select);
 
     select
 }
@@ -140,9 +167,7 @@ pub fn select_all_games_by_start_datetime_gte_and_start_datetime_lte_order_by_st
 ) -> SelectStatement {
     let mut select = select_all_games_order_by_start_datetime_desc(user_id);
 
-    select
-        .and_where(Expr::col((GameLogIden::Table, GameLogIden::StartDateTime)).gte(start_datetime))
-        .and_where(Expr::col((GameLogIden::Table, GameLogIden::StartDateTime)).lte(end_datetime));
+    where_start_datetime_gte_and_start_datetime_lte(&mut select, start_datetime, end_datetime);
 
     select
 }
@@ -262,6 +287,37 @@ fn from_and_where_user_id(select: &mut SelectStatement, user_id: &str) {
     select
         .from(GameLogIden::Table)
         .and_where(Expr::col((GameLogIden::Table, GameLogIden::UserId)).eq(user_id));
+}
+
+fn where_optional_start_datetime_gte_and_start_datetime_lte(
+    select: &mut SelectStatement,
+    start_datetime: Option<NaiveDateTime>,
+    end_datetime: Option<NaiveDateTime>,
+) {
+    if let Some(start) = start_datetime {
+        select.and_where(Expr::col((GameLogIden::Table, GameLogIden::StartDateTime)).gte(start));
+    }
+
+    if let Some(end) = end_datetime {
+        select.and_where(Expr::col((GameLogIden::Table, GameLogIden::StartDateTime)).lte(end));
+    }
+}
+
+fn where_start_datetime_gte_and_start_datetime_lte(
+    select: &mut SelectStatement,
+    start_datetime: NaiveDateTime,
+    end_datetime: NaiveDateTime,
+) {
+    select
+        .and_where(Expr::col((GameLogIden::Table, GameLogIden::StartDateTime)).gte(start_datetime))
+        .and_where(Expr::col((GameLogIden::Table, GameLogIden::StartDateTime)).lte(end_datetime));
+}
+
+fn order_by_start_datetime_desc(select: &mut SelectStatement) {
+    select.order_by(
+        (GameLogIden::Table, GameLogIden::StartDateTime),
+        Order::Desc,
+    );
 }
 
 fn add_start_datetime_and_end_datetime_and_time_fields(select: &mut SelectStatement) {

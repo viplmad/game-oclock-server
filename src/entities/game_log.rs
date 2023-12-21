@@ -1,6 +1,7 @@
 use chrono::NaiveDateTime;
 use sea_query::Iden;
 use sqlx::{postgres::types::PgInterval, FromRow};
+use uuid::Uuid;
 
 use super::TableIden;
 
@@ -32,6 +33,7 @@ pub struct GameLog {
 
 #[derive(FromRow)]
 pub struct GameLogWithTime {
+    pub game_id: Uuid,
     pub datetime: NaiveDateTime,
     pub end_datetime: NaiveDateTime,
     pub query_time: PgInterval,

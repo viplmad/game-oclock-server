@@ -1,6 +1,6 @@
 use std::future::Future;
 
-use chrono::NaiveDate;
+use chrono::{NaiveDate, NaiveDateTime};
 
 use crate::clients::image_client::ImageClient;
 use crate::entities::PageResult;
@@ -186,7 +186,7 @@ where
     update_function(entity_to_update).await
 }
 
-pub(super) fn check_start_end(
+pub(super) fn check_optional_start_end(
     start_date: Option<NaiveDate>,
     end_date: Option<NaiveDate>,
 ) -> Result<(), ApiErrors> {
@@ -195,12 +195,39 @@ pub(super) fn check_start_end(
             "Start date and end date cannot be empty",
         )));
     }
-    if start_date.is_some_and(|start| end_date.is_some_and(|end| start > end)) {
+    if let Some(start) = start_date {
+        if let Some(end) = end_date {
+            check_start_end(start, end)?;
+        }
+    }
+    Ok(())
+}
+
+pub(super) fn check_start_end(start_date: NaiveDate, end_date: NaiveDate) -> Result<(), ApiErrors> {
+    if start_date > end_date {
         return Err(ApiErrors::InvalidParameter(String::from(
             "Start date must be previous than end date",
         )));
     }
     Ok(())
+}
+
+pub(super) fn optional_start_end_to_datetime(
+    start_date: Option<NaiveDate>,
+    end_date: Option<NaiveDate>,
+) -> (Option<NaiveDateTime>, Option<NaiveDateTime>) {
+    let start_datetime = start_date.map(crate::date_utils::date_at_start_of_day);
+    let end_datetime = end_date.map(crate::date_utils::date_at_midnight);
+    (start_datetime, end_datetime)
+}
+
+pub(super) fn start_end_to_datetime(
+    start_date: NaiveDate,
+    end_date: NaiveDate,
+) -> (NaiveDateTime, NaiveDateTime) {
+    let start_datetime = crate::date_utils::date_at_start_of_day(start_date);
+    let end_datetime = crate::date_utils::date_at_midnight(end_date);
+    (start_datetime, end_datetime)
 }
 
 pub(super) fn handle_query_mapping<T, S>(
