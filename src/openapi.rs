@@ -43,6 +43,7 @@ pub fn get_openapi() -> utoipa::openapi::OpenApi {
             // Game Streaks
             routes::get_game_streaks,
             routes::get_streaks,
+            routes::get_total_game_logs_by_month,
             // DLCs
             routes::get_dlc,
             routes::get_dlc_base_game,
