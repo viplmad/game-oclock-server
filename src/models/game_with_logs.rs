@@ -35,6 +35,7 @@ pub struct GamesWithLogsExtendedDTO {
     pub count: i32,
     pub longest_streak: GamesStreakDTO,
     pub longest_session: GamesLogDTO,
+    pub total_sessions: i32,
     #[schema(value_type = String)]
     pub total_time: DurationDef,
     pub total_time_grouped: HashMap<u32, DurationDef>,
@@ -64,13 +65,14 @@ pub struct GameWithLogsExtendedDTO {
     pub backup: bool,
     pub longest_streak: GameStreakDTO,
     pub longest_session: GameLogDTO,
+    pub total_sessions: i32,
     #[schema(value_type = String)]
     pub total_time: DurationDef,
     pub total_time_grouped: HashMap<u32, DurationDef>,
     #[serde(skip)]
     pub streaks: Vec<GameStreakDTO>,
     #[serde(skip)]
-    pub logs: Vec<GameLogDTO>,
+    pub sessions: Vec<GameLogDTO>,
 }
 
 #[derive(Serialize, ToSchema)]

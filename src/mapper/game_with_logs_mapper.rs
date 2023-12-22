@@ -71,20 +71,21 @@ impl From<GameWithLog> for GameWithLogsExtendedDTO {
             save_folder: game.save_folder,
             screenshot_folder: game.screenshot_folder,
             backup: game.backup,
-            logs: vec![],
-            streaks: vec![],
-            longest_session: GameLogDTO {
-                start_datetime: NaiveDateTime::default(),
-                end_datetime: NaiveDateTime::default(),
-                time: DurationDef::default(),
-            },
             longest_streak: GameStreakDTO {
                 start_date: NaiveDate::default(),
                 end_date: NaiveDate::default(),
                 days: 0,
             },
+            longest_session: GameLogDTO {
+                start_datetime: NaiveDateTime::default(),
+                end_datetime: NaiveDateTime::default(),
+                time: DurationDef::default(),
+            },
+            total_sessions: 0,
             total_time: DurationDef::default(),
             total_time_grouped: HashMap::<u32, DurationDef>::new(),
+            streaks: vec![],
+            sessions: vec![],
         }
     }
 }

@@ -87,6 +87,28 @@ pub async fn get_detailed_game_with_logs(
     Ok(game_with_logs)
 }
 
+/*pub async fn get_sum_game_logs_grouped_by_month(
+    pool: &PgPool,
+    user_id: &str,
+    game_id: &str,
+    start_date: NaiveDate,
+    end_date: NaiveDate,
+) -> Result<HashMap<u32, DurationDef>, ApiErrors> {
+    check_start_end(start_date, end_date)?;
+    games_service::exists_game(pool, user_id, game_id).await?;
+
+    let entity_list = find_game_with_logs_between(pool, user_id, start_date, end_date).await?;
+    let mut sum_by_month_map = HashMap::<u32, DurationDef>::new();
+    for log in logs {
+        let start_datetime = log.datetime;
+        let time = DurationDef::from(log.query_time);
+
+        logs_utils::fill_sum_game_by_month(&mut sum_by_month_map, start_datetime, time);
+    }
+
+    Ok(sum_by_month_map)
+}*/
+
 async fn find_game_with_logs_between(
     pool: &PgPool,
     user_id: &str,
@@ -187,8 +209,14 @@ fn create_detailed_list(game_with_logs: Vec<GameWithLog>) -> GamesWithLogsExtend
         );
         logs_utils::fill_game_streaks(&mut game.streaks, start_datetime, end_datetime);
 
-        let session_time = build_session(&game.logs, start_datetime, end_datetime, time.clone());
-        game.logs.push(log);
+        fill_game_sessions(
+            &mut game.sessions,
+            start_datetime,
+            end_datetime,
+            time.clone(),
+        );
+        game.total_sessions =
+            i32::try_from(game.sessions.len()).expect("Count was not within valid range");
 
         // Found longer streak
         if let Some(last_streak) = game.streaks.last() {
@@ -202,58 +230,80 @@ fn create_detailed_list(game_with_logs: Vec<GameWithLog>) -> GamesWithLogsExtend
             }
         }
 
-        // Found longer session
-        if session_time.micros > game.longest_session.time.micros {
-            game.longest_session = GameLogDTO {
-                start_datetime,
-                end_datetime: start_datetime + Duration::microseconds(session_time.micros),
-                time: session_time.clone(),
-            };
-        }
+        if let Some(last_session) = game.sessions.last() {
+            // Found longer session
+            let last_session_time = last_session.time.clone();
+            if last_session_time.micros > game.longest_session.time.micros {
+                game.longest_session = GameLogDTO {
+                    start_datetime: last_session.start_datetime,
+                    end_datetime: last_session.end_datetime,
+                    time: last_session_time.clone(),
+                };
+            }
 
-        // Found longer global session
-        if session_time.micros > longest_session.time.micros {
-            longest_session = GamesLogDTO {
-                game_id: game_id.clone(),
-                start_datetime,
-                end_datetime: start_datetime + Duration::microseconds(session_time.micros),
-                time: session_time.clone(),
-            };
+            // Found longer global session
+            if last_session_time.micros > longest_session.time.micros {
+                longest_session = GamesLogDTO {
+                    game_id: game_id.clone(),
+                    start_datetime: last_session.start_datetime,
+                    end_datetime: last_session.end_datetime,
+                    time: last_session_time.clone(),
+                };
+            }
         }
     }
 
     let num_games = i32::try_from(map.len()).expect("Count was not within valid range");
+    let total_sessions = map.iter().map(|(_, g)| g.total_sessions).sum();
 
     GamesWithLogsExtendedDTO {
         count: num_games,
         longest_streak,
         longest_session,
+        total_sessions,
         total_time,
         total_time_grouped: total_sum_by_month,
         games_with_logs: map.into_values().collect(),
     }
 }
 
-fn build_session(
-    logs: &Vec<GameLogDTO>,
+fn fill_game_sessions(
+    sessions: &mut Vec<GameLogDTO>,
     start_datetime: NaiveDateTime,
     end_datetime: NaiveDateTime,
     time: DurationDef,
-) -> DurationDef {
-    let mut session_time = time.clone();
-    // Check if this is part of a continuous log (ended on midnight and kept playing)
-    if let Some(last_log) = logs.last() {
-        if
-        // If the date of the current log is on the previous day of the last log
-        start_datetime.date() == (last_log.start_datetime.date() - Duration::days(1))
-        // and the end time of the current log is midnight
-        && end_datetime.time() == NaiveTime::MIN
-        // and the start time of the last log is midnight
-        && last_log.start_datetime.time() == NaiveTime::MIN
-        {
-            session_time = DurationDef::microseconds(last_log.time.micros + time.micros);
+) {
+    match sessions.last_mut() {
+        Some(last_session) => {
+            let last_session_time = last_session.time.clone();
+            let last_session_start_datetime = last_session.start_datetime;
+            // Check if this is part of a continuous log (ended on midnight and kept playing)
+            if
+            // If the date of the current log is on the previous day of the last log
+            start_datetime.date() == (last_session_start_datetime.date() - Duration::days(1))
+                // and the end time of the current log is midnight
+                && end_datetime.time() == NaiveTime::MIN
+                // and the start time of the last log is midnight
+                && last_session_start_datetime.time() == NaiveTime::MIN
+            {
+                last_session.start_datetime = start_datetime;
+                last_session.time =
+                    DurationDef::microseconds(last_session_time.micros + time.micros);
+            } else {
+                sessions.push(GameLogDTO {
+                    start_datetime,
+                    end_datetime,
+                    time,
+                })
+            }
+        }
+        None => {
+            // Start first session
+            sessions.push(GameLogDTO {
+                start_datetime,
+                end_datetime,
+                time,
+            })
         }
     }
-
-    session_time
 }

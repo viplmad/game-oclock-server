@@ -54,22 +54,6 @@ pub fn select_all_by_user_id_and_game_id_and_start_datetime_gte_and_start_dateti
     select
 }
 
-pub fn select_all_by_user_id_and_start_datetime_gte_and_start_datetime_lte_order_by_start_datetime_desc(
-    user_id: &str,
-    start_datetime: NaiveDateTime,
-    end_datetime: NaiveDateTime,
-) -> impl QueryStatementWriter {
-    let mut select = Query::select();
-
-    from_and_where_user_id(&mut select, user_id);
-    where_start_datetime_gte_and_start_datetime_lte(&mut select, start_datetime, end_datetime);
-    add_start_datetime_and_end_datetime_and_time_fields(&mut select);
-    select.column((GameLogIden::Table, GameLogIden::GameId));
-    order_by_start_datetime_desc(&mut select);
-
-    select
-}
-
 fn select_all_game_with_log_by_start_datetime_gte_and_start_datetime_lte(
     user_id: &str,
     start_datetime: Option<NaiveDateTime>,
