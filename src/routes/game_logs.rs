@@ -198,7 +198,7 @@ async fn get_last_played_games(
         StartEndDateQuery,
     ),
     responses(
-        (status = 200, description = "Game with logs obtained", body = [GamesWithLogsExtendedDTO], content_type = "application/json"),
+        (status = 200, description = "Game with logs obtained", body = GamesWithLogsExtendedDTO, content_type = "application/json"),
         (status = 401, description = "Unauthorized", body = ErrorMessage, content_type = "application/json"),
         (status = 403, description = "Forbidden", body = ErrorMessage, content_type = "application/json"),
         (status = 500, description = "Internal server error", body = ErrorMessage, content_type = "application/json"),
