@@ -36,6 +36,17 @@ pub async fn get_game_logs(
     handle_get_list_result::<GameLogWithTime, GameLogDTO>(find_result)
 }
 
+pub(super) async fn find_first_game_logs_by_games(
+    pool: &PgPool,
+    user_id: &str,
+    game_ids: Vec<String>,
+) -> Result<Vec<GameLogWithTime>, ApiErrors> {
+    let find_result =
+        game_log_repository::find_all_first_by_user_id_and_game_id_in(pool, user_id, game_ids)
+            .await;
+    handle_result::<Vec<GameLogWithTime>, GameLogDTO>(find_result)
+}
+
 pub async fn create_game_log(
     pool: &PgPool,
     user_id: &str,

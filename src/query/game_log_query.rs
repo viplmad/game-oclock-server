@@ -33,23 +33,37 @@ pub fn select_all_by_user_id_and_game_id(
 
     from_and_where_user_id_and_game_id(&mut select, user_id, game_id);
     add_start_datetime_and_end_datetime_and_time_fields(&mut select);
+    select.column((GameLogIden::Table, GameLogIden::GameId));
 
     select
 }
 
-pub fn select_all_by_user_id_and_game_id_and_start_datetime_gte_and_start_datetime_lte_order_by_start_datetime_desc(
+pub fn select_all_first_by_user_id_and_game_id_in(
     user_id: &str,
-    game_id: &str,
-    start_datetime: NaiveDateTime,
-    end_datetime: NaiveDateTime,
+    game_ids: Vec<String>,
 ) -> impl QueryStatementWriter {
     let mut select = Query::select();
 
-    from_and_where_user_id_and_game_id(&mut select, user_id, game_id);
-    where_start_datetime_gte_and_start_datetime_lte(&mut select, start_datetime, end_datetime);
-    add_start_datetime_and_end_datetime_and_time_fields(&mut select);
+    from_and_where_user_id(&mut select, user_id);
+    select.and_where(Expr::col((GameLogIden::Table, GameLogIden::GameId)).is_in(game_ids));
     select.column((GameLogIden::Table, GameLogIden::GameId));
-    order_by_start_datetime_desc(&mut select);
+    select
+        .expr_as(
+            Expr::col((GameLogIden::Table, GameLogIden::StartDateTime)).min(),
+            GameLogIden::StartDateTime,
+        )
+        .expr_as(
+            Expr::col((GameLogIden::Table, GameLogIden::EndDateTime)).max(),
+            GameLogIden::EndDateTime,
+        )
+        .expr_as(coalesce_time_sum(), Alias::new(QUERY_TIME_ALIAS));
+    select.order_by_expr(
+        Expr::col((GameLogIden::Table, GameLogIden::StartDateTime)).min(),
+        Order::Asc,
+    );
+    select
+        .group_by_col((GameLogIden::Table, GameLogIden::UserId))
+        .group_by_col((GameLogIden::Table, GameLogIden::GameId));
 
     select
 }
@@ -314,7 +328,7 @@ fn add_start_datetime_and_end_datetime_and_time_fields(select: &mut SelectStatem
 fn coalesce_time_sum() -> FunctionCall {
     Func::coalesce([
         Expr::expr(derived_time_expr()).sum(),
-        Expr::val("0 seconds").into(), // TODO
+        Expr::val("0 seconds").into(),
     ])
 }
 
