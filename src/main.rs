@@ -158,7 +158,6 @@ async fn run(
                         .service(routes::get_tag_games)
                         .service(routes::get_platform_games)
                         .service(routes::get_games)
-                        .service(routes::get_games_review)
                         .service(routes::post_game)
                         .service(routes::post_game_cover)
                         .service(routes::put_game)
@@ -179,6 +178,7 @@ async fn run(
                         // Game Logs
                         .service(routes::get_game_logs)
                         .service(routes::get_total_game_logs)
+                        .service(routes::get_played_games_review)
                         .service(routes::get_played_games)
                         .service(routes::get_first_played_games)
                         .service(routes::get_last_played_games)

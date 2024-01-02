@@ -20,6 +20,7 @@ impl From<GameLogDTO> for GameLog {
     }
 }
 
+// TODO Remove borrow
 impl From<&GameWithLog> for GameLogDTO {
     fn from(game: &GameWithLog) -> Self {
         Self {

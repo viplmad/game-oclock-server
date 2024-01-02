@@ -3,12 +3,11 @@ use sqlx::PgPool;
 
 use crate::models::{
     DateDTO, FileTempPath, ItemId, ItemIdAndRelatedId, LoggedUser, NewGameDTO, QuicksearchQuery,
-    SearchDTO, StartEndDateQuery,
+    SearchDTO,
 };
 use crate::providers::ImageClientProvider;
 use crate::services::{
-    game_available_service, game_image_service, game_review_service, game_tags_service,
-    games_service,
+    game_available_service, game_image_service, game_tags_service, games_service,
 };
 
 use super::base::{
@@ -103,43 +102,6 @@ async fn get_platform_games(
         game_available_service::get_platform_games(&pool, &logged_user.id, &id).await;
     populate_get_result(&mut get_result, |games| {
         game_image_service::populate_games_available_cover(&image_client_provider, games)
-    });
-    handle_get_result(get_result)
-}
-
-#[utoipa::path(
-    post,
-    path = "/api/v1/games/review",
-    tag = "Games",
-    params(
-        StartEndDateQuery,
-    ),
-    responses(
-        (status = 200, description = "Games review obtained", body = GamesReviewDTO, content_type = "application/json"),
-        (status = 401, description = "Unauthorized", body = ErrorMessage, content_type = "application/json"),
-        (status = 403, description = "Forbidden", body = ErrorMessage, content_type = "application/json"),
-        (status = 500, description = "Internal server error", body = ErrorMessage, content_type = "application/json"),
-    ),
-    security(
-        ("bearer_token" = [])
-    )
-)]
-#[post("/games/review")]
-async fn get_games_review(
-    pool: web::Data<PgPool>,
-    image_client_provider: web::Data<ImageClientProvider>,
-    query: web::Query<StartEndDateQuery>,
-    logged_user: LoggedUser,
-) -> impl Responder {
-    let mut get_result = game_review_service::get_games_review(
-        &pool,
-        &logged_user.id,
-        query.start_date,
-        query.end_date,
-    )
-    .await;
-    populate_get_result(&mut get_result, |review| {
-        game_image_service::populate_games_review_cover(&image_client_provider, &mut review.games)
     });
     handle_get_result(get_result)
 }

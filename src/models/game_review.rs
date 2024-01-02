@@ -7,7 +7,7 @@ use utoipa::ToSchema;
 use super::{DurationDef, GameLogDTO, GameStatus};
 
 #[derive(Serialize, ToSchema)]
-pub struct GamesReviewDTO {
+pub struct GamesPlayedReviewDTO {
     pub total_played: i32,
     pub total_first_played: i32,
     pub longest_streak: GamesStreakDTO,
@@ -19,11 +19,11 @@ pub struct GamesReviewDTO {
     pub total_time_grouped: HashMap<u32, DurationDef>,
     //pub total_finished: i32,
     //pub total_finished_grouped: HashMap<u32, i32>,
-    pub games: Vec<GameReviewDTO>,
+    pub games: Vec<GamePlayedReviewDTO>,
 }
 
 #[derive(Serialize, ToSchema)]
-pub struct GameReviewDTO {
+pub struct GamePlayedReviewDTO {
     pub id: String,
     pub name: String,
     pub edition: String,

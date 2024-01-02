@@ -6,7 +6,9 @@ use crate::models::{
     SearchDTO, StartEndDateQuery,
 };
 use crate::providers::ImageClientProvider;
-use crate::services::{game_image_service, game_logs_service, game_with_logs_service};
+use crate::services::{
+    game_image_service, game_logs_service, game_review_service, game_with_logs_service,
+};
 
 use super::base::{
     handle_action_result, handle_delete_result, handle_get_result, populate_get_page_result,
@@ -62,6 +64,46 @@ async fn get_total_game_logs(
 ) -> impl Responder {
     let ItemId(id) = path.into_inner();
     let get_result = game_logs_service::get_sum_game_logs(&pool, &logged_user.id, &id).await;
+    handle_get_result(get_result)
+}
+
+#[utoipa::path(
+    post,
+    path = "/api/v1/games/played/review",
+    tag = "GameLogs",
+    params(
+        StartEndDateQuery,
+    ),
+    responses(
+        (status = 200, description = "Played games review obtained", body = GamesPlayedReviewDTO, content_type = "application/json"),
+        (status = 401, description = "Unauthorized", body = ErrorMessage, content_type = "application/json"),
+        (status = 403, description = "Forbidden", body = ErrorMessage, content_type = "application/json"),
+        (status = 500, description = "Internal server error", body = ErrorMessage, content_type = "application/json"),
+    ),
+    security(
+        ("bearer_token" = [])
+    )
+)]
+#[post("/games/played/review")]
+async fn get_played_games_review(
+    pool: web::Data<PgPool>,
+    image_client_provider: web::Data<ImageClientProvider>,
+    query: web::Query<StartEndDateQuery>,
+    logged_user: LoggedUser,
+) -> impl Responder {
+    let mut get_result = game_review_service::get_played_games_review(
+        &pool,
+        &logged_user.id,
+        query.start_date,
+        query.end_date,
+    )
+    .await;
+    populate_get_result(&mut get_result, |review| {
+        game_image_service::populate_games_played_review_cover(
+            &image_client_provider,
+            &mut review.games,
+        )
+    });
     handle_get_result(get_result)
 }
 

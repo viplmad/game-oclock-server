@@ -3,9 +3,9 @@ use std::collections::HashMap;
 use chrono::{NaiveDate, NaiveDateTime};
 
 use crate::entities::GameWithLog;
-use crate::models::{DurationDef, GameLogDTO, GameReviewDTO, GameStatus, GameStreakDTO};
+use crate::models::{DurationDef, GameLogDTO, GamePlayedReviewDTO, GameStatus, GameStreakDTO};
 
-impl From<GameWithLog> for GameReviewDTO {
+impl From<GameWithLog> for GamePlayedReviewDTO {
     fn from(game: GameWithLog) -> Self {
         Self {
             id: game.id.to_string(),
