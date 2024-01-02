@@ -17,8 +17,6 @@ pub struct GamesPlayedReviewDTO {
     #[schema(value_type = String)]
     pub total_time: DurationDef,
     pub total_time_grouped: HashMap<u32, DurationDef>,
-    //pub total_finished: i32,
-    //pub total_finished_grouped: HashMap<u32, i32>,
     pub games: Vec<GamePlayedReviewDTO>,
 }
 
@@ -55,6 +53,43 @@ pub struct GamePlayedReviewDTO {
     pub streaks: Vec<GameStreakDTO>,
     #[serde(skip)]
     pub sessions: Vec<GameLogDTO>,
+}
+
+#[derive(Serialize, ToSchema)]
+pub struct GamesFinishedReviewDTO {
+    pub total_finished: i32,
+    pub total_first_finished: i32,
+    pub total_finished_grouped: HashMap<u32, i32>,
+    #[schema(value_type = String)]
+    pub games: Vec<GameFinishedReviewDTO>,
+}
+
+#[derive(Serialize, ToSchema)]
+pub struct GameFinishedReviewDTO {
+    pub id: String,
+    pub name: String,
+    pub edition: String,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub release_year: Option<i32>,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub cover_filename: Option<String>,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub cover_url: Option<String>,
+    #[schema(value_type = String, format = DateTime)]
+    pub added_datetime: NaiveDateTime,
+    #[schema(value_type = String, format = DateTime)]
+    pub updated_datetime: NaiveDateTime,
+    pub status: GameStatus,
+    pub rating: i32,
+    pub notes: String,
+    pub save_folder: String,
+    pub screenshot_folder: String,
+    pub backup: bool,
+    pub total_finished: i32,
+    pub total_finished_grouped: HashMap<u32, i32>,
+    pub first_finished: bool,
+    #[serde(skip)]
+    pub finishes: Vec<NaiveDate>,
 }
 
 #[derive(Serialize, ToSchema)]

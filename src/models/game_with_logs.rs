@@ -4,6 +4,7 @@ use utoipa::ToSchema;
 
 use super::{DurationDef, GameDTO, GameLogDTO, GameStatus, ModelInfo};
 
+// TODO Remove - create calls for aggregation
 #[derive(Serialize, ToSchema)]
 pub struct GameWithLogsDTO {
     pub id: String,

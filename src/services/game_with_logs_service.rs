@@ -73,28 +73,6 @@ pub async fn get_game_with_logs(
     Ok(game_with_logs)
 }
 
-/*pub async fn get_sum_game_logs_grouped_by_month(
-    pool: &PgPool,
-    user_id: &str,
-    game_id: &str,
-    start_date: NaiveDate,
-    end_date: NaiveDate,
-) -> Result<HashMap<u32, DurationDef>, ApiErrors> {
-    check_start_end(start_date, end_date)?;
-    games_service::exists_game(pool, user_id, game_id).await?;
-
-    let entity_list = find_game_with_logs_between(pool, user_id, start_date, end_date).await?;
-    let mut sum_by_month_map = HashMap::<u32, DurationDef>::new();
-    for log in logs {
-        let start_datetime = log.datetime;
-        let time = DurationDef::from(log.query_time);
-
-        logs_utils::fill_sum_game_by_month(&mut sum_by_month_map, start_datetime, time);
-    }
-
-    Ok(sum_by_month_map)
-}*/
-
 pub(super) async fn find_game_with_logs_between(
     pool: &PgPool,
     user_id: &str,

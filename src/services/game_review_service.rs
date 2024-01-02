@@ -3,14 +3,17 @@ use std::collections::{HashMap, HashSet};
 use chrono::{NaiveDate, NaiveDateTime};
 use sqlx::PgPool;
 
-use crate::entities::{GameLogWithTime, GameWithLog};
+use crate::entities::{GameFinish, GameLogWithTime, GameWithDate, GameWithLog};
 use crate::errors::ApiErrors;
 use crate::models::{
-    DurationDef, GameLogDTO, GamePlayedReviewDTO, GameStreakDTO, GamesLogDTO, GamesPlayedReviewDTO,
-    GamesStreakDTO,
+    DurationDef, GameFinishedReviewDTO, GameLogDTO, GamePlayedReviewDTO, GameStreakDTO,
+    GamesFinishedReviewDTO, GamesLogDTO, GamesPlayedReviewDTO, GamesStreakDTO,
 };
 
-use super::{game_logs_service, game_with_logs_service, logs_utils};
+use super::{
+    game_finishes_service, game_logs_service, game_with_finish_service, game_with_logs_service,
+    logs_utils,
+};
 
 pub async fn get_played_games_review(
     pool: &PgPool,
@@ -31,8 +34,32 @@ pub async fn get_played_games_review(
     let first_logs =
         game_logs_service::find_first_game_logs_by_games(pool, user_id, game_ids).await?;
 
-    let game_with_logs = build_played_review(game_with_logs, first_logs);
-    Ok(game_with_logs)
+    let review = build_played_review(game_with_logs, first_logs);
+    Ok(review)
+}
+
+pub async fn get_finished_games_review(
+    pool: &PgPool,
+    user_id: &str,
+    start_date: NaiveDate,
+    end_date: NaiveDate,
+) -> Result<GamesFinishedReviewDTO, ApiErrors> {
+    let game_with_finishes = game_with_finish_service::find_game_with_finishes_between(
+        pool, user_id, start_date, end_date,
+    )
+    .await?;
+
+    let game_ids = game_with_finishes
+        .iter()
+        .map(|game| game.id.to_string())
+        .collect::<HashSet<String>>()
+        .into_iter()
+        .collect();
+    let first_finishes =
+        game_finishes_service::find_first_game_finishes_by_games(pool, user_id, game_ids).await?;
+
+    let review = build_finished_review(game_with_finishes, first_finishes);
+    Ok(review)
 }
 
 fn build_played_review(
@@ -71,7 +98,7 @@ fn build_played_review(
             map.insert(game_id.clone(), new_game);
         }
         let game = map.get_mut(&game_id).unwrap(); // Safe unwrap: already checked the key is contained.
-        fill_game_review(game, start_datetime, end_datetime, time);
+        fill_played_game_review(game, start_datetime, end_datetime, time);
     }
 
     // Fill first played
@@ -152,6 +179,62 @@ fn build_played_review(
     }
 }
 
+fn build_finished_review(
+    game_with_finishes: Vec<GameWithDate>,
+    first_finishes: Vec<GameFinish>,
+) -> GamesFinishedReviewDTO {
+    let mut map = HashMap::<String, GameFinishedReviewDTO>::new();
+
+    // Fill finishes map
+    for game_with_finish in game_with_finishes {
+        let game_id = game_with_finish.id.to_string();
+
+        let finish_date = game_with_finish.query_date;
+
+        if !map.contains_key(&game_id) {
+            let new_game = GameFinishedReviewDTO::from(game_with_finish);
+            map.insert(game_id.clone(), new_game);
+        }
+        let game = map.get_mut(&game_id).unwrap(); // Safe unwrap: already checked the key is contained.
+        fill_finished_game_review(game, finish_date);
+    }
+
+    // Fill first played
+    for first_finish in first_finishes {
+        let game_id = first_finish.game_id.to_string();
+
+        let first_finish_date = first_finish.date;
+
+        let game = map.get_mut(&game_id).unwrap(); // Safe unwrap: already checked the key is contained.
+
+        if let Some(finish_date) = game.finishes.last() {
+            game.first_finished = first_finish_date == finish_date.clone();
+        }
+    }
+
+    // Fill globals and grouped
+    let mut total_finished = 0;
+    let mut total_first_finished = 0;
+    let mut total_finished_by_month = HashMap::<u32, i32>::new();
+    for game in map.values_mut() {
+        total_finished += 1;
+        total_first_finished += if game.first_finished { 1 } else { 0 };
+
+        // Fill global total finished
+        logs_utils::merge_total_finished_by_month(
+            &mut total_finished_by_month,
+            &game.total_finished_grouped,
+        );
+    }
+
+    GamesFinishedReviewDTO {
+        total_finished,
+        total_first_finished,
+        total_finished_grouped: total_finished_by_month,
+        games: map.into_values().collect(),
+    }
+}
+
 fn get_longest_streak(
     streaks: &Vec<GamesStreakDTO>,
     current_longest_streak: &GamesStreakDTO,
@@ -187,7 +270,7 @@ fn get_longest_session(
     None
 }
 
-fn fill_game_review(
+fn fill_played_game_review(
     game: &mut GamePlayedReviewDTO,
     start_datetime: NaiveDateTime,
     end_datetime: NaiveDateTime,
@@ -219,6 +302,16 @@ fn fill_game_review(
 
     // Found longer session
     fill_longest_game_session(game);
+}
+
+fn fill_finished_game_review(game: &mut GameFinishedReviewDTO, finish_date: NaiveDate) {
+    // Fill total finished
+    logs_utils::fill_total_finished_by_month(&mut game.total_finished_grouped, finish_date);
+
+    // Fill finishes
+    logs_utils::fill_game_finishes(&mut game.finishes, finish_date);
+    game.total_finished =
+        i32::try_from(game.finishes.len()).expect("Count was not within valid range");
 }
 
 fn fill_longest_game_streak(game: &mut GamePlayedReviewDTO) {

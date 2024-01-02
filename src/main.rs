@@ -171,6 +171,7 @@ async fn run(
                         // Game Finish
                         .service(routes::get_game_finishes)
                         .service(routes::get_first_game_finish)
+                        .service(routes::get_finished_games_review)
                         .service(routes::get_first_finished_games)
                         .service(routes::get_last_finished_games)
                         .service(routes::post_game_finish)

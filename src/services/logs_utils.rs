@@ -1,6 +1,6 @@
 use std::collections::HashMap;
 
-use chrono::{Datelike, Duration, Months, NaiveDateTime, NaiveTime};
+use chrono::{Datelike, Duration, Months, NaiveDate, NaiveDateTime, NaiveTime};
 
 use crate::models::{DurationDef, GameLogDTO, GameStreakDTO, GamesStreakDTO};
 
@@ -189,4 +189,47 @@ pub(super) fn fill_streaks(
             });
         }
     }
+}
+
+pub(super) fn fill_total_finished_by_month(
+    total_finished_by_month_map: &mut HashMap<u32, i32>,
+    finish_date: NaiveDate,
+) {
+    let month = finish_date.month();
+    fill_single_total_finished_by_month(total_finished_by_month_map, month, 1);
+}
+
+pub(super) fn merge_total_finished_by_month(
+    total_finished_by_month_map: &mut HashMap<u32, i32>,
+    game_total_finished_by_month: &HashMap<u32, i32>,
+) {
+    for (month, amount) in game_total_finished_by_month {
+        fill_single_total_finished_by_month(
+            total_finished_by_month_map,
+            month.clone(),
+            amount.clone(),
+        );
+    }
+}
+
+fn fill_single_total_finished_by_month(
+    total_finished_by_month_map: &mut HashMap<u32, i32>,
+    month: u32,
+    amount: i32,
+) {
+    match total_finished_by_month_map.get(&month) {
+        Some(month_total_finished) => {
+            // Continue the month total
+            let added_total = month_total_finished + amount;
+            total_finished_by_month_map.insert(month, added_total);
+        }
+        None => {
+            // Start month total
+            total_finished_by_month_map.insert(month, amount);
+        }
+    }
+}
+
+pub(super) fn fill_game_finishes(finishes: &mut Vec<NaiveDate>, finish_date: NaiveDate) {
+    finishes.push(finish_date);
 }

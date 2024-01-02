@@ -2,10 +2,10 @@ use chrono::NaiveDate;
 use sqlx::PgPool;
 
 use crate::entities::{GameSearch, GameWithDate, PageResult};
-use crate::errors::SearchErrors;
+use crate::errors::{RepositoryError, SearchErrors};
 use crate::query::game_finish_query;
 
-use super::base::fetch_all_search;
+use super::base::{fetch_all, fetch_all_search};
 
 pub async fn search_first_by_date_between(
     pool: &PgPool,
@@ -33,4 +33,17 @@ pub async fn search_last_by_date_between(
             user_id, start_date, end_date, search,
         )?;
     fetch_all_search(pool, search_query).await
+}
+
+pub async fn find_all_by_date_between(
+    pool: &PgPool,
+    user_id: &str,
+    start_date: NaiveDate,
+    end_date: NaiveDate,
+) -> Result<Vec<GameWithDate>, RepositoryError> {
+    let query =
+        game_finish_query::select_all_games_finish_by_date_gte_and_date_lte_order_by_date_desc(
+            user_id, start_date, end_date,
+        );
+    fetch_all(pool, query).await
 }
