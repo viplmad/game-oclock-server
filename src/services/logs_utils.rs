@@ -74,6 +74,26 @@ fn fill_single_total_sessions_by_month(
     }
 }
 
+pub(super) fn fill_total_by_release_year(
+    total_by_relese_year_map: &mut HashMap<i32, i32>,
+    release_year: &Option<i32>,
+) {
+    if let Some(y) = release_year {
+        let year = y.clone();
+        match total_by_relese_year_map.get(&year) {
+            Some(total_played) => {
+                // Continue the total
+                let added_total = total_played + 1;
+                total_by_relese_year_map.insert(year, added_total);
+            }
+            None => {
+                // Start total
+                total_by_relese_year_map.insert(year, 1);
+            }
+        }
+    }
+}
+
 pub(super) fn fill_game_streaks(
     streaks: &mut Vec<GameStreakDTO>,
     start_datetime: NaiveDateTime,

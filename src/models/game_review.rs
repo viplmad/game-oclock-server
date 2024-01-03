@@ -17,6 +17,7 @@ pub struct GamesPlayedReviewDTO {
     #[schema(value_type = String)]
     pub total_time: DurationDef,
     pub total_time_grouped: HashMap<u32, DurationDef>,
+    pub total_played_by_release_year: HashMap<i32, i32>,
     pub games: Vec<GamePlayedReviewDTO>,
 }
 
@@ -60,7 +61,7 @@ pub struct GamesFinishedReviewDTO {
     pub total_finished: i32,
     pub total_first_finished: i32,
     pub total_finished_grouped: HashMap<u32, i32>,
-    #[schema(value_type = String)]
+    pub total_finished_by_release_year: HashMap<i32, i32>,
     pub games: Vec<GameFinishedReviewDTO>,
 }
 

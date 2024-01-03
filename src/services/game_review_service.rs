@@ -123,6 +123,7 @@ fn build_played_review(
     let mut total_sessions_by_month = HashMap::<u32, i32>::new();
     let mut total_time = DurationDef::default();
     let mut total_time_by_month = HashMap::<u32, DurationDef>::new();
+    let mut total_played_by_release_year = HashMap::<i32, i32>::new();
     let mut longest_session = GamesLogDTO {
         game_id: String::default(),
         start_datetime: NaiveDateTime::default(),
@@ -139,6 +140,12 @@ fn build_played_review(
         // Fill global total time
         total_time = DurationDef::microseconds(total_time.micros + game.total_time.micros);
         logs_utils::merge_total_time_by_month(&mut total_time_by_month, &game.total_time_grouped);
+
+        // Fill global total by release year
+        logs_utils::fill_total_by_release_year(
+            &mut total_played_by_release_year,
+            &game.release_year,
+        );
 
         // Fill grouped sessions
         for session in game.sessions.iter() {
@@ -175,6 +182,7 @@ fn build_played_review(
         total_sessions_grouped: total_sessions_by_month,
         total_time,
         total_time_grouped: total_time_by_month,
+        total_played_by_release_year,
         games: map.into_values().collect(),
     }
 }
@@ -216,6 +224,7 @@ fn build_finished_review(
     let mut total_finished = 0;
     let mut total_first_finished = 0;
     let mut total_finished_by_month = HashMap::<u32, i32>::new();
+    let mut total_finished_by_release_year = HashMap::<i32, i32>::new();
     for game in map.values_mut() {
         total_finished += 1;
         total_first_finished += if game.first_finished { 1 } else { 0 };
@@ -225,12 +234,19 @@ fn build_finished_review(
             &mut total_finished_by_month,
             &game.total_finished_grouped,
         );
+
+        // Fill global total by release year
+        logs_utils::fill_total_by_release_year(
+            &mut total_finished_by_release_year,
+            &game.release_year,
+        );
     }
 
     GamesFinishedReviewDTO {
         total_finished,
         total_first_finished,
         total_finished_grouped: total_finished_by_month,
+        total_finished_by_release_year,
         games: map.into_values().collect(),
     }
 }
