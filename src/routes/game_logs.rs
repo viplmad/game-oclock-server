@@ -19,6 +19,9 @@ use super::base::{
     get,
     path = "/api/v1/games/{id}/logs",
     tag = "GameLogs",
+    params(
+        ("id" = String, Path, description = "Game id"),
+    ),
     responses(
         (status = 200, description = "Logs obtained", body = [GameLogDTO], content_type = "application/json"),
         (status = 401, description = "Unauthorized", body = ErrorMessage, content_type = "application/json"),
@@ -45,6 +48,9 @@ async fn get_game_logs(
     get,
     path = "/api/v1/games/{id}/logs/total",
     tag = "GameLogs",
+    params(
+        ("id" = String, Path, description = "Game id"),
+    ),
     responses(
         (status = 200, description = "Total logs time obtained", body = String, content_type = "application/json"),
         (status = 401, description = "Unauthorized", body = ErrorMessage, content_type = "application/json"),
@@ -236,6 +242,9 @@ async fn get_last_played_games(
     post,
     path = "/api/v1/games/{id}/logs",
     tag = "GameLogs",
+    params(
+        ("id" = String, Path, description = "Game id"),
+    ),
     request_body(content = NewGameLogDTO, description = "Game log to be added", content_type = "application/json"),
     responses(
         (status = 204, description = "Game log added"),
@@ -266,6 +275,9 @@ async fn post_game_log(
     delete,
     path = "/api/v1/games/{id}/logs",
     tag = "GameLogs",
+    params(
+        ("id" = String, Path, description = "Game id"),
+    ),
     request_body(content = DateTimeDTO, description = "Game log datetime to be deleted", content_type = "application/json"),
     responses(
         (status = 204, description = "Game log deleted"),

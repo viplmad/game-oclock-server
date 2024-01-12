@@ -17,6 +17,9 @@ use super::base::{
     get,
     path = "/api/v1/dlcs/{id}",
     tag = "DLCs",
+    params(
+        ("id" = String, Path, description = "DLC id"),
+    ),
     responses(
         (status = 200, description = "DLC obtained", body = DLCDTO, content_type = "application/json"),
         (status = 401, description = "Unauthorized", body = ErrorMessage, content_type = "application/json"),
@@ -47,6 +50,9 @@ async fn get_dlc(
     get,
     path = "/api/v1/dlcs/{id}/base-game",
     tag = "DLCs",
+    params(
+        ("id" = String, Path, description = "DLC id"),
+    ),
     responses(
         (status = 200, description = "Game obtained", body = GameDTO, content_type = "application/json"),
         (status = 401, description = "Unauthorized", body = ErrorMessage, content_type = "application/json"),
@@ -77,6 +83,9 @@ async fn get_dlc_base_game(
     get,
     path = "/api/v1/games/{id}/dlcs",
     tag = "DLCs",
+    params(
+        ("id" = String, Path, description = "Game id"),
+    ),
     responses(
         (status = 200, description = "DLCs obtained", body = [DLCDTO], content_type = "application/json"),
         (status = 401, description = "Unauthorized", body = ErrorMessage, content_type = "application/json"),
@@ -107,6 +116,9 @@ async fn get_game_dlcs(
     get,
     path = "/api/v1/platforms/{id}/dlcs",
     tag = "DLCs",
+    params(
+        ("id" = String, Path, description = "Platform id"),
+    ),
     responses(
         (status = 200, description = "DLCs obtained", body = [DLCAvailableDTO], content_type = "application/json"),
         (status = 401, description = "Unauthorized", body = ErrorMessage, content_type = "application/json"),
@@ -199,6 +211,9 @@ async fn post_dlc(
     post,
     path = "/api/v1/dlcs/{id}/cover",
     tag = "DLCs",
+    params(
+        ("id" = String, Path, description = "DLC id"),
+    ),
     request_body(content = Image, description = "DLC cover to be uploaded", content_type = "multipart/form-data"),
     responses(
         (status = 204, description = "DLC cover uploaded"),
@@ -249,6 +264,9 @@ async fn post_dlc_cover(
     put,
     path = "/api/v1/dlcs/{id}",
     tag = "DLCs",
+    params(
+        ("id" = String, Path, description = "DLC id"),
+    ),
     request_body(content = NewDLCDTO, description = "DLC to be updated", content_type = "application/json"),
     responses(
         (status = 204, description = "DLC updated"),
@@ -278,6 +296,9 @@ async fn put_dlc(
     put,
     path = "/api/v1/dlcs/{id}/cover",
     tag = "DLCs",
+    params(
+        ("id" = String, Path, description = "DLC id"),
+    ),
     request_body(content = String, description = "New dlc cover name", content_type = "application/json"),
     responses(
         (status = 204, description = "DLC cover renamed"),
@@ -315,6 +336,10 @@ async fn put_dlc_cover(
     put,
     path = "/api/v1/dlcs/{id}/base-game/{other_id}",
     tag = "DLCs",
+    params(
+        ("id" = String, Path, description = "DLC id"),
+        ("other_id" = String, Path, description = "Game id"),
+    ),
     responses(
         (status = 204, description = "DLC and Game linked"),
         (status = 401, description = "Unauthorized", body = ErrorMessage, content_type = "application/json"),
@@ -342,6 +367,10 @@ async fn link_dlc_game(
     put,
     path = "/api/v1/dlcs/{id}/platforms/{other_id}",
     tag = "DLCs",
+    params(
+        ("id" = String, Path, description = "DLC id"),
+        ("other_id" = String, Path, description = "Platform id"),
+    ),
     request_body(content = DateDTO, description = "Available date", content_type = "application/json"),
     responses(
         (status = 204, description = "DLC and Platform linked"),
@@ -378,6 +407,9 @@ async fn link_dlc_platform(
     delete,
     path = "/api/v1/dlcs/{id}",
     tag = "DLCs",
+    params(
+        ("id" = String, Path, description = "DLC id"),
+    ),
     responses(
         (status = 204, description = "DLC deleted"),
         (status = 401, description = "Unauthorized", body = ErrorMessage, content_type = "application/json"),
@@ -406,6 +438,9 @@ async fn delete_dlc(
     delete,
     path = "/api/v1/dlcs/{id}/cover",
     tag = "DLCs",
+    params(
+        ("id" = String, Path, description = "DLC id"),
+    ),
     responses(
         (status = 204, description = "DLC cover deleted"),
         (status = 400, description = "Bad request", body = ErrorMessage, content_type = "application/json"),
@@ -435,6 +470,9 @@ async fn delete_dlc_cover(
     delete,
     path = "/api/v1/dlcs/{id}/base-game",
     tag = "DLCs",
+    params(
+        ("id" = String, Path, description = "DLC id"),
+    ),
     responses(
         (status = 204, description = "DLC and Game unlinked"),
         (status = 400, description = "Bad request", body = ErrorMessage, content_type = "application/json"),
@@ -462,6 +500,10 @@ async fn unlink_dlc_game(
     delete,
     path = "/api/v1/dlcs/{id}/platforms/{other_id}",
     tag = "DLCs",
+    params(
+        ("id" = String, Path, description = "DLC id"),
+        ("other_id" = String, Path, description = "Platform id"),
+    ),
     responses(
         (status = 204, description = "DLC and Platform unlinked"),
         (status = 400, description = "Bad request", body = ErrorMessage, content_type = "application/json"),

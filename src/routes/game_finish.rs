@@ -19,6 +19,9 @@ use super::base::{
     get,
     path = "/api/v1/games/{id}/finishes",
     tag = "GameFinish",
+    params(
+        ("id" = String, Path, description = "Game id"),
+    ),
     responses(
         (status = 200, description = "Finishes obtained", body = [String], content_type = "application/json"),
         (status = 401, description = "Unauthorized", body = ErrorMessage, content_type = "application/json"),
@@ -45,6 +48,9 @@ async fn get_game_finishes(
     get,
     path = "/api/v1/games/{id}/finishes/first",
     tag = "GameFinish",
+    params(
+        ("id" = String, Path, description = "Game id"),
+    ),
     responses(
         (status = 200, description = "First finish obtained", body = String, content_type = "application/json"),
         (status = 401, description = "Unauthorized", body = ErrorMessage, content_type = "application/json"),
@@ -200,6 +206,9 @@ async fn get_last_finished_games(
     post,
     path = "/api/v1/games/{id}/finishes",
     tag = "GameFinish",
+    params(
+        ("id" = String, Path, description = "Game id"),
+    ),
     request_body(content = DateDTO, description = "Game finish date to be added", content_type = "application/json"),
     responses(
         (status = 204, description = "Game finish added"),
@@ -230,6 +239,9 @@ async fn post_game_finish(
     delete,
     path = "/api/v1/games/{id}/finishes",
     tag = "GameFinish",
+    params(
+        ("id" = String, Path, description = "Game id"),
+    ),
     request_body(content = DateDTO, description = "Game finish date to be deleted", content_type = "application/json"),
     responses(
         (status = 204, description = "Game finish date deleted"),

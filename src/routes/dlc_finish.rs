@@ -15,6 +15,9 @@ use super::base::{
     get,
     path = "/api/v1/dlcs/{id}/finishes",
     tag = "DLCFinish",
+    params(
+        ("id" = String, Path, description = "DLC id"),
+    ),
     responses(
         (status = 200, description = "Finishes obtained", body = [String], content_type = "application/json"),
         (status = 401, description = "Unauthorized", body = ErrorMessage, content_type = "application/json"),
@@ -41,6 +44,9 @@ async fn get_dlc_finishes(
     get,
     path = "/api/v1/dlcs/{id}/finishes/first",
     tag = "DLCFinish",
+    params(
+        ("id" = String, Path, description = "DLC id"),
+    ),
     responses(
         (status = 200, description = "First finish obtained", body = String, content_type = "application/json"),
         (status = 401, description = "Unauthorized", body = ErrorMessage, content_type = "application/json"),
@@ -155,6 +161,9 @@ async fn get_last_finished_dlcs(
     post,
     path = "/api/v1/dlcs/{id}/finishes",
     tag = "DLCFinish",
+    params(
+        ("id" = String, Path, description = "DLC id"),
+    ),
     request_body(content = DateDTO, description = "DLC finish date to be added", content_type = "application/json"),
     responses(
         (status = 204, description = "DLC finish added"),
@@ -185,6 +194,9 @@ async fn post_dlc_finish(
     delete,
     path = "/api/v1/dlcs/{id}/finishes",
     tag = "DLCFinish",
+    params(
+        ("id" = String, Path, description = "DLC id"),
+    ),
     request_body(content = DateDTO, description = "DLC finish date to be deleted", content_type = "application/json"),
     responses(
         (status = 204, description = "DLC finish date deleted"),
