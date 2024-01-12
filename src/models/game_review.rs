@@ -49,9 +49,9 @@ pub struct GamePlayedReviewDTO {
     pub total_time_grouped: HashMap<u32, DurationDef>,
     pub first_played: bool,
     #[schema(value_type = String, format = DateTime)]
-    pub first_session_start_datetime: NaiveDateTime,
+    pub first_play_start_datetime: NaiveDateTime,
     #[schema(value_type = String, format = DateTime)]
-    pub last_session_start_datetime: NaiveDateTime,
+    pub last_play_start_datetime: NaiveDateTime,
     #[serde(skip)]
     pub streaks: Vec<GameStreakDTO>,
     #[serde(skip)]
@@ -92,9 +92,9 @@ pub struct GameFinishedReviewDTO {
     pub total_finished_grouped: HashMap<u32, i32>,
     pub first_finished: bool,
     #[schema(value_type = String, format = Date)]
-    pub first_finish_date: NaiveDate,
+    pub first_finish: NaiveDate,
     #[schema(value_type = String, format = Date)]
-    pub last_finish_date: NaiveDate,
+    pub last_finish: NaiveDate,
     #[serde(skip)]
     pub finishes: Vec<NaiveDate>,
 }
