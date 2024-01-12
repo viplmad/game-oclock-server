@@ -2,8 +2,8 @@ additionalProperties:
   ensureUniqueParams: true
   pubAuthor: viplmad
   pubAuthorEmail:
-  pubDescription: Game collection client for dart
+  pubDescription: Game o'Clock client for dart
   pubHomepage:
-  pubLibrary: n2t.game_collection.client
-  pubName: game_collection_client
-  pubVersion: 1.0.0+24
+  pubLibrary: n2t.game_oclock.client
+  pubName: game_oclock_client
+  pubVersion: 1.0.0

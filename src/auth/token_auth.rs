@@ -7,7 +7,7 @@ use crate::errors::{TokenErrors, ValidationError};
 use crate::models::{TokenResponse, UserClaims};
 
 const KID: &str = "075d91f0-a35b-455a-9d78-8598846805e8"; // Random UUID
-const ISSUER: &str = "game_collection_server";
+const ISSUER: &str = "game_oclock";
 
 const TOKEN_TYPE_BEARER: &str = "bearer";
 

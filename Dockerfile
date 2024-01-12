@@ -13,7 +13,7 @@ RUN cargo build --target x86_64-unknown-linux-musl --release
 FROM alpine:3.18
 
 COPY migrations /usr/local/bin/migrations
-COPY --from=builder /target/x86_64-unknown-linux-musl/release/game-collection-server /usr/local/bin
+COPY --from=builder /target/x86_64-unknown-linux-musl/release/game-oclock-server /usr/local/bin
 
 WORKDIR /usr/local/bin
-CMD ["game-collection-server"]
+CMD ["game-oclock-server"]

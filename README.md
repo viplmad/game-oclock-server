@@ -1,3 +1,3 @@
-# game_collection_server
+# game_oclock_server
 
-A Game Collection server written in Rust using actix-web
+The server for Game o'Clock. Written in Rust with actix-web.

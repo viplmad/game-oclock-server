@@ -2,7 +2,7 @@ use std::{env, fs::File, io::BufReader};
 
 use actix_web_httpauth::middleware::HttpAuthentication;
 use dotenvy::dotenv;
-use game_collection_server::{
+use game_oclock_server::{
     clients::cloudinary::{CloudinaryClient, CloudinaryClientBuilder},
     migrations, openapi,
     providers::ImageClientProvider,
@@ -142,7 +142,7 @@ async fn run(
     let openapi = openapi::get_openapi();
 
     let mut server = HttpServer::new(move || {
-        let auth = HttpAuthentication::bearer(game_collection_server::auth::token_validator);
+        let auth = HttpAuthentication::bearer(game_oclock_server::auth::token_validator);
 
         App::new()
             .app_data(data_database_connection.clone())
