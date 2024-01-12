@@ -35,10 +35,11 @@ impl From<GameWithLog> for GamePlayedReviewDTO {
                 time: DurationDef::default(),
             },
             total_sessions: 0,
-            total_sessions_grouped: HashMap::<u32, i32>::new(),
             total_time: DurationDef::default(),
             total_time_grouped: HashMap::<u32, DurationDef>::new(),
             first_played: false,
+            first_session_start_datetime: NaiveDateTime::MAX,
+            last_session_start_datetime: NaiveDateTime::MIN,
             streaks: vec![],
             sessions: vec![],
         }
@@ -65,6 +66,8 @@ impl From<GameWithDate> for GameFinishedReviewDTO {
             total_finished: 0,
             total_finished_grouped: HashMap::<u32, i32>::new(),
             first_finished: false,
+            first_finish: NaiveDate::MAX,
+            last_finish: NaiveDate::MIN,
             finishes: vec![],
         }
     }

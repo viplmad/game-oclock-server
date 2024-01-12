@@ -1,6 +1,6 @@
 use std::collections::HashMap;
 
-use chrono::{Datelike, Duration, Months, NaiveDate, NaiveDateTime, NaiveTime};
+use chrono::{Datelike, Duration, NaiveDate, NaiveDateTime, NaiveTime};
 
 use crate::models::{DurationDef, GameLogDTO, GameStreakDTO, GamesStreakDTO};
 
@@ -36,40 +36,6 @@ fn fill_single_total_time_by_month(
         None => {
             // Start month total
             total_time_by_month_map.insert(month, time);
-        }
-    }
-}
-
-pub(super) fn fill_total_sessions_by_month(
-    total_sessions_by_month_map: &mut HashMap<u32, i32>,
-    start_datetime: NaiveDateTime,
-    end_datetime: NaiveDateTime,
-) {
-    let end_month = end_datetime.month();
-    let end_year = end_datetime.year();
-
-    let mut date = start_datetime.date();
-    while date.year() < end_year || (date.year() == end_year && date.month() <= end_month) {
-        let month = date.month();
-        fill_single_total_sessions_by_month(total_sessions_by_month_map, month, 1);
-        date = date.checked_add_months(Months::new(1)).unwrap(); // Safe unwrap: assume exists next month.
-    }
-}
-
-fn fill_single_total_sessions_by_month(
-    total_sessions_by_month_map: &mut HashMap<u32, i32>,
-    month: u32,
-    amount: i32,
-) {
-    match total_sessions_by_month_map.get(&month) {
-        Some(month_total_sessions) => {
-            // Continue the month total
-            let added_total = month_total_sessions + amount;
-            total_sessions_by_month_map.insert(month, added_total);
-        }
-        None => {
-            // Start month total
-            total_sessions_by_month_map.insert(month, amount);
         }
     }
 }

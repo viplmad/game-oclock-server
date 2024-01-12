@@ -120,7 +120,6 @@ fn build_played_review(
     let mut total_played = 0;
     let mut total_first_played = 0;
     let mut total_sessions = 0;
-    let mut total_sessions_by_month = HashMap::<u32, i32>::new();
     let mut total_time = DurationDef::default();
     let mut total_time_by_month = HashMap::<u32, DurationDef>::new();
     let mut total_played_by_release_year = HashMap::<i32, i32>::new();
@@ -147,24 +146,6 @@ fn build_played_review(
             &game.release_year,
         );
 
-        // Fill grouped sessions
-        for session in game.sessions.iter() {
-            let start_datetime = session.start_datetime;
-            let end_datetime = session.end_datetime;
-
-            logs_utils::fill_total_sessions_by_month(
-                &mut game.total_sessions_grouped,
-                start_datetime,
-                end_datetime,
-            );
-
-            logs_utils::fill_total_sessions_by_month(
-                &mut total_sessions_by_month,
-                start_datetime,
-                end_datetime,
-            );
-        }
-
         // Found longer global session
         if let Some(new_longest_session) =
             get_longest_session(&game.longest_session, &longest_session, &game_id)
@@ -179,7 +160,6 @@ fn build_played_review(
         longest_streak,
         longest_session,
         total_sessions,
-        total_sessions_grouped: total_sessions_by_month,
         total_time,
         total_time_grouped: total_time_by_month,
         total_played_by_release_year,
@@ -318,6 +298,13 @@ fn fill_played_game_review(
 
     // Found longer session
     fill_longest_game_session(game);
+
+    if start_datetime < game.first_session_start_datetime {
+        game.first_session_start_datetime = start_datetime;
+    }
+    if start_datetime > game.last_session_start_datetime {
+        game.last_session_start_datetime = start_datetime;
+    }
 }
 
 fn fill_finished_game_review(game: &mut GameFinishedReviewDTO, finish_date: NaiveDate) {
@@ -328,6 +315,13 @@ fn fill_finished_game_review(game: &mut GameFinishedReviewDTO, finish_date: Naiv
     logs_utils::fill_game_finishes(&mut game.finishes, finish_date);
     game.total_finished =
         i32::try_from(game.finishes.len()).expect("Count was not within valid range");
+
+    if finish_date < game.first_finish {
+        game.first_finish = finish_date;
+    }
+    if finish_date > game.last_finish {
+        game.last_finish = finish_date;
+    }
 }
 
 fn fill_longest_game_streak(game: &mut GamePlayedReviewDTO) {
