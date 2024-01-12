@@ -92,9 +92,9 @@ pub struct GameFinishedReviewDTO {
     pub total_finished_grouped: HashMap<u32, i32>,
     pub first_finished: bool,
     #[schema(value_type = String, format = Date)]
-    pub first_finish: NaiveDate,
+    pub first_finish_date: NaiveDate,
     #[schema(value_type = String, format = Date)]
-    pub last_finish: NaiveDate,
+    pub last_finish_date: NaiveDate,
     #[serde(skip)]
     pub finishes: Vec<NaiveDate>,
 }

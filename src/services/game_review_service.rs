@@ -316,11 +316,11 @@ fn fill_finished_game_review(game: &mut GameFinishedReviewDTO, finish_date: Naiv
     game.total_finished =
         i32::try_from(game.finishes.len()).expect("Count was not within valid range");
 
-    if finish_date < game.first_finish {
-        game.first_finish = finish_date;
+    if finish_date < game.first_finish_date {
+        game.first_finish_date = finish_date;
     }
-    if finish_date > game.last_finish {
-        game.last_finish = finish_date;
+    if finish_date > game.last_finish_date {
+        game.last_finish_date = finish_date;
     }
 }
 

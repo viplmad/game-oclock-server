@@ -66,8 +66,8 @@ impl From<GameWithDate> for GameFinishedReviewDTO {
             total_finished: 0,
             total_finished_grouped: HashMap::<u32, i32>::new(),
             first_finished: false,
-            first_finish: NaiveDate::MAX,
-            last_finish: NaiveDate::MIN,
+            first_finish_date: NaiveDate::MAX,
+            last_finish_date: NaiveDate::MIN,
             finishes: vec![],
         }
     }
