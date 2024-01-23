@@ -1,4 +1,4 @@
-FROM rust:1.73.0 as builder
+FROM rust:1.75.0 as builder
 
 # muslc is required in order to build the rust image.
 RUN apt-get update && apt-get -y install cmake musl-tools libssl-dev && rm -rf /var/lib/apt/lists/*
@@ -10,7 +10,7 @@ ENV PKG_CONFIG_ALLOW_CROSS=1
 RUN cargo build --target x86_64-unknown-linux-musl --release
 
 
-FROM alpine:3.18
+FROM alpine:3.19
 
 COPY migrations /usr/local/bin/migrations
 COPY --from=builder /target/x86_64-unknown-linux-musl/release/game-oclock-server /usr/local/bin
