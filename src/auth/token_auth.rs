@@ -11,8 +11,8 @@ const ISSUER: &str = "game_oclock";
 
 const TOKEN_TYPE_BEARER: &str = "bearer";
 
-const ONE_DAY_IN_SECONDS: i64 = 60 * 60 * 24;
-const ONE_WEEK_IN_SECONDS: i64 = 60 * 60 * 24 * 7;
+const DAYS_PER_WEEK: i64 = 7;
+const SECONDS_PER_ONE_WEEK: i64 = crate::date_utils::SECONDS_PER_DAY * DAYS_PER_WEEK;
 
 pub async fn token_validator(
     req: ServiceRequest,
@@ -71,13 +71,13 @@ pub fn generate_token_response(
 }
 
 fn create_access_token_claims(user_id: &str) -> UserClaims {
-    create_token_claims(user_id, ONE_DAY_IN_SECONDS, None)
+    create_token_claims(user_id, crate::date_utils::SECONDS_PER_DAY, None)
 }
 
 fn create_refresh_token_claims(user_id: &str, access_token_id: &str) -> UserClaims {
     create_token_claims(
         user_id,
-        ONE_WEEK_IN_SECONDS,
+        SECONDS_PER_ONE_WEEK,
         Some(String::from(access_token_id)),
     )
 }

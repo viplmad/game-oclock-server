@@ -5,7 +5,9 @@ use crate::entities::{GameLog, GameLogWithTime};
 use crate::errors::RepositoryError;
 use crate::query::game_log_query;
 
-use super::base::{execute, execute_return_single, exists_id, fetch_all};
+use super::base::{
+    begin_transaction, commit_transaction, execute, execute_return_single, exists_id, fetch_all,
+};
 
 pub async fn find_sum_time_by_game_id(
     pool: &PgPool,
@@ -38,14 +40,22 @@ pub async fn find_all_first_by_user_id_and_game_id_in(
     fetch_all(pool, query).await
 }
 
-pub async fn create(
+pub async fn create_multiple(
     pool: &PgPool,
     user_id: &str,
     game_id: &str,
-    log: &GameLog,
+    logs: Vec<GameLog>,
 ) -> Result<(), RepositoryError> {
-    let query = game_log_query::insert(user_id, game_id, log);
-    execute(pool, query).await
+    let mut transaction = begin_transaction(pool).await?;
+
+    for log in logs.into_iter() {
+        let query = game_log_query::insert(user_id, game_id, &log);
+        execute(&mut transaction, query).await?;
+    }
+
+    commit_transaction(transaction).await?;
+
+    Ok(())
 }
 
 pub async fn delete_by_id(

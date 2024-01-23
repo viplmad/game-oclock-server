@@ -1,5 +1,12 @@
 use chrono::{NaiveDate, NaiveDateTime, NaiveTime};
 
+pub const MICROS_PER_SECOND: i64 = 1_000_000;
+pub const SECONDS_PER_MINUTE: i64 = 60;
+pub const MINUTES_PER_HOUR: i64 = 60;
+pub const HOURS_PER_DAY: i64 = 24;
+pub const SECONDS_PER_HOUR: i64 = MINUTES_PER_HOUR * SECONDS_PER_MINUTE;
+pub const SECONDS_PER_DAY: i64 = HOURS_PER_DAY * SECONDS_PER_HOUR;
+
 pub fn now() -> NaiveDateTime {
     chrono::Utc::now().naive_utc()
 }

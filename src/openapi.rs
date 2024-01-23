@@ -168,7 +168,6 @@ pub fn get_openapi() -> utoipa::openapi::OpenApi {
             )
         }
     }
-    // TODO Add allOf to OpenAPI
 
     // Make instance variable of ApiDoc so all worker threads get the same instance.
     ApiDoc::openapi()

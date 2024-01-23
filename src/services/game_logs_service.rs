@@ -1,4 +1,4 @@
-use chrono::{Duration, NaiveDateTime, NaiveTime};
+use chrono::{Duration, NaiveDateTime};
 use sqlx::postgres::types::PgInterval;
 use sqlx::PgPool;
 
@@ -55,36 +55,33 @@ pub async fn create_game_log(
 ) -> Result<(), ApiErrors> {
     games_service::exists_game(pool, user_id, game_id).await?;
 
-    if log.start_datetime > log.end_datetime {
+    let start_datetime = log.start_datetime;
+    let end_datetime = log.end_datetime;
+
+    if start_datetime > end_datetime {
         return Err(ApiErrors::InvalidParameter(String::from(
-            "Start date time must be previous than end date time",
+            "Session start datetime must be previous than end datetime",
         )));
     }
 
-    // TODO Split if contains different days
-    if log.start_datetime.date() != log.end_datetime.date() {
-        // If the end date is next day
-        if log.start_datetime.date() == (log.end_datetime.date() - Duration::days(1)) {
-            // If end time is not midnight
-            if log.end_datetime.time() != NaiveTime::MIN {
-                return Err(ApiErrors::InvalidParameter(String::from(
-                    "Log must be from the same day or until midnight of next day",
-                )));
-            }
-        } else {
-            return Err(ApiErrors::InvalidParameter(String::from(
-                "Log must be from the same day or until midnight of next day",
-            )));
-        }
+    let logs: Vec<NewGameLogDTO> = split_session_into_logs(start_datetime, end_datetime);
+    if logs.is_empty() {
+        return Err(ApiErrors::InvalidParameter(String::from(
+            "Session to add must not have an empty span of time",
+        )));
     }
 
     let exists_result =
-        game_log_repository::exists_gap(pool, user_id, log.start_datetime, log.end_datetime).await;
+        game_log_repository::exists_gap(pool, user_id, start_datetime, end_datetime).await;
     handle_already_exists_result::<GameLogDTO>(exists_result)?;
 
-    let merged_log = GameLogDTO::merge_with_default(log);
-    let log_to_create = GameLog::from(merged_log);
-    let create_result = game_log_repository::create(pool, user_id, game_id, &log_to_create).await;
+    let logs_to_create: Vec<GameLog> = logs
+        .into_iter()
+        .map(|log| GameLogDTO::merge_with_default(log))
+        .map(|merged_log| GameLog::from(merged_log))
+        .collect();
+    let create_result =
+        game_log_repository::create_multiple(pool, user_id, game_id, logs_to_create).await;
     handle_action_result::<GameLogDTO>(create_result)
 }
 
@@ -109,4 +106,41 @@ pub async fn exists_game_log(
 ) -> Result<(), ApiErrors> {
     let exists_result = game_log_repository::exists_by_id(pool, user_id, game_id, datetime).await;
     handle_not_found_result::<GameLogDTO>(exists_result)
+}
+
+fn split_session_into_logs(
+    start_datetime: NaiveDateTime,
+    end_datetime: NaiveDateTime,
+) -> Vec<NewGameLogDTO> {
+    let mut sessions: Vec<NewGameLogDTO> = vec![];
+    if start_datetime.date() == end_datetime.date() {
+        // If session happens on the same day
+        if start_datetime.time() != end_datetime.time() {
+            // Avoid empty log -> return single session if span of time is valid
+            sessions.push(NewGameLogDTO {
+                start_datetime,
+                end_datetime,
+            });
+        }
+    } else {
+        // If session spans differents day
+        let mut temp_date = start_datetime;
+        while temp_date.date() < end_datetime.date() {
+            let next_day_at_start_of_day =
+                crate::date_utils::date_at_start_of_day(temp_date.date() + Duration::days(1));
+            sessions.push(NewGameLogDTO {
+                start_datetime: temp_date,
+                end_datetime: next_day_at_start_of_day,
+            });
+            temp_date = next_day_at_start_of_day;
+        }
+        if end_datetime.time() != temp_date.time() {
+            // Avoid empty log -> store last log if span of time until end date is valid
+            sessions.push(NewGameLogDTO {
+                start_datetime: temp_date,
+                end_datetime,
+            });
+        }
+    }
+    return sessions;
 }

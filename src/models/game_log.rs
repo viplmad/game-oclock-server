@@ -36,6 +36,4 @@ pub struct NewGameLogDTO {
     pub start_datetime: NaiveDateTime,
     #[schema(value_type = String, format = DateTime)]
     pub end_datetime: NaiveDateTime,
-    // TODO add time
-    // TODO Add optional for all
 }

@@ -1,12 +1,7 @@
-use futures::future::BoxFuture;
-
 use crate::errors::ImageClientError;
 
 #[async_trait::async_trait]
 pub trait ImageClient: 'static + Send + Sync {
-    /// Checks if a connection is still valid.
-    fn ping(&self) -> BoxFuture<'_, Result<(), ImageClientError>>;
-
     async fn upload_image(
         &self,
         file_path: &str,

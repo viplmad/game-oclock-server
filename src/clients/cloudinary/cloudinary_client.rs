@@ -2,7 +2,6 @@ use chrono::Utc;
 use cloudinary::result::{CloudinaryDeleteResult, CloudinaryRenameResult, CloudinaryUploadResult};
 use cloudinary::upload::UploadOptions;
 use cloudinary::Cloudinary;
-use futures::future::BoxFuture;
 
 use crate::clients::image_client::ImageClient;
 use crate::errors::ImageClientError;
@@ -24,10 +23,6 @@ impl CloudinaryClient {
 
 #[async_trait::async_trait]
 impl ImageClient for CloudinaryClient {
-    fn ping(&self) -> BoxFuture<'_, Result<(), ImageClientError>> {
-        todo!(); // TODO access sample
-    }
-
     async fn upload_image(
         &self,
         file_path: &str,

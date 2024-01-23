@@ -18,7 +18,7 @@ impl From<TagDTO> for Tag {
     fn from(tag: TagDTO) -> Self {
         Self {
             id: Uuid::default(),
-            user_id: Uuid::default(), // TODO Possibly remove user_id field from entities
+            user_id: Uuid::default(),
             name: tag.name,
             added_datetime: tag.added_datetime,
             updated_datetime: tag.updated_datetime,

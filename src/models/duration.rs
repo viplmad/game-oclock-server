@@ -5,9 +5,7 @@ use std::{
 
 use serde::{de::Visitor, Deserialize, Serialize};
 
-const MICROS_PER_SEC: i64 = 1_000_000;
-const SECONDS_PER_HOUR: i64 = 3600;
-const SECONDS_PER_MINUTE: i64 = 60;
+use crate::errors::error_message_builder;
 
 #[derive(Default, Clone)]
 pub struct DurationDef {
@@ -22,7 +20,7 @@ impl DurationDef {
     }
 
     fn as_secs(&self) -> i64 {
-        self.micros / MICROS_PER_SEC
+        self.micros / crate::date_utils::MICROS_PER_SECOND
     }
 }
 
@@ -50,40 +48,38 @@ impl<'de> Visitor<'de> for DurationVisitor {
     type Value = DurationDef;
 
     fn expecting(&self, formatter: &mut std::fmt::Formatter) -> std::fmt::Result {
-        formatter.write_str("a string of a duration in ISO 8601 format")
+        formatter.write_str("a string of a duration in ISO 8601 format.")
     }
 
     fn visit_str<E>(self, v: &str) -> Result<Self::Value, E>
     where
         E: serde::de::Error,
     {
-        let duration = DurationDef::from_str(v);
-        Ok(duration.unwrap()) // TODO
+        DurationDef::from_str(v).map_err(|err| serde::de::Error::custom(err))
     }
 }
 
 impl Display for DurationDef {
     fn fmt(&self, f: &mut Formatter<'_>) -> std::fmt::Result {
-        // TODO
         let secs = self.as_secs();
 
         let mut hours: u32 = 0;
         let mut minutes: u32 = 0;
         let mut seconds: u32 = 0;
         if secs > 0 {
-            hours = (secs / SECONDS_PER_HOUR) as u32;
+            hours = (secs / crate::date_utils::SECONDS_PER_HOUR) as u32;
             if hours > 0 {
-                let remainder_seconds: u32 = (secs % SECONDS_PER_HOUR) as u32;
-                minutes = remainder_seconds / (SECONDS_PER_MINUTE as u32);
+                let remainder_seconds: u32 = (secs % crate::date_utils::SECONDS_PER_HOUR) as u32;
+                minutes = remainder_seconds / (crate::date_utils::SECONDS_PER_MINUTE as u32);
                 if minutes > 0 {
-                    seconds = remainder_seconds % (SECONDS_PER_MINUTE as u32);
+                    seconds = remainder_seconds % (crate::date_utils::SECONDS_PER_MINUTE as u32);
                 } else {
                     seconds = remainder_seconds;
                 }
             } else {
-                minutes = (secs / SECONDS_PER_MINUTE) as u32;
+                minutes = (secs / crate::date_utils::SECONDS_PER_MINUTE) as u32;
                 if minutes > 0 {
-                    seconds = (secs % SECONDS_PER_MINUTE) as u32;
+                    seconds = (secs % crate::date_utils::SECONDS_PER_MINUTE) as u32;
                 } else {
                     seconds = secs as u32;
                 }
@@ -103,27 +99,35 @@ impl Display for DurationDef {
 }
 
 impl FromStr for DurationDef {
-    type Err = (); // TODO
+    type Err = String;
+
     fn from_str(s: &str) -> Result<Self, Self::Err> {
-        let duration = iso8601::duration(s).map_err(|_| ())?;
+        let duration = iso8601::duration(s).map_err(|err| {
+            error_message_builder::inner_error("Could not format duration string.", &err)
+        })?;
         match duration {
             iso8601::Duration::YMDHMS {
                 year: _,
                 month: _,
-                day: _,
+                day,
                 hour,
                 minute,
                 second,
                 millisecond: _,
             } => {
                 let duration_secs = i64::from(
-                    hour * (SECONDS_PER_HOUR as u32)
-                        + minute * (SECONDS_PER_MINUTE as u32)
+                    day * (crate::date_utils::SECONDS_PER_DAY as u32)
+                        + hour * (crate::date_utils::SECONDS_PER_HOUR as u32)
+                        + minute * (crate::date_utils::SECONDS_PER_MINUTE as u32)
                         + second,
                 );
-                Ok(DurationDef::microseconds(duration_secs * MICROS_PER_SEC))
+                Ok(DurationDef::microseconds(
+                    duration_secs * crate::date_utils::MICROS_PER_SECOND,
+                ))
             }
-            iso8601::Duration::Weeks(_) => todo!(),
+            iso8601::Duration::Weeks(_) => {
+                Err(String::from("Duration format in weeks not supported"))
+            }
         }
     }
 }

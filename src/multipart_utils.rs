@@ -32,11 +32,11 @@ pub async fn get_multipart_file_path(mut multipart: Multipart) -> Result<FileTem
         .await
         .map_err(|err| {
             log::warn!("Temp directory could not be created. - {}", err.to_string());
-            ApiErrors::UnknownError(String::from("Error trying to create temp directory"))
+            ApiErrors::UnknownError(String::from("Error trying to create temp directory."))
         })?
         .map_err(|err| {
             log::warn!("Temp directory could not be created. - {}", err.to_string());
-            ApiErrors::UnknownError(String::from("Error trying to create temp directory"))
+            ApiErrors::UnknownError(String::from("Error trying to create temp directory."))
         })?;
 
     let file_path = temp_file_utils::generate_temp_file_path(&directory_path);
@@ -50,14 +50,14 @@ pub async fn get_multipart_file_path(mut multipart: Multipart) -> Result<FileTem
                 "File could not be created from multipart. - {}",
                 err.to_string()
             );
-            ApiErrors::UnknownError(String::from("Error trying to create file"))
+            ApiErrors::UnknownError(String::from("Error trying to create file."))
         })?
         .map_err(|err| {
             log::warn!(
                 "File could not be created from multipart. - {}",
                 err.to_string()
             );
-            ApiErrors::UnknownError(String::from("Error trying to create file"))
+            ApiErrors::UnknownError(String::from("Error trying to create file."))
         })?;
 
     while let Some(chunk) = field.next().await {
@@ -70,15 +70,14 @@ pub async fn get_multipart_file_path(mut multipart: Multipart) -> Result<FileTem
                     "File could not be created from multipart. - {}",
                     err.to_string()
                 );
-                ApiErrors::UnknownError(String::from("Error trying to create file"))
+                ApiErrors::UnknownError(String::from("Error trying to create file."))
             })?
             .map_err(|err| {
                 log::warn!(
                     "File could not be created from multipart. - {}",
                     err.to_string()
                 );
-                ApiErrors::UnknownError(String::from("Error trying to create file"))
-                // TODO Use other error -> this is for service errors
+                ApiErrors::UnknownError(String::from("Error trying to create file."))
             })?;
     }
 

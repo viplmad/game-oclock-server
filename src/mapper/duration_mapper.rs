@@ -14,6 +14,9 @@ impl From<DurationDef> for PgInterval {
 
 impl From<PgInterval> for DurationDef {
     fn from(interval: PgInterval) -> Self {
-        Self::microseconds(interval.microseconds)
+        let days_in_micros = i64::from(interval.days)
+            * crate::date_utils::SECONDS_PER_DAY
+            * crate::date_utils::MICROS_PER_SECOND;
+        Self::microseconds(interval.microseconds + days_in_micros)
     }
 }
