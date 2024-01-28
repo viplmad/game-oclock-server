@@ -123,6 +123,7 @@ fn build_played_review(
     let mut total_time = DurationDef::default();
     let mut total_time_by_month = HashMap::<u32, DurationDef>::new();
     let mut total_played_by_release_year = HashMap::<i32, i32>::new();
+    let mut total_played_by_rating = HashMap::<i32, i32>::new();
     let mut longest_session = GamesLogDTO {
         game_id: String::default(),
         start_datetime: NaiveDateTime::default(),
@@ -141,10 +142,10 @@ fn build_played_review(
         logs_utils::merge_total_time_by_month(&mut total_time_by_month, &game.total_time_grouped);
 
         // Fill global total by release year
-        logs_utils::fill_total_by_release_year(
-            &mut total_played_by_release_year,
-            &game.release_year,
-        );
+        logs_utils::fill_total_optional_map(&mut total_played_by_release_year, &game.release_year);
+
+        // Fill global total by rating
+        logs_utils::fill_total_map(&mut total_played_by_rating, game.rating);
 
         // Found longer global session
         if let Some(new_longest_session) =
@@ -163,6 +164,7 @@ fn build_played_review(
         total_time,
         total_time_grouped: total_time_by_month,
         total_played_by_release_year,
+        total_played_by_rating,
         games: map.into_values().collect(),
     }
 }
@@ -216,7 +218,7 @@ fn build_finished_review(
         );
 
         // Fill global total by release year
-        logs_utils::fill_total_by_release_year(
+        logs_utils::fill_total_optional_map(
             &mut total_finished_by_release_year,
             &game.release_year,
         );

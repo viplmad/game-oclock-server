@@ -17,6 +17,7 @@ pub struct GamesPlayedReviewDTO {
     pub total_time: DurationDef,
     pub total_time_grouped: HashMap<u32, DurationDef>,
     pub total_played_by_release_year: HashMap<i32, i32>,
+    pub total_played_by_rating: HashMap<i32, i32>,
     pub games: Vec<GamePlayedReviewDTO>,
 }
 
