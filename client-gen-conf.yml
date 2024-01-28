@@ -1,9 +1,0 @@
-additionalProperties:
-  ensureUniqueParams: true
-  pubAuthor: viplmad
-  pubAuthorEmail:
-  pubDescription: Game o'Clock client for dart
-  pubHomepage:
-  pubLibrary: n2t.game_oclock.client
-  pubName: game_oclock_client
-  pubVersion: 1.0.0
