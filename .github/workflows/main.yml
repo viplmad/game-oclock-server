@@ -71,6 +71,12 @@ jobs:
           cargo sonar --clippy --clippy-path clippy-report.json --sonar-path sonar-clippy-report.json
           cargo sonar --audit --audit-path audit-report.json --sonar-path sonar-audit-report.json
 
+      - uses: jacobtomlinson/gha-find-replace@v3
+        with:
+          find: "/home/runner/work/game-oclock-server/game-oclock-server/Cargo.lock"
+          replace: "Cargo.lock"
+          include: "sonar-audit-report.json"
+
       # Upload sonar report
       - uses: SonarSource/sonarcloud-github-action@v2.1.1
         env:
