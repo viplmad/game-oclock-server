@@ -73,10 +73,10 @@ jobs:
 
       - uses: jacobtomlinson/gha-find-replace@v3
         with:
-          find: "/home/runner/work/game-oclock-server/game-oclock-server/Cargo.lock"
-          replace: "Cargo.lock"
+          find: '"filePath":"[\w\/\-\.]*"' 
+          replace: '"filePath":"Cargo.lock"'
           include: "**sonar-audit-report.json"
-          regex: false
+          regex: true
 
       # Upload sonar report
       - uses: SonarSource/sonarcloud-github-action@v2.1.1
