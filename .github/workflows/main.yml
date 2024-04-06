@@ -50,9 +50,9 @@ jobs:
       # Install cargo-sonar
       - run: cargo install cargo-sonar
 
-      - run: cargo clippy --message-format json > my-clippy-report.json
+      - run: cargo clippy --message-format json > clippy-report.json
 
-      - run: cargo sonar --issues clippy --clippy-path my-clippy-report.json
+      - run: cargo sonar --clippy --clippy-path clippy-report.json
 
       - uses: SonarSource/sonarcloud-github-action@v2.1.1
         env:
