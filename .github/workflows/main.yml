@@ -29,6 +29,39 @@ jobs:
       # Analyse
       - run: cargo clippy
 
+  sonar:
+    needs: analysis
+    # This job will run on ubuntu virtual machine
+    runs-on: ubuntu-latest
+    steps:
+
+      - uses: actions/checkout@v3.3.0
+        with:
+          # Disabling shallow clone is recommended for improving relevancy of reporting
+          fetch-depth: 0
+
+      # Setup the rust environment
+      - uses: actions-rs/toolchain@v1.0.6
+        with:
+          profile: minimal
+          toolchain: nightly
+          components: rustfmt, clippy
+
+      # Install cargo-sonar
+      - run: cargo install cargo-sonar
+
+      - run: cargo clippy --message-format json > my-clippy-report.json
+
+      - run: cargo sonar --issues clippy --clippy-path my-clippy-report.json
+
+      - uses: SonarSource/sonarcloud-github-action@v2.1.1
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}  # Needed to get PR information, if any
+          SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
+        with:
+          args: >
+            -Dsonar.externalIssuesReportPaths=sonar-issues.json
+
   build:
     needs: analysis
     # This job will run on ubuntu virtual machine
