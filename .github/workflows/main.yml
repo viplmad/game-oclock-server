@@ -29,9 +29,8 @@ jobs:
           components: rustfmt, clippy
 
       # Analyse
-      - run: |
-          cargo clippy --message-format json > clippy-report.json
-          cargo audit --json > audit-report.json
+      - run: cargo clippy --message-format json > clippy-report.json
+      - run: cargo audit --json > audit-report.json
 
       # Upload report
       - uses: actions/upload-artifact@v4.3.1
