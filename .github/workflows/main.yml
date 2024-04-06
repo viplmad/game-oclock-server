@@ -16,25 +16,6 @@ jobs:
     # This job will run on ubuntu virtual machine
     runs-on: ubuntu-latest
     steps:
-
-      - uses: actions/checkout@v3.3.0
-
-      # Setup the rust environment
-      - uses: actions-rs/toolchain@v1.0.6
-        with:
-          profile: minimal
-          toolchain: nightly-2024-02-04
-          components: rustfmt, clippy
-
-      # Analyse
-      - run: cargo clippy
-
-  sonar:
-    needs: analysis
-    # This job will run on ubuntu virtual machine
-    runs-on: ubuntu-latest
-    steps:
-
       - uses: actions/checkout@v3.3.0
         with:
           # Disabling shallow clone is recommended for improving relevancy of reporting
@@ -47,27 +28,59 @@ jobs:
           toolchain: nightly-2024-02-04
           components: rustfmt, clippy
 
+      # Analyse
+      - run: |
+          cargo clippy --message-format json > clippy-report.json
+          cargo audit --json > audit-report.json
+
+      # Upload report
+      - uses: actions/upload-artifact@v4.3.1
+        with:
+          name: reports
+          path: |
+            clippy-report.json
+            audit-report.json
+
+  sonar:
+    needs: analysis
+    # This job will run on ubuntu virtual machine
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v3.3.0
+
+      - uses: actions/download-artifact@v4
+        with:
+          name: reports
+
+      # Setup the rust environment
+      - uses: actions-rs/toolchain@v1.0.6
+        with:
+          profile: minimal
+          toolchain: nightly-2024-02-04
+          components: rustfmt, clippy
+
       # Install cargo-sonar
       - run: cargo install cargo-sonar
 
-      - run: cargo clippy --message-format json > clippy-report.json
+      # Transform reports
+      - run: |
+          cargo sonar --clippy --clippy-path clippy-report.json --sonar-path sonar-clippy-report.json
+          cargo sonar --audit --audit-path audit-report.json --sonar-path sonar-audit-report.json
 
-      - run: cargo sonar --clippy --clippy-path clippy-report.json
-
+      # Upload sonar report
       - uses: SonarSource/sonarcloud-github-action@v2.1.1
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}  # Needed to get PR information, if any
           SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
         with:
           args: >
-            -Dsonar.externalIssuesReportPaths=sonar-issues.json
+            -Dsonar.externalIssuesReportPaths=sonar-clippy-report.json,sonar-audit-report.json
 
   build:
     needs: analysis
     # This job will run on ubuntu virtual machine
     runs-on: ubuntu-latest
     steps:
-
       - uses: actions/checkout@v3.3.0
 
       # Setup the rust environment
