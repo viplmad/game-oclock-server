@@ -28,14 +28,15 @@ jobs:
           toolchain: nightly-2024-02-04
           components: rustfmt, clippy
 
-      # Install cargo-sonar
-      - run: cargo install cargo-audit
+      # Install analysis dependencies
+      - run: cargo install cargo-audit cargo-outdated
 
       # Analyse
       - continue-on-error: true
         run: |
           cargo clippy --message-format json > clippy-report.json
           cargo audit --json > audit-report.json
+          cargo outdated --workspace --depth 1 --format json > outdated-report.json
 
       # Upload report
       - uses: actions/upload-artifact@v4.3.1
@@ -44,6 +45,7 @@ jobs:
           path: |
             clippy-report.json
             audit-report.json
+            outdated-report.json
 
   sonar:
     needs: analysis
@@ -70,6 +72,7 @@ jobs:
       - run: |
           cargo sonar --clippy --clippy-path clippy-report.json --sonar-path sonar-clippy-report.json
           cargo sonar --audit --audit-path audit-report.json --sonar-path sonar-audit-report.json
+          cargo sonar --outdated --outdated-path outdated-report.json --sonar-path sonar-outdated-report.json
 
       - uses: jacobtomlinson/gha-find-replace@v3
         with:
@@ -85,7 +88,7 @@ jobs:
           SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
         with:
           args: >
-            -Dsonar.externalIssuesReportPaths=sonar-clippy-report.json,sonar-audit-report.json
+            -Dsonar.externalIssuesReportPaths=sonar-clippy-report.json,sonar-audit-report.json,sonar-outdated-report.json
 
       # Upload report
       - uses: actions/upload-artifact@v4.3.1
@@ -94,6 +97,7 @@ jobs:
           path: |
             sonar-clippy-report.json
             sonar-audit-report.json
+            sonar-outdated-report.json
 
   build:
     needs: analysis
