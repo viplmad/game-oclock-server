@@ -25,6 +25,7 @@ jobs:
       - uses: actions-rs/toolchain@v1.0.6
         with:
           profile: minimal
+          toolchain: nightly-2024-02-04
           components: rustfmt, clippy
 
       # Install cargo-sonar
@@ -58,6 +59,7 @@ jobs:
       - uses: actions-rs/toolchain@v1.0.6
         with:
           profile: minimal
+          toolchain: nightly-2024-02-04
           components: rustfmt, clippy
 
       # Install cargo-sonar
@@ -88,6 +90,7 @@ jobs:
       - uses: actions-rs/toolchain@v1.0.6
         with:
           profile: minimal
+          toolchain: nightly-2024-02-04
           components: rustfmt, clippy
 
       # Build
