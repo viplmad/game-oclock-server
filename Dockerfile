@@ -2,7 +2,7 @@ FROM rust:1 AS builder
 
 # muslc is required in order to build the rust image.
 RUN apt-get update \
- && apt-get --no-install-recommends install -y cmake musl-tools libssl-dev
+ && apt-get --no-install-recommends install -y cmake musl-tools libssl-dev \
  && rm -rf /var/lib/apt/lists/*
 
 COPY . .
