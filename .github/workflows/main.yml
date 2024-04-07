@@ -29,7 +29,7 @@ jobs:
           components: rustfmt, clippy
 
       # Install analysis dependencies
-      - run: cargo install cargo-audit cargo-outdated
+      - run: cargo install cargo-audit cargo-outdated cargo-udeps
 
       # Analyse
       - run: cargo clippy --message-format json > clippy-report.json
