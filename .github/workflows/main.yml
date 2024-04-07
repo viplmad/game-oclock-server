@@ -37,7 +37,7 @@ jobs:
       - run: cargo audit --json > audit-report.json
         continue-on-error: true
       - run: cargo outdated --workspace --depth 1 --format json > outdated-report.json
-      - run: cargo deny init && cargo deny --format json check 2> deny-report.json
+      - run: cargo deny --audit-compatible-output --format json check > deny-report.json
         continue-on-error: true
     # - run: cargo udeps --quiet --workspace --all-features --all-targets --output json > udeps-report.json
 
@@ -78,7 +78,7 @@ jobs:
           cargo sonar --clippy --clippy-path clippy-report.json --sonar-path sonar-clippy-report.json
           cargo sonar --audit --audit-path audit-report.json --sonar-path sonar-audit-report.json
           cargo sonar --outdated --outdated-path outdated-report.json --sonar-path sonar-outdated-report.json
-          cargo sonar --deny --deny-path deny-report.json --sonar-path sonar-deny-report.json
+          cargo sonar --audit --audit-path deny-report.json --sonar-path sonar-deny-report.json
      #    cargo sonar --udeps --udeps-path udeps-report.json --sonar-path sonar-udeps-report.json
 
       - uses: jacobtomlinson/gha-find-replace@v3
@@ -92,6 +92,12 @@ jobs:
           find: '"filePath":"[\w\/\-\.]*"' 
           replace: '"filePath":"Cargo.lock"'
           include: "**sonar-outdated-report.json"
+          regex: true
+      - uses: jacobtomlinson/gha-find-replace@v3
+        with:
+          find: '"filePath":"[\w\/\-\.]*"' 
+          replace: '"filePath":"Cargo.lock"'
+          include: "**sonar-deny-report.json"
           regex: true
 
       # Upload sonar report
