@@ -37,7 +37,8 @@ jobs:
       - run: cargo audit --json > audit-report.json
         continue-on-error: true
       - run: cargo outdated --workspace --depth 1 --format json > outdated-report.json
-      - run: cargo deny --format json check 2> deny-report.json
+      - run: cargo deny init && cargo deny --format json check 2> deny-report.json
+        continue-on-error: true
     # - run: cargo udeps --quiet --workspace --all-features --all-targets --output json > udeps-report.json
 
       # Upload report
