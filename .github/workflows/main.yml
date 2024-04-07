@@ -29,7 +29,7 @@ jobs:
           components: rustfmt, clippy
 
       # Install analysis dependencies
-      - run: cargo install cargo-audit cargo-outdated
+      - run: cargo install cargo-audit cargo-outdated duplicate_code
       # cargo-deny cargo-udeps
 
       # Analyse
@@ -40,6 +40,7 @@ jobs:
     # - run: cargo deny init && cargo deny --format json check 2> deny-report.json
     #   continue-on-error: true
     # - run: cargo udeps --quiet --workspace --all-features --all-targets --output json > udeps-report.json
+      - run: cargo duplicate_code --json > duplicate-report.json
 
       # Upload report
       - uses: actions/upload-artifact@v4.3.1
@@ -49,6 +50,7 @@ jobs:
             clippy-report.json
             audit-report.json
             outdated-report.json
+            duplicate-report.json
           # deny-report.json
           # udeps-report.json
 
