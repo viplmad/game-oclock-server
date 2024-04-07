@@ -239,7 +239,7 @@ fn build_finished_review(
 }
 
 fn get_longest_streak(
-    streaks: &Vec<GamesStreakDTO>,
+    streaks: &[GamesStreakDTO],
     current_longest_streak: &GamesStreakDTO,
 ) -> Option<GamesStreakDTO> {
     if let Some(last_streak) = streaks.last() {

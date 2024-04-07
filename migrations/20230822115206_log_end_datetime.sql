@@ -5,4 +5,5 @@ ALTER TABLE ONLY "GameLog"
     ALTER COLUMN "time" DROP NOT NULL;
 
 UPDATE "GameLog"
+    WHERE end_datetime IS NULL
     SET end_datetime = (datetime + "time");

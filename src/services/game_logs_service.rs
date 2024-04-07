@@ -77,8 +77,8 @@ pub async fn create_game_log(
 
     let logs_to_create: Vec<GameLog> = logs
         .into_iter()
-        .map(|log| GameLogDTO::merge_with_default(log))
-        .map(|merged_log| GameLog::from(merged_log))
+        .map(GameLogDTO::merge_with_default)
+        .map(GameLog::from)
         .collect();
     let create_result =
         game_log_repository::create_multiple(pool, user_id, game_id, logs_to_create).await;
@@ -142,5 +142,5 @@ fn split_session_into_logs(
             });
         }
     }
-    return sessions;
+    sessions
 }
