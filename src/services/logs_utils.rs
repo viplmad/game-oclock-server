@@ -1,4 +1,4 @@
-use std::collections::HashMap;
+use std::{cmp::Ordering, collections::HashMap};
 
 use chrono::{Datelike, Duration, NaiveDate, NaiveDateTime, NaiveTime};
 
@@ -68,17 +68,21 @@ pub(super) fn fill_game_streaks(
     match streaks.last_mut() {
         Some(last_streak) => {
             let previous_date = last_streak.start_date - Duration::days(1);
-            if start_datetime.date() == previous_date {
-                // Continued the streak
-                last_streak.start_date = start_datetime.date();
-                last_streak.days += 1;
-            } else if start_datetime.date() < previous_date {
-                // Lost the streak, start a new one
-                streaks.push(GameStreakDTO {
-                    start_date: start_datetime.date(),
-                    end_date: end_datetime.date(),
-                    days: 1,
-                });
+            match start_datetime.date().cmp(&previous_date) {
+                Ordering::Equal => {
+                    // Continued the streak
+                    last_streak.start_date = start_datetime.date();
+                    last_streak.days += 1;
+                }
+                Ordering::Less => {
+                    // Lost the streak, start a new one
+                    streaks.push(GameStreakDTO {
+                        start_date: start_datetime.date(),
+                        end_date: end_datetime.date(),
+                        days: 1,
+                    });
+                }
+                Ordering::Greater => (),
             }
         }
         None => {
@@ -143,25 +147,29 @@ pub(super) fn fill_streaks(
     match streaks.last_mut() {
         Some(last_streak) => {
             let previous_date = last_streak.start_date - Duration::days(1);
-            if start_datetime.date() == previous_date {
-                // Continued the streak
-                if !last_streak.games_ids.contains(&game_id_clone) {
-                    last_streak.games_ids.push(game_id_clone);
+            match start_datetime.date().cmp(&previous_date) {
+                Ordering::Equal => {
+                    // Continued the streak
+                    if !last_streak.games_ids.contains(&game_id_clone) {
+                        last_streak.games_ids.push(game_id_clone);
+                    }
+                    last_streak.start_date = start_datetime.date();
+                    last_streak.days += 1;
                 }
-                last_streak.start_date = start_datetime.date();
-                last_streak.days += 1;
-            } else if start_datetime.date() < previous_date {
-                // Lost the streak, start a new one
-                streaks.push(GamesStreakDTO {
-                    games_ids: vec![game_id_clone],
-                    start_date: start_datetime.date(),
-                    end_date: end_datetime.date(),
-                    days: 1,
-                });
-            } else {
-                // Already on a streak day, add game if necessary
-                if !last_streak.games_ids.contains(&game_id_clone) {
-                    last_streak.games_ids.push(game_id_clone);
+                Ordering::Less => {
+                    // Lost the streak, start a new one
+                    streaks.push(GamesStreakDTO {
+                        games_ids: vec![game_id_clone],
+                        start_date: start_datetime.date(),
+                        end_date: end_datetime.date(),
+                        days: 1,
+                    });
+                }
+                Ordering::Greater => {
+                    // Already on a streak day, add game if necessary
+                    if !last_streak.games_ids.contains(&game_id_clone) {
+                        last_streak.games_ids.push(game_id_clone);
+                    }
                 }
             }
         }
