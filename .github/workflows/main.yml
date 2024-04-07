@@ -1,113 +1,117 @@
-name: Rust CI
+name: Build CI
 
-# This workflow is triggered on pushes to the repository.
-
-# Controls when the action will run.
 on:
-  # Triggers the workflow on push or pull request events but only for the main branch
+  # Triggers the workflow on push or pull request events but only for the default branch
   push:
-    branches: [ main ]
+    branches: [main]
 
 env:
   CARGO_TERM_COLOR: always
 
 jobs:
   analysis:
+    name: Analysis
     # This job will run on ubuntu virtual machine
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v3.3.0
+      - name: Checkout
+        uses: actions/checkout@v4.1.1
         with:
           # Disabling shallow clone is recommended for improving relevancy of reporting
           fetch-depth: 0
 
-      # Setup the rust environment
-      - uses: actions-rs/toolchain@v1.0.6
+      - name: Setup rust environment
+        uses: actions-rs/toolchain@v1.0.6
         with:
           profile: minimal
           toolchain: nightly-2024-02-04
           components: rustfmt, clippy
 
-      # Install analysis dependencies
-      - run: cargo install cargo-audit cargo-outdated duplicate_code
+      - name: Get dependencies
+        run: cargo install cargo-audit cargo-outdated
       # cargo-deny cargo-udeps
 
-      # Analyse
-      - run: cargo clippy --message-format json > clippy-report.json
-      - run: cargo audit --json > audit-report.json
+      - name: Analyse with clippy
+        run: cargo clippy --message-format json > clippy-report.json
+      - name: Analyse with audit
+        run: cargo audit --json > audit-report.json
         continue-on-error: true
-      - run: cargo outdated --workspace --depth 1 --format json > outdated-report.json
-    # - run: cargo deny init && cargo deny --format json check 2> deny-report.json
-    #   continue-on-error: true
-    # - run: cargo udeps --quiet --workspace --all-features --all-targets --output json > udeps-report.json
-      - run: cargo duplicate_code --json > duplicate-report.json
+      - name: Analyse with outdated
+        run: cargo outdated --workspace --depth 1 --format json > outdated-report.json
+      # - run: cargo deny init && cargo deny --format json check 2> deny-report.json
+      #   continue-on-error: true
+      # - run: cargo udeps --quiet --workspace --all-features --all-targets --output json > udeps-report.json
 
-      # Upload report
-      - uses: actions/upload-artifact@v4.3.1
+      - name: Create reports artifact
+        uses: actions/upload-artifact@v4.3.1
         with:
           name: reports
           path: |
             clippy-report.json
             audit-report.json
             outdated-report.json
-            duplicate-report.json
           # deny-report.json
           # udeps-report.json
 
   sonar:
+    name: Sonar
     needs: analysis
     # This job will run on ubuntu virtual machine
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v3.3.0
+      - name: Checkout
+        uses: actions/checkout@v4.1.1
 
-      - uses: actions/download-artifact@v4
+      - name: Download reports artifact
+        uses: actions/download-artifact@v4.1.4
         with:
           name: reports
 
-      # Setup the rust environment
-      - uses: actions-rs/toolchain@v1.0.6
+      - name: Setup rust environment
+        uses: actions-rs/toolchain@v1.0.6
         with:
           profile: minimal
           toolchain: nightly-2024-02-04
           components: rustfmt, clippy
 
-      # Install cargo-sonar
-      - run: cargo install cargo-sonar
+      - name: Get dependencies
+        run: cargo install cargo-sonar
 
-      # Transform reports
-      - run: |
+      - name: Transform reports
+        run: |
           cargo sonar --clippy --clippy-path clippy-report.json --sonar-path sonar-clippy-report.json
           cargo sonar --audit --audit-path audit-report.json --sonar-path sonar-audit-report.json
           cargo sonar --outdated --outdated-path outdated-report.json --sonar-path sonar-outdated-report.json
-     #    cargo sonar --deny --deny-path deny-report.json --sonar-path sonar-deny-report.json
-     #    cargo sonar --udeps --udeps-path udeps-report.json --sonar-path sonar-udeps-report.json
+      #    cargo sonar --deny --deny-path deny-report.json --sonar-path sonar-deny-report.json
+      #    cargo sonar --udeps --udeps-path udeps-report.json --sonar-path sonar-udeps-report.json
 
-      - uses: jacobtomlinson/gha-find-replace@v3
+      - name: Fix audit report
+        uses: jacobtomlinson/gha-find-replace@v3
         with:
-          find: '"filePath":"[\w\/\-\.]*"' 
+          find: '"filePath":"[\w\/\-\.]*"'
           replace: '"filePath":"Cargo.lock"'
-          include: "**sonar-audit-report.json"
+          include: '**sonar-audit-report.json'
           regex: true
-      - uses: jacobtomlinson/gha-find-replace@v3
+      - name: Fix outdated report
+        uses: jacobtomlinson/gha-find-replace@v3
         with:
-          find: '"filePath":"[\w\/\-\.]*"' 
+          find: '"filePath":"[\w\/\-\.]*"'
           replace: '"filePath":"Cargo.lock"'
-          include: "**sonar-outdated-report.json"
+          include: '**sonar-outdated-report.json'
           regex: true
 
-      # Upload sonar report
-      - uses: SonarSource/sonarcloud-github-action@v2.1.1
+      - name: Upload reports to sonar
+        uses: SonarSource/sonarcloud-github-action@v2.1.1
         env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}  # Needed to get PR information, if any
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }} # Needed to get PR information, if any
           SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
         with:
           args: >
             -Dsonar.externalIssuesReportPaths=sonar-clippy-report.json,sonar-audit-report.json,sonar-outdated-report.json
           # ,sonar-deny-report.json,sonar-udeps-report.json
 
-      # Upload report
-      - uses: actions/upload-artifact@v4.3.1
+      - name: Create sonar reports artifact
+        uses: actions/upload-artifact@v4.3.1
         with:
           name: sonar-reports
           path: |
@@ -118,18 +122,20 @@ jobs:
           # sonar-udeps-report.json
 
   build:
+    name: Build
     needs: analysis
     # This job will run on ubuntu virtual machine
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v3.3.0
+      - name: Checkout
+        uses: actions/checkout@v4.1.1
 
-      # Setup the rust environment
-      - uses: actions-rs/toolchain@v1.0.6
+      - name: Setup rust environment
+        uses: actions-rs/toolchain@v1.0.6
         with:
           profile: minimal
           toolchain: nightly-2024-02-04
           components: rustfmt, clippy
 
-      # Build
-      - run: cargo build --release
+      - name: Build executable
+        run: cargo build --release
