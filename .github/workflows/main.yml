@@ -29,14 +29,16 @@ jobs:
           components: rustfmt, clippy
 
       # Install analysis dependencies
-      - run: cargo install cargo-audit cargo-outdated cargo-udeps
+      - run: cargo install cargo-audit cargo-outdated cargo-deny
+      # cargo-udeps
 
       # Analyse
       - run: cargo clippy --message-format json > clippy-report.json
       - run: cargo audit --json > audit-report.json
         continue-on-error: true
       - run: cargo outdated --workspace --depth 1 --format json > outdated-report.json
-      - run: cargo udeps --quiet --workspace --all-features --all-targets --output json > udeps-report.json
+      - run: cargo deny --format json check 2> deny-report.json
+    # - run: cargo udeps --quiet --workspace --all-features --all-targets --output json > udeps-report.json
 
       # Upload report
       - uses: actions/upload-artifact@v4.3.1
@@ -46,7 +48,8 @@ jobs:
             clippy-report.json
             audit-report.json
             outdated-report.json
-            udeps-report.json
+            deny-report.json
+          # udeps-report.json
 
   sonar:
     needs: analysis
@@ -74,7 +77,8 @@ jobs:
           cargo sonar --clippy --clippy-path clippy-report.json --sonar-path sonar-clippy-report.json
           cargo sonar --audit --audit-path audit-report.json --sonar-path sonar-audit-report.json
           cargo sonar --outdated --outdated-path outdated-report.json --sonar-path sonar-outdated-report.json
-          cargo sonar --udeps --udeps-path udeps-report.json --sonar-path sonar-udeps-report.json
+          cargo sonar --deny --deny-path deny-report.json --sonar-path sonar-deny-report.json
+     #    cargo sonar --udeps --udeps-path udeps-report.json --sonar-path sonar-udeps-report.json
 
       - uses: jacobtomlinson/gha-find-replace@v3
         with:
@@ -96,7 +100,8 @@ jobs:
           SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
         with:
           args: >
-            -Dsonar.externalIssuesReportPaths=sonar-clippy-report.json,sonar-audit-report.json,sonar-outdated-report.json,sonar-udeps-report.json
+            -Dsonar.externalIssuesReportPaths=sonar-clippy-report.json,sonar-audit-report.json,sonar-outdated-report.json,sonar-deny-report.json
+          # ,sonar-udeps-report.json
 
       # Upload report
       - uses: actions/upload-artifact@v4.3.1
@@ -106,7 +111,8 @@ jobs:
             sonar-clippy-report.json
             sonar-audit-report.json
             sonar-outdated-report.json
-            sonar-udeps-report.json
+            sonar-deny-report. json
+          # sonar-udeps-report.json
 
   build:
     needs: analysis
