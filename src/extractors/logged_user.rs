@@ -2,8 +2,14 @@ use std::{future::Future, pin::Pin};
 
 use actix_web::{Error, FromRequest};
 use actix_web_httpauth::extractors::bearer::BearerAuth;
+use base64::Engine;
 
 use crate::models::{LoggedUser, UserClaims};
+
+const URL_SAFE_NO_PAD: &base64::engine::GeneralPurpose = &base64::engine::GeneralPurpose::new(
+    &base64::alphabet::URL_SAFE,
+    base64::engine::general_purpose::NO_PAD,
+);
 
 /// Takes the result of a rsplit and ensure we only get 2 parts
 /// Errors if we don't
@@ -41,5 +47,5 @@ impl FromRequest for LoggedUser {
 }
 
 fn b64_decode<T: AsRef<[u8]>>(input: T) -> Result<Vec<u8>, base64::DecodeError> {
-    base64::decode_config(input, base64::URL_SAFE_NO_PAD)
+    URL_SAFE_NO_PAD.decode(input)
 }

@@ -4,16 +4,16 @@ version = "1.3.7"
 edition = "2021"
 
 [dependencies]
-actix-web = { version = "^4", default-features = false, features = [ "rustls" ] }
-sqlx = { version = "^0", default-features = false, features = [ "macros", "migrate", "runtime-actix-rustls", "postgres", "chrono", "uuid" ] }
+actix-web = { version = "^4", default-features = false, features = [ "rustls", "macros" ] }
+sqlx = { version = "^0", default-features = false, features = [ "macros", "migrate", "runtime-tokio-rustls", "postgres", "chrono", "uuid" ] }
 sea-query = { version = "0.28.5", default-features = false, features = [ "derive", "backend-postgres", "with-chrono" ] }
 chrono = { version = "^0", default-features = false, features = [ "serde" ] }
 iso8601 = { version = "^0", default-features = false }
 
 # Authentication
 actix-web-httpauth = { version = "^0", default-features = false }
-jsonwebtoken = { version = "^8", default-features = false }
-base64 = { version = "^0.13", default-features = false }
+jsonwebtoken = { version = "^9", default-features = false }
+base64 = { version = "^0.22", default-features = false }
 uuid = { version = "^1", default-features = false, features = [ "v4", "v7", "std" ] }
 bcrypt = { version = "^0", default-features = false, features = [ "std" ] }
 
@@ -40,5 +40,5 @@ log = { version = "^0", default-features = false }
 env_logger = { version = "^0", default-features = false }
 
 # OpenAPI
-utoipa = { version = "^3", default-features = false, features = [ "actix_extras", "chrono" ] }
-utoipa-swagger-ui = { version = "^3", default-features = false, features = [ "actix-web" ] }
+utoipa = { version = "^4", default-features = false, features = [ "actix_extras", "chrono" ] }
+utoipa-swagger-ui = { version = "^6", default-features = false, features = [ "actix-web" ] }

@@ -50,7 +50,7 @@ pub async fn create_multiple(
 
     for log in logs.into_iter() {
         let query = game_log_query::insert(user_id, game_id, &log);
-        execute(&mut transaction, query).await?;
+        execute(&mut *transaction, query).await?;
     }
 
     commit_transaction(transaction).await?;

@@ -32,10 +32,10 @@ pub async fn create(pool: &PgPool, user_id: &str, game: &Game) -> Result<String,
     let mut transaction = begin_transaction(pool).await?;
 
     let query = game_query::insert(user_id, &id, game);
-    execute(&mut transaction, query).await?;
+    execute(&mut *transaction, query).await?;
 
     let user_info_query = game_query::insert_user_info(user_id, &id, game);
-    execute(&mut transaction, user_info_query).await?;
+    execute(&mut *transaction, user_info_query).await?;
 
     commit_transaction(transaction).await?;
 
@@ -51,10 +51,10 @@ pub async fn update_by_id(
     let mut transaction = begin_transaction(pool).await?;
 
     let query = game_query::update_by_id(user_id, id, game);
-    execute(&mut transaction, query).await?;
+    execute(&mut *transaction, query).await?;
 
     let user_info_query = game_query::update_user_info_by_id(user_id, id, game);
-    execute(&mut transaction, user_info_query).await?;
+    execute(&mut *transaction, user_info_query).await?;
 
     commit_transaction(transaction).await?;
 
@@ -75,10 +75,10 @@ pub async fn delete_by_id(pool: &PgPool, user_id: &str, id: &str) -> Result<(), 
     let mut transaction = begin_transaction(pool).await?;
 
     let query = game_query::delete_by_id(user_id, id);
-    execute(&mut transaction, query).await?;
+    execute(&mut *transaction, query).await?;
 
     let user_info_query = game_query::delete_user_info_by_id(user_id, id);
-    execute(&mut transaction, user_info_query).await?;
+    execute(&mut *transaction, user_info_query).await?;
 
     commit_transaction(transaction).await?;
 
