@@ -79,6 +79,12 @@ jobs:
           replace: '"filePath":"Cargo.lock"'
           include: "**sonar-audit-report.json"
           regex: true
+      - uses: jacobtomlinson/gha-find-replace@v3
+        with:
+          find: '"filePath":"[\w\/\-\.]*"' 
+          replace: '"filePath":"Cargo.lock"'
+          include: "**sonar-outdated-report.json"
+          regex: true
 
       # Upload sonar report
       - uses: SonarSource/sonarcloud-github-action@v2.1.1
