@@ -30,7 +30,7 @@ use super::base::{
         (status = 500, description = "Internal server error", body = ErrorMessage, content_type = "application/json"),
     ),
     security(
-        ("bearer_token" = [])
+        ("OAuth2" = [])
     )
 )]
 #[get("/games/{id}")]
@@ -63,7 +63,7 @@ async fn get_game(
         (status = 500, description = "Internal server error", body = ErrorMessage, content_type = "application/json"),
     ),
     security(
-        ("bearer_token" = [])
+        ("OAuth2" = [])
     )
 )]
 #[get("/tags/{id}/games")]
@@ -96,7 +96,7 @@ async fn get_tag_games(
         (status = 500, description = "Internal server error", body = ErrorMessage, content_type = "application/json"),
     ),
     security(
-        ("bearer_token" = [])
+        ("OAuth2" = [])
     )
 )]
 #[get("/platforms/{id}/games")]
@@ -130,7 +130,7 @@ async fn get_platform_games(
         (status = 500, description = "Internal server error", body = ErrorMessage, content_type = "application/json"),
     ),
     security(
-        ("bearer_token" = [])
+        ("OAuth2" = [])
     )
 )]
 #[post("/games/list")]
@@ -163,7 +163,7 @@ async fn get_games(
         (status = 500, description = "Internal server error", body = ErrorMessage, content_type = "application/json"),
     ),
     security(
-        ("bearer_token" = [])
+        ("OAuth2" = [])
     )
 )]
 #[post("/games")]
@@ -193,7 +193,7 @@ async fn post_game(
         (status = 500, description = "Internal server error", body = ErrorMessage, content_type = "application/json"),
     ),
     security(
-        ("bearer_token" = [])
+        ("OAuth2" = [])
     )
 )]
 #[post("/games/{id}/cover")]
@@ -246,7 +246,7 @@ async fn post_game_cover(
         (status = 500, description = "Internal server error", body = ErrorMessage, content_type = "application/json"),
     ),
     security(
-        ("bearer_token" = [])
+        ("OAuth2" = [])
     )
 )]
 #[put("/games/{id}")]
@@ -278,7 +278,7 @@ async fn put_game(
         (status = 500, description = "Internal server error", body = ErrorMessage, content_type = "application/json"),
     ),
     security(
-        ("bearer_token" = [])
+        ("OAuth2" = [])
     )
 )]
 #[put("/games/{id}/cover")]
@@ -318,7 +318,7 @@ async fn put_game_cover(
         (status = 500, description = "Internal server error", body = ErrorMessage, content_type = "application/json"),
     ),
     security(
-        ("bearer_token" = [])
+        ("OAuth2" = [])
     )
 )]
 #[put("/games/{id}/tags/{other_id}")]
@@ -351,7 +351,7 @@ async fn link_game_tag(
         (status = 500, description = "Internal server error", body = ErrorMessage, content_type = "application/json"),
     ),
     security(
-        ("bearer_token" = [])
+        ("OAuth2" = [])
     )
 )]
 #[put("/games/{id}/platforms/{other_id}")]
@@ -388,7 +388,7 @@ async fn link_game_platform(
         (status = 500, description = "Internal server error", body = ErrorMessage, content_type = "application/json"),
     ),
     security(
-        ("bearer_token" = [])
+        ("OAuth2" = [])
     )
 )]
 #[delete("/games/{id}")]
@@ -420,7 +420,7 @@ async fn delete_game(
         (status = 500, description = "Internal server error", body = ErrorMessage, content_type = "application/json"),
     ),
     security(
-        ("bearer_token" = [])
+        ("OAuth2" = [])
     )
 )]
 #[delete("/games/{id}/cover")]
@@ -453,7 +453,7 @@ async fn delete_game_cover(
         (status = 500, description = "Internal server error", body = ErrorMessage, content_type = "application/json"),
     ),
     security(
-        ("bearer_token" = [])
+        ("OAuth2" = [])
     )
 )]
 #[delete("/games/{id}/tags/{other_id}")]
@@ -485,7 +485,7 @@ async fn unlink_game_tag(
         (status = 500, description = "Internal server error", body = ErrorMessage, content_type = "application/json"),
     ),
     security(
-        ("bearer_token" = [])
+        ("OAuth2" = [])
     )
 )]
 #[delete("/games/{id}/platforms/{other_id}")]

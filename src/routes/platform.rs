@@ -29,7 +29,7 @@ use super::base::{
         (status = 500, description = "Internal server error", body = ErrorMessage, content_type = "application/json"),
     ),
     security(
-        ("bearer_token" = [])
+        ("OAuth2" = [])
     )
 )]
 #[get("/platforms/{id}")]
@@ -62,7 +62,7 @@ async fn get_platform(
         (status = 500, description = "Internal server error", body = ErrorMessage, content_type = "application/json"),
     ),
     security(
-        ("bearer_token" = [])
+        ("OAuth2" = [])
     )
 )]
 #[get("/games/{id}/platforms")]
@@ -96,7 +96,7 @@ async fn get_game_platforms(
         (status = 500, description = "Internal server error", body = ErrorMessage, content_type = "application/json"),
     ),
     security(
-        ("bearer_token" = [])
+        ("OAuth2" = [])
     )
 )]
 #[get("/dlcs/{id}/platforms")]
@@ -130,7 +130,7 @@ async fn get_dlc_platforms(
         (status = 500, description = "Internal server error", body = ErrorMessage, content_type = "application/json"),
     ),
     security(
-        ("bearer_token" = [])
+        ("OAuth2" = [])
     )
 )]
 #[post("/platforms/list")]
@@ -163,7 +163,7 @@ async fn get_platforms(
         (status = 500, description = "Internal server error", body = ErrorMessage, content_type = "application/json"),
     ),
     security(
-        ("bearer_token" = [])
+        ("OAuth2" = [])
     )
 )]
 #[post("/platforms")]
@@ -193,7 +193,7 @@ async fn post_platform(
         (status = 500, description = "Internal server error", body = ErrorMessage, content_type = "application/json"),
     ),
     security(
-        ("bearer_token" = [])
+        ("OAuth2" = [])
     )
 )]
 #[post("/platforms/{id}/icon")]
@@ -246,7 +246,7 @@ async fn post_platform_icon(
         (status = 500, description = "Internal server error", body = ErrorMessage, content_type = "application/json"),
     ),
     security(
-        ("bearer_token" = [])
+        ("OAuth2" = [])
     )
 )]
 #[put("/platforms/{id}")]
@@ -279,7 +279,7 @@ async fn put_platform(
         (status = 500, description = "Internal server error", body = ErrorMessage, content_type = "application/json"),
     ),
     security(
-        ("bearer_token" = [])
+        ("OAuth2" = [])
     )
 )]
 #[put("/platforms/{id}/icon")]
@@ -317,7 +317,7 @@ async fn put_platform_icon(
         (status = 500, description = "Internal server error", body = ErrorMessage, content_type = "application/json"),
     ),
     security(
-        ("bearer_token" = [])
+        ("OAuth2" = [])
     )
 )]
 #[delete("/platforms/{id}")]
@@ -350,7 +350,7 @@ async fn delete_platform(
         (status = 500, description = "Internal server error", body = ErrorMessage, content_type = "application/json"),
     ),
     security(
-        ("bearer_token" = [])
+        ("OAuth2" = [])
     )
 )]
 #[delete("/platforms/{id}/icon")]

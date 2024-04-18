@@ -26,7 +26,7 @@ use super::base::{
         (status = 500, description = "Internal server error", body = ErrorMessage, content_type = "application/json"),
     ),
     security(
-        ("bearer_token" = [])
+        ("OAuth2" = [])
     )
 )]
 #[get("/users/{id}")]
@@ -48,7 +48,7 @@ async fn get_user(pool: web::Data<PgPool>, path: web::Path<ItemId>) -> impl Resp
         (status = 500, description = "Internal server error", body = ErrorMessage, content_type = "application/json"),
     ),
     security(
-        ("bearer_token" = [])
+        ("OAuth2" = [])
     )
 )]
 #[get("/myself")]
@@ -72,7 +72,7 @@ async fn get_current_user(pool: web::Data<PgPool>, logged_user: LoggedUser) -> i
         (status = 500, description = "Internal server error", body = ErrorMessage, content_type = "application/json"),
     ),
     security(
-        ("bearer_token" = [])
+        ("OAuth2" = [])
     )
 )]
 #[post("/users/list")]
@@ -102,7 +102,7 @@ async fn get_users(
         (status = 500, description = "Internal server error", body = ErrorMessage, content_type = "application/json"),
     ),
     security(
-        ("bearer_token" = [])
+        ("OAuth2" = [])
     )
 )]
 #[post("/users")]
@@ -137,7 +137,7 @@ async fn post_user(
         (status = 500, description = "Internal server error", body = ErrorMessage, content_type = "application/json"),
     ),
     security(
-        ("bearer_token" = [])
+        ("OAuth2" = [])
     )
 )]
 #[put("/users/{id}")]
@@ -165,7 +165,7 @@ async fn put_user(
         (status = 500, description = "Internal server error", body = ErrorMessage, content_type = "application/json"),
     ),
     security(
-        ("bearer_token" = [])
+        ("OAuth2" = [])
     )
 )]
 #[put("/myself/change-password")]
@@ -195,7 +195,7 @@ async fn change_password(
         (status = 500, description = "Internal server error", body = ErrorMessage, content_type = "application/json"),
     ),
     security(
-        ("bearer_token" = [])
+        ("OAuth2" = [])
     )
 )]
 #[put("/users/{id}/promote")]
@@ -229,7 +229,7 @@ async fn promote_user(
         (status = 500, description = "Internal server error", body = ErrorMessage, content_type = "application/json"),
     ),
     security(
-        ("bearer_token" = [])
+        ("OAuth2" = [])
     )
 )]
 #[put("/users/{id}/demote")]
@@ -262,7 +262,7 @@ async fn demote_user(
         (status = 500, description = "Internal server error", body = ErrorMessage, content_type = "application/json"),
     ),
     security(
-        ("bearer_token" = [])
+        ("OAuth2" = [])
     )
 )]
 #[delete("/users/{id}")]

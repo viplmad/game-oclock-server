@@ -26,7 +26,7 @@ use super::base::{
         (status = 500, description = "Internal server error", body = ErrorMessage, content_type = "application/json"),
     ),
     security(
-        ("bearer_token" = [])
+        ("OAuth2" = [])
     )
 )]
 #[get("/dlcs/{id}/finishes")]
@@ -55,7 +55,7 @@ async fn get_dlc_finishes(
         (status = 500, description = "Internal server error", body = ErrorMessage, content_type = "application/json"),
     ),
     security(
-        ("bearer_token" = [])
+        ("OAuth2" = [])
     )
 )]
 #[get("/dlcs/{id}/finishes/first")]
@@ -86,7 +86,7 @@ async fn get_first_dlc_finish(
         (status = 500, description = "Internal server error", body = ErrorMessage, content_type = "application/json"),
     ),
     security(
-        ("bearer_token" = [])
+        ("OAuth2" = [])
     )
 )]
 #[post("/dlcs/finished/first")]
@@ -130,7 +130,7 @@ async fn get_first_finished_dlcs(
         (status = 500, description = "Internal server error", body = ErrorMessage, content_type = "application/json"),
     ),
     security(
-        ("bearer_token" = [])
+        ("OAuth2" = [])
     )
 )]
 #[post("/dlcs/finished/last")]
@@ -174,7 +174,7 @@ async fn get_last_finished_dlcs(
         (status = 500, description = "Internal server error", body = ErrorMessage, content_type = "application/json"),
     ),
     security(
-        ("bearer_token" = [])
+        ("OAuth2" = [])
     )
 )]
 #[post("/dlcs/{id}/finishes")]
@@ -206,7 +206,7 @@ async fn post_dlc_finish(
         (status = 500, description = "Internal server error", body = ErrorMessage, content_type = "application/json"),
     ),
     security(
-        ("bearer_token" = [])
+        ("OAuth2" = [])
     )
 )]
 #[delete("/dlcs/{id}/finishes")]

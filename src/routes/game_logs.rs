@@ -30,7 +30,7 @@ use super::base::{
         (status = 500, description = "Internal server error", body = ErrorMessage, content_type = "application/json"),
     ),
     security(
-        ("bearer_token" = [])
+        ("OAuth2" = [])
     )
 )]
 #[get("/games/{id}/logs")]
@@ -59,7 +59,7 @@ async fn get_game_logs(
         (status = 500, description = "Internal server error", body = ErrorMessage, content_type = "application/json"),
     ),
     security(
-        ("bearer_token" = [])
+        ("OAuth2" = [])
     )
 )]
 #[get("/games/{id}/logs/total")]
@@ -87,7 +87,7 @@ async fn get_total_game_logs(
         (status = 500, description = "Internal server error", body = ErrorMessage, content_type = "application/json"),
     ),
     security(
-        ("bearer_token" = [])
+        ("OAuth2" = [])
     )
 )]
 #[post("/games/played/review")]
@@ -127,7 +127,7 @@ async fn get_played_games_review(
         (status = 500, description = "Internal server error", body = ErrorMessage, content_type = "application/json"),
     ),
     security(
-        ("bearer_token" = [])
+        ("OAuth2" = [])
     )
 )]
 #[post("/games/played")]
@@ -167,7 +167,7 @@ async fn get_played_games(
         (status = 500, description = "Internal server error", body = ErrorMessage, content_type = "application/json"),
     ),
     security(
-        ("bearer_token" = [])
+        ("OAuth2" = [])
     )
 )]
 #[post("/games/played/first")]
@@ -211,7 +211,7 @@ async fn get_first_played_games(
         (status = 500, description = "Internal server error", body = ErrorMessage, content_type = "application/json"),
     ),
     security(
-        ("bearer_token" = [])
+        ("OAuth2" = [])
     )
 )]
 #[post("/games/played/last")]
@@ -255,7 +255,7 @@ async fn get_last_played_games(
         (status = 500, description = "Internal server error", body = ErrorMessage, content_type = "application/json"),
     ),
     security(
-        ("bearer_token" = [])
+        ("OAuth2" = [])
     )
 )]
 #[post("/games/{id}/logs")]
@@ -287,7 +287,7 @@ async fn post_game_log(
         (status = 500, description = "Internal server error", body = ErrorMessage, content_type = "application/json"),
     ),
     security(
-        ("bearer_token" = [])
+        ("OAuth2" = [])
     )
 )]
 #[delete("/games/{id}/logs")]

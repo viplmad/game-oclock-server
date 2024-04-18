@@ -28,7 +28,7 @@ use super::base::{
         (status = 500, description = "Internal server error", body = ErrorMessage, content_type = "application/json"),
     ),
     security(
-        ("bearer_token" = [])
+        ("OAuth2" = [])
     )
 )]
 #[get("/dlcs/{id}")]
@@ -61,7 +61,7 @@ async fn get_dlc(
         (status = 500, description = "Internal server error", body = ErrorMessage, content_type = "application/json"),
     ),
     security(
-        ("bearer_token" = [])
+        ("OAuth2" = [])
     )
 )]
 #[get("/dlcs/{id}/base-game")]
@@ -94,7 +94,7 @@ async fn get_dlc_base_game(
         (status = 500, description = "Internal server error", body = ErrorMessage, content_type = "application/json"),
     ),
     security(
-        ("bearer_token" = [])
+        ("OAuth2" = [])
     )
 )]
 #[get("/games/{id}/dlcs")]
@@ -127,7 +127,7 @@ async fn get_game_dlcs(
         (status = 500, description = "Internal server error", body = ErrorMessage, content_type = "application/json"),
     ),
     security(
-        ("bearer_token" = [])
+        ("OAuth2" = [])
     )
 )]
 #[get("/platforms/{id}/dlcs")]
@@ -161,7 +161,7 @@ async fn get_platform_dlcs(
         (status = 500, description = "Internal server error", body = ErrorMessage, content_type = "application/json"),
     ),
     security(
-        ("bearer_token" = [])
+        ("OAuth2" = [])
     )
 )]
 #[post("/dlcs/list")]
@@ -194,7 +194,7 @@ async fn get_dlcs(
         (status = 500, description = "Internal server error", body = ErrorMessage, content_type = "application/json"),
     ),
     security(
-        ("bearer_token" = [])
+        ("OAuth2" = [])
     )
 )]
 #[post("/dlcs")]
@@ -224,7 +224,7 @@ async fn post_dlc(
         (status = 500, description = "Internal server error", body = ErrorMessage, content_type = "application/json"),
     ),
     security(
-        ("bearer_token" = [])
+        ("OAuth2" = [])
     )
 )]
 #[post("/dlcs/{id}/cover")]
@@ -277,7 +277,7 @@ async fn post_dlc_cover(
         (status = 500, description = "Internal server error", body = ErrorMessage, content_type = "application/json"),
     ),
     security(
-        ("bearer_token" = [])
+        ("OAuth2" = [])
     )
 )]
 #[put("/dlcs/{id}")]
@@ -309,7 +309,7 @@ async fn put_dlc(
         (status = 500, description = "Internal server error", body = ErrorMessage, content_type = "application/json"),
     ),
     security(
-        ("bearer_token" = [])
+        ("OAuth2" = [])
     )
 )]
 #[put("/dlcs/{id}/cover")]
@@ -348,7 +348,7 @@ async fn put_dlc_cover(
         (status = 500, description = "Internal server error", body = ErrorMessage, content_type = "application/json"),
     ),
     security(
-        ("bearer_token" = [])
+        ("OAuth2" = [])
     )
 )]
 #[put("/dlcs/{id}/base-game/{other_id}")]
@@ -381,7 +381,7 @@ async fn link_dlc_game(
         (status = 500, description = "Internal server error", body = ErrorMessage, content_type = "application/json"),
     ),
     security(
-        ("bearer_token" = [])
+        ("OAuth2" = [])
     )
 )]
 #[put("/dlcs/{id}/platforms/{other_id}")]
@@ -418,7 +418,7 @@ async fn link_dlc_platform(
         (status = 500, description = "Internal server error", body = ErrorMessage, content_type = "application/json"),
     ),
     security(
-        ("bearer_token" = [])
+        ("OAuth2" = [])
     )
 )]
 #[delete("/dlcs/{id}")]
@@ -450,7 +450,7 @@ async fn delete_dlc(
         (status = 500, description = "Internal server error", body = ErrorMessage, content_type = "application/json"),
     ),
     security(
-        ("bearer_token" = [])
+        ("OAuth2" = [])
     )
 )]
 #[delete("/dlcs/{id}/cover")]
@@ -482,7 +482,7 @@ async fn delete_dlc_cover(
         (status = 500, description = "Internal server error", body = ErrorMessage, content_type = "application/json"),
     ),
     security(
-        ("bearer_token" = [])
+        ("OAuth2" = [])
     )
 )]
 #[delete("/dlcs/{id}/base-game")]
@@ -513,7 +513,7 @@ async fn unlink_dlc_game(
         (status = 500, description = "Internal server error", body = ErrorMessage, content_type = "application/json"),
     ),
     security(
-        ("bearer_token" = [])
+        ("OAuth2" = [])
     )
 )]
 #[delete("/dlcs/{id}/platforms/{other_id}")]

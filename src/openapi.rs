@@ -1,5 +1,5 @@
 use utoipa::{
-    openapi::security::{HttpAuthScheme, HttpBuilder, SecurityScheme},
+    openapi::security::{Flow, OAuth2, Password, Scopes, SecurityScheme},
     Modify, OpenApi,
 };
 
@@ -158,13 +158,14 @@ pub fn get_openapi() -> utoipa::openapi::OpenApi {
         fn modify(&self, openapi: &mut utoipa::openapi::OpenApi) {
             let components = openapi.components.as_mut().unwrap(); // Safe unwrap: there already are components registered.
             components.add_security_scheme(
-                "bearer_token",
-                SecurityScheme::Http(
-                    HttpBuilder::new()
-                        .scheme(HttpAuthScheme::Bearer)
-                        .bearer_format("JWT")
-                        .build(),
-                ),
+                "OAuth2",
+                SecurityScheme::OAuth2(OAuth2::with_description(
+                    [Flow::Password(Password::new(
+                        "/auth/token",
+                        Scopes::from_iter([("read", "read"), ("write", "write")]),
+                    ))],
+                    "OAuth2 flow",
+                )),
             )
         }
     }
