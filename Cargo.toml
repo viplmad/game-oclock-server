@@ -1,6 +1,6 @@
 [package]
 name = "game-oclock-server"
-version = "1.3.8"
+version = "1.3.9"
 edition = "2021"
 
 [dependencies]
@@ -18,8 +18,8 @@ uuid = { version = "^1", default-features = false, features = [ "v4", "v7", "std
 bcrypt = { version = "^0", default-features = false, features = [ "std" ] }
 
 # TLS
-# Fix version because actix uses old version
-rustls = { version = "0.20.8", default-features = false }
+# Fix version because actix (tokio-rustls) uses old version
+rustls = { version = "^0.20.9", default-features = false }
 rustls-pemfile = { version = "^1", default-features = false }
 
 # Serialisation/Deserialisation
