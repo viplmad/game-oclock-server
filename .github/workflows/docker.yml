@@ -27,7 +27,7 @@ jobs:
         uses: docker/build-push-action@v5.3.0
         with:
           load: true
-          tags: ${{ github.GITHUB_REPOSITORY }}:${{ github.GITHUB_SHA }}
+          tags: ${{ github.repository }}:${{ github.sha }}
 
       - name: Save image
         run: docker save "$GITHUB_REPOSITORY:$GITHUB_SHA" -o game-oclock-server.tar
