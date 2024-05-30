@@ -9,14 +9,14 @@ RUN apt-get update \
 COPY src /src
 COPY Cargo.toml Cargo.lock rust-toolchain.toml /
 ENV PKG_CONFIG_ALLOW_CROSS=1
-RUN rustup target add x86_64-unknown-linux-musl \
- && cargo build --target x86_64-unknown-linux-musl --release
+RUN rustup target add aarch64-unknown-linux-musl \
+ && cargo build --target aarch64-unknown-linux-musl --release
 
 
 FROM alpine:3.19 AS runtime
 
 COPY migrations /app/migrations
-COPY --from=builder /target/x86_64-unknown-linux-musl/release/game-oclock-server /app
+COPY --from=builder /target/aarch64-unknown-linux-musl/release/game-oclock-server /app
 
 RUN addgroup -S nonroot \
  && adduser -S nonroot -G nonroot \

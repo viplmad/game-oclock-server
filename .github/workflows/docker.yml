@@ -8,7 +8,7 @@ on:
 #  workflow_run:
 #    workflows: ["Build CI"]
 #    branches: [main]
-#    types: 
+#    types:
 #      - completed
 
 env:
@@ -26,6 +26,7 @@ jobs:
       - name: Build
         uses: docker/build-push-action@v5.3.0
         with:
+          platforms: linux/arm64
           load: true
           tags: ${{ github.repository }}:${{ github.sha }}
 
