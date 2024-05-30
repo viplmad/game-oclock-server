@@ -27,10 +27,10 @@ jobs:
         uses: docker/build-push-action@v5.3.0
         with:
           load: true
-          tags: $GITHUB_REPOSITORY:$GITHUB_SHA
+          tags: "$GITHUB_REPOSITORY:$GITHUB_SHA"
 
       - name: Save image
-        run: docker save $GITHUB_REPOSITORY:$GITHUB_SHA -o game-oclock-server.tar
+        run: docker save "$GITHUB_REPOSITORY:$GITHUB_SHA" -o game-oclock-server.tar
 
       - name: Upload generated image to the artifacts
         uses: actions/upload-artifact@v4.3.0
