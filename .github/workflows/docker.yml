@@ -1,0 +1,40 @@
+name: Docker CI
+
+on:
+  # Triggers the workflow on push or pull request events but only for the default branch
+  push:
+    branches: [main]
+#on:
+#  workflow_run:
+#    workflows: ["Build CI"]
+#    branches: [main]
+#    types: 
+#      - completed
+
+env:
+  CARGO_TERM_COLOR: always
+
+jobs:
+  docker:
+    name: Docker
+    # This job will run on ubuntu virtual machine
+    runs-on: ubuntu-latest
+    steps:
+      - name: Setup Docker Buildx
+        uses: docker/setup-buildx-action@v3.3.0
+
+      - name: Build
+        uses: docker/build-push-action@v5.3.0
+        with:
+          load: true
+          tags: $GITHUB_REPOSITORY:$GITHUB_SHA
+
+      - name: Save image
+        run: docker save $GITHUB_REPOSITORY:$GITHUB_SHA -o game-oclock-server.tar
+
+      - name: Upload generated image to the artifacts
+        uses: actions/upload-artifact@v4.3.0
+        with:
+          name: release-image-tar
+          path: game-oclock-server.tar
+          retention-days: 5
