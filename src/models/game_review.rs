@@ -15,7 +15,10 @@ pub struct GamesPlayedReviewDTO {
     pub total_sessions: i32,
     #[schema(value_type = String)]
     pub total_time: DurationDef,
-    pub total_time_grouped: HashMap<u32, DurationDef>,
+    pub total_time_by_month: HashMap<u32, DurationDef>,
+    pub total_time_by_week: HashMap<u32, DurationDef>,
+    pub total_time_by_weekday: HashMap<u32, DurationDef>,
+    pub total_time_by_hour: HashMap<u32, DurationDef>,
     pub total_played_by_release_year: HashMap<i32, i32>,
     pub total_rated: i32,
     pub total_rated_by_rating: HashMap<i32, i32>,
@@ -48,7 +51,10 @@ pub struct GamePlayedReviewDTO {
     pub total_sessions: i32,
     #[schema(value_type = String)]
     pub total_time: DurationDef,
-    pub total_time_grouped: HashMap<u32, DurationDef>,
+    pub total_time_by_month: HashMap<u32, DurationDef>,
+    pub total_time_by_week: HashMap<u32, DurationDef>,
+    pub total_time_by_weekday: HashMap<u32, DurationDef>,
+    pub total_time_by_hour: HashMap<u32, DurationDef>,
     pub first_played: bool,
     #[schema(value_type = String, format = DateTime)]
     pub first_play_start_datetime: NaiveDateTime,

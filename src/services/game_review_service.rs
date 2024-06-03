@@ -123,6 +123,9 @@ fn build_played_review(
     let mut total_rated = 0;
     let mut total_time = DurationDef::default();
     let mut total_time_by_month = HashMap::<u32, DurationDef>::new();
+    let mut total_time_by_week = HashMap::<u32, DurationDef>::new();
+    let mut total_time_by_weekday = HashMap::<u32, DurationDef>::new();
+    let mut total_time_by_hour = HashMap::<u32, DurationDef>::new();
     let mut total_played_by_release_year = HashMap::<i32, i32>::new();
     let mut total_rated_by_rating = HashMap::<i32, i32>::new();
     let mut longest_session = GamesLogDTO {
@@ -140,7 +143,13 @@ fn build_played_review(
 
         // Fill global total time
         total_time = DurationDef::microseconds(total_time.micros + game.total_time.micros);
-        logs_utils::merge_total_time_by_month(&mut total_time_by_month, &game.total_time_grouped);
+        logs_utils::merge_total_time_grouped(&mut total_time_by_month, &game.total_time_by_month);
+        logs_utils::merge_total_time_grouped(&mut total_time_by_week, &game.total_time_by_week);
+        logs_utils::merge_total_time_grouped(
+            &mut total_time_by_weekday,
+            &game.total_time_by_weekday,
+        );
+        logs_utils::merge_total_time_grouped(&mut total_time_by_hour, &game.total_time_by_hour);
 
         // Fill global total by release year
         logs_utils::fill_total_optional_map(&mut total_played_by_release_year, &game.release_year);
@@ -166,7 +175,10 @@ fn build_played_review(
         longest_session,
         total_sessions,
         total_time,
-        total_time_grouped: total_time_by_month,
+        total_time_by_month,
+        total_time_by_week,
+        total_time_by_weekday,
+        total_time_by_hour,
         total_played_by_release_year,
         total_rated,
         total_rated_by_rating,
@@ -282,10 +294,17 @@ fn fill_played_game_review(
     // Fill total time
     game.total_time = DurationDef::microseconds(game.total_time.micros + time.micros);
     logs_utils::fill_total_time_by_month(
-        &mut game.total_time_grouped,
+        &mut game.total_time_by_month,
         start_datetime,
         time.clone(),
     );
+    logs_utils::fill_total_time_by_week(&mut game.total_time_by_week, start_datetime, time.clone());
+    logs_utils::fill_total_time_by_weekday(
+        &mut game.total_time_by_weekday,
+        start_datetime,
+        time.clone(),
+    );
+    logs_utils::fill_total_time_by_hour(&mut game.total_time_by_hour, start_datetime, end_datetime);
 
     // Fill streaks
     logs_utils::fill_game_streaks(&mut game.streaks, start_datetime, end_datetime);

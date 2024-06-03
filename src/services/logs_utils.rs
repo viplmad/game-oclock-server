@@ -1,6 +1,6 @@
 use std::{cmp::Ordering, collections::HashMap};
 
-use chrono::{Datelike, Duration, NaiveDate, NaiveDateTime, NaiveTime};
+use chrono::{Datelike, Duration, NaiveDate, NaiveDateTime, NaiveTime, Timelike};
 
 use crate::models::{DurationDef, GameLogDTO, GameStreakDTO, GamesStreakDTO};
 
@@ -10,32 +10,82 @@ pub(super) fn fill_total_time_by_month(
     time: DurationDef,
 ) {
     let month = start_datetime.month();
-    fill_single_total_time_by_month(total_time_by_month_map, month, time);
+    fill_single_total_time_grouped(total_time_by_month_map, month, time);
 }
 
-pub(super) fn merge_total_time_by_month(
-    total_time_by_month_map: &mut HashMap<u32, DurationDef>,
-    game_total_time_by_month: &HashMap<u32, DurationDef>,
+pub(super) fn fill_total_time_by_week(
+    total_time_by_week_map: &mut HashMap<u32, DurationDef>,
+    start_datetime: NaiveDateTime,
+    time: DurationDef,
 ) {
-    for (month, time) in game_total_time_by_month {
-        fill_single_total_time_by_month(total_time_by_month_map, month.clone(), time.clone());
+    let week = start_datetime.iso_week().week();
+    fill_single_total_time_grouped(total_time_by_week_map, week, time);
+}
+
+pub(super) fn fill_total_time_by_weekday(
+    total_time_by_weekday_map: &mut HashMap<u32, DurationDef>,
+    start_datetime: NaiveDateTime,
+    time: DurationDef,
+) {
+    let weekday = start_datetime.weekday().number_from_monday();
+    fill_single_total_time_grouped(total_time_by_weekday_map, weekday, time);
+}
+
+pub(super) fn fill_total_time_by_hour(
+    total_time_by_hour_map: &mut HashMap<u32, DurationDef>,
+    start_datetime: NaiveDateTime,
+    end_datetime: NaiveDateTime,
+) {
+    // If log spans differents hours
+    let mut temp_time = start_datetime.time();
+    let end_time = end_datetime.time();
+    while temp_time.hour() < end_time.hour() {
+        let hour = temp_time.hour();
+
+        let next_time_at_next_hour = NaiveTime::from_hms_opt(hour + 1, 0, 0);
+        if let Some(next_time) = next_time_at_next_hour {
+            let remaining_time_micros = (next_time - temp_time).num_microseconds();
+            if let Some(micros) = remaining_time_micros {
+                let remaining_time = DurationDef::microseconds(micros);
+                fill_single_total_time_grouped(total_time_by_hour_map, hour, remaining_time);
+            }
+
+            temp_time = next_time;
+        }
+    }
+    if end_time.hour() == temp_time.hour() && end_time.minute() != temp_time.minute() {
+        let remaining_time_micros = (end_time - temp_time).num_microseconds();
+        if let Some(micros) = remaining_time_micros {
+            let remianing_time = DurationDef::microseconds(micros);
+            let hour = temp_time.hour();
+            fill_single_total_time_grouped(total_time_by_hour_map, hour, remianing_time);
+        }
     }
 }
 
-fn fill_single_total_time_by_month(
-    total_time_by_month_map: &mut HashMap<u32, DurationDef>,
-    month: u32,
+pub(super) fn merge_total_time_grouped(
+    total_time_grouped_map: &mut HashMap<u32, DurationDef>,
+    game_total_time_grouped: &HashMap<u32, DurationDef>,
+) {
+    for (group, time) in game_total_time_grouped {
+        fill_single_total_time_grouped(total_time_grouped_map, group.clone(), time.clone());
+    }
+}
+
+fn fill_single_total_time_grouped(
+    total_time_grouped_map: &mut HashMap<u32, DurationDef>,
+    group: u32,
     time: DurationDef,
 ) {
-    match total_time_by_month_map.get(&month) {
-        Some(month_total_time) => {
-            // Continue the month total
-            let added_time = DurationDef::microseconds(month_total_time.micros + time.micros);
-            total_time_by_month_map.insert(month, added_time);
+    match total_time_grouped_map.get(&group) {
+        Some(group_total_time) => {
+            // Continue the group total
+            let added_time = DurationDef::microseconds(group_total_time.micros + time.micros);
+            total_time_grouped_map.insert(group, added_time);
         }
         None => {
-            // Start month total
-            total_time_by_month_map.insert(month, time);
+            // Start group total
+            total_time_grouped_map.insert(group, time);
         }
     }
 }
