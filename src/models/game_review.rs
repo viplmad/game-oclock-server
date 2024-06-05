@@ -12,6 +12,8 @@ pub struct GamesPlayedReviewDTO {
     pub total_first_played: i32,
     pub longest_streak: GamesStreakDTO,
     pub longest_session: GamesLogDTO,
+    pub first_session: GamesLogDTO,
+    pub last_session: GamesLogDTO,
     pub total_sessions: i32,
     #[schema(value_type = String)]
     pub total_time: DurationDef,
@@ -46,8 +48,11 @@ pub struct GamePlayedReviewDTO {
     pub save_folder: String,
     pub screenshot_folder: String,
     pub backup: bool,
+    pub first_played: bool,
     pub longest_streak: GameStreakDTO,
     pub longest_session: GameLogDTO,
+    pub first_session: GameLogDTO,
+    pub last_session: GameLogDTO,
     pub total_sessions: i32,
     #[schema(value_type = String)]
     pub total_time: DurationDef,
@@ -55,11 +60,6 @@ pub struct GamePlayedReviewDTO {
     pub total_time_by_week: HashMap<u32, DurationDef>,
     pub total_time_by_weekday: HashMap<u32, DurationDef>,
     pub total_time_by_hour: HashMap<u32, DurationDef>,
-    pub first_played: bool,
-    #[schema(value_type = String, format = DateTime)]
-    pub first_play_start_datetime: NaiveDateTime,
-    #[schema(value_type = String, format = DateTime)]
-    pub last_play_start_datetime: NaiveDateTime,
     #[serde(skip)]
     pub streaks: Vec<GameStreakDTO>,
     #[serde(skip)]
@@ -116,7 +116,7 @@ pub struct GameStreakDTO {
     pub end_date: NaiveDate,
 }
 
-#[derive(Serialize, ToSchema)]
+#[derive(Default, Serialize, ToSchema)]
 pub struct GamesLogDTO {
     pub game_id: String,
     #[schema(value_type = String, format = DateTime)]

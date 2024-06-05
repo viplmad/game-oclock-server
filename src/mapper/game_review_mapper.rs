@@ -24,13 +24,20 @@ impl From<GameWithLog> for GamePlayedReviewDTO {
             save_folder: game.save_folder,
             screenshot_folder: game.screenshot_folder,
             backup: game.backup,
+            first_played: false,
             longest_streak: GameStreakDTO {
                 start_date: NaiveDate::default(),
                 end_date: NaiveDate::default(),
                 days: 0,
             },
-            longest_session: GameLogDTO {
-                start_datetime: NaiveDateTime::default(),
+            longest_session: GameLogDTO::default(),
+            first_session: GameLogDTO {
+                start_datetime: NaiveDateTime::MAX,
+                end_datetime: NaiveDateTime::default(),
+                time: DurationDef::default(),
+            },
+            last_session: GameLogDTO {
+                start_datetime: NaiveDateTime::MIN,
                 end_datetime: NaiveDateTime::default(),
                 time: DurationDef::default(),
             },
@@ -40,9 +47,6 @@ impl From<GameWithLog> for GamePlayedReviewDTO {
             total_time_by_week: HashMap::<u32, DurationDef>::new(),
             total_time_by_weekday: HashMap::<u32, DurationDef>::new(),
             total_time_by_hour: HashMap::<u32, DurationDef>::new(),
-            first_played: false,
-            first_play_start_datetime: NaiveDateTime::MAX,
-            last_play_start_datetime: NaiveDateTime::MIN,
             streaks: vec![],
             sessions: vec![],
         }

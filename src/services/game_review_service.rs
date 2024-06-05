@@ -128,9 +128,16 @@ fn build_played_review(
     let mut total_time_by_hour = HashMap::<u32, DurationDef>::new();
     let mut total_played_by_release_year = HashMap::<i32, i32>::new();
     let mut total_rated_by_rating = HashMap::<i32, i32>::new();
-    let mut longest_session = GamesLogDTO {
+    let mut longest_session = GamesLogDTO::default();
+    let mut first_session = GamesLogDTO {
         game_id: String::default(),
-        start_datetime: NaiveDateTime::default(),
+        start_datetime: NaiveDateTime::MAX,
+        end_datetime: NaiveDateTime::default(),
+        time: DurationDef::default(),
+    };
+    let mut last_session = GamesLogDTO {
+        game_id: String::default(),
+        start_datetime: NaiveDateTime::MIN,
         end_datetime: NaiveDateTime::default(),
         time: DurationDef::default(),
     };
@@ -166,6 +173,18 @@ fn build_played_review(
         {
             longest_session = new_longest_session;
         };
+
+        if let Some(new_first_session) =
+            get_first_session(&game.first_session, &first_session, &game_id)
+        {
+            first_session = new_first_session;
+        }
+
+        if let Some(new_last_session) =
+            get_last_session(&game.last_session, &last_session, &game_id)
+        {
+            last_session = new_last_session;
+        }
     }
 
     GamesPlayedReviewDTO {
@@ -173,6 +192,8 @@ fn build_played_review(
         total_first_played,
         longest_streak,
         longest_session,
+        first_session,
+        last_session,
         total_sessions,
         total_time,
         total_time_by_month,
@@ -279,7 +300,41 @@ fn get_longest_session(
             game_id: String::from(game_id),
             start_datetime: longest_session.start_datetime,
             end_datetime: longest_session.end_datetime,
-            time: longest_session_time.clone(),
+            time: longest_session_time,
+        });
+    }
+    None
+}
+
+fn get_first_session(
+    first_sesion: &GameLogDTO,
+    current_first_session: &GamesLogDTO,
+    game_id: &str,
+) -> Option<GamesLogDTO> {
+    let first_session_start_datetime = first_sesion.start_datetime;
+    if first_session_start_datetime < current_first_session.start_datetime {
+        return Some(GamesLogDTO {
+            game_id: String::from(game_id),
+            start_datetime: first_session_start_datetime,
+            end_datetime: first_sesion.end_datetime,
+            time: first_sesion.time.clone(),
+        });
+    }
+    None
+}
+
+fn get_last_session(
+    last_sesion: &GameLogDTO,
+    current_last_session: &GamesLogDTO,
+    game_id: &str,
+) -> Option<GamesLogDTO> {
+    let last_session_start_datetime = last_sesion.start_datetime;
+    if last_session_start_datetime > current_last_session.start_datetime {
+        return Some(GamesLogDTO {
+            game_id: String::from(game_id),
+            start_datetime: last_session_start_datetime,
+            end_datetime: last_sesion.end_datetime,
+            time: last_sesion.time.clone(),
         });
     }
     None
@@ -323,14 +378,7 @@ fn fill_played_game_review(
         i32::try_from(game.sessions.len()).expect("Count was not within valid range");
 
     // Found longer session
-    fill_longest_game_session(game);
-
-    if start_datetime < game.first_play_start_datetime {
-        game.first_play_start_datetime = start_datetime;
-    }
-    if start_datetime > game.last_play_start_datetime {
-        game.last_play_start_datetime = start_datetime;
-    }
+    fill_longest_first_last_game_session(game);
 }
 
 fn fill_finished_game_review(game: &mut GameFinishedReviewDTO, finish_date: NaiveDate) {
@@ -363,7 +411,7 @@ fn fill_longest_game_streak(game: &mut GamePlayedReviewDTO) {
     }
 }
 
-fn fill_longest_game_session(game: &mut GamePlayedReviewDTO) {
+fn fill_longest_first_last_game_session(game: &mut GamePlayedReviewDTO) {
     if let Some(last_session) = game.sessions.last() {
         let last_session_time = last_session.time.clone();
         if last_session_time.micros > game.longest_session.time.micros {
@@ -372,6 +420,23 @@ fn fill_longest_game_session(game: &mut GamePlayedReviewDTO) {
                 end_datetime: last_session.end_datetime,
                 time: last_session_time.clone(),
             };
+        }
+
+        let last_session_start_datetime = last_session.start_datetime;
+        if last_session_start_datetime <= game.first_session.start_datetime {
+            game.first_session = GameLogDTO {
+                start_datetime: last_session_start_datetime,
+                end_datetime: last_session.end_datetime,
+                time: last_session_time.clone(),
+            }
+        }
+
+        if last_session_start_datetime >= game.last_session.start_datetime {
+            game.last_session = GameLogDTO {
+                start_datetime: last_session_start_datetime,
+                end_datetime: last_session.end_datetime,
+                time: last_session_time.clone(),
+            }
         }
     }
 }
