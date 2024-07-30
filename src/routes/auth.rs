@@ -20,7 +20,7 @@ use super::base::handle_get_result;
     ),
 )]
 #[post("/token")]
-async fn token(
+pub async fn token(
     pool: web::Data<PgPool>,
     encoding_key: web::Data<EncodingKey>,
     decoding_key: web::Data<DecodingKey>,

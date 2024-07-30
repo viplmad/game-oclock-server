@@ -33,7 +33,7 @@ use super::base::{
     )
 )]
 #[get("/platforms/{id}")]
-async fn get_platform(
+pub async fn get_platform(
     pool: web::Data<PgPool>,
     image_client_provider: web::Data<ImageClientProvider>,
     path: web::Path<ItemId>,
@@ -66,7 +66,7 @@ async fn get_platform(
     )
 )]
 #[get("/games/{id}/platforms")]
-async fn get_game_platforms(
+pub async fn get_game_platforms(
     pool: web::Data<PgPool>,
     image_client_provider: web::Data<ImageClientProvider>,
     path: web::Path<ItemId>,
@@ -100,7 +100,7 @@ async fn get_game_platforms(
     )
 )]
 #[get("/dlcs/{id}/platforms")]
-async fn get_dlc_platforms(
+pub async fn get_dlc_platforms(
     pool: web::Data<PgPool>,
     image_client_provider: web::Data<ImageClientProvider>,
     path: web::Path<ItemId>,
@@ -134,7 +134,7 @@ async fn get_dlc_platforms(
     )
 )]
 #[post("/platforms/list")]
-async fn get_platforms(
+pub async fn get_platforms(
     pool: web::Data<PgPool>,
     image_client_provider: web::Data<ImageClientProvider>,
     query: web::Query<QuicksearchQuery>,
@@ -167,7 +167,7 @@ async fn get_platforms(
     )
 )]
 #[post("/platforms")]
-async fn post_platform(
+pub async fn post_platform(
     pool: web::Data<PgPool>,
     body: web::Json<NewPlatformDTO>,
     logged_user: LoggedUser,
@@ -197,7 +197,7 @@ async fn post_platform(
     )
 )]
 #[post("/platforms/{id}/icon")]
-async fn post_platform_icon(
+pub async fn post_platform_icon(
     pool: web::Data<PgPool>,
     image_client_provider: web::Data<ImageClientProvider>,
     path: web::Path<ItemId>,
@@ -250,7 +250,7 @@ async fn post_platform_icon(
     )
 )]
 #[put("/platforms/{id}")]
-async fn put_platform(
+pub async fn put_platform(
     pool: web::Data<PgPool>,
     path: web::Path<ItemId>,
     body: web::Json<NewPlatformDTO>,
@@ -283,7 +283,7 @@ async fn put_platform(
     )
 )]
 #[put("/platforms/{id}/icon")]
-async fn put_platform_icon(
+pub async fn put_platform_icon(
     pool: web::Data<PgPool>,
     image_client_provider: web::Data<ImageClientProvider>,
     path: web::Path<ItemId>,
@@ -321,7 +321,7 @@ async fn put_platform_icon(
     )
 )]
 #[delete("/platforms/{id}")]
-async fn delete_platform(
+pub async fn delete_platform(
     pool: web::Data<PgPool>,
     image_client_provider: web::Data<ImageClientProvider>,
     path: web::Path<ItemId>,
@@ -354,7 +354,7 @@ async fn delete_platform(
     )
 )]
 #[delete("/platforms/{id}/icon")]
-async fn delete_platform_icon(
+pub async fn delete_platform_icon(
     pool: web::Data<PgPool>,
     image_client_provider: web::Data<ImageClientProvider>,
     path: web::Path<ItemId>,

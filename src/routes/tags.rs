@@ -27,7 +27,7 @@ use super::base::{
     )
 )]
 #[get("/tags/{id}")]
-async fn get_tag(
+pub async fn get_tag(
     pool: web::Data<PgPool>,
     path: web::Path<ItemId>,
     logged_user: LoggedUser,
@@ -56,7 +56,7 @@ async fn get_tag(
     )
 )]
 #[get("/games/{id}/tags")]
-async fn get_game_tags(
+pub async fn get_game_tags(
     pool: web::Data<PgPool>,
     path: web::Path<ItemId>,
     logged_user: LoggedUser,
@@ -85,7 +85,7 @@ async fn get_game_tags(
     )
 )]
 #[post("/tags/list")]
-async fn get_tags(
+pub async fn get_tags(
     pool: web::Data<PgPool>,
     query: web::Query<QuicksearchQuery>,
     body: web::Json<SearchDTO>,
@@ -113,7 +113,7 @@ async fn get_tags(
     )
 )]
 #[post("/tags")]
-async fn post_tag(
+pub async fn post_tag(
     pool: web::Data<PgPool>,
     body: web::Json<NewTagDTO>,
     logged_user: LoggedUser,
@@ -143,7 +143,7 @@ async fn post_tag(
     )
 )]
 #[put("/tags/{id}")]
-async fn put_tag(
+pub async fn put_tag(
     pool: web::Data<PgPool>,
     path: web::Path<ItemId>,
     body: web::Json<NewTagDTO>,
@@ -173,7 +173,7 @@ async fn put_tag(
     )
 )]
 #[delete("/tags/{id}")]
-async fn delete_tag(
+pub async fn delete_tag(
     pool: web::Data<PgPool>,
     path: web::Path<ItemId>,
     logged_user: LoggedUser,

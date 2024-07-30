@@ -34,7 +34,7 @@ use super::base::{
     )
 )]
 #[get("/games/{id}/logs")]
-async fn get_game_logs(
+pub async fn get_game_logs(
     pool: web::Data<PgPool>,
     path: web::Path<ItemId>,
     logged_user: LoggedUser,
@@ -63,7 +63,7 @@ async fn get_game_logs(
     )
 )]
 #[get("/games/{id}/logs/total")]
-async fn get_total_game_logs(
+pub async fn get_total_game_logs(
     pool: web::Data<PgPool>,
     path: web::Path<ItemId>,
     logged_user: LoggedUser,
@@ -91,7 +91,7 @@ async fn get_total_game_logs(
     )
 )]
 #[post("/games/played/review")]
-async fn get_played_games_review(
+pub async fn get_played_games_review(
     pool: web::Data<PgPool>,
     image_client_provider: web::Data<ImageClientProvider>,
     query: web::Query<StartEndDateQuery>,
@@ -131,7 +131,7 @@ async fn get_played_games_review(
     )
 )]
 #[post("/games/played")]
-async fn get_played_games(
+pub async fn get_played_games(
     pool: web::Data<PgPool>,
     image_client_provider: web::Data<ImageClientProvider>,
     query: web::Query<StartEndDateQuery>,
@@ -171,7 +171,7 @@ async fn get_played_games(
     )
 )]
 #[post("/games/played/first")]
-async fn get_first_played_games(
+pub async fn get_first_played_games(
     pool: web::Data<PgPool>,
     image_client_provider: web::Data<ImageClientProvider>,
     query: web::Query<OptionalStartEndDateQuery>,
@@ -215,7 +215,7 @@ async fn get_first_played_games(
     )
 )]
 #[post("/games/played/last")]
-async fn get_last_played_games(
+pub async fn get_last_played_games(
     pool: web::Data<PgPool>,
     image_client_provider: web::Data<ImageClientProvider>,
     query: web::Query<OptionalStartEndDateQuery>,
@@ -259,7 +259,7 @@ async fn get_last_played_games(
     )
 )]
 #[post("/games/{id}/logs")]
-async fn post_game_log(
+pub async fn post_game_log(
     pool: web::Data<PgPool>,
     path: web::Path<ItemId>,
     body: web::Json<NewGameLogDTO>,
@@ -291,7 +291,7 @@ async fn post_game_log(
     )
 )]
 #[delete("/games/{id}/logs")]
-async fn delete_game_log(
+pub async fn delete_game_log(
     pool: web::Data<PgPool>,
     path: web::Path<ItemId>,
     body: web::Json<DateTimeDTO>,

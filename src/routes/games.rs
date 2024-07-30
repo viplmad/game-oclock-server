@@ -34,7 +34,7 @@ use super::base::{
     )
 )]
 #[get("/games/{id}")]
-async fn get_game(
+pub async fn get_game(
     pool: web::Data<PgPool>,
     image_client_provider: web::Data<ImageClientProvider>,
     path: web::Path<ItemId>,
@@ -67,7 +67,7 @@ async fn get_game(
     )
 )]
 #[get("/tags/{id}/games")]
-async fn get_tag_games(
+pub async fn get_tag_games(
     pool: web::Data<PgPool>,
     image_client_provider: web::Data<ImageClientProvider>,
     path: web::Path<ItemId>,
@@ -100,7 +100,7 @@ async fn get_tag_games(
     )
 )]
 #[get("/platforms/{id}/games")]
-async fn get_platform_games(
+pub async fn get_platform_games(
     pool: web::Data<PgPool>,
     image_client_provider: web::Data<ImageClientProvider>,
     path: web::Path<ItemId>,
@@ -134,7 +134,7 @@ async fn get_platform_games(
     )
 )]
 #[post("/games/list")]
-async fn get_games(
+pub async fn get_games(
     pool: web::Data<PgPool>,
     image_client_provider: web::Data<ImageClientProvider>,
     query: web::Query<QuicksearchQuery>,
@@ -167,7 +167,7 @@ async fn get_games(
     )
 )]
 #[post("/games")]
-async fn post_game(
+pub async fn post_game(
     pool: web::Data<PgPool>,
     body: web::Json<NewGameDTO>,
     logged_user: LoggedUser,
@@ -197,7 +197,7 @@ async fn post_game(
     )
 )]
 #[post("/games/{id}/cover")]
-async fn post_game_cover(
+pub async fn post_game_cover(
     pool: web::Data<PgPool>,
     image_client_provider: web::Data<ImageClientProvider>,
     path: web::Path<ItemId>,
@@ -250,7 +250,7 @@ async fn post_game_cover(
     )
 )]
 #[put("/games/{id}")]
-async fn put_game(
+pub async fn put_game(
     pool: web::Data<PgPool>,
     path: web::Path<ItemId>,
     body: web::Json<NewGameDTO>,
@@ -282,7 +282,7 @@ async fn put_game(
     )
 )]
 #[put("/games/{id}/cover")]
-async fn put_game_cover(
+pub async fn put_game_cover(
     pool: web::Data<PgPool>,
     image_client_provider: web::Data<ImageClientProvider>,
     path: web::Path<ItemId>,
@@ -322,7 +322,7 @@ async fn put_game_cover(
     )
 )]
 #[put("/games/{id}/tags/{other_id}")]
-async fn link_game_tag(
+pub async fn link_game_tag(
     pool: web::Data<PgPool>,
     path: web::Path<ItemIdAndRelatedId>,
     logged_user: LoggedUser,
@@ -355,7 +355,7 @@ async fn link_game_tag(
     )
 )]
 #[put("/games/{id}/platforms/{other_id}")]
-async fn link_game_platform(
+pub async fn link_game_platform(
     pool: web::Data<PgPool>,
     path: web::Path<ItemIdAndRelatedId>,
     body: web::Json<DateDTO>,
@@ -392,7 +392,7 @@ async fn link_game_platform(
     )
 )]
 #[delete("/games/{id}")]
-async fn delete_game(
+pub async fn delete_game(
     pool: web::Data<PgPool>,
     image_client_provider: web::Data<ImageClientProvider>,
     path: web::Path<ItemId>,
@@ -424,7 +424,7 @@ async fn delete_game(
     )
 )]
 #[delete("/games/{id}/cover")]
-async fn delete_game_cover(
+pub async fn delete_game_cover(
     pool: web::Data<PgPool>,
     image_client_provider: web::Data<ImageClientProvider>,
     path: web::Path<ItemId>,
@@ -457,7 +457,7 @@ async fn delete_game_cover(
     )
 )]
 #[delete("/games/{id}/tags/{other_id}")]
-async fn unlink_game_tag(
+pub async fn unlink_game_tag(
     pool: web::Data<PgPool>,
     path: web::Path<ItemIdAndRelatedId>,
     logged_user: LoggedUser,
@@ -489,7 +489,7 @@ async fn unlink_game_tag(
     )
 )]
 #[delete("/games/{id}/platforms/{other_id}")]
-async fn unlink_game_platform(
+pub async fn unlink_game_platform(
     pool: web::Data<PgPool>,
     path: web::Path<ItemIdAndRelatedId>,
     logged_user: LoggedUser,

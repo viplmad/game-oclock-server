@@ -30,7 +30,7 @@ use super::base::{
     )
 )]
 #[get("/users/{id}")]
-async fn get_user(pool: web::Data<PgPool>, path: web::Path<ItemId>) -> impl Responder {
+pub async fn get_user(pool: web::Data<PgPool>, path: web::Path<ItemId>) -> impl Responder {
     let ItemId(id) = path.into_inner();
     let get_result = users_service::get_user(&pool, &id).await;
     handle_get_result(get_result)
@@ -52,7 +52,7 @@ async fn get_user(pool: web::Data<PgPool>, path: web::Path<ItemId>) -> impl Resp
     )
 )]
 #[get("/myself")]
-async fn get_current_user(pool: web::Data<PgPool>, logged_user: LoggedUser) -> impl Responder {
+pub async fn get_current_user(pool: web::Data<PgPool>, logged_user: LoggedUser) -> impl Responder {
     let get_result = users_service::get_user(&pool, &logged_user.id).await;
     handle_get_result(get_result)
 }
@@ -76,7 +76,7 @@ async fn get_current_user(pool: web::Data<PgPool>, logged_user: LoggedUser) -> i
     )
 )]
 #[post("/users/list")]
-async fn get_users(
+pub async fn get_users(
     pool: web::Data<PgPool>,
     query: web::Query<QuicksearchQuery>,
     body: web::Json<SearchDTO>,
@@ -106,7 +106,7 @@ async fn get_users(
     )
 )]
 #[post("/users")]
-async fn post_user(
+pub async fn post_user(
     pool: web::Data<PgPool>,
     query: web::Query<PasswordQuery>,
     body: web::Json<NewUserDTO>,
@@ -141,7 +141,7 @@ async fn post_user(
     )
 )]
 #[put("/users/{id}")]
-async fn put_user(
+pub async fn put_user(
     pool: web::Data<PgPool>,
     path: web::Path<ItemId>,
     body: web::Json<NewUserDTO>,
@@ -169,7 +169,7 @@ async fn put_user(
     )
 )]
 #[put("/myself/change-password")]
-async fn change_password(
+pub async fn change_password(
     pool: web::Data<PgPool>,
     form: web::Form<PasswordChangeDTO>,
     logged_user: LoggedUser,
@@ -199,7 +199,7 @@ async fn change_password(
     )
 )]
 #[put("/users/{id}/promote")]
-async fn promote_user(
+pub async fn promote_user(
     pool: web::Data<PgPool>,
     path: web::Path<ItemId>,
     logged_user: LoggedUser,
@@ -233,7 +233,7 @@ async fn promote_user(
     )
 )]
 #[put("/users/{id}/demote")]
-async fn demote_user(
+pub async fn demote_user(
     pool: web::Data<PgPool>,
     path: web::Path<ItemId>,
     logged_user: LoggedUser,
@@ -266,7 +266,7 @@ async fn demote_user(
     )
 )]
 #[delete("/users/{id}")]
-async fn delete_user(
+pub async fn delete_user(
     pool: web::Data<PgPool>,
     path: web::Path<ItemId>,
     logged_user: LoggedUser,

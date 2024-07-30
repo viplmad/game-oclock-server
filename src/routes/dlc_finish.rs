@@ -30,7 +30,7 @@ use super::base::{
     )
 )]
 #[get("/dlcs/{id}/finishes")]
-async fn get_dlc_finishes(
+pub async fn get_dlc_finishes(
     pool: web::Data<PgPool>,
     path: web::Path<ItemId>,
     logged_user: LoggedUser,
@@ -59,7 +59,7 @@ async fn get_dlc_finishes(
     )
 )]
 #[get("/dlcs/{id}/finishes/first")]
-async fn get_first_dlc_finish(
+pub async fn get_first_dlc_finish(
     pool: web::Data<PgPool>,
     path: web::Path<ItemId>,
     logged_user: LoggedUser,
@@ -90,7 +90,7 @@ async fn get_first_dlc_finish(
     )
 )]
 #[post("/dlcs/finished/first")]
-async fn get_first_finished_dlcs(
+pub async fn get_first_finished_dlcs(
     pool: web::Data<PgPool>,
     image_client_provider: web::Data<ImageClientProvider>,
     query: web::Query<OptionalStartEndDateQuery>,
@@ -134,7 +134,7 @@ async fn get_first_finished_dlcs(
     )
 )]
 #[post("/dlcs/finished/last")]
-async fn get_last_finished_dlcs(
+pub async fn get_last_finished_dlcs(
     pool: web::Data<PgPool>,
     image_client_provider: web::Data<ImageClientProvider>,
     query: web::Query<OptionalStartEndDateQuery>,
@@ -178,7 +178,7 @@ async fn get_last_finished_dlcs(
     )
 )]
 #[post("/dlcs/{id}/finishes")]
-async fn post_dlc_finish(
+pub async fn post_dlc_finish(
     pool: web::Data<PgPool>,
     path: web::Path<ItemId>,
     body: web::Json<DateDTO>,
@@ -210,7 +210,7 @@ async fn post_dlc_finish(
     )
 )]
 #[delete("/dlcs/{id}/finishes")]
-async fn delete_dlc_finish(
+pub async fn delete_dlc_finish(
     pool: web::Data<PgPool>,
     path: web::Path<ItemId>,
     body: web::Json<DateDTO>,

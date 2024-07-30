@@ -32,7 +32,7 @@ use super::base::{
     )
 )]
 #[get("/dlcs/{id}")]
-async fn get_dlc(
+pub async fn get_dlc(
     pool: web::Data<PgPool>,
     image_client_provider: web::Data<ImageClientProvider>,
     path: web::Path<ItemId>,
@@ -65,7 +65,7 @@ async fn get_dlc(
     )
 )]
 #[get("/dlcs/{id}/base-game")]
-async fn get_dlc_base_game(
+pub async fn get_dlc_base_game(
     pool: web::Data<PgPool>,
     image_client_provider: web::Data<ImageClientProvider>,
     path: web::Path<ItemId>,
@@ -98,7 +98,7 @@ async fn get_dlc_base_game(
     )
 )]
 #[get("/games/{id}/dlcs")]
-async fn get_game_dlcs(
+pub async fn get_game_dlcs(
     pool: web::Data<PgPool>,
     image_client_provider: web::Data<ImageClientProvider>,
     path: web::Path<ItemId>,
@@ -131,7 +131,7 @@ async fn get_game_dlcs(
     )
 )]
 #[get("/platforms/{id}/dlcs")]
-async fn get_platform_dlcs(
+pub async fn get_platform_dlcs(
     pool: web::Data<PgPool>,
     image_client_provider: web::Data<ImageClientProvider>,
     path: web::Path<ItemId>,
@@ -165,7 +165,7 @@ async fn get_platform_dlcs(
     )
 )]
 #[post("/dlcs/list")]
-async fn get_dlcs(
+pub async fn get_dlcs(
     pool: web::Data<PgPool>,
     image_client_provider: web::Data<ImageClientProvider>,
     query: web::Query<QuicksearchQuery>,
@@ -198,7 +198,7 @@ async fn get_dlcs(
     )
 )]
 #[post("/dlcs")]
-async fn post_dlc(
+pub async fn post_dlc(
     pool: web::Data<PgPool>,
     body: web::Json<NewDLCDTO>,
     logged_user: LoggedUser,
@@ -228,7 +228,7 @@ async fn post_dlc(
     )
 )]
 #[post("/dlcs/{id}/cover")]
-async fn post_dlc_cover(
+pub async fn post_dlc_cover(
     pool: web::Data<PgPool>,
     image_client_provider: web::Data<ImageClientProvider>,
     path: web::Path<ItemId>,
@@ -281,7 +281,7 @@ async fn post_dlc_cover(
     )
 )]
 #[put("/dlcs/{id}")]
-async fn put_dlc(
+pub async fn put_dlc(
     pool: web::Data<PgPool>,
     path: web::Path<ItemId>,
     body: web::Json<NewDLCDTO>,
@@ -313,7 +313,7 @@ async fn put_dlc(
     )
 )]
 #[put("/dlcs/{id}/cover")]
-async fn put_dlc_cover(
+pub async fn put_dlc_cover(
     pool: web::Data<PgPool>,
     image_client_provider: web::Data<ImageClientProvider>,
     path: web::Path<ItemId>,
@@ -352,7 +352,7 @@ async fn put_dlc_cover(
     )
 )]
 #[put("/dlcs/{id}/base-game/{other_id}")]
-async fn link_dlc_game(
+pub async fn link_dlc_game(
     pool: web::Data<PgPool>,
     path: web::Path<ItemIdAndRelatedId>,
     logged_user: LoggedUser,
@@ -385,7 +385,7 @@ async fn link_dlc_game(
     )
 )]
 #[put("/dlcs/{id}/platforms/{other_id}")]
-async fn link_dlc_platform(
+pub async fn link_dlc_platform(
     pool: web::Data<PgPool>,
     path: web::Path<ItemIdAndRelatedId>,
     body: web::Json<DateDTO>,
@@ -422,7 +422,7 @@ async fn link_dlc_platform(
     )
 )]
 #[delete("/dlcs/{id}")]
-async fn delete_dlc(
+pub async fn delete_dlc(
     pool: web::Data<PgPool>,
     image_client_provider: web::Data<ImageClientProvider>,
     path: web::Path<ItemId>,
@@ -454,7 +454,7 @@ async fn delete_dlc(
     )
 )]
 #[delete("/dlcs/{id}/cover")]
-async fn delete_dlc_cover(
+pub async fn delete_dlc_cover(
     pool: web::Data<PgPool>,
     image_client_provider: web::Data<ImageClientProvider>,
     path: web::Path<ItemId>,
@@ -486,7 +486,7 @@ async fn delete_dlc_cover(
     )
 )]
 #[delete("/dlcs/{id}/base-game")]
-async fn unlink_dlc_game(
+pub async fn unlink_dlc_game(
     pool: web::Data<PgPool>,
     path: web::Path<ItemId>,
     logged_user: LoggedUser,
@@ -517,7 +517,7 @@ async fn unlink_dlc_game(
     )
 )]
 #[delete("/dlcs/{id}/platforms/{other_id}")]
-async fn unlink_dlc_platform(
+pub async fn unlink_dlc_platform(
     pool: web::Data<PgPool>,
     path: web::Path<ItemIdAndRelatedId>,
     logged_user: LoggedUser,

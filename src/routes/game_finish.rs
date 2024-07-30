@@ -34,7 +34,7 @@ use super::base::{
     )
 )]
 #[get("/games/{id}/finishes")]
-async fn get_game_finishes(
+pub async fn get_game_finishes(
     pool: web::Data<PgPool>,
     path: web::Path<ItemId>,
     logged_user: LoggedUser,
@@ -63,7 +63,7 @@ async fn get_game_finishes(
     )
 )]
 #[get("/games/{id}/finishes/first")]
-async fn get_first_game_finish(
+pub async fn get_first_game_finish(
     pool: web::Data<PgPool>,
     path: web::Path<ItemId>,
     logged_user: LoggedUser,
@@ -92,7 +92,7 @@ async fn get_first_game_finish(
     )
 )]
 #[post("/games/finished/review")]
-async fn get_finished_games_review(
+pub async fn get_finished_games_review(
     pool: web::Data<PgPool>,
     image_client_provider: web::Data<ImageClientProvider>,
     query: web::Query<StartEndDateQuery>,
@@ -135,7 +135,7 @@ async fn get_finished_games_review(
     )
 )]
 #[post("/games/finished/first")]
-async fn get_first_finished_games(
+pub async fn get_first_finished_games(
     pool: web::Data<PgPool>,
     image_client_provider: web::Data<ImageClientProvider>,
     query: web::Query<OptionalStartEndDateQuery>,
@@ -179,7 +179,7 @@ async fn get_first_finished_games(
     )
 )]
 #[post("/games/finished/last")]
-async fn get_last_finished_games(
+pub async fn get_last_finished_games(
     pool: web::Data<PgPool>,
     image_client_provider: web::Data<ImageClientProvider>,
     query: web::Query<OptionalStartEndDateQuery>,
@@ -223,7 +223,7 @@ async fn get_last_finished_games(
     )
 )]
 #[post("/games/{id}/finishes")]
-async fn post_game_finish(
+pub async fn post_game_finish(
     pool: web::Data<PgPool>,
     path: web::Path<ItemId>,
     body: web::Json<DateDTO>,
@@ -255,7 +255,7 @@ async fn post_game_finish(
     )
 )]
 #[delete("/games/{id}/finishes")]
-async fn delete_game_finish(
+pub async fn delete_game_finish(
     pool: web::Data<PgPool>,
     path: web::Path<ItemId>,
     body: web::Json<DateDTO>,
