@@ -2,8 +2,8 @@ use actix_web::{delete, get, post, web, Responder};
 use sqlx::PgPool;
 
 use crate::models::{
-    DateDTO, ItemId, LoggedUser, OptionalStartEndDateQuery, QuicksearchQuery, SearchDTO,
-    StartEndDateQuery,
+    DateDTO, ItemId, LoggedUser, NewGameFinishDTO, OptionalStartEndDateQuery,
+    QuicksearchQuery, SearchDTO, StartEndDateQuery,
 };
 use crate::providers::ImageClientProvider;
 use crate::routes::base::populate_get_result;
@@ -23,7 +23,7 @@ use super::base::{
         ("id" = String, Path, description = "Game id"),
     ),
     responses(
-        (status = 200, description = "Finishes obtained", body = [String], content_type = "application/json"),
+        (status = 200, description = "Finishes obtained", body = [GameFinishDTO], content_type = "application/json"),
         (status = 401, description = "Unauthorized", body = ErrorMessage, content_type = "application/json"),
         (status = 403, description = "Forbidden", body = ErrorMessage, content_type = "application/json"),
         (status = 404, description = "Game not found", body = ErrorMessage, content_type = "application/json"),
@@ -52,7 +52,7 @@ pub async fn get_game_finishes(
         ("id" = String, Path, description = "Game id"),
     ),
     responses(
-        (status = 200, description = "First finish obtained", body = String, content_type = "application/json"),
+        (status = 200, description = "First finish obtained", body = GameFinishDTO, content_type = "application/json"),
         (status = 401, description = "Unauthorized", body = ErrorMessage, content_type = "application/json"),
         (status = 403, description = "Forbidden", body = ErrorMessage, content_type = "application/json"),
         (status = 404, description = "Game or finish not found", body = ErrorMessage, content_type = "application/json"),
@@ -209,7 +209,7 @@ pub async fn get_last_finished_games(
     params(
         ("id" = String, Path, description = "Game id"),
     ),
-    request_body(content = DateDTO, description = "Game finish date to be added", content_type = "application/json"),
+    request_body(content = NewGameFinishDTO, description = "Game finish to be added", content_type = "application/json"),
     responses(
         (status = 204, description = "Game finish added"),
         (status = 400, description = "Bad request", body = ErrorMessage, content_type = "application/json"),
@@ -226,7 +226,7 @@ pub async fn get_last_finished_games(
 pub async fn post_game_finish(
     pool: web::Data<PgPool>,
     path: web::Path<ItemId>,
-    body: web::Json<DateDTO>,
+    body: web::Json<NewGameFinishDTO>,
     logged_user: LoggedUser,
 ) -> impl Responder {
     let ItemId(id) = path.into_inner();

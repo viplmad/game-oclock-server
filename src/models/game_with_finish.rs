@@ -7,10 +7,12 @@ use super::{GameDTO, GameStatus, ModelInfo};
 #[derive(Serialize, ToSchema)]
 pub struct GameWithFinishDTO {
     pub id: String,
-    pub name: String,
+    pub title: String,
     pub edition: String,
     #[serde(skip_serializing_if = "Option::is_none")]
-    pub release_year: Option<i32>,
+    pub release_date: Option<NaiveDate>,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub base_game_id: Option<String>,
     #[serde(skip_serializing_if = "Option::is_none")]
     pub cover_filename: Option<String>,
     #[serde(skip_serializing_if = "Option::is_none")]
@@ -22,11 +24,11 @@ pub struct GameWithFinishDTO {
     pub status: GameStatus,
     pub rating: i32,
     pub notes: String,
-    pub save_folder: String,
-    pub screenshot_folder: String,
-    pub backup: bool,
     #[schema(value_type = String, format = Date)]
     pub finish_date: NaiveDate,
+    pub finish_status: GameStatus,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub finish_device_id: Option<String>,
 }
 
 impl ModelInfo for GameWithFinishDTO {

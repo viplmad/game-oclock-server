@@ -16,12 +16,6 @@ pub enum GameUserInfoIden {
     Rating,
     #[iden = "notes"]
     Notes,
-    #[iden = "save_folder"]
-    SaveFolder,
-    #[iden = "screenshot_folder"]
-    ScreenshotFolder,
-    #[iden = "backup"]
-    Backup,
     #[iden = "added_datetime"]
     AddedDateTime,
     #[iden = "updated_datetime"]

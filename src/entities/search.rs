@@ -124,5 +124,4 @@ pub enum FieldType {
     Date,
     DateTime,
     GameStatus,
-    PlatformType,
 }

@@ -10,6 +10,8 @@ pub struct GameLogDTO {
     pub start_datetime: NaiveDateTime,
     #[schema(value_type = String, format = DateTime)]
     pub end_datetime: NaiveDateTime,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub device_id: Option<String>,
     #[schema(value_type = String)]
     pub time: DurationDef,
 }
@@ -19,6 +21,7 @@ impl Merge<NewGameLogDTO> for GameLogDTO {
         Self {
             start_datetime: other.start_datetime,
             end_datetime: other.end_datetime,
+            device_id: other.device_id,
             time: self.time,
         }
     }
@@ -26,7 +29,7 @@ impl Merge<NewGameLogDTO> for GameLogDTO {
 
 impl ModelInfo for GameLogDTO {
     const MODEL_NAME: &'static str = "Game log";
-    const ID_FIELDS: &'static [&'static str] = &["game id", "datetime"];
+    const ID_FIELDS: &'static [&'static str] = &["game id", "start datetime"];
     const UNIQUE_FIELDS: &'static [&'static str] = GameLogDTO::ID_FIELDS;
 }
 
@@ -36,4 +39,6 @@ pub struct NewGameLogDTO {
     pub start_datetime: NaiveDateTime,
     #[schema(value_type = String, format = DateTime)]
     pub end_datetime: NaiveDateTime,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub device_id: Option<String>,
 }

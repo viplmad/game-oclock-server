@@ -15,10 +15,12 @@ pub enum GameLogIden {
     UserId,
     #[iden = "game_id"]
     GameId,
-    #[iden = "datetime"]
+    #[iden = "start_datetime"]
     StartDateTime,
     #[iden = "end_datetime"]
     EndDateTime,
+    #[iden = "device_id"]
+    DeviceId,
 }
 
 impl TableIden for GameLogIden {
@@ -27,14 +29,17 @@ impl TableIden for GameLogIden {
 
 #[derive(FromRow)]
 pub struct GameLog {
-    pub datetime: NaiveDateTime,
+    pub game_id: Uuid,
+    pub start_datetime: NaiveDateTime,
     pub end_datetime: NaiveDateTime,
+    pub device_id: Option<Uuid>,
 }
 
 #[derive(FromRow)]
 pub struct GameLogWithTime {
     pub game_id: Uuid,
-    pub datetime: NaiveDateTime,
+    pub start_datetime: NaiveDateTime,
     pub end_datetime: NaiveDateTime,
+    pub device_id: Option<Uuid>,
     pub query_time: PgInterval,
 }

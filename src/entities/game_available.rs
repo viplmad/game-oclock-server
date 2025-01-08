@@ -8,8 +8,8 @@ pub enum GameAvailableIden {
     UserId,
     #[iden = "game_id"]
     GameId,
-    #[iden = "platform_id"]
-    PlatformId,
-    #[iden = "added_date"]
-    AddedDate,
+    #[iden = "location_id"]
+    LocationId,
+    #[iden = "date"]
+    Date,
 }

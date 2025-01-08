@@ -15,6 +15,10 @@ pub enum GameFinishIden {
     GameId,
     #[iden = "date"]
     Date,
+    #[iden = "status"]
+    Status,
+    #[iden = "device_id"]
+    DeviceId,
 }
 
 impl TableIden for GameFinishIden {
@@ -25,4 +29,6 @@ impl TableIden for GameFinishIden {
 pub struct GameFinish {
     pub game_id: Uuid,
     pub date: NaiveDate,
+    pub status: i16,
+    pub device_id: Option<Uuid>,
 }

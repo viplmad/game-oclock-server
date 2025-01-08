@@ -7,6 +7,7 @@ pub enum GameStatus {
     LowPriority,
     NextUp,
     Playing,
-    Played,
+    Completed,
     Wishlist,
+    Retired,
 }

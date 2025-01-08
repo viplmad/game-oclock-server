@@ -1,4 +1,4 @@
-use chrono::NaiveDateTime;
+use chrono::{NaiveDateTime, NaiveDate};
 use sqlx::{postgres::types::PgInterval, FromRow};
 use uuid::Uuid;
 
@@ -10,19 +10,17 @@ pub const LOG_TIME_ALIAS: &str = "log_time";
 pub struct GameWithLog {
     pub id: Uuid,
     pub user_id: Uuid,
-    pub name: String,
+    pub title: String,
     pub edition: String,
-    pub release_year: Option<i32>,
-    pub cover_filename: Option<String>,
+    pub release_date: Option<NaiveDate>,
+    pub cover_filepath: Option<String>,
     pub added_datetime: NaiveDateTime,
     pub updated_datetime: NaiveDateTime,
     pub status: i16,
     pub rating: i32,
     pub notes: String,
-    pub save_folder: String,
-    pub screenshot_folder: String,
-    pub backup: bool,
     pub log_start_datetime: NaiveDateTime,
     pub log_end_datetime: NaiveDateTime,
+    pub log_device_id: Option<Uuid>,
     pub log_time: PgInterval,
 }

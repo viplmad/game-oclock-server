@@ -1,4 +1,4 @@
-use chrono::NaiveDateTime;
+use chrono::{NaiveDate, NaiveDateTime};
 use serde::Serialize;
 use utoipa::ToSchema;
 
@@ -8,10 +8,12 @@ use super::{DurationDef, GameDTO, GameLogDTO, GameStatus, ModelInfo};
 #[derive(Serialize, ToSchema)]
 pub struct GameWithLogsDTO {
     pub id: String,
-    pub name: String,
+    pub title: String,
     pub edition: String,
     #[serde(skip_serializing_if = "Option::is_none")]
-    pub release_year: Option<i32>,
+    pub release_date: Option<NaiveDate>,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub base_game_id: Option<String>,
     #[serde(skip_serializing_if = "Option::is_none")]
     pub cover_filename: Option<String>,
     #[serde(skip_serializing_if = "Option::is_none")]
@@ -23,19 +25,18 @@ pub struct GameWithLogsDTO {
     pub status: GameStatus,
     pub rating: i32,
     pub notes: String,
-    pub save_folder: String,
-    pub screenshot_folder: String,
-    pub backup: bool,
     pub logs: Vec<GameLogDTO>,
 }
 
 #[derive(Serialize, ToSchema)]
 pub struct GameWithLogDTO {
     pub id: String,
-    pub name: String,
+    pub title: String,
     pub edition: String,
     #[serde(skip_serializing_if = "Option::is_none")]
-    pub release_year: Option<i32>,
+    pub release_date: Option<NaiveDate>,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub base_game_id: Option<String>,
     #[serde(skip_serializing_if = "Option::is_none")]
     pub cover_filename: Option<String>,
     #[serde(skip_serializing_if = "Option::is_none")]
@@ -47,13 +48,12 @@ pub struct GameWithLogDTO {
     pub status: GameStatus,
     pub rating: i32,
     pub notes: String,
-    pub save_folder: String,
-    pub screenshot_folder: String,
-    pub backup: bool,
     #[schema(value_type = String, format = DateTime)]
     pub log_start_datetime: NaiveDateTime,
     #[schema(value_type = String, format = DateTime)]
     pub log_end_datetime: NaiveDateTime,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub log_device_id: Option<String>,
     #[schema(value_type = String)]
     pub log_time: DurationDef,
 }
