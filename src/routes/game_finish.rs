@@ -231,7 +231,7 @@ pub async fn post_game_finish(
 ) -> impl Responder {
     let ItemId(id) = path.into_inner();
     let create_result =
-        game_finishes_service::create_game_finish(&pool, &logged_user.id, &id, body.date).await;
+        game_finishes_service::create_game_finish(&pool, &logged_user.id, &id, body.0).await;
     handle_action_result(create_result)
 }
 
@@ -244,7 +244,7 @@ pub async fn post_game_finish(
     ),
     request_body(content = DateDTO, description = "Game finish date to be deleted", content_type = "application/json"),
     responses(
-        (status = 204, description = "Game finish date deleted"),
+        (status = 204, description = "Game finish deleted"),
         (status = 401, description = "Unauthorized", body = ErrorMessage, content_type = "application/json"),
         (status = 403, description = "Forbidden", body = ErrorMessage, content_type = "application/json"),
         (status = 404, description = "Game not found", body = ErrorMessage, content_type = "application/json"),
@@ -258,7 +258,7 @@ pub async fn post_game_finish(
 pub async fn delete_game_finish(
     pool: web::Data<PgPool>,
     path: web::Path<ItemId>,
-    body: web::Json<DateDTO>,
+    body: web::Json<DateDTO>,// TODO Add status and device
     logged_user: LoggedUser,
 ) -> impl Responder {
     let ItemId(id) = path.into_inner();

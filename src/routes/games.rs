@@ -83,24 +83,24 @@ pub async fn get_tag_games(
 
 #[utoipa::path(
     get,
-    path = "/api/v1/platforms/{id}/games",
+    path = "/api/v1/locations/{id}/games",
     tag = "Games",
     params(
-        ("id" = String, Path, description = "Platform id"),
+        ("id" = String, Path, description = "Location id"),
     ),
     responses(
         (status = 200, description = "Games obtained", body = [GameAvailableDTO], content_type = "application/json"),
         (status = 401, description = "Unauthorized", body = ErrorMessage, content_type = "application/json"),
         (status = 403, description = "Forbidden", body = ErrorMessage, content_type = "application/json"),
-        (status = 404, description = "Platform not found", body = ErrorMessage, content_type = "application/json"),
+        (status = 404, description = "Location not found", body = ErrorMessage, content_type = "application/json"),
         (status = 500, description = "Internal server error", body = ErrorMessage, content_type = "application/json"),
     ),
     security(
         ("OAuth2" = [])
     )
 )]
-#[get("/platforms/{id}/games")]
-pub async fn get_platform_games(
+#[get("/locations/{id}/games")]
+pub async fn get_location_games(
     pool: web::Data<PgPool>,
     image_client_provider: web::Data<ImageClientProvider>,
     path: web::Path<ItemId>,
@@ -108,9 +108,77 @@ pub async fn get_platform_games(
 ) -> impl Responder {
     let ItemId(id) = path.into_inner();
     let mut get_result =
-        game_available_service::get_platform_games(&pool, &logged_user.id, &id).await;
+        game_available_service::get_location_games(&pool, &logged_user.id, &id).await;
     populate_get_result(&mut get_result, |games| {
         game_image_service::populate_games_available_cover(&image_client_provider, games)
+    });
+    handle_get_result(get_result)
+}
+
+#[utoipa::path(
+    get,
+    path = "/api/v1/genres/{id}/games",
+    tag = "Games",
+    params(
+        ("id" = String, Path, description = "Genre id"),
+    ),
+    responses(
+        (status = 200, description = "Games obtained", body = [GameAvailableDTO], content_type = "application/json"),
+        (status = 401, description = "Unauthorized", body = ErrorMessage, content_type = "application/json"),
+        (status = 403, description = "Forbidden", body = ErrorMessage, content_type = "application/json"),
+        (status = 404, description = "Genre not found", body = ErrorMessage, content_type = "application/json"),
+        (status = 500, description = "Internal server error", body = ErrorMessage, content_type = "application/json"),
+    ),
+    security(
+        ("OAuth2" = [])
+    )
+)]
+#[get("/genres/{id}/games")]
+pub async fn get_genre_games(
+    pool: web::Data<PgPool>,
+    image_client_provider: web::Data<ImageClientProvider>,
+    path: web::Path<ItemId>,
+    logged_user: LoggedUser,
+) -> impl Responder {
+    let ItemId(id) = path.into_inner();
+    let mut get_result =
+        game_genre_service::get_genre_games(&pool, &logged_user.id, &id).await;
+    populate_get_result(&mut get_result, |games| {
+        game_image_service::populate_games_genre_cover(&image_client_provider, games)
+    });
+    handle_get_result(get_result)
+}
+
+#[utoipa::path(
+    get,
+    path = "/api/v1/devices/{id}/games",
+    tag = "Games",
+    params(
+        ("id" = String, Path, description = "Device id"),
+    ),
+    responses(
+        (status = 200, description = "Games obtained", body = [GameAvailableDTO], content_type = "application/json"),
+        (status = 401, description = "Unauthorized", body = ErrorMessage, content_type = "application/json"),
+        (status = 403, description = "Forbidden", body = ErrorMessage, content_type = "application/json"),
+        (status = 404, description = "Device not found", body = ErrorMessage, content_type = "application/json"),
+        (status = 500, description = "Internal server error", body = ErrorMessage, content_type = "application/json"),
+    ),
+    security(
+        ("OAuth2" = [])
+    )
+)]
+#[get("/devices/{id}/games")]
+pub async fn get_device_games(
+    pool: web::Data<PgPool>,
+    image_client_provider: web::Data<ImageClientProvider>,
+    path: web::Path<ItemId>,
+    logged_user: LoggedUser,
+) -> impl Responder {
+    let ItemId(id) = path.into_inner();
+    let mut get_result =
+        game_device_service::get_device_games(&pool, &logged_user.id, &id).await;
+    populate_get_result(&mut get_result, |games| {
+        game_image_service::populate_games_device_cover(&image_client_provider, games)
     });
     handle_get_result(get_result)
 }
@@ -335,38 +403,78 @@ pub async fn link_game_tag(
 
 #[utoipa::path(
     put,
-    path = "/api/v1/games/{id}/platforms/{other_id}",
+    path = "/api/v1/games/{id}/locations/{other_id}",
     tag = "Games",
     params(
         ("id" = String, Path, description = "Game id"),
-        ("other_id" = String, Path, description = "Platform id"),
+        ("other_id" = String, Path, description = "Location id"),
     ),
     request_body(content = DateDTO, description = "Available date", content_type = "application/json"),
     responses(
-        (status = 204, description = "Game and Platform linked"),
+        (status = 204, description = "Game and Location linked"),
         (status = 400, description = "Bad request", body = ErrorMessage, content_type = "application/json"),
         (status = 401, description = "Unauthorized", body = ErrorMessage, content_type = "application/json"),
         (status = 403, description = "Forbidden", body = ErrorMessage, content_type = "application/json"),
-        (status = 404, description = "Game or Platform not found", body = ErrorMessage, content_type = "application/json"),
+        (status = 404, description = "Game or Location not found", body = ErrorMessage, content_type = "application/json"),
         (status = 500, description = "Internal server error", body = ErrorMessage, content_type = "application/json"),
     ),
     security(
         ("OAuth2" = [])
     )
 )]
-#[put("/games/{id}/platforms/{other_id}")]
-pub async fn link_game_platform(
+#[put("/games/{id}/locations/{other_id}")]
+pub async fn link_game_location(
     pool: web::Data<PgPool>,
     path: web::Path<ItemIdAndRelatedId>,
     body: web::Json<DateDTO>,
     logged_user: LoggedUser,
 ) -> impl Responder {
-    let ItemIdAndRelatedId(id, platform_id) = path.into_inner();
+    let ItemIdAndRelatedId(id, location_id) = path.into_inner();
     let create_result = game_available_service::create_game_available(
         &pool,
         &logged_user.id,
         &id,
-        &platform_id,
+        &location_id,
+        body.date,
+    )
+    .await;
+    handle_action_result(create_result)
+}
+
+#[utoipa::path(
+    put,
+    path = "/api/v1/games/{id}/genres/{other_id}",
+    tag = "Games",
+    params(
+        ("id" = String, Path, description = "Game id"),
+        ("other_id" = String, Path, description = "Genre id"),
+    ),
+    request_body(content = DateDTO, description = "Available date", content_type = "application/json"),
+    responses(
+        (status = 204, description = "Game and Genre linked"),
+        (status = 400, description = "Bad request", body = ErrorMessage, content_type = "application/json"),
+        (status = 401, description = "Unauthorized", body = ErrorMessage, content_type = "application/json"),
+        (status = 403, description = "Forbidden", body = ErrorMessage, content_type = "application/json"),
+        (status = 404, description = "Game or Genre not found", body = ErrorMessage, content_type = "application/json"),
+        (status = 500, description = "Internal server error", body = ErrorMessage, content_type = "application/json"),
+    ),
+    security(
+        ("OAuth2" = [])
+    )
+)]
+#[put("/games/{id}/genres/{other_id}")]
+pub async fn link_game_genre(
+    pool: web::Data<PgPool>,
+    path: web::Path<ItemIdAndRelatedId>,
+    body: web::Json<DateDTO>,
+    logged_user: LoggedUser,
+) -> impl Responder {
+    let ItemIdAndRelatedId(id, genre_id) = path.into_inner();
+    let create_result = game_genre_service::create_game_genre(
+        &pool,
+        &logged_user.id,
+        &id,
+        &genre_id,
         body.date,
     )
     .await;
@@ -470,33 +578,194 @@ pub async fn unlink_game_tag(
 
 #[utoipa::path(
     delete,
-    path = "/api/v1/games/{id}/platforms/{other_id}",
+    path = "/api/v1/games/{id}/locations/{other_id}",
     tag = "Games",
     params(
         ("id" = String, Path, description = "Game id"),
-        ("other_id" = String, Path, description = "Platform id"),
+        ("other_id" = String, Path, description = "Location id"),
     ),
     responses(
-        (status = 204, description = "Game and Platform unlinked"),
+        (status = 204, description = "Game and Location unlinked"),
         (status = 400, description = "Bad request", body = ErrorMessage, content_type = "application/json"),
         (status = 401, description = "Unauthorized", body = ErrorMessage, content_type = "application/json"),
         (status = 403, description = "Forbidden", body = ErrorMessage, content_type = "application/json"),
-        (status = 404, description = "Game and Platform relation not found", body = ErrorMessage, content_type = "application/json"),
+        (status = 404, description = "Game and Location relation not found", body = ErrorMessage, content_type = "application/json"),
         (status = 500, description = "Internal server error", body = ErrorMessage, content_type = "application/json"),
     ),
     security(
         ("OAuth2" = [])
     )
 )]
-#[delete("/games/{id}/platforms/{other_id}")]
-pub async fn unlink_game_platform(
+#[delete("/games/{id}/locations/{other_id}")]
+pub async fn unlink_game_location(
     pool: web::Data<PgPool>,
     path: web::Path<ItemIdAndRelatedId>,
     logged_user: LoggedUser,
 ) -> impl Responder {
-    let ItemIdAndRelatedId(id, platform_id) = path.into_inner();
+    let ItemIdAndRelatedId(id, location_id) = path.into_inner();
     let delete_result =
-        game_available_service::delete_game_available(&pool, &logged_user.id, &id, &platform_id)
+        game_available_service::delete_game_available(&pool, &logged_user.id, &id, &location_id)
             .await;
     handle_action_result(delete_result)
+}
+
+#[utoipa::path(
+    delete,
+    path = "/api/v1/games/{id}/genres/{other_id}",
+    tag = "Games",
+    params(
+        ("id" = String, Path, description = "Game id"),
+        ("other_id" = String, Path, description = "Genre id"),
+    ),
+    responses(
+        (status = 204, description = "Game and Genre unlinked"),
+        (status = 400, description = "Bad request", body = ErrorMessage, content_type = "application/json"),
+        (status = 401, description = "Unauthorized", body = ErrorMessage, content_type = "application/json"),
+        (status = 403, description = "Forbidden", body = ErrorMessage, content_type = "application/json"),
+        (status = 404, description = "Game and Genre relation not found", body = ErrorMessage, content_type = "application/json"),
+        (status = 500, description = "Internal server error", body = ErrorMessage, content_type = "application/json"),
+    ),
+    security(
+        ("OAuth2" = [])
+    )
+)]
+#[delete("/games/{id}/genres/{other_id}")]
+pub async fn unlink_game_genre(
+    pool: web::Data<PgPool>,
+    path: web::Path<ItemIdAndRelatedId>,
+    logged_user: LoggedUser,
+) -> impl Responder {
+    let ItemIdAndRelatedId(id, genre_id) = path.into_inner();
+    let delete_result =
+        game_genre_service::delete_game_genre(&pool, &logged_user.id, &id, &genre_id)
+            .await;
+    handle_action_result(delete_result)
+}
+
+// TODO dlcs
+#[utoipa::path(
+    get,
+    path = "/api/v1/games/{id}/dlcs",
+    tag = "DLCs",
+    params(
+        ("id" = String, Path, description = "Game id"),
+    ),
+    responses(
+        (status = 200, description = "DLCs obtained", body = [DLCDTO], content_type = "application/json"),
+        (status = 401, description = "Unauthorized", body = ErrorMessage, content_type = "application/json"),
+        (status = 403, description = "Forbidden", body = ErrorMessage, content_type = "application/json"),
+        (status = 404, description = "Game not found", body = ErrorMessage, content_type = "application/json"),
+        (status = 500, description = "Internal server error", body = ErrorMessage, content_type = "application/json"),
+    ),
+    security(
+        ("OAuth2" = [])
+    )
+)]
+#[get("/games/{id}/dlcs")]
+pub async fn get_game_dlcs(
+    pool: web::Data<PgPool>,
+    image_client_provider: web::Data<ImageClientProvider>,
+    path: web::Path<ItemId>,
+    logged_user: LoggedUser,
+) -> impl Responder {
+    let ItemId(id) = path.into_inner();
+    let mut get_result = dlcs_service::get_game_dlcs(&pool, &logged_user.id, &id).await;
+    populate_get_result(&mut get_result, |dlcs| {
+        dlc_image_service::populate_dlcs_cover(&image_client_provider, dlcs)
+    });
+    handle_get_result(get_result)
+}
+
+#[utoipa::path(
+    get,
+    path = "/api/v1/games/{id}/base-game",
+    tag = "DLCs",
+    params(
+        ("id" = String, Path, description = "DLC id"),
+    ),
+    responses(
+        (status = 200, description = "Game obtained", body = GameDTO, content_type = "application/json"),
+        (status = 401, description = "Unauthorized", body = ErrorMessage, content_type = "application/json"),
+        (status = 403, description = "Forbidden", body = ErrorMessage, content_type = "application/json"),
+        (status = 404, description = "DLC or Game not found", body = ErrorMessage, content_type = "application/json"),
+        (status = 500, description = "Internal server error", body = ErrorMessage, content_type = "application/json"),
+    ),
+    security(
+        ("OAuth2" = [])
+    )
+)]
+#[get("/games/{id}/base-game")]
+pub async fn get_dlc_base_game(
+    pool: web::Data<PgPool>,
+    image_client_provider: web::Data<ImageClientProvider>,
+    path: web::Path<ItemId>,
+    logged_user: LoggedUser,
+) -> impl Responder {
+    let ItemId(id) = path.into_inner();
+    let mut get_result = dlcs_service::get_dlc_base_game(&pool, &logged_user.id, &id).await;
+    populate_get_result(&mut get_result, |game| {
+        game_image_service::populate_game_cover(&image_client_provider, game)
+    });
+    handle_get_result(get_result)
+}
+
+#[utoipa::path(
+    put,
+    path = "/api/v1/games/{id}/base-game/{other_id}",
+    tag = "DLCs",
+    params(
+        ("id" = String, Path, description = "DLC id"),
+        ("other_id" = String, Path, description = "Game id"),
+    ),
+    responses(
+        (status = 204, description = "DLC and Game linked"),
+        (status = 401, description = "Unauthorized", body = ErrorMessage, content_type = "application/json"),
+        (status = 403, description = "Forbidden", body = ErrorMessage, content_type = "application/json"),
+        (status = 404, description = "DLC or Game not found", body = ErrorMessage, content_type = "application/json"),
+        (status = 500, description = "Internal server error", body = ErrorMessage, content_type = "application/json"),
+    ),
+    security(
+        ("OAuth2" = [])
+    )
+)]
+#[put("/games/{id}/base-game/{other_id}")]
+pub async fn link_dlc_game(
+    pool: web::Data<PgPool>,
+    path: web::Path<ItemIdAndRelatedId>,
+    logged_user: LoggedUser,
+) -> impl Responder {
+    let ItemIdAndRelatedId(id, game_id) = path.into_inner();
+    let update_result =
+        dlcs_service::set_dlc_base_game(&pool, &logged_user.id, &id, Some(game_id)).await;
+    handle_action_result(update_result)
+}
+
+#[utoipa::path(
+    delete,
+    path = "/api/v1/games/{id}/base-game",
+    tag = "DLCs",
+    params(
+        ("id" = String, Path, description = "DLC id"),
+    ),
+    responses(
+        (status = 204, description = "DLC and Game unlinked"),
+        (status = 400, description = "Bad request", body = ErrorMessage, content_type = "application/json"),
+        (status = 401, description = "Unauthorized", body = ErrorMessage, content_type = "application/json"),
+        (status = 403, description = "Forbidden", body = ErrorMessage, content_type = "application/json"),
+        (status = 404, description = "DLC not found", body = ErrorMessage, content_type = "application/json"),
+        (status = 500, description = "Internal server error", body = ErrorMessage, content_type = "application/json"),
+    ),
+    security(
+        ("OAuth2" = [])
+    )
+)]
+#[delete("/games/{id}/base-game")]
+pub async fn unlink_dlc_game(
+    pool: web::Data<PgPool>,
+    path: web::Path<ItemId>,
+    logged_user: LoggedUser,
+) -> impl Responder {
+    let ItemId(id) = path.into_inner();
+    let update_result = dlcs_service::set_dlc_base_game(&pool, &logged_user.id, &id, None).await;
+    handle_action_result(update_result)
 }

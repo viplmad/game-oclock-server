@@ -115,43 +115,6 @@ pub async fn get_played_games_review(
 
 #[utoipa::path(
     post,
-    path = "/api/v1/games/played",
-    tag = "GameLogs",
-    params(
-        StartEndDateQuery,
-    ),
-    responses(
-        (status = 200, description = "Game with logs obtained", body = [GameWithLogsDTO], content_type = "application/json"),
-        (status = 401, description = "Unauthorized", body = ErrorMessage, content_type = "application/json"),
-        (status = 403, description = "Forbidden", body = ErrorMessage, content_type = "application/json"),
-        (status = 500, description = "Internal server error", body = ErrorMessage, content_type = "application/json"),
-    ),
-    security(
-        ("OAuth2" = [])
-    )
-)]
-#[post("/games/played")]
-pub async fn get_played_games(
-    pool: web::Data<PgPool>,
-    image_client_provider: web::Data<ImageClientProvider>,
-    query: web::Query<StartEndDateQuery>,
-    logged_user: LoggedUser,
-) -> impl Responder {
-    let mut get_result = game_with_logs_service::get_game_with_logs(
-        &pool,
-        &logged_user.id,
-        query.start_date,
-        query.end_date,
-    )
-    .await;
-    populate_get_result(&mut get_result, |game| {
-        game_image_service::populate_games_with_logs_cover(&image_client_provider, game)
-    });
-    handle_get_result(get_result)
-}
-
-#[utoipa::path(
-    post,
     path = "/api/v1/games/played/first",
     tag = "GameLogs",
     params(

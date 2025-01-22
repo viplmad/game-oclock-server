@@ -1,13 +1,9 @@
 use actix_web::{delete, get, post, put, web, Responder};
 use sqlx::PgPool;
 
-use crate::models::{
-    FileTempPath, ItemId, LoggedUser, NewPlatformDTO, QuicksearchQuery, SearchDTO,
-};
+use crate::models::{FileTempPath, ItemId, LoggedUser, NewDeviceDTO, QuicksearchQuery, SearchDTO};
 use crate::providers::ImageClientProvider;
-use crate::services::{
-    dlc_available_service, game_available_service, platform_image_service, platforms_service,
-};
+use crate::services::{device_image_service, devices_service, game_available_service};
 
 use super::base::{
     handle_action_result, handle_create_result, handle_delete_result, handle_get_result,
@@ -16,46 +12,46 @@ use super::base::{
 
 #[utoipa::path(
     get,
-    path = "/api/v1/platforms/{id}",
-    tag = "Platforms",
+    path = "/api/v1/devices/{id}",
+    tag = "Devices",
     params(
-        ("id" = String, Path, description = "Platform id"),
+        ("id" = String, Path, description = "Device id"),
     ),
     responses(
-        (status = 200, description = "Platform obtained", body = PlatformDTO, content_type = "application/json"),
+        (status = 200, description = "Device obtained", body = DeviceDTO, content_type = "application/json"),
         (status = 401, description = "Unauthorized", body = ErrorMessage, content_type = "application/json"),
         (status = 403, description = "Forbidden", body = ErrorMessage, content_type = "application/json"),
-        (status = 404, description = "Platform not found", body = ErrorMessage, content_type = "application/json"),
+        (status = 404, description = "Device not found", body = ErrorMessage, content_type = "application/json"),
         (status = 500, description = "Internal server error", body = ErrorMessage, content_type = "application/json"),
     ),
     security(
         ("OAuth2" = [])
     )
 )]
-#[get("/platforms/{id}")]
-pub async fn get_platform(
+#[get("/devices/{id}")]
+pub async fn get_device(
     pool: web::Data<PgPool>,
     image_client_provider: web::Data<ImageClientProvider>,
     path: web::Path<ItemId>,
     logged_user: LoggedUser,
 ) -> impl Responder {
     let ItemId(id) = path.into_inner();
-    let mut get_result = platforms_service::get_platform(&pool, &logged_user.id, &id).await;
-    populate_get_result(&mut get_result, |platform| {
-        platform_image_service::populate_platform_icon(&image_client_provider, platform)
+    let mut get_result = devices_service::get_device(&pool, &logged_user.id, &id).await;
+    populate_get_result(&mut get_result, |device| {
+        device_image_service::populate_device_icon(&image_client_provider, device)
     });
     handle_get_result(get_result)
 }
 
 #[utoipa::path(
     get,
-    path = "/api/v1/games/{id}/platforms",
-    tag = "Platforms",
+    path = "/api/v1/games/{id}/devices",
+    tag = "Devices",
     params(
         ("id" = String, Path, description = "Game id"),
     ),
     responses(
-        (status = 200, description = "Platforms obtained", body = [PlatformAvailableDTO], content_type = "application/json"),
+        (status = 200, description = "Devices obtained", body = [DeviceAvailableDTO], content_type = "application/json"),
         (status = 401, description = "Unauthorized", body = ErrorMessage, content_type = "application/json"),
         (status = 403, description = "Forbidden", body = ErrorMessage, content_type = "application/json"),
         (status = 404, description = "Game not found", body = ErrorMessage, content_type = "application/json"),
@@ -65,8 +61,8 @@ pub async fn get_platform(
         ("OAuth2" = [])
     )
 )]
-#[get("/games/{id}/platforms")]
-pub async fn get_game_platforms(
+#[get("/games/{id}/devices")]
+pub async fn get_game_devices(
     pool: web::Data<PgPool>,
     image_client_provider: web::Data<ImageClientProvider>,
     path: web::Path<ItemId>,
@@ -74,57 +70,23 @@ pub async fn get_game_platforms(
 ) -> impl Responder {
     let ItemId(id) = path.into_inner();
     let mut get_result =
-        game_available_service::get_game_platforms(&pool, &logged_user.id, &id).await;
-    populate_get_result(&mut get_result, |platform| {
-        platform_image_service::populate_platforms_available_icon(&image_client_provider, platform)
-    });
-    handle_get_result(get_result)
-}
-
-#[utoipa::path(
-    get,
-    path = "/api/v1/dlcs/{id}/platforms",
-    tag = "Platforms",
-    params(
-        ("id" = String, Path, description = "DLC id"),
-    ),
-    responses(
-        (status = 200, description = "Platforms obtained", body = [PlatformAvailableDTO], content_type = "application/json"),
-        (status = 401, description = "Unauthorized", body = ErrorMessage, content_type = "application/json"),
-        (status = 403, description = "Forbidden", body = ErrorMessage, content_type = "application/json"),
-        (status = 404, description = "DLC not found", body = ErrorMessage, content_type = "application/json"),
-        (status = 500, description = "Internal server error", body = ErrorMessage, content_type = "application/json"),
-    ),
-    security(
-        ("OAuth2" = [])
-    )
-)]
-#[get("/dlcs/{id}/platforms")]
-pub async fn get_dlc_platforms(
-    pool: web::Data<PgPool>,
-    image_client_provider: web::Data<ImageClientProvider>,
-    path: web::Path<ItemId>,
-    logged_user: LoggedUser,
-) -> impl Responder {
-    let ItemId(id) = path.into_inner();
-    let mut get_result =
-        dlc_available_service::get_dlc_platforms(&pool, &logged_user.id, &id).await;
-    populate_get_result(&mut get_result, |platform| {
-        platform_image_service::populate_platforms_available_icon(&image_client_provider, platform)
+        game_available_service::get_game_devices(&pool, &logged_user.id, &id).await;
+    populate_get_result(&mut get_result, |device| {
+        device_image_service::populate_devices_available_icon(&image_client_provider, device)
     });
     handle_get_result(get_result)
 }
 
 #[utoipa::path(
     post,
-    path = "/api/v1/platforms/list",
-    tag = "Platforms",
+    path = "/api/v1/devices/list",
+    tag = "Devices",
     params(
         QuicksearchQuery,
     ),
     request_body(content = SearchDTO, description = "Query", content_type = "application/json"),
     responses(
-        (status = 200, description = "Platforms obtained", body = PlatformPageResult, content_type = "application/json"),
+        (status = 200, description = "Devices obtained", body = DevicePageResult, content_type = "application/json"),
         (status = 401, description = "Unauthorized", body = ErrorMessage, content_type = "application/json"),
         (status = 403, description = "Forbidden", body = ErrorMessage, content_type = "application/json"),
         (status = 500, description = "Internal server error", body = ErrorMessage, content_type = "application/json"),
@@ -133,8 +95,8 @@ pub async fn get_dlc_platforms(
         ("OAuth2" = [])
     )
 )]
-#[post("/platforms/list")]
-pub async fn get_platforms(
+#[post("/devices/list")]
+pub async fn get_devices(
     pool: web::Data<PgPool>,
     image_client_provider: web::Data<ImageClientProvider>,
     query: web::Query<QuicksearchQuery>,
@@ -142,62 +104,62 @@ pub async fn get_platforms(
     logged_user: LoggedUser,
 ) -> impl Responder {
     let mut search_result =
-        platforms_service::search_platforms(&pool, &logged_user.id, body.0, query.0.q).await;
-    populate_get_page_result(&mut search_result, |platform| {
-        platform_image_service::populate_platforms_icon(&image_client_provider, platform)
+        devices_service::search_devices(&pool, &logged_user.id, body.0, query.0.q).await;
+    populate_get_page_result(&mut search_result, |device| {
+        device_image_service::populate_devices_icon(&image_client_provider, device)
     });
     handle_get_result(search_result)
 }
 
 #[utoipa::path(
     post,
-    path = "/api/v1/platforms",
-    tag = "Platforms",
-    request_body(content = NewPlatformDTO, description = "Platform to be createad", content_type = "application/json"),
+    path = "/api/v1/devices",
+    tag = "Devices",
+    request_body(content = NewDeviceDTO, description = "Device to be createad", content_type = "application/json"),
     responses(
-        (status = 201, description = "Platform created", body = PlatformDTO, content_type = "application/json"),
+        (status = 201, description = "Device created", body = DeviceDTO, content_type = "application/json"),
         (status = 400, description = "Bad request", body = ErrorMessage, content_type = "application/json"),
         (status = 401, description = "Unauthorized", body = ErrorMessage, content_type = "application/json"),
         (status = 403, description = "Forbidden", body = ErrorMessage, content_type = "application/json"),
-        (status = 404, description = "Platform not found", body = ErrorMessage, content_type = "application/json"),
+        (status = 404, description = "Device not found", body = ErrorMessage, content_type = "application/json"),
         (status = 500, description = "Internal server error", body = ErrorMessage, content_type = "application/json"),
     ),
     security(
         ("OAuth2" = [])
     )
 )]
-#[post("/platforms")]
-pub async fn post_platform(
+#[post("/devices")]
+pub async fn post_device(
     pool: web::Data<PgPool>,
-    body: web::Json<NewPlatformDTO>,
+    body: web::Json<NewDeviceDTO>,
     logged_user: LoggedUser,
 ) -> impl Responder {
-    let create_result = platforms_service::create_platform(&pool, &logged_user.id, body.0).await;
+    let create_result = devices_service::create_device(&pool, &logged_user.id, body.0).await;
     handle_create_result(create_result)
 }
 
 #[utoipa::path(
     post,
-    path = "/api/v1/platforms/{id}/icon",
-    tag = "Platforms",
+    path = "/api/v1/devices/{id}/icon",
+    tag = "Devices",
     params(
-        ("id" = String, Path, description = "Platform id"),
+        ("id" = String, Path, description = "Device id"),
     ),
-    request_body(content = Image, description = "Platform icon to be uploaded", content_type = "multipart/form-data"),
+    request_body(content = Image, description = "Device icon to be uploaded", content_type = "multipart/form-data"),
     responses(
-        (status = 204, description = "Platform icon uploaded"),
+        (status = 204, description = "Device icon uploaded"),
         (status = 400, description = "Bad request", body = ErrorMessage, content_type = "application/json"),
         (status = 401, description = "Unauthorized", body = ErrorMessage, content_type = "application/json"),
         (status = 403, description = "Forbidden", body = ErrorMessage, content_type = "application/json"),
-        (status = 404, description = "Platform not found", body = ErrorMessage, content_type = "application/json"),
+        (status = 404, description = "Device not found", body = ErrorMessage, content_type = "application/json"),
         (status = 500, description = "Internal server error", body = ErrorMessage, content_type = "application/json"),
     ),
     security(
         ("OAuth2" = [])
     )
 )]
-#[post("/platforms/{id}/icon")]
-pub async fn post_platform_icon(
+#[post("/devices/{id}/icon")]
+pub async fn post_device_icon(
     pool: web::Data<PgPool>,
     image_client_provider: web::Data<ImageClientProvider>,
     path: web::Path<ItemId>,
@@ -215,7 +177,7 @@ pub async fn post_platform_icon(
         Err(err) => return err,
     };
 
-    let upload_result = platforms_service::set_platform_icon(
+    let upload_result = devices_service::set_device_icon(
         &pool,
         &image_client_provider,
         &logged_user.id,
@@ -231,59 +193,58 @@ pub async fn post_platform_icon(
 
 #[utoipa::path(
     put,
-    path = "/api/v1/platforms/{id}",
-    tag = "Platforms",
+    path = "/api/v1/devices/{id}",
+    tag = "Devices",
     params(
-        ("id" = String, Path, description = "Platform id"),
+        ("id" = String, Path, description = "Device id"),
     ),
-    request_body(content = NewPlatformDTO, description = "Platform to be updated", content_type = "application/json"),
+    request_body(content = NewDeviceDTO, description = "Device to be updated", content_type = "application/json"),
     responses(
-        (status = 204, description = "Platform updated"),
+        (status = 204, description = "Device updated"),
         (status = 400, description = "Bad request", body = ErrorMessage, content_type = "application/json"),
         (status = 401, description = "Unauthorized", body = ErrorMessage, content_type = "application/json"),
         (status = 403, description = "Forbidden", body = ErrorMessage, content_type = "application/json"),
-        (status = 404, description = "Platform not found", body = ErrorMessage, content_type = "application/json"),
+        (status = 404, description = "Device not found", body = ErrorMessage, content_type = "application/json"),
         (status = 500, description = "Internal server error", body = ErrorMessage, content_type = "application/json"),
     ),
     security(
         ("OAuth2" = [])
     )
 )]
-#[put("/platforms/{id}")]
-pub async fn put_platform(
+#[put("/devices/{id}")]
+pub async fn put_device(
     pool: web::Data<PgPool>,
     path: web::Path<ItemId>,
-    body: web::Json<NewPlatformDTO>,
+    body: web::Json<NewDeviceDTO>,
     logged_user: LoggedUser,
 ) -> impl Responder {
     let ItemId(id) = path.into_inner();
-    let update_result =
-        platforms_service::update_platform(&pool, &logged_user.id, &id, body.0).await;
+    let update_result = devices_service::update_device(&pool, &logged_user.id, &id, body.0).await;
     handle_update_result(update_result)
 }
 
 #[utoipa::path(
     put,
-    path = "/api/v1/platforms/{id}/icon",
-    tag = "Platforms",
+    path = "/api/v1/devices/{id}/icon",
+    tag = "Devices",
     params(
-        ("id" = String, Path, description = "Platform id"),
+        ("id" = String, Path, description = "Device id"),
     ),
-    request_body(content = String, description = "New platform icon name", content_type = "application/json"),
+    request_body(content = String, description = "New device icon name", content_type = "application/json"),
     responses(
-        (status = 204, description = "Platform icon renamed"),
+        (status = 204, description = "Device icon renamed"),
         (status = 400, description = "Bad request", body = ErrorMessage, content_type = "application/json"),
         (status = 401, description = "Unauthorized", body = ErrorMessage, content_type = "application/json"),
         (status = 403, description = "Forbidden", body = ErrorMessage, content_type = "application/json"),
-        (status = 404, description = "Platform not found", body = ErrorMessage, content_type = "application/json"),
+        (status = 404, description = "Device not found", body = ErrorMessage, content_type = "application/json"),
         (status = 500, description = "Internal server error", body = ErrorMessage, content_type = "application/json"),
     ),
     security(
         ("OAuth2" = [])
     )
 )]
-#[put("/platforms/{id}/icon")]
-pub async fn put_platform_icon(
+#[put("/devices/{id}/icon")]
+pub async fn put_device_icon(
     pool: web::Data<PgPool>,
     image_client_provider: web::Data<ImageClientProvider>,
     path: web::Path<ItemId>,
@@ -291,7 +252,7 @@ pub async fn put_platform_icon(
     logged_user: LoggedUser,
 ) -> impl Responder {
     let ItemId(id) = path.into_inner();
-    let update_result = platforms_service::rename_platform_icon(
+    let update_result = devices_service::rename_device_icon(
         &pool,
         &image_client_provider,
         &logged_user.id,
@@ -304,24 +265,24 @@ pub async fn put_platform_icon(
 
 #[utoipa::path(
     delete,
-    path = "/api/v1/platforms/{id}",
-    tag = "Platforms",
+    path = "/api/v1/devices/{id}",
+    tag = "Devices",
     params(
-        ("id" = String, Path, description = "Platform id"),
+        ("id" = String, Path, description = "Device id"),
     ),
     responses(
-        (status = 204, description = "Platform deleted"),
+        (status = 204, description = "Device deleted"),
         (status = 401, description = "Unauthorized", body = ErrorMessage, content_type = "application/json"),
         (status = 403, description = "Forbidden", body = ErrorMessage, content_type = "application/json"),
-        (status = 404, description = "Platform not found", body = ErrorMessage, content_type = "application/json"),
+        (status = 404, description = "Device not found", body = ErrorMessage, content_type = "application/json"),
         (status = 500, description = "Internal server error", body = ErrorMessage, content_type = "application/json"),
     ),
     security(
         ("OAuth2" = [])
     )
 )]
-#[delete("/platforms/{id}")]
-pub async fn delete_platform(
+#[delete("/devices/{id}")]
+pub async fn delete_device(
     pool: web::Data<PgPool>,
     image_client_provider: web::Data<ImageClientProvider>,
     path: web::Path<ItemId>,
@@ -329,44 +290,39 @@ pub async fn delete_platform(
 ) -> impl Responder {
     let ItemId(id) = path.into_inner();
     let delete_result =
-        platforms_service::delete_platform(&pool, &image_client_provider, &logged_user.id, &id)
-            .await;
+        devices_service::delete_device(&pool, &image_client_provider, &logged_user.id, &id).await;
     handle_delete_result(delete_result)
 }
 
 #[utoipa::path(
     delete,
-    path = "/api/v1/platforms/{id}/icon",
-    tag = "Platforms",
+    path = "/api/v1/devices/{id}/icon",
+    tag = "Devices",
     params(
-        ("id" = String, Path, description = "Platform id"),
+        ("id" = String, Path, description = "Device id"),
     ),
     responses(
-        (status = 204, description = "Platform icon deleted"),
+        (status = 204, description = "Device icon deleted"),
         (status = 400, description = "Bad request", body = ErrorMessage, content_type = "application/json"),
         (status = 401, description = "Unauthorized", body = ErrorMessage, content_type = "application/json"),
         (status = 403, description = "Forbidden", body = ErrorMessage, content_type = "application/json"),
-        (status = 404, description = "Platform not found", body = ErrorMessage, content_type = "application/json"),
+        (status = 404, description = "Device not found", body = ErrorMessage, content_type = "application/json"),
         (status = 500, description = "Internal server error", body = ErrorMessage, content_type = "application/json"),
     ),
     security(
         ("OAuth2" = [])
     )
 )]
-#[delete("/platforms/{id}/icon")]
-pub async fn delete_platform_icon(
+#[delete("/devices/{id}/icon")]
+pub async fn delete_device_icon(
     pool: web::Data<PgPool>,
     image_client_provider: web::Data<ImageClientProvider>,
     path: web::Path<ItemId>,
     logged_user: LoggedUser,
 ) -> impl Responder {
     let ItemId(id) = path.into_inner();
-    let delete_result = platforms_service::delete_platform_icon(
-        &pool,
-        &image_client_provider,
-        &logged_user.id,
-        &id,
-    )
-    .await;
+    let delete_result =
+        devices_service::delete_device_icon(&pool, &image_client_provider, &logged_user.id, &id)
+            .await;
     handle_action_result(delete_result)
 }
