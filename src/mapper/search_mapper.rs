@@ -9,8 +9,8 @@ use crate::entities::{
 };
 use crate::errors::{error_message_builder, MappingError};
 use crate::models::{
-    ChainOperatorType, FilterDTO, GameStatus, OperatorType, OrderType, PlatformType, SearchDTO,
-    SearchValue, SortDTO,
+    ChainOperatorType, FilterDTO, GameStatus, OperatorType, OrderType, SearchDTO, SearchValue,
+    SortDTO,
 };
 
 impl From<OperatorType> for FilterOperator {
@@ -168,12 +168,6 @@ impl TryFrom<FieldSearchValue> for Value {
                     convert_with_serde::<GameStatus>(&format!("\"{value}\""), "game status")?;
                 let status_value = i16::from(status);
                 Ok(status_value.into())
-            }
-            FieldType::PlatformType => {
-                let ptype =
-                    convert_with_serde::<PlatformType>(&format!("\"{value}\""), "platform type")?;
-                let ptype_value = i16::from(ptype);
-                Ok(ptype_value.into())
             }
         }
     }

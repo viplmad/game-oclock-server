@@ -5,19 +5,17 @@ impl From<GameWithLog> for GameWithLogsDTO {
     fn from(game: GameWithLog) -> Self {
         Self {
             id: game.id.to_string(),
-            name: game.name,
+            title: game.title,
             edition: game.edition,
-            release_year: game.release_year,
-            cover_filename: game.cover_filename,
-            cover_url: None,
+            release_date: game.release_date,
+            base_game_id: game.base_game_id.map(|id| id.to_string()),
+            cover_filename: None, // TODO extract filename from url
+            cover_url: game.cover_url,
             added_datetime: game.added_datetime,
             updated_datetime: game.updated_datetime,
             status: GameStatus::try_from(game.status).expect("Status was not within valid range"),
             rating: game.rating,
             notes: game.notes,
-            save_folder: game.save_folder,
-            screenshot_folder: game.screenshot_folder,
-            backup: game.backup,
             logs: vec![],
         }
     }
@@ -27,21 +25,20 @@ impl From<GameWithLog> for GameWithLogDTO {
     fn from(game: GameWithLog) -> Self {
         Self {
             id: game.id.to_string(),
-            name: game.name,
+            title: game.title,
             edition: game.edition,
-            release_year: game.release_year,
-            cover_filename: game.cover_filename,
-            cover_url: None,
+            release_date: game.release_date,
+            base_game_id: game.base_game_id.map(|id| id.to_string()),
+            cover_filename: None, // TODO extract filename from url
+            cover_url: game.cover_url,
             added_datetime: game.added_datetime,
             updated_datetime: game.updated_datetime,
             status: GameStatus::try_from(game.status).expect("Status was not within valid range"),
             rating: game.rating,
             notes: game.notes,
-            save_folder: game.save_folder,
-            screenshot_folder: game.screenshot_folder,
-            backup: game.backup,
             log_start_datetime: game.log_start_datetime,
             log_end_datetime: game.log_end_datetime,
+            log_device_id: game.log_device_id.map(|id| id.to_string()),
             log_time: DurationDef::from(game.log_time),
         }
     }

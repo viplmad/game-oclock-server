@@ -3,7 +3,7 @@ use serde::Serialize;
 use sqlx::PgPool;
 
 use crate::errors::{forbidden_error, ToError};
-use crate::models::{FileTempPath, ModelInfo, PageResultDTO};
+use crate::models::FileTempPath;
 use crate::services::users_service;
 
 pub(super) fn handle_get_result(
@@ -58,23 +58,5 @@ pub(super) async fn require_admin(pool: &PgPool, user_id: &str) -> Result<(), Ht
             Ok(())
         }
         Err(_) => Err(forbidden_error()),
-    }
-}
-
-pub(super) fn populate_get_result<T>(
-    service_result: &mut Result<T, impl ToError>,
-    mut populate_function: impl FnMut(&mut T),
-) {
-    if let Ok(item) = service_result {
-        populate_function(item);
-    }
-}
-
-pub(super) fn populate_get_page_result<T: ModelInfo>(
-    service_result: &mut Result<PageResultDTO<T>, impl ToError>,
-    mut populate_function: impl FnMut(&mut Vec<T>),
-) {
-    if let Ok(page) = service_result {
-        populate_function(&mut page.data);
     }
 }

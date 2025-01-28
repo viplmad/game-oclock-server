@@ -172,6 +172,7 @@ pub(super) fn fill_game_sessions(
                 sessions.push(GameLogDTO {
                     start_datetime,
                     end_datetime,
+                    // TODO
                     time,
                 })
             }
@@ -181,6 +182,7 @@ pub(super) fn fill_game_sessions(
             sessions.push(GameLogDTO {
                 start_datetime,
                 end_datetime,
+                // TODO
                 time,
             })
         }

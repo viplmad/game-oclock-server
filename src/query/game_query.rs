@@ -54,20 +54,20 @@ pub fn insert(user_id: &str, id: &str, game: &Game) -> impl QueryStatementWriter
         .columns([
             GameIden::UserId,
             GameIden::Id,
-            GameIden::Name,
+            GameIden::Title,
             GameIden::Edition,
-            GameIden::ReleaseYear,
-            GameIden::CoverFilename,
+            GameIden::ReleaseDate,
+            GameIden::CoverUrl,
             GameIden::AddedDateTime,
             GameIden::UpdatedDateTime,
         ])
         .values_panic([
             user_id.into(),
             id.into(),
-            game.name.clone().into(),
+            game.title.clone().into(),
             game.edition.clone().into(),
-            game.release_year.into(),
-            game.cover_filename.clone().into(),
+            game.release_date.into(),
+            game.cover_url.clone().into(),
             crate::date_utils::now().into(),
             crate::date_utils::now().into(),
         ]);
@@ -86,9 +86,6 @@ pub fn insert_user_info(user_id: &str, game_id: &str, game: &Game) -> impl Query
             GameUserInfoIden::Status,
             GameUserInfoIden::Rating,
             GameUserInfoIden::Notes,
-            GameUserInfoIden::SaveFolder,
-            GameUserInfoIden::ScreenshotFolder,
-            GameUserInfoIden::Backup,
             GameUserInfoIden::AddedDateTime,
             GameUserInfoIden::UpdatedDateTime,
         ])
@@ -98,9 +95,6 @@ pub fn insert_user_info(user_id: &str, game_id: &str, game: &Game) -> impl Query
             game.status.into(),
             game.rating.into(),
             game.notes.clone().into(),
-            game.save_folder.clone().into(),
-            game.screenshot_folder.clone().into(),
-            game.backup.into(),
             crate::date_utils::now().into(),
             crate::date_utils::now().into(),
         ]);
@@ -113,23 +107,11 @@ pub fn update_by_id(user_id: &str, id: &str, game: &Game) -> impl QueryStatement
         user_id,
         id,
         vec![
-            (GameIden::Name, game.name.clone().into()),
+            (GameIden::Title, game.title.clone().into()),
             (GameIden::Edition, game.edition.clone().into()),
-            (GameIden::ReleaseYear, game.release_year.into()),
-            (GameIden::CoverFilename, game.cover_filename.clone().into()),
+            (GameIden::ReleaseDate, game.release_date.into()),
+            (GameIden::CoverUrl, game.cover_url.clone().into()),
         ],
-    )
-}
-
-pub fn update_cover_filename_by_id(
-    user_id: &str,
-    id: &str,
-    cover_filename: Option<String>,
-) -> impl QueryStatementWriter {
-    update_values_by_id(
-        user_id,
-        id,
-        vec![(GameIden::CoverFilename, cover_filename.into())],
     )
 }
 
@@ -162,15 +144,6 @@ pub fn update_user_info_by_id(
             (GameUserInfoIden::Status, game.status.into()),
             (GameUserInfoIden::Rating, game.rating.into()),
             (GameUserInfoIden::Notes, game.notes.clone().into()),
-            (
-                GameUserInfoIden::SaveFolder,
-                game.save_folder.clone().into(),
-            ),
-            (
-                GameUserInfoIden::ScreenshotFolder,
-                game.screenshot_folder.clone().into(),
-            ),
-            (GameUserInfoIden::Backup, game.backup.into()),
         ],
     )
 }
@@ -227,13 +200,14 @@ pub fn exists_by_id(user_id: &str, id: &str) -> impl QueryStatementWriter {
     select
 }
 
+// TODO rename to title
 pub fn exists_by_name_and_edition(user_id: &str, name: &str, edition: &str) -> SelectStatement {
     let mut select = Query::select();
 
     from_and_where_user_id(&mut select, user_id);
     add_id_field(&mut select);
     select
-        .and_where(Expr::col(GameIden::Name).eq(name))
+        .and_where(Expr::col(GameIden::Title).eq(name))
         .and_where(Expr::col(GameIden::Edition).eq(edition));
 
     select
@@ -282,16 +256,14 @@ fn add_fields(select: &mut SelectStatement) {
     add_id_field(select);
     select
         .column((GameIden::Table, GameIden::UserId))
-        .column((GameIden::Table, GameIden::Name))
+        .column((GameIden::Table, GameIden::Title))
         .column((GameIden::Table, GameIden::Edition))
-        .column((GameIden::Table, GameIden::ReleaseYear))
-        .column((GameIden::Table, GameIden::CoverFilename))
+        .column((GameIden::Table, GameIden::ReleaseDate))
+        .column((GameIden::Table, GameIden::BaseGameId))
+        .column((GameIden::Table, GameIden::CoverUrl))
         .column((GameIden::Table, GameIden::AddedDateTime))
         .column((GameIden::Table, GameIden::UpdatedDateTime))
         .column((GameUserInfoIden::Table, GameUserInfoIden::Status))
         .column((GameUserInfoIden::Table, GameUserInfoIden::Rating))
-        .column((GameUserInfoIden::Table, GameUserInfoIden::Notes))
-        .column((GameUserInfoIden::Table, GameUserInfoIden::SaveFolder))
-        .column((GameUserInfoIden::Table, GameUserInfoIden::ScreenshotFolder))
-        .column((GameUserInfoIden::Table, GameUserInfoIden::Backup));
+        .column((GameUserInfoIden::Table, GameUserInfoIden::Notes));
 }

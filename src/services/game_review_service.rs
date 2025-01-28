@@ -1,9 +1,9 @@
 use std::collections::{HashMap, HashSet};
 
-use chrono::{NaiveDate, NaiveDateTime};
+use chrono::{Datelike, NaiveDate, NaiveDateTime};
 use sqlx::PgPool;
 
-use crate::entities::{GameFinish, GameLogWithTime, GameWithDate, GameWithLog};
+use crate::entities::{GameFinish, GameLogWithTime, GameWithFinish, GameWithLog};
 use crate::errors::ApiErrors;
 use crate::models::{
     DurationDef, GameFinishedReviewDTO, GameLogDTO, GamePlayedReviewDTO, GameStreakDTO,
@@ -159,7 +159,10 @@ fn build_played_review(
         logs_utils::merge_total_time_grouped(&mut total_time_by_hour, &game.total_time_by_hour);
 
         // Fill global total by release year
-        logs_utils::fill_total_optional_map(&mut total_played_by_release_year, &game.release_year);
+        logs_utils::fill_total_optional_map(
+            &mut total_played_by_release_year,
+            &game.release_date.map(|d| d.year()),
+        );
 
         if game.rating != 0 {
             // Fill global total by rating
@@ -208,7 +211,7 @@ fn build_played_review(
 }
 
 fn build_finished_review(
-    game_with_finishes: Vec<GameWithDate>,
+    game_with_finishes: Vec<GameWithFinish>,
     first_finishes: Vec<GameFinish>,
 ) -> GamesFinishedReviewDTO {
     let mut map = HashMap::<String, GameFinishedReviewDTO>::new();
@@ -217,7 +220,7 @@ fn build_finished_review(
     for game_with_finish in game_with_finishes {
         let game_id = game_with_finish.id.to_string();
 
-        let finish_date = game_with_finish.query_date;
+        let finish_date = game_with_finish.finish_date;
 
         if !map.contains_key(&game_id) {
             let new_game = GameFinishedReviewDTO::from(game_with_finish);
@@ -258,7 +261,7 @@ fn build_finished_review(
         // Fill global total by release year
         logs_utils::fill_total_optional_map(
             &mut total_finished_by_release_year,
-            &game.release_year,
+            &game.release_date.map(|d| d.year()),
         );
     }
 
@@ -418,6 +421,7 @@ fn fill_longest_first_last_game_session(game: &mut GamePlayedReviewDTO) {
             game.longest_session = GameLogDTO {
                 start_datetime: last_session.start_datetime,
                 end_datetime: last_session.end_datetime,
+                device_id: last_session.device_id.clone(),
                 time: last_session_time.clone(),
             };
         }
@@ -427,6 +431,7 @@ fn fill_longest_first_last_game_session(game: &mut GamePlayedReviewDTO) {
             game.first_session = GameLogDTO {
                 start_datetime: last_session_start_datetime,
                 end_datetime: last_session.end_datetime,
+                device_id: last_session.device_id.clone(),
                 time: last_session_time.clone(),
             }
         }
@@ -435,6 +440,7 @@ fn fill_longest_first_last_game_session(game: &mut GamePlayedReviewDTO) {
             game.last_session = GameLogDTO {
                 start_datetime: last_session_start_datetime,
                 end_datetime: last_session.end_datetime,
+                device_id: last_session.device_id.clone(),
                 time: last_session_time.clone(),
             }
         }

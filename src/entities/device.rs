@@ -19,8 +19,8 @@ pub enum DeviceIden {
     UserId,
     #[iden = "name"]
     Name,
-    #[iden = "icon_filepath"]
-    IconFilepath,
+    #[iden = "icon_url"]
+    IconUrl,
     #[iden = "added_datetime"]
     AddedDateTime,
     #[iden = "updated_datetime"]
@@ -36,7 +36,7 @@ pub struct Device {
     pub id: Uuid,
     pub user_id: Uuid,
     pub name: String,
-    pub icon_filepath: Option<String>,
+    pub icon_url: Option<String>,
     pub added_datetime: NaiveDateTime,
     pub updated_datetime: NaiveDateTime,
 }
@@ -46,7 +46,7 @@ pub struct DeviceWithDate {
     pub id: Uuid,
     pub user_id: Uuid,
     pub name: String,
-    pub icon_filepath: Option<String>,
+    pub icon_url: Option<String>,
     pub added_datetime: NaiveDateTime,
     pub updated_datetime: NaiveDateTime,
     pub query_date: NaiveDate,
@@ -59,10 +59,7 @@ impl FromStr for FieldIden<DeviceIden> {
         match field {
             "id" => Ok(FieldIden::new(DeviceIden::Id, FieldType::String)),
             "name" => Ok(FieldIden::new(DeviceIden::Name, FieldType::String)),
-            "icon_filepath" => Ok(FieldIden::new(
-                DeviceIden::IconFilepath,
-                FieldType::String,
-            )),
+            "icon_url" => Ok(FieldIden::new(DeviceIden::IconUrl, FieldType::String)),
             "added_datetime" => Ok(FieldIden::new(
                 DeviceIden::AddedDateTime,
                 FieldType::DateTime,

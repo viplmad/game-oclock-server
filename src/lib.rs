@@ -1,5 +1,4 @@
-#![feature(async_closure)]
-
+// TODO check plural/singular mod names
 pub mod auth;
 pub mod clients;
 pub mod entities;

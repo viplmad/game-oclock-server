@@ -19,8 +19,8 @@ pub enum LocationIden {
     UserId,
     #[iden = "name"]
     Name,
-    #[iden = "icon_filepath"]
-    IconFilepath,
+    #[iden = "icon_url"]
+    IconUrl,
     #[iden = "added_datetime"]
     AddedDateTime,
     #[iden = "updated_datetime"]
@@ -36,7 +36,7 @@ pub struct Location {
     pub id: Uuid,
     pub user_id: Uuid,
     pub name: String,
-    pub icon_filepath: Option<String>,
+    pub icon_url: Option<String>,
     pub added_datetime: NaiveDateTime,
     pub updated_datetime: NaiveDateTime,
 }
@@ -46,7 +46,7 @@ pub struct LocationWithDate {
     pub id: Uuid,
     pub user_id: Uuid,
     pub name: String,
-    pub icon_filepath: Option<String>,
+    pub icon_url: Option<String>,
     pub added_datetime: NaiveDateTime,
     pub updated_datetime: NaiveDateTime,
     pub query_date: NaiveDate,
@@ -59,10 +59,7 @@ impl FromStr for FieldIden<LocationIden> {
         match field {
             "id" => Ok(FieldIden::new(LocationIden::Id, FieldType::String)),
             "name" => Ok(FieldIden::new(LocationIden::Name, FieldType::String)),
-            "icon_filepath" => Ok(FieldIden::new(
-                LocationIden::IconFilepath,
-                FieldType::String,
-            )),
+            "icon_url" => Ok(FieldIden::new(LocationIden::IconUrl, FieldType::String)),
             "added_datetime" => Ok(FieldIden::new(
                 LocationIden::AddedDateTime,
                 FieldType::DateTime,

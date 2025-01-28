@@ -1,31 +1,29 @@
 use chrono::NaiveDate;
 use sqlx::PgPool;
 
-use crate::entities::{GameWithDate, PlatformWithDate};
+use crate::entities::{GameWithDate, LocationWithDate};
 use crate::errors::RepositoryError;
 use crate::query::game_available_query;
 
 use super::base::{execute, exists_id, fetch_all};
 
-pub async fn find_all_games_with_platform(
+pub async fn find_all_games_with_location(
     pool: &PgPool,
     user_id: &str,
-    platform_id: &str,
+    location_id: &str,
 ) -> Result<Vec<GameWithDate>, RepositoryError> {
-    let query = game_available_query::select_all_games_by_platform_id_order_by_added_date(
-        user_id,
-        platform_id,
-    );
+    let query =
+        game_available_query::select_all_games_by_location_id_order_by_date(user_id, location_id);
     fetch_all(pool, query).await
 }
 
-pub async fn find_all_platforms_with_game(
+pub async fn find_all_locations_with_game(
     pool: &PgPool,
     user_id: &str,
     game_id: &str,
-) -> Result<Vec<PlatformWithDate>, RepositoryError> {
+) -> Result<Vec<LocationWithDate>, RepositoryError> {
     let query =
-        game_available_query::select_all_platforms_by_game_id_order_by_added_date(user_id, game_id);
+        game_available_query::select_all_locations_by_game_id_order_by_date(user_id, game_id);
     fetch_all(pool, query).await
 }
 
@@ -33,10 +31,10 @@ pub async fn create(
     pool: &PgPool,
     user_id: &str,
     game_id: &str,
-    platform_id: &str,
-    added_date: NaiveDate,
+    location_id: &str,
+    date: NaiveDate,
 ) -> Result<(), RepositoryError> {
-    let query = game_available_query::insert(user_id, game_id, platform_id, added_date);
+    let query = game_available_query::insert(user_id, game_id, location_id, date);
     execute(pool, query).await
 }
 
@@ -44,9 +42,9 @@ pub async fn delete_by_id(
     pool: &PgPool,
     user_id: &str,
     game_id: &str,
-    platform_id: &str,
+    location_id: &str,
 ) -> Result<(), RepositoryError> {
-    let query = game_available_query::delete_by_id(user_id, game_id, platform_id);
+    let query = game_available_query::delete_by_id(user_id, game_id, location_id);
     execute(pool, query).await
 }
 
@@ -54,17 +52,17 @@ pub async fn exists_by_id(
     pool: &PgPool,
     user_id: &str,
     game_id: &str,
-    platform_id: &str,
+    location_id: &str,
 ) -> Result<bool, RepositoryError> {
-    let query = game_available_query::exists_by_id(user_id, game_id, platform_id);
+    let query = game_available_query::exists_by_id(user_id, game_id, location_id);
     exists_id(pool, query).await
 }
 
-pub async fn exists_platforms_with_game(
+pub async fn exists_locations_with_game(
     pool: &PgPool,
     user_id: &str,
     game_id: &str,
 ) -> Result<bool, RepositoryError> {
-    let query = game_available_query::exists_platforms_by_game_id(user_id, game_id);
+    let query = game_available_query::exists_locations_by_game_id(user_id, game_id);
     exists_id(pool, query).await
 }

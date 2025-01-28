@@ -2,17 +2,15 @@ use actix_web::{delete, get, post, put, web, Responder};
 use sqlx::PgPool;
 
 use crate::models::{
-    DateDTO, FileTempPath, ItemId, ItemIdAndRelatedId, LoggedUser, NewGameDTO, QuicksearchQuery,
-    SearchDTO,
+    DateDTO, ItemId, ItemIdAndRelatedId, LoggedUser, NewGameDTO, QuicksearchQuery, SearchDTO,
 };
-use crate::providers::ImageClientProvider;
 use crate::services::{
-    game_available_service, game_image_service, game_tags_service, games_service,
+    game_available_service, game_genres_service, game_tags_service, games_service,
 };
 
 use super::base::{
     handle_action_result, handle_create_result, handle_delete_result, handle_get_result,
-    handle_multipart_result, handle_update_result, populate_get_page_result, populate_get_result,
+    handle_update_result,
 };
 
 #[utoipa::path(
@@ -36,15 +34,11 @@ use super::base::{
 #[get("/games/{id}")]
 pub async fn get_game(
     pool: web::Data<PgPool>,
-    image_client_provider: web::Data<ImageClientProvider>,
     path: web::Path<ItemId>,
     logged_user: LoggedUser,
 ) -> impl Responder {
     let ItemId(id) = path.into_inner();
-    let mut get_result = games_service::get_game(&pool, &logged_user.id, &id).await;
-    populate_get_result(&mut get_result, |game| {
-        game_image_service::populate_game_cover(&image_client_provider, game)
-    });
+    let get_result = games_service::get_game(&pool, &logged_user.id, &id).await;
     handle_get_result(get_result)
 }
 
@@ -69,15 +63,11 @@ pub async fn get_game(
 #[get("/tags/{id}/games")]
 pub async fn get_tag_games(
     pool: web::Data<PgPool>,
-    image_client_provider: web::Data<ImageClientProvider>,
     path: web::Path<ItemId>,
     logged_user: LoggedUser,
 ) -> impl Responder {
     let ItemId(id) = path.into_inner();
-    let mut get_result = game_tags_service::get_tag_games(&pool, &logged_user.id, &id).await;
-    populate_get_result(&mut get_result, |games| {
-        game_image_service::populate_games_cover(&image_client_provider, games)
-    });
+    let get_result = game_tags_service::get_tag_games(&pool, &logged_user.id, &id).await;
     handle_get_result(get_result)
 }
 
@@ -102,16 +92,11 @@ pub async fn get_tag_games(
 #[get("/locations/{id}/games")]
 pub async fn get_location_games(
     pool: web::Data<PgPool>,
-    image_client_provider: web::Data<ImageClientProvider>,
     path: web::Path<ItemId>,
     logged_user: LoggedUser,
 ) -> impl Responder {
     let ItemId(id) = path.into_inner();
-    let mut get_result =
-        game_available_service::get_location_games(&pool, &logged_user.id, &id).await;
-    populate_get_result(&mut get_result, |games| {
-        game_image_service::populate_games_available_cover(&image_client_provider, games)
-    });
+    let get_result = game_available_service::get_location_games(&pool, &logged_user.id, &id).await;
     handle_get_result(get_result)
 }
 
@@ -136,16 +121,11 @@ pub async fn get_location_games(
 #[get("/genres/{id}/games")]
 pub async fn get_genre_games(
     pool: web::Data<PgPool>,
-    image_client_provider: web::Data<ImageClientProvider>,
     path: web::Path<ItemId>,
     logged_user: LoggedUser,
 ) -> impl Responder {
     let ItemId(id) = path.into_inner();
-    let mut get_result =
-        game_genre_service::get_genre_games(&pool, &logged_user.id, &id).await;
-    populate_get_result(&mut get_result, |games| {
-        game_image_service::populate_games_genre_cover(&image_client_provider, games)
-    });
+    let get_result = game_genres_service::get_genre_games(&pool, &logged_user.id, &id).await;
     handle_get_result(get_result)
 }
 
@@ -170,16 +150,11 @@ pub async fn get_genre_games(
 #[get("/devices/{id}/games")]
 pub async fn get_device_games(
     pool: web::Data<PgPool>,
-    image_client_provider: web::Data<ImageClientProvider>,
     path: web::Path<ItemId>,
     logged_user: LoggedUser,
 ) -> impl Responder {
     let ItemId(id) = path.into_inner();
-    let mut get_result =
-        game_device_service::get_device_games(&pool, &logged_user.id, &id).await;
-    populate_get_result(&mut get_result, |games| {
-        game_image_service::populate_games_device_cover(&image_client_provider, games)
-    });
+    let get_result = game_device_service::get_device_games(&pool, &logged_user.id, &id).await;
     handle_get_result(get_result)
 }
 
@@ -204,16 +179,12 @@ pub async fn get_device_games(
 #[post("/games/list")]
 pub async fn get_games(
     pool: web::Data<PgPool>,
-    image_client_provider: web::Data<ImageClientProvider>,
     query: web::Query<QuicksearchQuery>,
     body: web::Json<SearchDTO>,
     logged_user: LoggedUser,
 ) -> impl Responder {
-    let mut search_result =
+    let search_result =
         games_service::search_games(&pool, &logged_user.id, body.0, query.0.q).await;
-    populate_get_page_result(&mut search_result, |games| {
-        game_image_service::populate_games_cover(&image_client_provider, games)
-    });
     handle_get_result(search_result)
 }
 
@@ -242,59 +213,6 @@ pub async fn post_game(
 ) -> impl Responder {
     let create_result = games_service::create_game(&pool, &logged_user.id, body.0).await;
     handle_create_result(create_result)
-}
-
-#[utoipa::path(
-    post,
-    path = "/api/v1/games/{id}/cover",
-    tag = "Games",
-    params(
-        ("id" = String, Path, description = "Game id"),
-    ),
-    request_body(content = Image, description = "Game cover to be uploaded", content_type = "multipart/form-data"),
-    responses(
-        (status = 204, description = "Game cover uploaded"),
-        (status = 400, description = "Bad request", body = ErrorMessage, content_type = "application/json"),
-        (status = 401, description = "Unauthorized", body = ErrorMessage, content_type = "application/json"),
-        (status = 403, description = "Forbidden", body = ErrorMessage, content_type = "application/json"),
-        (status = 404, description = "Game not found", body = ErrorMessage, content_type = "application/json"),
-        (status = 500, description = "Internal server error", body = ErrorMessage, content_type = "application/json"),
-    ),
-    security(
-        ("OAuth2" = [])
-    )
-)]
-#[post("/games/{id}/cover")]
-pub async fn post_game_cover(
-    pool: web::Data<PgPool>,
-    image_client_provider: web::Data<ImageClientProvider>,
-    path: web::Path<ItemId>,
-    body: actix_multipart::Multipart,
-    logged_user: LoggedUser,
-) -> impl Responder {
-    let ItemId(id) = path.into_inner();
-
-    let file_path_result = crate::multipart_utils::get_multipart_file_path(body).await;
-    let FileTempPath {
-        directory_path,
-        file_path,
-    } = match handle_multipart_result(file_path_result) {
-        Ok(res) => res,
-        Err(err) => return err,
-    };
-
-    let upload_result = games_service::set_game_cover(
-        &pool,
-        &image_client_provider,
-        &logged_user.id,
-        &id,
-        &file_path,
-    )
-    .await;
-
-    crate::temp_file_utils::delete_temp_dir(&directory_path).await;
-
-    handle_action_result(upload_result)
 }
 
 #[utoipa::path(
@@ -327,46 +245,6 @@ pub async fn put_game(
     let ItemId(id) = path.into_inner();
     let update_result = games_service::update_game(&pool, &logged_user.id, &id, body.0).await;
     handle_update_result(update_result)
-}
-
-#[utoipa::path(
-    put,
-    path = "/api/v1/games/{id}/cover",
-    tag = "Games",
-    params(
-        ("id" = String, Path, description = "Game id"),
-    ),
-    request_body(content = String, description = "New game cover name", content_type = "application/json"),
-    responses(
-        (status = 204, description = "Game cover renamed"),
-        (status = 400, description = "Bad request", body = ErrorMessage, content_type = "application/json"),
-        (status = 401, description = "Unauthorized", body = ErrorMessage, content_type = "application/json"),
-        (status = 403, description = "Forbidden", body = ErrorMessage, content_type = "application/json"),
-        (status = 404, description = "Game not found", body = ErrorMessage, content_type = "application/json"),
-        (status = 500, description = "Internal server error", body = ErrorMessage, content_type = "application/json"),
-    ),
-    security(
-        ("OAuth2" = [])
-    )
-)]
-#[put("/games/{id}/cover")]
-pub async fn put_game_cover(
-    pool: web::Data<PgPool>,
-    image_client_provider: web::Data<ImageClientProvider>,
-    path: web::Path<ItemId>,
-    body: web::Json<String>,
-    logged_user: LoggedUser,
-) -> impl Responder {
-    let ItemId(id) = path.into_inner();
-    let update_result = games_service::rename_game_cover(
-        &pool,
-        &image_client_provider,
-        &logged_user.id,
-        &id,
-        &body.0,
-    )
-    .await;
-    handle_action_result(update_result)
 }
 
 #[utoipa::path(
@@ -449,7 +327,6 @@ pub async fn link_game_location(
         ("id" = String, Path, description = "Game id"),
         ("other_id" = String, Path, description = "Genre id"),
     ),
-    request_body(content = DateDTO, description = "Available date", content_type = "application/json"),
     responses(
         (status = 204, description = "Game and Genre linked"),
         (status = 400, description = "Bad request", body = ErrorMessage, content_type = "application/json"),
@@ -466,18 +343,11 @@ pub async fn link_game_location(
 pub async fn link_game_genre(
     pool: web::Data<PgPool>,
     path: web::Path<ItemIdAndRelatedId>,
-    body: web::Json<DateDTO>,
     logged_user: LoggedUser,
 ) -> impl Responder {
     let ItemIdAndRelatedId(id, genre_id) = path.into_inner();
-    let create_result = game_genre_service::create_game_genre(
-        &pool,
-        &logged_user.id,
-        &id,
-        &genre_id,
-        body.date,
-    )
-    .await;
+    let create_result =
+        game_genres_service::create_game_genre(&pool, &logged_user.id, &id, &genre_id).await;
     handle_action_result(create_result)
 }
 
@@ -502,46 +372,12 @@ pub async fn link_game_genre(
 #[delete("/games/{id}")]
 pub async fn delete_game(
     pool: web::Data<PgPool>,
-    image_client_provider: web::Data<ImageClientProvider>,
     path: web::Path<ItemId>,
     logged_user: LoggedUser,
 ) -> impl Responder {
     let ItemId(id) = path.into_inner();
-    let delete_result =
-        games_service::delete_game(&pool, &image_client_provider, &logged_user.id, &id).await;
+    let delete_result = games_service::delete_game(&pool, &logged_user.id, &id).await;
     handle_delete_result(delete_result)
-}
-
-#[utoipa::path(
-    delete,
-    path = "/api/v1/games/{id}/cover",
-    tag = "Games",
-    params(
-        ("id" = String, Path, description = "Game id"),
-    ),
-    responses(
-        (status = 204, description = "Game cover deleted"),
-        (status = 400, description = "Bad request", body = ErrorMessage, content_type = "application/json"),
-        (status = 401, description = "Unauthorized", body = ErrorMessage, content_type = "application/json"),
-        (status = 403, description = "Forbidden", body = ErrorMessage, content_type = "application/json"),
-        (status = 404, description = "Game not found", body = ErrorMessage, content_type = "application/json"),
-        (status = 500, description = "Internal server error", body = ErrorMessage, content_type = "application/json"),
-    ),
-    security(
-        ("OAuth2" = [])
-    )
-)]
-#[delete("/games/{id}/cover")]
-pub async fn delete_game_cover(
-    pool: web::Data<PgPool>,
-    image_client_provider: web::Data<ImageClientProvider>,
-    path: web::Path<ItemId>,
-    logged_user: LoggedUser,
-) -> impl Responder {
-    let ItemId(id) = path.into_inner();
-    let delete_result =
-        games_service::delete_game_cover(&pool, &image_client_provider, &logged_user.id, &id).await;
-    handle_action_result(delete_result)
 }
 
 #[utoipa::path(
@@ -637,8 +473,7 @@ pub async fn unlink_game_genre(
 ) -> impl Responder {
     let ItemIdAndRelatedId(id, genre_id) = path.into_inner();
     let delete_result =
-        game_genre_service::delete_game_genre(&pool, &logged_user.id, &id, &genre_id)
-            .await;
+        game_genres_service::delete_game_genre(&pool, &logged_user.id, &id, &genre_id).await;
     handle_action_result(delete_result)
 }
 
@@ -664,15 +499,11 @@ pub async fn unlink_game_genre(
 #[get("/games/{id}/dlcs")]
 pub async fn get_game_dlcs(
     pool: web::Data<PgPool>,
-    image_client_provider: web::Data<ImageClientProvider>,
     path: web::Path<ItemId>,
     logged_user: LoggedUser,
 ) -> impl Responder {
     let ItemId(id) = path.into_inner();
     let mut get_result = dlcs_service::get_game_dlcs(&pool, &logged_user.id, &id).await;
-    populate_get_result(&mut get_result, |dlcs| {
-        dlc_image_service::populate_dlcs_cover(&image_client_provider, dlcs)
-    });
     handle_get_result(get_result)
 }
 
@@ -697,15 +528,11 @@ pub async fn get_game_dlcs(
 #[get("/games/{id}/base-game")]
 pub async fn get_dlc_base_game(
     pool: web::Data<PgPool>,
-    image_client_provider: web::Data<ImageClientProvider>,
     path: web::Path<ItemId>,
     logged_user: LoggedUser,
 ) -> impl Responder {
     let ItemId(id) = path.into_inner();
     let mut get_result = dlcs_service::get_dlc_base_game(&pool, &logged_user.id, &id).await;
-    populate_get_result(&mut get_result, |game| {
-        game_image_service::populate_game_cover(&image_client_provider, game)
-    });
     handle_get_result(get_result)
 }
 

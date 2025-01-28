@@ -1,7 +1,7 @@
 use chrono::NaiveDate;
 use sqlx::PgPool;
 
-use crate::entities::{GameSearch, GameWithDate};
+use crate::entities::{GameSearch, GameWithFinish};
 use crate::errors::ApiErrors;
 use crate::models::{GameWithFinishDTO, GameWithFinishPageResult, SearchDTO};
 use crate::repository::game_with_finish_repository;
@@ -52,11 +52,11 @@ pub(super) async fn find_game_with_finishes_between(
     user_id: &str,
     start_date: NaiveDate,
     end_date: NaiveDate,
-) -> Result<Vec<GameWithDate>, ApiErrors> {
+) -> Result<Vec<GameWithFinish>, ApiErrors> {
     check_start_end(start_date, end_date)?;
 
     let find_result =
         game_with_finish_repository::find_all_by_date_between(pool, user_id, start_date, end_date)
             .await;
-    handle_result::<Vec<GameWithDate>, GameWithFinishDTO>(find_result)
+    handle_result::<Vec<GameWithFinish>, GameWithFinishDTO>(find_result)
 }

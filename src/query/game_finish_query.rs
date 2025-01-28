@@ -1,7 +1,10 @@
 use chrono::NaiveDate;
 use sea_query::{Alias, Expr, Order, Query, QueryStatementWriter, SelectStatement};
 
-use crate::entities::{GameFinishIden, GameIden, GameSearch, SearchQuery, QUERY_DATE_ALIAS};
+use crate::entities::{
+    GameFinish, GameFinishIden, GameIden, GameSearch, SearchQuery, FINISH_DATE_ALIAS,
+    FINISH_DEVICE_ID_ALIAS, FINISH_STATUS_ALIAS,
+};
 use crate::errors::SearchErrors;
 
 use super::game_query;
@@ -23,7 +26,7 @@ pub fn select_all_by_user_id_and_game_id(user_id: &str, game_id: &str) -> Select
     let mut select = Query::select();
 
     from_and_where_user_id_and_game_id(&mut select, user_id, game_id);
-    add_date_field(&mut select);
+    add_date_and_status_and_device_id_fields(&mut select);
 
     select
 }
@@ -74,10 +77,19 @@ pub fn select_all_first_game_with_finish_with_search_by_date_gte_and_date_lte_or
     let mut select =
         select_all_game_with_finish_by_date_gte_and_date_lte(user_id, start_date, end_date);
 
-    select.expr_as(
-        Expr::col((GameFinishIden::Table, GameFinishIden::Date)).min(),
-        Alias::new(QUERY_DATE_ALIAS),
-    );
+    select
+        .expr_as(
+            Expr::col((GameFinishIden::Table, GameFinishIden::Date)).min(),
+            Alias::new(FINISH_DATE_ALIAS),
+        )
+        .expr_as(
+            Expr::col((GameFinishIden::Table, GameFinishIden::Status)).min(), // TODO
+            Alias::new(FINISH_STATUS_ALIAS),
+        )
+        .expr_as(
+            Expr::col((GameFinishIden::Table, GameFinishIden::DeviceId)).min(), // TODO
+            Alias::new(FINISH_DEVICE_ID_ALIAS),
+        );
     select.order_by_expr(
         Expr::col((GameFinishIden::Table, GameFinishIden::Date)).min(),
         Order::Asc,
@@ -97,10 +109,19 @@ pub fn select_all_last_game_with_finish_with_search_by_date_gte_and_date_lte_ord
     let mut select =
         select_all_game_with_finish_by_date_gte_and_date_lte(user_id, start_date, end_date);
 
-    select.expr_as(
-        Expr::col((GameFinishIden::Table, GameFinishIden::Date)).max(),
-        Alias::new(QUERY_DATE_ALIAS),
-    );
+    select
+        .expr_as(
+            Expr::col((GameFinishIden::Table, GameFinishIden::Date)).max(),
+            Alias::new(FINISH_DATE_ALIAS),
+        )
+        .expr_as(
+            Expr::col((GameFinishIden::Table, GameFinishIden::Status)).max(), // TODO
+            Alias::new(FINISH_STATUS_ALIAS),
+        )
+        .expr_as(
+            Expr::col((GameFinishIden::Table, GameFinishIden::DeviceId)).max(), // TODO
+            Alias::new(FINISH_DEVICE_ID_ALIAS),
+        );
     select.order_by_expr(
         Expr::col((GameFinishIden::Table, GameFinishIden::Date)).max(),
         Order::Desc,
@@ -140,15 +161,24 @@ pub fn select_all_games_finish_by_date_gte_and_date_lte_order_by_date_desc(
     let mut select =
         select_all_games_by_date_gte_and_date_lte_order_by_date_desc(user_id, start_date, end_date);
 
-    select.expr_as(
-        Expr::col((GameFinishIden::Table, GameFinishIden::Date)),
-        Alias::new(QUERY_DATE_ALIAS),
-    );
+    select
+        .expr_as(
+            Expr::col((GameFinishIden::Table, GameFinishIden::Date)),
+            Alias::new(FINISH_DATE_ALIAS),
+        )
+        .expr_as(
+            Expr::col((GameFinishIden::Table, GameFinishIden::Status)),
+            Alias::new(FINISH_STATUS_ALIAS),
+        )
+        .expr_as(
+            Expr::col((GameFinishIden::Table, GameFinishIden::DeviceId)),
+            Alias::new(FINISH_DEVICE_ID_ALIAS),
+        );
 
     select
 }
 
-pub fn insert(user_id: &str, game_id: &str, date: NaiveDate) -> impl QueryStatementWriter {
+pub fn insert(user_id: &str, game_id: &str, finish: &GameFinish) -> impl QueryStatementWriter {
     let mut insert = Query::insert();
 
     insert
@@ -157,8 +187,16 @@ pub fn insert(user_id: &str, game_id: &str, date: NaiveDate) -> impl QueryStatem
             GameFinishIden::UserId,
             GameFinishIden::GameId,
             GameFinishIden::Date,
+            GameFinishIden::Status,
+            GameFinishIden::DeviceId,
         ])
-        .values_panic([user_id.into(), game_id.into(), date.into()]);
+        .values_panic([
+            user_id.into(),
+            game_id.into(),
+            finish.date.into(),
+            finish.status.into(),
+            finish.device_id.map(|id| id.to_string()).clone().into(),
+        ]);
 
     insert
 }
@@ -237,6 +275,9 @@ fn order_by_date_desc(select: &mut SelectStatement) {
     select.order_by((GameFinishIden::Table, GameFinishIden::Date), Order::Desc);
 }
 
-fn add_date_field(select: &mut SelectStatement) {
-    select.column((GameFinishIden::Table, GameFinishIden::Date));
+fn add_date_and_status_and_device_id_fields(select: &mut SelectStatement) {
+    select
+        .column((GameFinishIden::Table, GameFinishIden::Date))
+        .column((GameFinishIden::Table, GameFinishIden::Status))
+        .column((GameFinishIden::Table, GameFinishIden::DeviceId));
 }

@@ -1,0 +1,26 @@
+use chrono::{NaiveDate, NaiveDateTime};
+use sqlx::FromRow;
+use uuid::Uuid;
+
+pub const FINISH_DATE_ALIAS: &str = "finish_date";
+pub const FINISH_STATUS_ALIAS: &str = "finish_status";
+pub const FINISH_DEVICE_ID_ALIAS: &str = "finish_device_id";
+
+#[derive(FromRow, Clone)]
+pub struct GameWithFinish {
+    pub id: Uuid,
+    pub user_id: Uuid,
+    pub title: String,
+    pub edition: String,
+    pub release_date: Option<NaiveDate>,
+    pub base_game_id: Option<Uuid>,
+    pub cover_url: Option<String>,
+    pub added_datetime: NaiveDateTime,
+    pub updated_datetime: NaiveDateTime,
+    pub status: i16,
+    pub rating: i32,
+    pub notes: String,
+    pub finish_date: NaiveDate,
+    pub finish_status: i16,
+    pub finish_device_id: Option<Uuid>,
+}

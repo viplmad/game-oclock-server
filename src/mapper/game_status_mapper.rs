@@ -8,7 +8,8 @@ impl TryFrom<i16> for GameStatus {
             0 => Ok(GameStatus::LowPriority),
             1 => Ok(GameStatus::NextUp),
             2 => Ok(GameStatus::Playing),
-            3 => Ok(GameStatus::Played),
+            3 => Ok(GameStatus::Completed),
+            4 => Ok(GameStatus::Retired),
             9 => Ok(GameStatus::Wishlist),
             _ => Err(()),
         }
@@ -21,7 +22,8 @@ impl From<GameStatus> for i16 {
             GameStatus::LowPriority => 0,
             GameStatus::NextUp => 1,
             GameStatus::Playing => 2,
-            GameStatus::Played => 3,
+            GameStatus::Completed => 3,
+            GameStatus::Retired => 4,
             GameStatus::Wishlist => 9,
         }
     }

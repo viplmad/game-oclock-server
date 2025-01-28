@@ -2,18 +2,12 @@ use actix_web::{delete, get, post, web, Responder};
 use sqlx::PgPool;
 
 use crate::models::{
-    DateDTO, ItemId, LoggedUser, NewGameFinishDTO, OptionalStartEndDateQuery,
-    QuicksearchQuery, SearchDTO, StartEndDateQuery,
+    DateDTO, ItemId, LoggedUser, NewGameFinishDTO, OptionalStartEndDateQuery, QuicksearchQuery,
+    SearchDTO, StartEndDateQuery,
 };
-use crate::providers::ImageClientProvider;
-use crate::routes::base::populate_get_result;
-use crate::services::{
-    game_finishes_service, game_image_service, game_review_service, game_with_finish_service,
-};
+use crate::services::{game_finishes_service, game_review_service, game_with_finish_service};
 
-use super::base::{
-    handle_action_result, handle_delete_result, handle_get_result, populate_get_page_result,
-};
+use super::base::{handle_action_result, handle_delete_result, handle_get_result};
 
 #[utoipa::path(
     get,
@@ -52,7 +46,7 @@ pub async fn get_game_finishes(
         ("id" = String, Path, description = "Game id"),
     ),
     responses(
-        (status = 200, description = "First finish obtained", body = GameFinishDTO, content_type = "application/json"),
+        (status = 200, description = "First finish obtained", body = String, content_type = "application/json"),
         (status = 401, description = "Unauthorized", body = ErrorMessage, content_type = "application/json"),
         (status = 403, description = "Forbidden", body = ErrorMessage, content_type = "application/json"),
         (status = 404, description = "Game or finish not found", body = ErrorMessage, content_type = "application/json"),
@@ -94,23 +88,16 @@ pub async fn get_first_game_finish(
 #[post("/games/finished/review")]
 pub async fn get_finished_games_review(
     pool: web::Data<PgPool>,
-    image_client_provider: web::Data<ImageClientProvider>,
     query: web::Query<StartEndDateQuery>,
     logged_user: LoggedUser,
 ) -> impl Responder {
-    let mut get_result = game_review_service::get_finished_games_review(
+    let get_result = game_review_service::get_finished_games_review(
         &pool,
         &logged_user.id,
         query.start_date,
         query.end_date,
     )
     .await;
-    populate_get_result(&mut get_result, |review| {
-        game_image_service::populate_games_finished_review_cover(
-            &image_client_provider,
-            &mut review.games,
-        )
-    });
     handle_get_result(get_result)
 }
 
@@ -137,13 +124,12 @@ pub async fn get_finished_games_review(
 #[post("/games/finished/first")]
 pub async fn get_first_finished_games(
     pool: web::Data<PgPool>,
-    image_client_provider: web::Data<ImageClientProvider>,
     query: web::Query<OptionalStartEndDateQuery>,
     quick_query: web::Query<QuicksearchQuery>,
     body: web::Json<SearchDTO>,
     logged_user: LoggedUser,
 ) -> impl Responder {
-    let mut get_result = game_with_finish_service::search_first_finished_games(
+    let get_result = game_with_finish_service::search_first_finished_games(
         &pool,
         &logged_user.id,
         query.start_date,
@@ -152,9 +138,6 @@ pub async fn get_first_finished_games(
         quick_query.0.q,
     )
     .await;
-    populate_get_page_result(&mut get_result, |game| {
-        game_image_service::populate_games_with_finish_cover(&image_client_provider, game)
-    });
     handle_get_result(get_result)
 }
 
@@ -181,13 +164,12 @@ pub async fn get_first_finished_games(
 #[post("/games/finished/last")]
 pub async fn get_last_finished_games(
     pool: web::Data<PgPool>,
-    image_client_provider: web::Data<ImageClientProvider>,
     query: web::Query<OptionalStartEndDateQuery>,
     quick_query: web::Query<QuicksearchQuery>,
     body: web::Json<SearchDTO>,
     logged_user: LoggedUser,
 ) -> impl Responder {
-    let mut get_result = game_with_finish_service::search_last_finished_games(
+    let get_result = game_with_finish_service::search_last_finished_games(
         &pool,
         &logged_user.id,
         query.start_date,
@@ -196,9 +178,6 @@ pub async fn get_last_finished_games(
         quick_query.0.q,
     )
     .await;
-    populate_get_page_result(&mut get_result, |game| {
-        game_image_service::populate_games_with_finish_cover(&image_client_provider, game)
-    });
     handle_get_result(get_result)
 }
 
@@ -258,7 +237,7 @@ pub async fn post_game_finish(
 pub async fn delete_game_finish(
     pool: web::Data<PgPool>,
     path: web::Path<ItemId>,
-    body: web::Json<DateDTO>,// TODO Add status and device
+    body: web::Json<DateDTO>, // TODO Add status and device
     logged_user: LoggedUser,
 ) -> impl Responder {
     let ItemId(id) = path.into_inner();

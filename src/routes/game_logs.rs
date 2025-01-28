@@ -5,15 +5,9 @@ use crate::models::{
     DateTimeDTO, ItemId, LoggedUser, NewGameLogDTO, OptionalStartEndDateQuery, QuicksearchQuery,
     SearchDTO, StartEndDateQuery,
 };
-use crate::providers::ImageClientProvider;
-use crate::services::{
-    game_image_service, game_logs_service, game_review_service, game_with_logs_service,
-};
+use crate::services::{game_logs_service, game_review_service, game_with_logs_service};
 
-use super::base::{
-    handle_action_result, handle_delete_result, handle_get_result, populate_get_page_result,
-    populate_get_result,
-};
+use super::base::{handle_action_result, handle_delete_result, handle_get_result};
 
 #[utoipa::path(
     get,
@@ -93,23 +87,16 @@ pub async fn get_total_game_logs(
 #[post("/games/played/review")]
 pub async fn get_played_games_review(
     pool: web::Data<PgPool>,
-    image_client_provider: web::Data<ImageClientProvider>,
     query: web::Query<StartEndDateQuery>,
     logged_user: LoggedUser,
 ) -> impl Responder {
-    let mut get_result = game_review_service::get_played_games_review(
+    let get_result = game_review_service::get_played_games_review(
         &pool,
         &logged_user.id,
         query.start_date,
         query.end_date,
     )
     .await;
-    populate_get_result(&mut get_result, |review| {
-        game_image_service::populate_games_played_review_cover(
-            &image_client_provider,
-            &mut review.games,
-        )
-    });
     handle_get_result(get_result)
 }
 
@@ -136,13 +123,12 @@ pub async fn get_played_games_review(
 #[post("/games/played/first")]
 pub async fn get_first_played_games(
     pool: web::Data<PgPool>,
-    image_client_provider: web::Data<ImageClientProvider>,
     query: web::Query<OptionalStartEndDateQuery>,
     quick_query: web::Query<QuicksearchQuery>,
     body: web::Json<SearchDTO>,
     logged_user: LoggedUser,
 ) -> impl Responder {
-    let mut get_result = game_with_logs_service::search_first_played_games(
+    let get_result = game_with_logs_service::search_first_played_games(
         &pool,
         &logged_user.id,
         query.start_date,
@@ -151,9 +137,6 @@ pub async fn get_first_played_games(
         quick_query.0.q,
     )
     .await;
-    populate_get_page_result(&mut get_result, |game| {
-        game_image_service::populate_games_with_log_cover(&image_client_provider, game)
-    });
     handle_get_result(get_result)
 }
 
@@ -180,13 +163,12 @@ pub async fn get_first_played_games(
 #[post("/games/played/last")]
 pub async fn get_last_played_games(
     pool: web::Data<PgPool>,
-    image_client_provider: web::Data<ImageClientProvider>,
     query: web::Query<OptionalStartEndDateQuery>,
     quick_query: web::Query<QuicksearchQuery>,
     body: web::Json<SearchDTO>,
     logged_user: LoggedUser,
 ) -> impl Responder {
-    let mut get_result = game_with_logs_service::search_last_played_games(
+    let get_result = game_with_logs_service::search_last_played_games(
         &pool,
         &logged_user.id,
         query.start_date,
@@ -195,9 +177,6 @@ pub async fn get_last_played_games(
         quick_query.0.q,
     )
     .await;
-    populate_get_page_result(&mut get_result, |game| {
-        game_image_service::populate_games_with_log_cover(&image_client_provider, game)
-    });
     handle_get_result(get_result)
 }
 

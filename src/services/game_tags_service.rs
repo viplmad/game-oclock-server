@@ -1,7 +1,7 @@
 use sqlx::PgPool;
 
 use crate::errors::ApiErrors;
-use crate::models::{GameDTO, GameTag, TagDTO};
+use crate::models::{GameDTO, GameTagDTO, TagDTO};
 use crate::repository::game_tag_repository;
 
 use super::base::{
@@ -42,10 +42,10 @@ pub async fn create_game_tag(
     tags_service::exists_tag(pool, user_id, tag_id).await?;
 
     let exists_result = game_tag_repository::exists_by_id(pool, user_id, game_id, tag_id).await;
-    handle_already_exists_result::<GameTag>(exists_result)?;
+    handle_already_exists_result::<GameTagDTO>(exists_result)?;
 
     let create_result = game_tag_repository::create(pool, user_id, game_id, tag_id).await;
-    handle_action_result::<GameTag>(create_result)
+    handle_action_result::<GameTagDTO>(create_result)
 }
 
 pub async fn delete_game_tag(
@@ -57,7 +57,7 @@ pub async fn delete_game_tag(
     exists_game_tag(pool, user_id, game_id, tag_id).await?;
 
     let delete_result = game_tag_repository::delete_by_id(pool, user_id, game_id, tag_id).await;
-    handle_action_result::<GameTag>(delete_result)
+    handle_action_result::<GameTagDTO>(delete_result)
 }
 
 pub async fn exists_game_tag(
@@ -67,5 +67,5 @@ pub async fn exists_game_tag(
     tag_id: &str,
 ) -> Result<(), ApiErrors> {
     let exists_result = game_tag_repository::exists_by_id(pool, user_id, game_id, tag_id).await;
-    handle_not_found_result::<GameTag>(exists_result)
+    handle_not_found_result::<GameTagDTO>(exists_result)
 }

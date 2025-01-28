@@ -27,8 +27,8 @@ pub enum GameIden {
     ReleaseDate,
     #[iden = "base_game_id"]
     BaseGameId,
-    #[iden = "cover_filepath"]
-    CoverFilepath,
+    #[iden = "cover_url"]
+    CoverUrl,
     #[iden = "added_datetime"]
     AddedDateTime,
     #[iden = "updated_datetime"]
@@ -47,7 +47,7 @@ pub struct Game {
     pub edition: String,
     pub release_date: Option<NaiveDate>,
     pub base_game_id: Option<Uuid>,
-    pub cover_filepath: Option<String>,
+    pub cover_url: Option<String>,
     pub added_datetime: NaiveDateTime,
     pub updated_datetime: NaiveDateTime,
     pub status: i16,
@@ -63,7 +63,7 @@ pub struct GameWithDate {
     pub edition: String,
     pub release_date: Option<NaiveDate>,
     pub base_game_id: Option<Uuid>,
-    pub cover_filepath: Option<String>,
+    pub cover_url: Option<String>,
     pub added_datetime: NaiveDateTime,
     pub updated_datetime: NaiveDateTime,
     pub status: i16,
@@ -82,7 +82,7 @@ impl FromStr for FieldIden<GameIden> {
             "edition" => Ok(FieldIden::new(GameIden::Edition, FieldType::String)),
             "release_date" => Ok(FieldIden::new(GameIden::ReleaseDate, FieldType::Integer)),
             "base_game_id" => Ok(FieldIden::new(GameIden::BaseGameId, FieldType::String)),
-            "cover_filepath" => Ok(FieldIden::new(GameIden::CoverFilepath, FieldType::String)),
+            "cover_url" => Ok(FieldIden::new(GameIden::CoverUrl, FieldType::String)),
             "status" => Ok(FieldIden::new(
                 GameUserInfoIden::Status,
                 FieldType::GameStatus,

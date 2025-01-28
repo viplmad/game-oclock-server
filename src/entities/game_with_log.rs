@@ -1,9 +1,10 @@
-use chrono::{NaiveDateTime, NaiveDate};
+use chrono::{NaiveDate, NaiveDateTime};
 use sqlx::{postgres::types::PgInterval, FromRow};
 use uuid::Uuid;
 
 pub const LOG_START_DATETIME_ALIAS: &str = "log_start_datetime";
 pub const LOG_END_DATETIME_ALIAS: &str = "log_end_datetime";
+pub const LOG_DEVICE_ID_ALIAS: &str = "log_device_id";
 pub const LOG_TIME_ALIAS: &str = "log_time";
 
 #[derive(FromRow, Clone)]
@@ -13,7 +14,8 @@ pub struct GameWithLog {
     pub title: String,
     pub edition: String,
     pub release_date: Option<NaiveDate>,
-    pub cover_filepath: Option<String>,
+    pub base_game_id: Option<Uuid>,
+    pub cover_url: Option<String>,
     pub added_datetime: NaiveDateTime,
     pub updated_datetime: NaiveDateTime,
     pub status: i16,

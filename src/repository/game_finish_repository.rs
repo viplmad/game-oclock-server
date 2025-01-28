@@ -5,7 +5,7 @@ use crate::entities::GameFinish;
 use crate::errors::RepositoryError;
 use crate::query::game_finish_query;
 
-use super::base::{execute, execute_return_single, exists_id, fetch_all, fetch_all_single};
+use super::base::{execute, execute_return_single, exists_id, fetch_all};
 
 pub async fn find_first_by_game_id(
     pool: &PgPool,
@@ -20,9 +20,9 @@ pub async fn find_all_by_game_id(
     pool: &PgPool,
     user_id: &str,
     game_id: &str,
-) -> Result<Vec<NaiveDate>, RepositoryError> {
+) -> Result<Vec<GameFinish>, RepositoryError> {
     let query = game_finish_query::select_all_by_user_id_and_game_id(user_id, game_id);
-    fetch_all_single(pool, query).await
+    fetch_all(pool, query).await
 }
 
 pub async fn find_all_first_by_user_id_and_game_id_in(
@@ -42,9 +42,9 @@ pub async fn create(
     pool: &PgPool,
     user_id: &str,
     game_id: &str,
-    date: NaiveDate,
+    finish: &GameFinish,
 ) -> Result<(), RepositoryError> {
-    let query = game_finish_query::insert(user_id, game_id, date);
+    let query = game_finish_query::insert(user_id, game_id, finish);
     execute(pool, query).await
 }
 

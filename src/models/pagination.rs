@@ -2,13 +2,15 @@ use serde::Serialize;
 use utoipa::ToSchema;
 
 use super::{
-    DeviceDTO, GameDTO, GameWithFinishDTO, GameWithLogDTO, LocationDTO, ModelInfo, TagDTO, UserDTO,
+    DeviceDTO, GameDTO, GameWithFinishDTO, GameWithLogDTO, GenreDTO, LocationDTO, ModelInfo,
+    TagDTO, UserDTO,
 };
 
 #[derive(Serialize, ToSchema)]
 #[aliases(GamePageResult = PageResultDTO<GameDTO>, GameWithFinishPageResult = PageResultDTO<GameWithFinishDTO>,
     GameWithLogPageResult = PageResultDTO<GameWithLogDTO>, LocationPageResult = PageResultDTO<LocationDTO>,
-    DevicePageResult = PageResultDTO<DeviceDTO>, TagPageResult = PageResultDTO<TagDTO>, UserPageResult = PageResultDTO<UserDTO>)]
+    GenrePageResult = PageResultDTO<GenreDTO>, DevicePageResult = PageResultDTO<DeviceDTO>,
+    TagPageResult = PageResultDTO<TagDTO>, UserPageResult = PageResultDTO<UserDTO>)]
 pub struct PageResultDTO<T>
 where
     T: ModelInfo,

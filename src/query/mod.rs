@@ -1,12 +1,11 @@
-pub mod dlc_available_query;
-pub mod dlc_finish_query;
-pub mod dlc_query;
 pub mod game_available_query;
 pub mod game_finish_query;
+pub mod game_genre_query;
 pub mod game_log_query;
 pub mod game_query;
 pub mod game_tag_query;
-pub mod platform_query;
+pub mod genre_query;
+pub mod location_query;
 pub mod search;
 pub mod tag_query;
 pub mod user_query;

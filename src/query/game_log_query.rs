@@ -5,8 +5,8 @@ use sea_query::{
 };
 
 use crate::entities::{
-    GameIden, GameLog, GameLogIden, GameSearch, SearchQuery, LOG_END_DATETIME_ALIAS,
-    LOG_START_DATETIME_ALIAS, LOG_TIME_ALIAS, QUERY_TIME_ALIAS,
+    GameIden, GameLog, GameLogIden, GameSearch, SearchQuery, LOG_DEVICE_ID_ALIAS,
+    LOG_END_DATETIME_ALIAS, LOG_START_DATETIME_ALIAS, LOG_TIME_ALIAS, QUERY_TIME_ALIAS,
 };
 use crate::errors::SearchErrors;
 
@@ -32,7 +32,7 @@ pub fn select_all_by_user_id_and_game_id(
     let mut select = Query::select();
 
     from_and_where_user_id_and_game_id(&mut select, user_id, game_id);
-    add_start_datetime_and_end_datetime_and_time_fields(&mut select);
+    add_start_datetime_and_end_datetime_and_device_id_and_time_fields(&mut select);
     select.column((GameLogIden::Table, GameLogIden::GameId));
 
     select
@@ -106,6 +106,10 @@ pub fn select_all_first_game_with_log_with_search_by_start_datetime_gte_and_star
             Expr::col((GameLogIden::Table, GameLogIden::EndDateTime)).max(),
             Alias::new(LOG_END_DATETIME_ALIAS),
         )
+        .expr_as(
+            Expr::col((GameLogIden::Table, GameLogIden::DeviceId)).max(), // TODO
+            Alias::new(LOG_DEVICE_ID_ALIAS),
+        )
         .expr_as(coalesce_time_sum(), Alias::new(LOG_TIME_ALIAS));
     select.order_by_expr(
         Expr::col((GameLogIden::Table, GameLogIden::StartDateTime)).min(),
@@ -137,6 +141,10 @@ pub fn select_all_last_game_with_log_with_search_by_start_datetime_gte_and_start
         .expr_as(
             Expr::col((GameLogIden::Table, GameLogIden::EndDateTime)).max(),
             Alias::new(LOG_END_DATETIME_ALIAS),
+        )
+        .expr_as(
+            Expr::col((GameLogIden::Table, GameLogIden::DeviceId)).max(), // TODO
+            Alias::new(LOG_DEVICE_ID_ALIAS),
         )
         .expr_as(coalesce_time_sum(), Alias::new(LOG_TIME_ALIAS));
     select.order_by_expr(
@@ -191,6 +199,10 @@ pub fn select_all_games_log_by_start_datetime_gte_and_start_datetime_lte_order_b
             Expr::col((GameLogIden::Table, GameLogIden::EndDateTime)),
             Alias::new(LOG_END_DATETIME_ALIAS),
         )
+        .expr_as(
+            Expr::col((GameLogIden::Table, GameLogIden::DeviceId)),
+            Alias::new(LOG_DEVICE_ID_ALIAS),
+        )
         .expr_as(derived_time_expr(), Alias::new(LOG_TIME_ALIAS));
 
     select
@@ -206,12 +218,14 @@ pub fn insert(user_id: &str, game_id: &str, log: &GameLog) -> impl QueryStatemen
             GameLogIden::GameId,
             GameLogIden::StartDateTime,
             GameLogIden::EndDateTime,
+            GameLogIden::DeviceId,
         ])
         .values_panic([
             user_id.into(),
             game_id.into(),
-            log.datetime.into(),
+            log.start_datetime.into(),
             log.end_datetime.into(),
+            log.device_id.map(|id| id.to_string()).clone().into(),
         ]);
 
     insert
@@ -318,10 +332,11 @@ fn order_by_start_datetime_desc(select: &mut SelectStatement) {
     );
 }
 
-fn add_start_datetime_and_end_datetime_and_time_fields(select: &mut SelectStatement) {
+fn add_start_datetime_and_end_datetime_and_device_id_and_time_fields(select: &mut SelectStatement) {
     select
         .column((GameLogIden::Table, GameLogIden::StartDateTime))
         .column((GameLogIden::Table, GameLogIden::EndDateTime))
+        .column((GameLogIden::Table, GameLogIden::DeviceId))
         .expr_as(derived_time_expr(), Alias::new(QUERY_TIME_ALIAS));
 }
 

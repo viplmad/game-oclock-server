@@ -61,16 +61,6 @@ pub async fn update_by_id(
     Ok(())
 }
 
-pub async fn update_cover_filename_by_id(
-    pool: &PgPool,
-    user_id: &str,
-    id: &str,
-    cover_filename: Option<String>,
-) -> Result<(), RepositoryError> {
-    let query = game_query::update_cover_filename_by_id(user_id, id, cover_filename);
-    execute(pool, query).await
-}
-
 pub async fn delete_by_id(pool: &PgPool, user_id: &str, id: &str) -> Result<(), RepositoryError> {
     let mut transaction = begin_transaction(pool).await?;
 
@@ -95,7 +85,7 @@ pub async fn exists_with_unique(
     user_id: &str,
     game: &Game,
 ) -> Result<bool, RepositoryError> {
-    let query = game_query::exists_by_name_and_edition(user_id, &game.name, &game.edition);
+    let query = game_query::exists_by_name_and_edition(user_id, &game.title, &game.edition);
     exists_id(pool, query).await
 }
 
@@ -107,7 +97,7 @@ pub async fn exists_with_unique_except_id(
 ) -> Result<bool, RepositoryError> {
     let query = game_query::exists_by_name_and_edition_and_id_not(
         user_id,
-        &game.name,
+        &game.title,
         &game.edition,
         excluded_id,
     );

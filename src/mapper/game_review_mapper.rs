@@ -2,7 +2,7 @@ use std::collections::HashMap;
 
 use chrono::{NaiveDate, NaiveDateTime};
 
-use crate::entities::{GameWithDate, GameWithLog};
+use crate::entities::{GameWithFinish, GameWithLog};
 use crate::models::{
     DurationDef, GameFinishedReviewDTO, GameLogDTO, GamePlayedReviewDTO, GameStatus, GameStreakDTO,
 };
@@ -11,19 +11,17 @@ impl From<GameWithLog> for GamePlayedReviewDTO {
     fn from(game: GameWithLog) -> Self {
         Self {
             id: game.id.to_string(),
-            name: game.name,
+            title: game.title,
             edition: game.edition,
-            release_year: game.release_year,
-            cover_filename: game.cover_filename,
-            cover_url: None,
+            release_date: game.release_date,
+            base_game_id: game.base_game_id.map(|id| id.to_string()),
+            cover_filename: None, // TODO extract filename from url
+            cover_url: game.cover_url,
             added_datetime: game.added_datetime,
             updated_datetime: game.updated_datetime,
             status: GameStatus::try_from(game.status).expect("Status was not within valid range"),
             rating: game.rating,
             notes: game.notes,
-            save_folder: game.save_folder,
-            screenshot_folder: game.screenshot_folder,
-            backup: game.backup,
             first_played: false,
             longest_streak: GameStreakDTO {
                 start_date: NaiveDate::default(),
@@ -34,11 +32,13 @@ impl From<GameWithLog> for GamePlayedReviewDTO {
             first_session: GameLogDTO {
                 start_datetime: NaiveDateTime::MAX,
                 end_datetime: NaiveDateTime::default(),
+                device_id: None,
                 time: DurationDef::default(),
             },
             last_session: GameLogDTO {
                 start_datetime: NaiveDateTime::MIN,
                 end_datetime: NaiveDateTime::default(),
+                device_id: None,
                 time: DurationDef::default(),
             },
             total_sessions: 0,
@@ -53,23 +53,21 @@ impl From<GameWithLog> for GamePlayedReviewDTO {
     }
 }
 
-impl From<GameWithDate> for GameFinishedReviewDTO {
-    fn from(game: GameWithDate) -> Self {
+impl From<GameWithFinish> for GameFinishedReviewDTO {
+    fn from(game: GameWithFinish) -> Self {
         Self {
             id: game.id.to_string(),
-            name: game.name,
+            title: game.title,
             edition: game.edition,
-            release_year: game.release_year,
-            cover_filename: game.cover_filename,
-            cover_url: None,
+            release_date: game.release_date,
+            base_game_id: game.base_game_id.map(|id| id.to_string()),
+            cover_filename: None, // TODO extract filename from url
+            cover_url: game.cover_url,
             added_datetime: game.added_datetime,
             updated_datetime: game.updated_datetime,
             status: GameStatus::try_from(game.status).expect("Status was not within valid range"),
             rating: game.rating,
             notes: game.notes,
-            save_folder: game.save_folder,
-            screenshot_folder: game.screenshot_folder,
-            backup: game.backup,
             total_finished: 0,
             total_finished_grouped: HashMap::<u32, i32>::new(),
             first_finished: false,
