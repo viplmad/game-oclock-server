@@ -83,6 +83,7 @@ pub async fn update_game(
 }
 
 pub async fn delete_game(pool: &PgPool, user_id: &str, game_id: &str) -> Result<(), ApiErrors> {
+    // TODO Error if game is used
     let delete_result = game_repository::delete_by_id(pool, user_id, game_id).await;
     handle_action_result::<GameDTO>(delete_result)
 }

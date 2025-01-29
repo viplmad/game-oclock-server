@@ -9,8 +9,7 @@ pub struct FinishDTO {
     #[schema(value_type = String, format = Date)]
     pub date: NaiveDate,
     pub status: GameStatus,
-    #[serde(skip_serializing_if = "Option::is_none")]
-    pub device_id: Option<String>,
+    pub device_id: String,
 }
 
 impl Merge<NewFinishDTO> for FinishDTO {
@@ -34,6 +33,5 @@ pub struct NewFinishDTO {
     #[schema(value_type = String, format = Date)]
     pub date: NaiveDate,
     pub status: GameStatus,
-    #[serde(skip_serializing_if = "Option::is_none")]
-    pub device_id: Option<String>,
+    pub device_id: String,
 }

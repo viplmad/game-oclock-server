@@ -27,8 +27,7 @@ pub struct GameWithFinishDTO {
     #[schema(value_type = String, format = Date)]
     pub finish_date: NaiveDate,
     pub finish_status: GameStatus,
-    #[serde(skip_serializing_if = "Option::is_none")]
-    pub finish_device_id: Option<String>,
+    pub finish_device_id: String,
 }
 
 impl ModelInfo for GameWithFinishDTO {

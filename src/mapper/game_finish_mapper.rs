@@ -7,7 +7,7 @@ impl From<Finish> for FinishDTO {
         Self {
             date: finish.date,
             status: GameStatus::try_from(finish.status).expect("Status was not within valid range"),
-            device_id: finish.device_id.map(|id| id.to_string()),
+            device_id: finish.device_id.to_string(),
         }
     }
 }
@@ -17,7 +17,7 @@ impl From<FinishDTO> for Finish {
         Self {
             date: finish.date,
             status: i16::from(finish.status),
-            device_id: finish.device_id.map(|id| uuid_utils::parse_uuid(&id)),
+            device_id: uuid_utils::parse_uuid(&finish.device_id),
         }
     }
 }
@@ -29,7 +29,7 @@ impl From<&GameWithFinish> for FinishDTO {
             date: game.finish_date,
             status: GameStatus::try_from(game.finish_status)
                 .expect("Status was not within valid range"),
-            device_id: game.finish_device_id.map(|id| id.to_string()),
+            device_id: game.finish_device_id.to_string(),
         }
     }
 }
@@ -39,7 +39,7 @@ impl From<GameFinish> for FinishDTO {
         Self {
             date: finish.date,
             status: GameStatus::try_from(finish.status).expect("Status was not within valid range"),
-            device_id: finish.device_id.map(|id| id.to_string()),
+            device_id: finish.device_id.to_string(),
         }
     }
 }

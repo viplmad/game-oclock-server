@@ -6,15 +6,14 @@ use super::{Merge, ModelInfo};
 #[derive(Default, Serialize, Deserialize, ToSchema)]
 pub struct LinkDTO {
     pub url: String,
-    #[serde(skip_serializing_if = "Option::is_none")]
-    pub description: Option<String>,
+    pub description: String,
 }
 
 impl Merge<NewLinkDTO> for LinkDTO {
     fn merge(self, other: NewLinkDTO) -> Self {
         Self {
             url: other.url,
-            description: other.description,
+            description: other.description.unwrap_or(self.description),
         }
     }
 }
@@ -28,6 +27,5 @@ impl ModelInfo for LinkDTO {
 #[derive(Deserialize, ToSchema)]
 pub struct NewLinkDTO {
     pub url: String,
-    #[serde(skip_serializing_if = "Option::is_none")]
     pub description: Option<String>,
 }

@@ -22,7 +22,7 @@ pub struct GameDTO {
     #[schema(value_type = String, format = DateTime)]
     pub updated_datetime: NaiveDateTime,
     pub status: GameStatus,
-    pub rating: i32,
+    pub rating: i16,
     pub notes: String,
 }
 
@@ -53,10 +53,11 @@ impl ModelInfo for GameDTO {
 
 #[derive(Deserialize, ToSchema)]
 pub struct NewGameDTO {
+    // TODO add cover_url
     pub title: Option<String>,
     pub edition: Option<String>,
     pub release_date: Option<NaiveDate>,
     pub status: Option<GameStatus>,
-    pub rating: Option<i32>,
+    pub rating: Option<i16>,
     pub notes: Option<String>,
 }

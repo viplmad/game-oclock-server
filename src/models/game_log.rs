@@ -10,8 +10,7 @@ pub struct LogDTO {
     pub start_datetime: NaiveDateTime,
     #[schema(value_type = String, format = DateTime)]
     pub end_datetime: NaiveDateTime,
-    #[serde(skip_serializing_if = "Option::is_none")]
-    pub device_id: Option<String>,
+    pub device_id: String,
     #[schema(value_type = String)]
     pub time: DurationDef,
 }
@@ -39,6 +38,5 @@ pub struct NewLogDTO {
     pub start_datetime: NaiveDateTime,
     #[schema(value_type = String, format = DateTime)]
     pub end_datetime: NaiveDateTime,
-    #[serde(skip_serializing_if = "Option::is_none")]
-    pub device_id: Option<String>,
+    pub device_id: String,
 }

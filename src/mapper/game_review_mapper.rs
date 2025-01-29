@@ -33,13 +33,13 @@ impl From<GameWithLog> for GamePlayedReviewDTO {
             first_session: LogDTO {
                 start_datetime: NaiveDateTime::MAX,
                 end_datetime: NaiveDateTime::default(),
-                device_id: None,
+                device_id: String::default(),
                 time: DurationDef::default(),
             },
             last_session: LogDTO {
                 start_datetime: NaiveDateTime::MIN,
                 end_datetime: NaiveDateTime::default(),
-                device_id: None,
+                device_id: String::default(),
                 time: DurationDef::default(),
             },
             total_sessions: 0,
@@ -75,12 +75,12 @@ impl From<GameWithFinish> for GameFinishedReviewDTO {
             first_finish: FinishDTO {
                 date: NaiveDate::MAX,
                 status: GameStatus::LowPriority,
-                device_id: None,
+                device_id: String::default(),
             },
             last_finish: FinishDTO {
                 date: NaiveDate::MIN,
                 status: GameStatus::LowPriority,
-                device_id: None,
+                device_id: String::default(),
             },
             finishes: vec![],
         }

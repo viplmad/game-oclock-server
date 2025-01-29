@@ -52,8 +52,7 @@ pub struct GameWithLogDTO {
     pub log_start_datetime: NaiveDateTime,
     #[schema(value_type = String, format = DateTime)]
     pub log_end_datetime: NaiveDateTime,
-    #[serde(skip_serializing_if = "Option::is_none")]
-    pub log_device_id: Option<String>,
+    pub log_device_id: String,
     #[schema(value_type = String)]
     pub log_time: DurationDef,
 }

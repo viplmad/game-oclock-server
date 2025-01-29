@@ -24,5 +24,5 @@ impl TableIden for GameLinkIden {
 #[derive(FromRow)]
 pub struct Link {
     pub url: String,
-    pub description: Option<String>,
+    pub description: String,
 }

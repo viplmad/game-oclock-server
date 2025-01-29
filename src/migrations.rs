@@ -22,7 +22,7 @@ pub async fn apply_migrations(pool: &PgPool) {
     match exists_admin {
         true => log::info!("Database admin present."),
         false => {
-            users_service::create_user(
+            let admin_user = users_service::create_user(
                 pool,
                 NewUserDTO {
                     username: String::from("admin"),
@@ -31,6 +31,9 @@ pub async fn apply_migrations(pool: &PgPool) {
             )
             .await
             .expect("Could not create admin user");
+            users_service::promote_user(pool, &admin_user.id)
+                .await
+                .expect("Could not promote admin user");
 
             log::info!("Database admin not present, created 'admin' user with default 'admin' password. PLEASE CHANGE PASSWORD.");
         }

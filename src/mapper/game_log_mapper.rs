@@ -9,7 +9,7 @@ impl From<LogWithTime> for LogDTO {
         Self {
             start_datetime: log.start_datetime,
             end_datetime: log.end_datetime,
-            device_id: log.device_id.map(|id| id.to_string()),
+            device_id: log.device_id.to_string(),
             time: DurationDef::from(log.query_time),
         }
     }
@@ -20,7 +20,7 @@ impl From<LogDTO> for LogWithTime {
         Self {
             start_datetime: log.start_datetime,
             end_datetime: log.end_datetime,
-            device_id: log.device_id.map(|id| uuid_utils::parse_uuid(&id)),
+            device_id: uuid_utils::parse_uuid(&log.device_id),
             query_time: PgInterval::default(), // Ignored
         }
     }
@@ -32,7 +32,7 @@ impl From<&GameWithLog> for LogDTO {
         Self {
             start_datetime: game.log_start_datetime,
             end_datetime: game.log_end_datetime,
-            device_id: game.log_device_id.map(|id| id.to_string()),
+            device_id: game.log_device_id.to_string(),
             time: DurationDef::from(game.log_time.clone()),
         }
     }
@@ -43,7 +43,7 @@ impl From<GameLogWithTime> for LogDTO {
         Self {
             start_datetime: log.start_datetime,
             end_datetime: log.end_datetime,
-            device_id: log.device_id.map(|id| id.to_string()),
+            device_id: log.device_id.to_string(),
             time: DurationDef::from(log.query_time.clone()),
         }
     }

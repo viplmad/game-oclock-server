@@ -150,7 +150,7 @@ pub(super) fn fill_game_sessions(
     sessions: &mut Vec<LogDTO>,
     start_datetime: NaiveDateTime,
     end_datetime: NaiveDateTime,
-    device_id: Option<String>,
+    device_id: &str,
     time: DurationDef,
 ) {
     match sessions.last_mut() {
@@ -173,7 +173,7 @@ pub(super) fn fill_game_sessions(
                 sessions.push(LogDTO {
                     start_datetime,
                     end_datetime,
-                    device_id,
+                    device_id: String::from(device_id),
                     time,
                 })
             }
@@ -183,7 +183,7 @@ pub(super) fn fill_game_sessions(
             sessions.push(LogDTO {
                 start_datetime,
                 end_datetime,
-                device_id,
+                device_id: String::from(device_id),
                 time,
             })
         }
@@ -281,11 +281,11 @@ pub(super) fn fill_game_finishes(
     finishes: &mut Vec<FinishDTO>,
     date: NaiveDate,
     status: GameStatus,
-    device_id: Option<String>,
+    device_id: &str,
 ) {
     finishes.push(FinishDTO {
         date,
         status,
-        device_id,
+        device_id: String::from(device_id),
     });
 }

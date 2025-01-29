@@ -53,3 +53,10 @@ pub(super) async fn require_admin(pool: &PgPool, user_id: &str) -> Result<(), Ht
         Err(_) => Err(forbidden_error()),
     }
 }
+
+pub(super) async fn require_admin_or_current_user(pool: &PgPool, user_id: &str, id: &str)  -> Result<(), HttpResponse>  {
+    match user_id == id {
+        true => Ok(()),
+        false => require_admin(pool, user_id).await,
+    }
+}

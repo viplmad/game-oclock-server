@@ -23,6 +23,6 @@ pub struct GameWithLog {
     pub notes: String,
     pub log_start_datetime: NaiveDateTime,
     pub log_end_datetime: NaiveDateTime,
-    pub log_device_id: Option<Uuid>,
+    pub log_device_id: Uuid,
     pub log_time: PgInterval,
 }

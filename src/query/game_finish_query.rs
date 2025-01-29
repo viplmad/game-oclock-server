@@ -195,7 +195,7 @@ pub fn insert(user_id: &str, game_id: &str, finish: &Finish) -> impl QueryStatem
             game_id.into(),
             finish.date.into(),
             finish.status.into(),
-            finish.device_id.map(|id| id.to_string()).clone().into(),
+            finish.device_id.to_string().into(),
         ]);
 
     insert

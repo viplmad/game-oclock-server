@@ -65,7 +65,7 @@ pub async fn create_game_log(
         )));
     }
 
-    let logs: Vec<NewLogDTO> = split_session_into_logs(start_datetime, end_datetime, log.device_id);
+    let logs: Vec<NewLogDTO> = split_session_into_logs(start_datetime, end_datetime, &log.device_id);
     if logs.is_empty() {
         return Err(ApiErrors::InvalidParameter(String::from(
             "Session to add must not have an empty span of time",
@@ -112,7 +112,7 @@ pub async fn exists_game_log(
 fn split_session_into_logs(
     start_datetime: NaiveDateTime,
     end_datetime: NaiveDateTime,
-    device_id: Option<String>,
+    device_id: &str,
 ) -> Vec<NewLogDTO> {
     let mut sessions: Vec<NewLogDTO> = vec![];
     if start_datetime.date() == end_datetime.date() {
@@ -122,7 +122,7 @@ fn split_session_into_logs(
             sessions.push(NewLogDTO {
                 start_datetime,
                 end_datetime,
-                device_id,
+                device_id: String::from(device_id),
             });
         }
     } else {
@@ -134,7 +134,7 @@ fn split_session_into_logs(
             sessions.push(NewLogDTO {
                 start_datetime: temp_date,
                 end_datetime: next_day_at_start_of_day,
-                device_id: device_id.clone(),
+                device_id: String::from(device_id),
             });
             temp_date = next_day_at_start_of_day;
         }
@@ -143,7 +143,7 @@ fn split_session_into_logs(
             sessions.push(NewLogDTO {
                 start_datetime: temp_date,
                 end_datetime,
-                device_id,
+                device_id: String::from(device_id),
             });
         }
     }

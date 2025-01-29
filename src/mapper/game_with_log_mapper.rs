@@ -38,7 +38,7 @@ impl From<GameWithLog> for GameWithLogDTO {
             notes: game.notes,
             log_start_datetime: game.log_start_datetime,
             log_end_datetime: game.log_end_datetime,
-            log_device_id: game.log_device_id.map(|id| id.to_string()),
+            log_device_id: game.log_device_id.to_string(),
             log_time: DurationDef::from(game.log_time),
         }
     }

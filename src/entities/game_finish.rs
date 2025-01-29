@@ -29,7 +29,7 @@ impl TableIden for GameFinishIden {
 pub struct Finish {
     pub date: NaiveDate,
     pub status: i16,
-    pub device_id: Option<Uuid>,
+    pub device_id: Uuid,
 }
 
 #[derive(FromRow)]
@@ -37,5 +37,5 @@ pub struct GameFinish {
     pub game_id: Uuid,
     pub date: NaiveDate,
     pub status: i16,
-    pub device_id: Option<Uuid>,
+    pub device_id: Uuid,
 }

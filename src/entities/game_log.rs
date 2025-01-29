@@ -31,7 +31,7 @@ impl TableIden for GameLogIden {
 pub struct LogWithTime {
     pub start_datetime: NaiveDateTime,
     pub end_datetime: NaiveDateTime,
-    pub device_id: Option<Uuid>,
+    pub device_id: Uuid,
     pub query_time: PgInterval,
 }
 
@@ -40,6 +40,6 @@ pub struct GameLogWithTime {
     pub game_id: Uuid,
     pub start_datetime: NaiveDateTime,
     pub end_datetime: NaiveDateTime,
-    pub device_id: Option<Uuid>,
+    pub device_id: Uuid,
     pub query_time: PgInterval,
 }

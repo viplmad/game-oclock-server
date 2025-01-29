@@ -4,6 +4,7 @@ use sqlx::PgPool;
 use crate::models::{
     ItemId, LoggedUser, NewUserDTO, PasswordChangeDTO, PasswordQuery, QuicksearchQuery, SearchDTO,
 };
+use crate::routes::base::require_admin_or_current_user;
 use crate::services::users_service;
 
 use super::base::{
@@ -30,8 +31,17 @@ use super::base::{
     )
 )]
 #[get("/users/{id}")]
-pub async fn get_user(pool: web::Data<PgPool>, path: web::Path<ItemId>) -> impl Responder {
+pub async fn get_user(
+    pool: web::Data<PgPool>,
+    path: web::Path<ItemId>,
+    logged_user: LoggedUser,
+) -> impl Responder {
     let ItemId(id) = path.into_inner();
+
+    if let Err(error) = require_admin_or_current_user(&pool, &logged_user.id, &id).await {
+        return error;
+    }
+
     let get_result = users_service::get_user(&pool, &id).await;
     handle_get_result(get_result)
 }
@@ -80,7 +90,12 @@ pub async fn get_users(
     pool: web::Data<PgPool>,
     query: web::Query<QuicksearchQuery>,
     body: web::Json<SearchDTO>,
+    logged_user: LoggedUser,
 ) -> impl Responder {
+    if let Err(error) = require_admin(&pool, &logged_user.id).await {
+        return error;
+    }
+
     let search_result = users_service::search_users(&pool, body.0, query.0.q).await;
     handle_get_result(search_result)
 }
@@ -145,8 +160,14 @@ pub async fn put_user(
     pool: web::Data<PgPool>,
     path: web::Path<ItemId>,
     body: web::Json<NewUserDTO>,
+    logged_user: LoggedUser,
 ) -> impl Responder {
     let ItemId(id) = path.into_inner();
+
+    if let Err(error) = require_admin_or_current_user(&pool, &logged_user.id, &id).await {
+        return error;
+    }
+
     let update_result = users_service::update_user(&pool, &id, body.0).await;
     handle_update_result(update_result)
 }
@@ -271,11 +292,12 @@ pub async fn delete_user(
     path: web::Path<ItemId>,
     logged_user: LoggedUser,
 ) -> impl Responder {
-    if let Err(error) = require_admin(&pool, &logged_user.id).await {
+    let ItemId(id) = path.into_inner();
+
+    if let Err(error) = require_admin_or_current_user(&pool, &logged_user.id, &id).await {
         return error;
     }
 
-    let ItemId(id) = path.into_inner();
     let delete_result = users_service::delete_user(&pool, &id).await;
     handle_delete_result(delete_result)
 }

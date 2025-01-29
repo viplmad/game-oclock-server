@@ -99,7 +99,7 @@ fn build_played_review(
             map.insert(game_id.clone(), new_game);
         }
         let game = map.get_mut(&game_id).unwrap(); // Safe unwrap: already checked the key is contained.
-        fill_played_game_review(game, start_datetime, end_datetime, device_id, time);
+        fill_played_game_review(game, start_datetime, end_datetime, &device_id, time);
     }
 
     // Fill first played
@@ -231,7 +231,7 @@ fn build_finished_review(
             map.insert(game_id.clone(), new_game);
         }
         let game = map.get_mut(&game_id).unwrap(); // Safe unwrap: already checked the key is contained.
-        fill_finished_game_review(game, date, status, device_id);
+        fill_finished_game_review(game, date, status, &device_id);
     }
 
     // Fill first played
@@ -352,7 +352,7 @@ fn fill_played_game_review(
     game: &mut GamePlayedReviewDTO,
     start_datetime: NaiveDateTime,
     end_datetime: NaiveDateTime,
-    device_id: Option<String>,
+    device_id: &str,
     time: DurationDef,
 ) {
     // Fill total time
@@ -395,13 +395,13 @@ fn fill_finished_game_review(
     game: &mut GameFinishedReviewDTO,
     date: NaiveDate,
     status: GameStatus,
-    device_id: Option<String>,
+    device_id: &str,
 ) {
     // Fill total finished
     logs_utils::fill_total_finished_by_month(&mut game.total_finished_grouped, date);
 
     // Fill finishes
-    logs_utils::fill_game_finishes(&mut game.finishes, date, status.clone(), device_id.clone());
+    logs_utils::fill_game_finishes(&mut game.finishes, date, status.clone(), &device_id);
     game.total_finished =
         i32::try_from(game.finishes.len()).expect("Count was not within valid range");
 
@@ -409,14 +409,14 @@ fn fill_finished_game_review(
         game.first_finish = FinishDTO {
             date,
             status: status.clone(),
-            device_id: device_id.clone(),
+            device_id: String::from(device_id),
         };
     }
     if date > game.last_finish.date {
         game.last_finish = FinishDTO {
             date,
             status: status.clone(),
-            device_id: device_id.clone(),
+            device_id: String::from(device_id),
         };
     }
 }
