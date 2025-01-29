@@ -1,6 +1,7 @@
 pub mod auth_service;
 mod base;
 pub mod devices_service;
+pub mod dlcs_service;
 pub mod game_available_service;
 pub mod game_finishes_service;
 pub mod game_genres_service;

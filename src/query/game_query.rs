@@ -16,6 +16,16 @@ pub fn select_by_id(user_id: &str, id: &str) -> impl QueryStatementWriter {
     select
 }
 
+pub fn select_all_by_base_game_id(user_id: &str, base_game_id: &str) -> impl QueryStatementWriter {
+    let mut select = Query::select();
+
+    from_and_where_user_id(&mut select, user_id);
+    add_fields(&mut select);
+    select.and_where(Expr::col(GameIden::BaseGameId).eq(base_game_id));
+
+    select
+}
+
 pub fn select_all_with_search(
     user_id: &str,
     search: GameSearch,
@@ -112,6 +122,18 @@ pub fn update_by_id(user_id: &str, id: &str, game: &Game) -> impl QueryStatement
             (GameIden::ReleaseDate, game.release_date.into()),
             (GameIden::CoverUrl, game.cover_url.clone().into()),
         ],
+    )
+}
+
+pub fn update_base_game_id_by_id(
+    user_id: &str,
+    id: &str,
+    base_game_id: Option<String>,
+) -> impl QueryStatementWriter {
+    update_values_by_id(
+        user_id,
+        id,
+        vec![(GameIden::BaseGameId, base_game_id.into())],
     )
 }
 

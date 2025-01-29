@@ -22,7 +22,7 @@ impl TableIden for GameLinkIden {
 }
 
 #[derive(FromRow)]
-pub struct GameLink {
+pub struct Link {
     pub url: String,
     pub description: Option<String>,
 }

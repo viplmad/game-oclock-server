@@ -1,7 +1,7 @@
 use actix_web::{delete, get, post, web, Responder};
 use sqlx::PgPool;
 
-use crate::models::{ItemId, LoggedUser, NewGameLinkDTO};
+use crate::models::{ItemId, LoggedUser, NewLinkDTO};
 use crate::services::game_links_service;
 
 use super::base::{handle_action_result, handle_delete_result, handle_get_result};
@@ -14,7 +14,7 @@ use super::base::{handle_action_result, handle_delete_result, handle_get_result}
         ("id" = String, Path, description = "Game id"),
     ),
     responses(
-        (status = 200, description = "Links obtained", body = [GameLinkDTO], content_type = "application/json"),
+        (status = 200, description = "Links obtained", body = [LinkDTO], content_type = "application/json"),
         (status = 401, description = "Unauthorized", body = ErrorMessage, content_type = "application/json"),
         (status = 403, description = "Forbidden", body = ErrorMessage, content_type = "application/json"),
         (status = 404, description = "Game not found", body = ErrorMessage, content_type = "application/json"),
@@ -42,7 +42,7 @@ pub async fn get_game_links(
     params(
         ("id" = String, Path, description = "Game id"),
     ),
-    request_body(content = NewGameLinkDTO, description = "Game link to be added", content_type = "application/json"),
+    request_body(content = NewLinkDTO, description = "Game link to be added", content_type = "application/json"),
     responses(
         (status = 204, description = "Game link added"),
         (status = 400, description = "Bad request", body = ErrorMessage, content_type = "application/json"),
@@ -59,7 +59,7 @@ pub async fn get_game_links(
 pub async fn post_game_link(
     pool: web::Data<PgPool>,
     path: web::Path<ItemId>,
-    body: web::Json<NewGameLinkDTO>,
+    body: web::Json<NewLinkDTO>,
     logged_user: LoggedUser,
 ) -> impl Responder {
     let ItemId(id) = path.into_inner();

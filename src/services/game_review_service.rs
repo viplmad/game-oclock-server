@@ -6,8 +6,8 @@ use sqlx::PgPool;
 use crate::entities::{GameFinish, GameLogWithTime, GameWithFinish, GameWithLog};
 use crate::errors::ApiErrors;
 use crate::models::{
-    DurationDef, GameFinishedReviewDTO, GameLogDTO, GamePlayedReviewDTO, GameStreakDTO,
-    GamesFinishedReviewDTO, GamesLogDTO, GamesPlayedReviewDTO, GamesStreakDTO,
+    DurationDef, FinishDTO, GameFinishedReviewDTO, GameLogDTO, GamePlayedReviewDTO, GameStatus,
+    GamesFinishedReviewDTO, GamesPlayedReviewDTO, GamesStreakDTO, LogDTO, StreakDTO,
 };
 
 use super::{
@@ -80,9 +80,10 @@ fn build_played_review(
     for game_with_log in game_with_logs {
         let game_id = game_with_log.id.to_string();
 
-        let log = GameLogDTO::from(&game_with_log);
+        let log = LogDTO::from(&game_with_log);
         let start_datetime = log.start_datetime;
         let end_datetime = log.end_datetime;
+        let device_id = log.device_id;
         let time = log.time;
 
         // Fill global streaks
@@ -98,14 +99,14 @@ fn build_played_review(
             map.insert(game_id.clone(), new_game);
         }
         let game = map.get_mut(&game_id).unwrap(); // Safe unwrap: already checked the key is contained.
-        fill_played_game_review(game, start_datetime, end_datetime, time);
+        fill_played_game_review(game, start_datetime, end_datetime, device_id, time);
     }
 
     // Fill first played
     for first_log in first_logs {
         let game_id = first_log.game_id.to_string();
 
-        let log = GameLogDTO::from(first_log);
+        let log = LogDTO::from(first_log);
         let first_start_datetime = log.start_datetime;
 
         let game = map.get_mut(&game_id).unwrap(); // Safe unwrap: already checked the key is contained.
@@ -128,14 +129,14 @@ fn build_played_review(
     let mut total_time_by_hour = HashMap::<u32, DurationDef>::new();
     let mut total_played_by_release_year = HashMap::<i32, i32>::new();
     let mut total_rated_by_rating = HashMap::<i32, i32>::new();
-    let mut longest_session = GamesLogDTO::default();
-    let mut first_session = GamesLogDTO {
+    let mut longest_session = GameLogDTO::default();
+    let mut first_session = GameLogDTO {
         game_id: String::default(),
         start_datetime: NaiveDateTime::MAX,
         end_datetime: NaiveDateTime::default(),
         time: DurationDef::default(),
     };
-    let mut last_session = GamesLogDTO {
+    let mut last_session = GameLogDTO {
         game_id: String::default(),
         start_datetime: NaiveDateTime::MIN,
         end_datetime: NaiveDateTime::default(),
@@ -220,26 +221,30 @@ fn build_finished_review(
     for game_with_finish in game_with_finishes {
         let game_id = game_with_finish.id.to_string();
 
-        let finish_date = game_with_finish.finish_date;
+        let finish = FinishDTO::from(&game_with_finish);
+        let date = finish.date;
+        let status = finish.status;
+        let device_id = finish.device_id;
 
         if !map.contains_key(&game_id) {
             let new_game = GameFinishedReviewDTO::from(game_with_finish);
             map.insert(game_id.clone(), new_game);
         }
         let game = map.get_mut(&game_id).unwrap(); // Safe unwrap: already checked the key is contained.
-        fill_finished_game_review(game, finish_date);
+        fill_finished_game_review(game, date, status, device_id);
     }
 
     // Fill first played
     for first_finish in first_finishes {
         let game_id = first_finish.game_id.to_string();
 
-        let first_finish_date = first_finish.date;
+        let finish = FinishDTO::from(first_finish);
+        let first_finish_date = finish.date;
 
         let game = map.get_mut(&game_id).unwrap(); // Safe unwrap: already checked the key is contained.
 
         if let Some(finish_date) = game.finishes.last() {
-            game.first_finished = first_finish_date == finish_date.clone();
+            game.first_finished = first_finish_date == finish_date.date.clone();
         }
     }
 
@@ -293,13 +298,13 @@ fn get_longest_streak(
 }
 
 fn get_longest_session(
-    longest_session: &GameLogDTO,
-    current_longest_session: &GamesLogDTO,
+    longest_session: &LogDTO,
+    current_longest_session: &GameLogDTO,
     game_id: &str,
-) -> Option<GamesLogDTO> {
+) -> Option<GameLogDTO> {
     let longest_session_time = longest_session.time.clone();
     if longest_session_time.micros > current_longest_session.time.micros {
-        return Some(GamesLogDTO {
+        return Some(GameLogDTO {
             game_id: String::from(game_id),
             start_datetime: longest_session.start_datetime,
             end_datetime: longest_session.end_datetime,
@@ -310,13 +315,13 @@ fn get_longest_session(
 }
 
 fn get_first_session(
-    first_sesion: &GameLogDTO,
-    current_first_session: &GamesLogDTO,
+    first_sesion: &LogDTO,
+    current_first_session: &GameLogDTO,
     game_id: &str,
-) -> Option<GamesLogDTO> {
+) -> Option<GameLogDTO> {
     let first_session_start_datetime = first_sesion.start_datetime;
     if first_session_start_datetime < current_first_session.start_datetime {
-        return Some(GamesLogDTO {
+        return Some(GameLogDTO {
             game_id: String::from(game_id),
             start_datetime: first_session_start_datetime,
             end_datetime: first_sesion.end_datetime,
@@ -327,13 +332,13 @@ fn get_first_session(
 }
 
 fn get_last_session(
-    last_sesion: &GameLogDTO,
-    current_last_session: &GamesLogDTO,
+    last_sesion: &LogDTO,
+    current_last_session: &GameLogDTO,
     game_id: &str,
-) -> Option<GamesLogDTO> {
+) -> Option<GameLogDTO> {
     let last_session_start_datetime = last_sesion.start_datetime;
     if last_session_start_datetime > current_last_session.start_datetime {
-        return Some(GamesLogDTO {
+        return Some(GameLogDTO {
             game_id: String::from(game_id),
             start_datetime: last_session_start_datetime,
             end_datetime: last_sesion.end_datetime,
@@ -347,6 +352,7 @@ fn fill_played_game_review(
     game: &mut GamePlayedReviewDTO,
     start_datetime: NaiveDateTime,
     end_datetime: NaiveDateTime,
+    device_id: Option<String>,
     time: DurationDef,
 ) {
     // Fill total time
@@ -375,6 +381,7 @@ fn fill_played_game_review(
         &mut game.sessions,
         start_datetime,
         end_datetime,
+        device_id,
         time.clone(),
     );
     game.total_sessions =
@@ -384,20 +391,33 @@ fn fill_played_game_review(
     fill_longest_first_last_game_session(game);
 }
 
-fn fill_finished_game_review(game: &mut GameFinishedReviewDTO, finish_date: NaiveDate) {
+fn fill_finished_game_review(
+    game: &mut GameFinishedReviewDTO,
+    date: NaiveDate,
+    status: GameStatus,
+    device_id: Option<String>,
+) {
     // Fill total finished
-    logs_utils::fill_total_finished_by_month(&mut game.total_finished_grouped, finish_date);
+    logs_utils::fill_total_finished_by_month(&mut game.total_finished_grouped, date);
 
     // Fill finishes
-    logs_utils::fill_game_finishes(&mut game.finishes, finish_date);
+    logs_utils::fill_game_finishes(&mut game.finishes, date, status.clone(), device_id.clone());
     game.total_finished =
         i32::try_from(game.finishes.len()).expect("Count was not within valid range");
 
-    if finish_date < game.first_finish {
-        game.first_finish = finish_date;
+    if date < game.first_finish.date {
+        game.first_finish = FinishDTO {
+            date,
+            status: status.clone(),
+            device_id: device_id.clone(),
+        };
     }
-    if finish_date > game.last_finish {
-        game.last_finish = finish_date;
+    if date > game.last_finish.date {
+        game.last_finish = FinishDTO {
+            date,
+            status: status.clone(),
+            device_id: device_id.clone(),
+        };
     }
 }
 
@@ -405,7 +425,7 @@ fn fill_longest_game_streak(game: &mut GamePlayedReviewDTO) {
     if let Some(last_streak) = game.streaks.last() {
         let last_streak_days = last_streak.days;
         if last_streak_days > game.longest_streak.days {
-            game.longest_streak = GameStreakDTO {
+            game.longest_streak = StreakDTO {
                 start_date: last_streak.start_date,
                 end_date: last_streak.end_date,
                 days: last_streak_days,
@@ -418,7 +438,7 @@ fn fill_longest_first_last_game_session(game: &mut GamePlayedReviewDTO) {
     if let Some(last_session) = game.sessions.last() {
         let last_session_time = last_session.time.clone();
         if last_session_time.micros > game.longest_session.time.micros {
-            game.longest_session = GameLogDTO {
+            game.longest_session = LogDTO {
                 start_datetime: last_session.start_datetime,
                 end_datetime: last_session.end_datetime,
                 device_id: last_session.device_id.clone(),
@@ -428,7 +448,7 @@ fn fill_longest_first_last_game_session(game: &mut GamePlayedReviewDTO) {
 
         let last_session_start_datetime = last_session.start_datetime;
         if last_session_start_datetime <= game.first_session.start_datetime {
-            game.first_session = GameLogDTO {
+            game.first_session = LogDTO {
                 start_datetime: last_session_start_datetime,
                 end_datetime: last_session.end_datetime,
                 device_id: last_session.device_id.clone(),
@@ -437,7 +457,7 @@ fn fill_longest_first_last_game_session(game: &mut GamePlayedReviewDTO) {
         }
 
         if last_session_start_datetime >= game.last_session.start_datetime {
-            game.last_session = GameLogDTO {
+            game.last_session = LogDTO {
                 start_datetime: last_session_start_datetime,
                 end_datetime: last_session.end_datetime,
                 device_id: last_session.device_id.clone(),

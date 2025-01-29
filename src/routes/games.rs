@@ -5,8 +5,8 @@ use crate::models::{
     DateDTO, ItemId, ItemIdAndRelatedId, LoggedUser, NewGameDTO, QuicksearchQuery, SearchDTO,
 };
 use crate::services::{
-    game_available_service, game_genres_service, game_played_device_service, game_tags_service,
-    games_service,
+    dlcs_service, game_available_service, game_genres_service, game_played_device_service,
+    game_tags_service, games_service,
 };
 
 use super::base::{
@@ -505,7 +505,7 @@ pub async fn get_game_dlcs(
     logged_user: LoggedUser,
 ) -> impl Responder {
     let ItemId(id) = path.into_inner();
-    let mut get_result = dlcs_service::get_game_dlcs(&pool, &logged_user.id, &id).await;
+    let get_result = dlcs_service::get_game_dlcs(&pool, &logged_user.id, &id).await;
     handle_get_result(get_result)
 }
 
@@ -534,7 +534,7 @@ pub async fn get_dlc_base_game(
     logged_user: LoggedUser,
 ) -> impl Responder {
     let ItemId(id) = path.into_inner();
-    let mut get_result = dlcs_service::get_dlc_base_game(&pool, &logged_user.id, &id).await;
+    let get_result = dlcs_service::get_dlc_base_game(&pool, &logged_user.id, &id).await;
     handle_get_result(get_result)
 }
 

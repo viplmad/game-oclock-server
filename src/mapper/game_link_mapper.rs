@@ -1,8 +1,8 @@
-use crate::entities::GameLink;
-use crate::models::GameLinkDTO;
+use crate::entities::Link;
+use crate::models::LinkDTO;
 
-impl From<GameLink> for GameLinkDTO {
-    fn from(link: GameLink) -> Self {
+impl From<Link> for LinkDTO {
+    fn from(link: Link) -> Self {
         Self {
             url: link.url,
             description: link.description,
@@ -10,8 +10,8 @@ impl From<GameLink> for GameLinkDTO {
     }
 }
 
-impl From<GameLinkDTO> for GameLink {
-    fn from(link: GameLinkDTO) -> Self {
+impl From<LinkDTO> for Link {
+    fn from(link: LinkDTO) -> Self {
         Self {
             url: link.url,
             description: link.description,

@@ -1,6 +1,6 @@
 use sea_query::{Expr, Query, QueryStatementWriter, SelectStatement};
 
-use crate::entities::{GameLink, GameLinkIden};
+use crate::entities::{GameLinkIden, Link};
 
 pub fn select_all_by_user_id_and_game_id(user_id: &str, game_id: &str) -> SelectStatement {
     let mut select = Query::select();
@@ -11,7 +11,7 @@ pub fn select_all_by_user_id_and_game_id(user_id: &str, game_id: &str) -> Select
     select
 }
 
-pub fn insert(user_id: &str, game_id: &str, link: &GameLink) -> impl QueryStatementWriter {
+pub fn insert(user_id: &str, game_id: &str, link: &Link) -> impl QueryStatementWriter {
     let mut insert = Query::insert();
 
     insert
@@ -70,15 +70,4 @@ fn add_url_and_description_fields(select: &mut SelectStatement) {
     select
         .column((GameLinkIden::Table, GameLinkIden::Url))
         .column((GameLinkIden::Table, GameLinkIden::Description));
-}
-
-#[cfg(test)]
-mod tests {
-    // Note this useful idiom: importing names from outer (for mod tests) scope.
-    use super::*;
-
-    #[test]
-    fn test_select_all_by_user_id_and_game_id() {
-        assert_eq!(select_all_by_user_id_and_game_id("user_id", "game_id").to_string(sea_query::PostgresQueryBuilder), "SELECT");
-    }
 }

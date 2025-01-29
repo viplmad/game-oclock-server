@@ -5,7 +5,8 @@ use crate::errors::{RepositoryError, SearchErrors};
 use crate::query::game_query;
 
 use super::base::{
-    begin_transaction, commit_transaction, execute, exists_id, fetch_all_search, fetch_optional,
+    begin_transaction, commit_transaction, execute, exists_id, fetch_all, fetch_all_search,
+    fetch_optional,
 };
 
 pub async fn find_by_id(
@@ -15,6 +16,15 @@ pub async fn find_by_id(
 ) -> Result<Option<Game>, RepositoryError> {
     let query = game_query::select_by_id(user_id, id);
     fetch_optional(pool, query).await
+}
+
+pub async fn find_all_by_base_game_id(
+    pool: &PgPool,
+    user_id: &str,
+    base_game_id: &str,
+) -> Result<Vec<Game>, RepositoryError> {
+    let query = game_query::select_all_by_base_game_id(user_id, base_game_id);
+    fetch_all(pool, query).await
 }
 
 pub async fn search_all(
@@ -59,6 +69,16 @@ pub async fn update_by_id(
     commit_transaction(transaction).await?;
 
     Ok(())
+}
+
+pub async fn update_base_game_id(
+    pool: &PgPool,
+    user_id: &str,
+    id: &str,
+    base_game_id: Option<String>,
+) -> Result<(), RepositoryError> {
+    let query = game_query::update_base_game_id_by_id(user_id, id, base_game_id);
+    execute(pool, query).await
 }
 
 pub async fn delete_by_id(pool: &PgPool, user_id: &str, id: &str) -> Result<(), RepositoryError> {

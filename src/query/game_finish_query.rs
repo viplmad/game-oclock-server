@@ -2,7 +2,7 @@ use chrono::NaiveDate;
 use sea_query::{Alias, Expr, Order, Query, QueryStatementWriter, SelectStatement};
 
 use crate::entities::{
-    GameFinish, GameFinishIden, GameIden, GameSearch, SearchQuery, FINISH_DATE_ALIAS,
+    Finish, GameFinishIden, GameIden, GameSearch, SearchQuery, FINISH_DATE_ALIAS,
     FINISH_DEVICE_ID_ALIAS, FINISH_STATUS_ALIAS,
 };
 use crate::errors::SearchErrors;
@@ -178,7 +178,7 @@ pub fn select_all_games_finish_by_date_gte_and_date_lte_order_by_date_desc(
     select
 }
 
-pub fn insert(user_id: &str, game_id: &str, finish: &GameFinish) -> impl QueryStatementWriter {
+pub fn insert(user_id: &str, game_id: &str, finish: &Finish) -> impl QueryStatementWriter {
     let mut insert = Query::insert();
 
     insert

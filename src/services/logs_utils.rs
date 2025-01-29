@@ -2,7 +2,7 @@ use std::{cmp::Ordering, collections::HashMap};
 
 use chrono::{Datelike, Duration, NaiveDate, NaiveDateTime, NaiveTime, Timelike};
 
-use crate::models::{DurationDef, GameLogDTO, GameStreakDTO, GamesStreakDTO};
+use crate::models::{DurationDef, FinishDTO, GameStatus, StreakDTO, GamesStreakDTO, LogDTO};
 
 pub(super) fn fill_total_time_by_month(
     total_time_by_month_map: &mut HashMap<u32, DurationDef>,
@@ -111,7 +111,7 @@ pub(super) fn fill_total_map(total_map: &mut HashMap<i32, i32>, value: i32) {
 }
 
 pub(super) fn fill_game_streaks(
-    streaks: &mut Vec<GameStreakDTO>,
+    streaks: &mut Vec<StreakDTO>,
     start_datetime: NaiveDateTime,
     end_datetime: NaiveDateTime,
 ) {
@@ -126,7 +126,7 @@ pub(super) fn fill_game_streaks(
                 }
                 Ordering::Less => {
                     // Lost the streak, start a new one
-                    streaks.push(GameStreakDTO {
+                    streaks.push(StreakDTO {
                         start_date: start_datetime.date(),
                         end_date: end_datetime.date(),
                         days: 1,
@@ -137,7 +137,7 @@ pub(super) fn fill_game_streaks(
         }
         None => {
             // Start first streak
-            streaks.push(GameStreakDTO {
+            streaks.push(StreakDTO {
                 start_date: start_datetime.date(),
                 end_date: end_datetime.date(),
                 days: 1,
@@ -147,9 +147,10 @@ pub(super) fn fill_game_streaks(
 }
 
 pub(super) fn fill_game_sessions(
-    sessions: &mut Vec<GameLogDTO>,
+    sessions: &mut Vec<LogDTO>,
     start_datetime: NaiveDateTime,
     end_datetime: NaiveDateTime,
+    device_id: Option<String>,
     time: DurationDef,
 ) {
     match sessions.last_mut() {
@@ -169,20 +170,20 @@ pub(super) fn fill_game_sessions(
                 last_session.time =
                     DurationDef::microseconds(last_session_time.micros + time.micros);
             } else {
-                sessions.push(GameLogDTO {
+                sessions.push(LogDTO {
                     start_datetime,
                     end_datetime,
-                    // TODO
+                    device_id,
                     time,
                 })
             }
         }
         None => {
             // Start first session
-            sessions.push(GameLogDTO {
+            sessions.push(LogDTO {
                 start_datetime,
                 end_datetime,
-                // TODO
+                device_id,
                 time,
             })
         }
@@ -276,6 +277,15 @@ fn fill_single_total_finished_by_month(
     }
 }
 
-pub(super) fn fill_game_finishes(finishes: &mut Vec<NaiveDate>, finish_date: NaiveDate) {
-    finishes.push(finish_date);
+pub(super) fn fill_game_finishes(
+    finishes: &mut Vec<FinishDTO>,
+    date: NaiveDate,
+    status: GameStatus,
+    device_id: Option<String>,
+) {
+    finishes.push(FinishDTO {
+        date,
+        status,
+        device_id,
+    });
 }

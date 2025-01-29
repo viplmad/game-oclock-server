@@ -281,20 +281,3 @@ pub(super) fn handle_image_client_provider(
         )))
     }
 }
-
-pub(super) fn build_image_filename(
-    user_id: &str,
-    id: &str,
-    suffix: &str,
-    name: Option<String>,
-) -> String {
-    let name = name.unwrap_or_default();
-    format!("{user_id}-{id}-{name}{suffix}")
-}
-
-pub(super) fn extract_image_name(filename: &str) -> Result<String, ApiErrors> {
-    filename
-        .split_once('.')
-        .ok_or_else(|| ApiErrors::UnknownError(String::from("Error extracting name from filename")))
-        .map(|split| String::from(split.0))
-}

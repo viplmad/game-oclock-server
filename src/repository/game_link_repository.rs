@@ -1,6 +1,6 @@
 use sqlx::PgPool;
 
-use crate::entities::GameLink;
+use crate::entities::Link;
 use crate::errors::RepositoryError;
 use crate::query::game_link_query;
 
@@ -10,7 +10,7 @@ pub async fn find_all_by_game_id(
     pool: &PgPool,
     user_id: &str,
     game_id: &str,
-) -> Result<Vec<GameLink>, RepositoryError> {
+) -> Result<Vec<Link>, RepositoryError> {
     let query = game_link_query::select_all_by_user_id_and_game_id(user_id, game_id);
     fetch_all(pool, query).await
 }
@@ -19,7 +19,7 @@ pub async fn create(
     pool: &PgPool,
     user_id: &str,
     game_id: &str,
-    link: &GameLink,
+    link: &Link,
 ) -> Result<(), RepositoryError> {
     let query = game_link_query::insert(user_id, game_id, link);
     execute(pool, query).await
@@ -43,4 +43,19 @@ pub async fn exists_by_id(
 ) -> Result<bool, RepositoryError> {
     let query = game_link_query::exists_by_id(user_id, game_id, url);
     exists_id(pool, query).await
+}
+
+#[cfg(test)]
+mod tests {
+    // Note this useful idiom: importing names from outer (for mod tests) scope.
+    use super::*;
+
+    #[test]
+    fn test_find_all_by_game_id() {
+        assert_eq!(
+            game_link_query::select_all_by_user_id_and_game_id("user_id", "game_id")
+                .to_string(sea_query::PostgresQueryBuilder),
+            "SELECT \"GameLink\".\"url\", \"GameLink\".\"description\" FROM \"GameLink\" WHERE \"GameLink\".\"user_id\" = 'user_id' AND \"GameLink\".\"game_id\" = 'game_id'"
+        );
+    }
 }

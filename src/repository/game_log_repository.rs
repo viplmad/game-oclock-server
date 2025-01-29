@@ -1,7 +1,7 @@
 use chrono::NaiveDateTime;
 use sqlx::{postgres::types::PgInterval, PgPool};
 
-use crate::entities::{GameLog, GameLogWithTime};
+use crate::entities::{GameLogWithTime, LogWithTime};
 use crate::errors::RepositoryError;
 use crate::query::game_log_query;
 
@@ -22,11 +22,12 @@ pub async fn find_all_by_game_id(
     pool: &PgPool,
     user_id: &str,
     game_id: &str,
-) -> Result<Vec<GameLogWithTime>, RepositoryError> {
+) -> Result<Vec<LogWithTime>, RepositoryError> {
     let query = game_log_query::select_all_by_user_id_and_game_id(user_id, game_id);
     fetch_all(pool, query).await
 }
 
+// For review
 pub async fn find_all_first_by_user_id_and_game_id_in(
     pool: &PgPool,
     user_id: &str,
@@ -44,7 +45,7 @@ pub async fn create_multiple(
     pool: &PgPool,
     user_id: &str,
     game_id: &str,
-    logs: Vec<GameLog>,
+    logs: Vec<LogWithTime>,
 ) -> Result<(), RepositoryError> {
     let mut transaction = begin_transaction(pool).await?;
 

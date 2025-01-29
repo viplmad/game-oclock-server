@@ -13,7 +13,6 @@ pub mod services;
 pub mod date_utils;
 pub mod errors;
 pub mod migrations;
-pub mod multipart_utils;
 pub mod openapi;
 pub mod providers;
 pub mod string_utils;

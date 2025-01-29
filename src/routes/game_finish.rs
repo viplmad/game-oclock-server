@@ -2,7 +2,7 @@ use actix_web::{delete, get, post, web, Responder};
 use sqlx::PgPool;
 
 use crate::models::{
-    DateDTO, ItemId, LoggedUser, NewGameFinishDTO, OptionalStartEndDateQuery, QuicksearchQuery,
+    DateDTO, ItemId, LoggedUser, NewFinishDTO, OptionalStartEndDateQuery, QuicksearchQuery,
     SearchDTO, StartEndDateQuery,
 };
 use crate::services::{game_finishes_service, game_review_service, game_with_finish_service};
@@ -17,7 +17,7 @@ use super::base::{handle_action_result, handle_delete_result, handle_get_result}
         ("id" = String, Path, description = "Game id"),
     ),
     responses(
-        (status = 200, description = "Finishes obtained", body = [GameFinishDTO], content_type = "application/json"),
+        (status = 200, description = "Finishes obtained", body = [FinishDTO], content_type = "application/json"),
         (status = 401, description = "Unauthorized", body = ErrorMessage, content_type = "application/json"),
         (status = 403, description = "Forbidden", body = ErrorMessage, content_type = "application/json"),
         (status = 404, description = "Game not found", body = ErrorMessage, content_type = "application/json"),
@@ -188,7 +188,7 @@ pub async fn get_last_finished_games(
     params(
         ("id" = String, Path, description = "Game id"),
     ),
-    request_body(content = NewGameFinishDTO, description = "Game finish to be added", content_type = "application/json"),
+    request_body(content = NewFinishDTO, description = "Game finish to be added", content_type = "application/json"),
     responses(
         (status = 204, description = "Game finish added"),
         (status = 400, description = "Bad request", body = ErrorMessage, content_type = "application/json"),
@@ -205,7 +205,7 @@ pub async fn get_last_finished_games(
 pub async fn post_game_finish(
     pool: web::Data<PgPool>,
     path: web::Path<ItemId>,
-    body: web::Json<NewGameFinishDTO>,
+    body: web::Json<NewFinishDTO>,
     logged_user: LoggedUser,
 ) -> impl Responder {
     let ItemId(id) = path.into_inner();

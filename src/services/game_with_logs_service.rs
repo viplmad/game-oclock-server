@@ -5,9 +5,7 @@ use sqlx::PgPool;
 
 use crate::entities::{GameSearch, GameWithLog};
 use crate::errors::ApiErrors;
-use crate::models::{
-    GameLogDTO, GameWithLogDTO, GameWithLogPageResult, GameWithLogsDTO, SearchDTO,
-};
+use crate::models::{GameWithLogDTO, GameWithLogPageResult, GameWithLogsDTO, LogDTO, SearchDTO};
 use crate::repository::game_with_log_repository;
 
 use super::base::{
@@ -98,7 +96,7 @@ fn build_game_with_logs_list(game_with_logs: Vec<GameWithLog>) -> Vec<GameWithLo
     for game_with_log in game_with_logs {
         let game_id = game_with_log.id.to_string();
 
-        let log = GameLogDTO::from(&game_with_log);
+        let log = LogDTO::from(&game_with_log);
         match map.get_mut(&game_id) {
             Some(game) => {
                 game.logs.push(log);

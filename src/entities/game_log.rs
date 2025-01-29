@@ -28,11 +28,11 @@ impl TableIden for GameLogIden {
 }
 
 #[derive(FromRow)]
-pub struct GameLog {
-    pub game_id: Uuid,
+pub struct LogWithTime {
     pub start_datetime: NaiveDateTime,
     pub end_datetime: NaiveDateTime,
     pub device_id: Option<Uuid>,
+    pub query_time: PgInterval,
 }
 
 #[derive(FromRow)]

@@ -4,7 +4,8 @@ use chrono::{NaiveDate, NaiveDateTime};
 
 use crate::entities::{GameWithFinish, GameWithLog};
 use crate::models::{
-    DurationDef, GameFinishedReviewDTO, GameLogDTO, GamePlayedReviewDTO, GameStatus, GameStreakDTO,
+    DurationDef, FinishDTO, GameFinishedReviewDTO, GamePlayedReviewDTO, GameStatus, LogDTO,
+    StreakDTO,
 };
 
 impl From<GameWithLog> for GamePlayedReviewDTO {
@@ -23,19 +24,19 @@ impl From<GameWithLog> for GamePlayedReviewDTO {
             rating: game.rating,
             notes: game.notes,
             first_played: false,
-            longest_streak: GameStreakDTO {
+            longest_streak: StreakDTO {
                 start_date: NaiveDate::default(),
                 end_date: NaiveDate::default(),
                 days: 0,
             },
-            longest_session: GameLogDTO::default(),
-            first_session: GameLogDTO {
+            longest_session: LogDTO::default(),
+            first_session: LogDTO {
                 start_datetime: NaiveDateTime::MAX,
                 end_datetime: NaiveDateTime::default(),
                 device_id: None,
                 time: DurationDef::default(),
             },
-            last_session: GameLogDTO {
+            last_session: LogDTO {
                 start_datetime: NaiveDateTime::MIN,
                 end_datetime: NaiveDateTime::default(),
                 device_id: None,
@@ -71,8 +72,16 @@ impl From<GameWithFinish> for GameFinishedReviewDTO {
             total_finished: 0,
             total_finished_grouped: HashMap::<u32, i32>::new(),
             first_finished: false,
-            first_finish: NaiveDate::MAX,
-            last_finish: NaiveDate::MIN,
+            first_finish: FinishDTO {
+                date: NaiveDate::MAX,
+                status: GameStatus::LowPriority,
+                device_id: None,
+            },
+            last_finish: FinishDTO {
+                date: NaiveDate::MIN,
+                status: GameStatus::LowPriority,
+                device_id: None,
+            },
             finishes: vec![],
         }
     }

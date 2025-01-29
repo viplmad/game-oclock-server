@@ -2,7 +2,7 @@ use chrono::{NaiveDate, NaiveDateTime};
 use serde::Serialize;
 use utoipa::ToSchema;
 
-use super::{DurationDef, GameDTO, GameLogDTO, GameStatus, ModelInfo};
+use super::{DurationDef, GameDTO, LogDTO, GameStatus, ModelInfo};
 
 // TODO Remove - create calls for aggregation
 #[derive(Serialize, ToSchema)]
@@ -25,7 +25,7 @@ pub struct GameWithLogsDTO {
     pub status: GameStatus,
     pub rating: i32,
     pub notes: String,
-    pub logs: Vec<GameLogDTO>,
+    pub logs: Vec<LogDTO>,
 }
 
 #[derive(Serialize, ToSchema)]

@@ -5,7 +5,7 @@ use sea_query::{
 };
 
 use crate::entities::{
-    GameIden, GameLog, GameLogIden, GameSearch, SearchQuery, LOG_DEVICE_ID_ALIAS,
+    GameIden, GameLogIden, GameSearch, LogWithTime, SearchQuery, LOG_DEVICE_ID_ALIAS,
     LOG_END_DATETIME_ALIAS, LOG_START_DATETIME_ALIAS, LOG_TIME_ALIAS, QUERY_TIME_ALIAS,
 };
 use crate::errors::SearchErrors;
@@ -208,7 +208,7 @@ pub fn select_all_games_log_by_start_datetime_gte_and_start_datetime_lte_order_b
     select
 }
 
-pub fn insert(user_id: &str, game_id: &str, log: &GameLog) -> impl QueryStatementWriter {
+pub fn insert(user_id: &str, game_id: &str, log: &LogWithTime) -> impl QueryStatementWriter {
     let mut insert = Query::insert();
 
     insert

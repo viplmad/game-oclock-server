@@ -4,16 +4,16 @@ use chrono::{NaiveDate, NaiveDateTime};
 use serde::Serialize;
 use utoipa::ToSchema;
 
-use super::{DurationDef, GameLogDTO, GameStatus};
+use super::{DurationDef, FinishDTO, GameStatus, LogDTO};
 
 #[derive(Serialize, ToSchema)]
 pub struct GamesPlayedReviewDTO {
     pub total_played: i32,
     pub total_first_played: i32,
     pub longest_streak: GamesStreakDTO,
-    pub longest_session: GamesLogDTO,
-    pub first_session: GamesLogDTO,
-    pub last_session: GamesLogDTO,
+    pub longest_session: GameLogDTO,
+    pub first_session: GameLogDTO,
+    pub last_session: GameLogDTO,
     pub total_sessions: i32,
     #[schema(value_type = String)]
     pub total_time: DurationDef,
@@ -48,10 +48,10 @@ pub struct GamePlayedReviewDTO {
     pub rating: i32,
     pub notes: String,
     pub first_played: bool,
-    pub longest_streak: GameStreakDTO,
-    pub longest_session: GameLogDTO,
-    pub first_session: GameLogDTO,
-    pub last_session: GameLogDTO,
+    pub longest_streak: StreakDTO,
+    pub longest_session: LogDTO,
+    pub first_session: LogDTO,
+    pub last_session: LogDTO,
     pub total_sessions: i32,
     #[schema(value_type = String)]
     pub total_time: DurationDef,
@@ -60,9 +60,9 @@ pub struct GamePlayedReviewDTO {
     pub total_time_by_weekday: HashMap<u32, DurationDef>,
     pub total_time_by_hour: HashMap<u32, DurationDef>,
     #[serde(skip)]
-    pub streaks: Vec<GameStreakDTO>,
+    pub streaks: Vec<StreakDTO>,
     #[serde(skip)]
-    pub sessions: Vec<GameLogDTO>,
+    pub sessions: Vec<LogDTO>,
 }
 
 #[derive(Serialize, ToSchema)]
@@ -97,16 +97,14 @@ pub struct GameFinishedReviewDTO {
     pub total_finished: i32,
     pub total_finished_grouped: HashMap<u32, i32>,
     pub first_finished: bool,
-    #[schema(value_type = String, format = Date)]
-    pub first_finish: NaiveDate,
-    #[schema(value_type = String, format = Date)]
-    pub last_finish: NaiveDate,
+    pub first_finish: FinishDTO,
+    pub last_finish: FinishDTO,
     #[serde(skip)]
-    pub finishes: Vec<NaiveDate>,
+    pub finishes: Vec<FinishDTO>,
 }
 
 #[derive(Serialize, ToSchema)]
-pub struct GameStreakDTO {
+pub struct StreakDTO {
     pub days: i64,
     #[schema(value_type = String, format = Date)]
     pub start_date: NaiveDate,
@@ -115,12 +113,14 @@ pub struct GameStreakDTO {
 }
 
 #[derive(Default, Serialize, ToSchema)]
-pub struct GamesLogDTO {
+pub struct GameLogDTO {
     pub game_id: String,
     #[schema(value_type = String, format = DateTime)]
     pub start_datetime: NaiveDateTime,
     #[schema(value_type = String, format = DateTime)]
     pub end_datetime: NaiveDateTime,
+    //#[serde(skip_serializing_if = "Option::is_none")]
+    //pub device_id: Option<String>,
     #[schema(value_type = String)]
     pub time: DurationDef,
 }

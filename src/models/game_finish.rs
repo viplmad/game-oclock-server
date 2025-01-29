@@ -5,7 +5,7 @@ use utoipa::ToSchema;
 use super::{GameStatus, Merge, ModelInfo};
 
 #[derive(Default, Serialize, Deserialize, ToSchema)]
-pub struct GameFinishDTO {
+pub struct FinishDTO {
     #[schema(value_type = String, format = Date)]
     pub date: NaiveDate,
     pub status: GameStatus,
@@ -13,8 +13,8 @@ pub struct GameFinishDTO {
     pub device_id: Option<String>,
 }
 
-impl Merge<NewGameFinishDTO> for GameFinishDTO {
-    fn merge(self, other: NewGameFinishDTO) -> Self {
+impl Merge<NewFinishDTO> for FinishDTO {
+    fn merge(self, other: NewFinishDTO) -> Self {
         Self {
             date: other.date,
             status: other.status,
@@ -23,14 +23,14 @@ impl Merge<NewGameFinishDTO> for GameFinishDTO {
     }
 }
 
-impl ModelInfo for GameFinishDTO {
+impl ModelInfo for FinishDTO {
     const MODEL_NAME: &'static str = "Game finish";
     const ID_FIELDS: &'static [&'static str] = &["game id", "date"];
-    const UNIQUE_FIELDS: &'static [&'static str] = GameFinishDTO::ID_FIELDS;
+    const UNIQUE_FIELDS: &'static [&'static str] = FinishDTO::ID_FIELDS;
 }
 
 #[derive(Deserialize, ToSchema)]
-pub struct NewGameFinishDTO {
+pub struct NewFinishDTO {
     #[schema(value_type = String, format = Date)]
     pub date: NaiveDate,
     pub status: GameStatus,

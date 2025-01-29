@@ -1,7 +1,7 @@
 use chrono::NaiveDate;
 use sqlx::PgPool;
 
-use crate::entities::GameFinish;
+use crate::entities::{Finish, GameFinish};
 use crate::errors::RepositoryError;
 use crate::query::game_finish_query;
 
@@ -20,11 +20,12 @@ pub async fn find_all_by_game_id(
     pool: &PgPool,
     user_id: &str,
     game_id: &str,
-) -> Result<Vec<GameFinish>, RepositoryError> {
+) -> Result<Vec<Finish>, RepositoryError> {
     let query = game_finish_query::select_all_by_user_id_and_game_id(user_id, game_id);
     fetch_all(pool, query).await
 }
 
+// For review
 pub async fn find_all_first_by_user_id_and_game_id_in(
     pool: &PgPool,
     user_id: &str,
@@ -42,7 +43,7 @@ pub async fn create(
     pool: &PgPool,
     user_id: &str,
     game_id: &str,
-    finish: &GameFinish,
+    finish: &Finish,
 ) -> Result<(), RepositoryError> {
     let query = game_finish_query::insert(user_id, game_id, finish);
     execute(pool, query).await
