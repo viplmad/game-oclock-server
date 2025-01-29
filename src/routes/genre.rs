@@ -91,7 +91,8 @@ pub async fn get_genres(
     body: web::Json<SearchDTO>,
     logged_user: LoggedUser,
 ) -> impl Responder {
-    let search_result = genres_service::search_genres(&pool, &logged_user.id, body.0, query.0.q).await;
+    let search_result =
+        genres_service::search_genres(&pool, &logged_user.id, body.0, query.0.q).await;
     handle_get_result(search_result)
 }
 

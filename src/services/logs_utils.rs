@@ -2,7 +2,7 @@ use std::{cmp::Ordering, collections::HashMap};
 
 use chrono::{Datelike, Duration, NaiveDate, NaiveDateTime, NaiveTime, Timelike};
 
-use crate::models::{DurationDef, FinishDTO, GameStatus, StreakDTO, GamesStreakDTO, LogDTO};
+use crate::models::{DurationDef, FinishDTO, GameStatus, GamesStreakDTO, LogDTO, StreakDTO};
 
 pub(super) fn fill_total_time_by_month(
     total_time_by_month_map: &mut HashMap<u32, DurationDef>,

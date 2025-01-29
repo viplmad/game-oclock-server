@@ -76,10 +76,7 @@ fn update_values_by_id(
 ) -> impl QueryStatementWriter {
     let mut update = Query::update();
 
-    values.push((
-        DeviceIden::UpdatedDateTime,
-        crate::date_utils::now().into(),
-    ));
+    values.push((DeviceIden::UpdatedDateTime, crate::date_utils::now().into()));
     update
         .table(DeviceIden::Table)
         .values(values)

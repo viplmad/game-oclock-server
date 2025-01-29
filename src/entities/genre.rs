@@ -45,7 +45,10 @@ impl FromStr for FieldIden<GenreIden> {
         match field {
             "id" => Ok(FieldIden::new(GenreIden::Id, FieldType::String)),
             "name" => Ok(FieldIden::new(GenreIden::Name, FieldType::String)),
-            "added_datetime" => Ok(FieldIden::new(GenreIden::AddedDateTime, FieldType::DateTime)),
+            "added_datetime" => Ok(FieldIden::new(
+                GenreIden::AddedDateTime,
+                FieldType::DateTime,
+            )),
             "updated_datetime" => Ok(FieldIden::new(
                 GenreIden::UpdatedDateTime,
                 FieldType::DateTime,

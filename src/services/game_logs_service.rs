@@ -65,8 +65,7 @@ pub async fn create_game_log(
         )));
     }
 
-    let logs: Vec<NewLogDTO> =
-        split_session_into_logs(start_datetime, end_datetime, log.device_id);
+    let logs: Vec<NewLogDTO> = split_session_into_logs(start_datetime, end_datetime, log.device_id);
     if logs.is_empty() {
         return Err(ApiErrors::InvalidParameter(String::from(
             "Session to add must not have an empty span of time",

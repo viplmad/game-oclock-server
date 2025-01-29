@@ -44,8 +44,7 @@ pub async fn create_device(
                 device_repository::exists_with_unique(pool, user_id, &device_to_create).await;
             handle_already_exists_result::<DeviceDTO>(exists_result)?;
 
-            let create_result =
-                device_repository::create(pool, user_id, &device_to_create).await;
+            let create_result = device_repository::create(pool, user_id, &device_to_create).await;
             handle_create_result::<String, DeviceDTO>(create_result)
         },
     )
@@ -72,28 +71,19 @@ pub async fn update_device(
             handle_already_exists_result::<DeviceDTO>(exists_result)?;
 
             let update_result =
-                device_repository::update_by_id(pool, user_id, device_id, &device_to_update)
-                    .await;
+                device_repository::update_by_id(pool, user_id, device_id, &device_to_update).await;
             handle_update_result::<DeviceDTO>(update_result)
         },
     )
     .await
 }
 
-pub async fn delete_device(
-    pool: &PgPool,
-    user_id: &str,
-    device_id: &str,
-) -> Result<(), ApiErrors> {
+pub async fn delete_device(pool: &PgPool, user_id: &str, device_id: &str) -> Result<(), ApiErrors> {
     let delete_result = device_repository::delete_by_id(pool, user_id, device_id).await;
     handle_action_result::<DeviceDTO>(delete_result)
 }
 
-pub async fn exists_device(
-    pool: &PgPool,
-    user_id: &str,
-    device_id: &str,
-) -> Result<(), ApiErrors> {
+pub async fn exists_device(pool: &PgPool, user_id: &str, device_id: &str) -> Result<(), ApiErrors> {
     let exists_result = device_repository::exists_by_id(pool, user_id, device_id).await;
     handle_not_found_result::<DeviceDTO>(exists_result)
 }

@@ -2,7 +2,7 @@ use chrono::{NaiveDate, NaiveDateTime};
 use serde::Serialize;
 use utoipa::ToSchema;
 
-use super::{DurationDef, GameDTO, LogDTO, GameStatus, ModelInfo};
+use super::{DurationDef, GameDTO, GameStatus, LogDTO, ModelInfo};
 
 // TODO Remove - create calls for aggregation
 #[derive(Serialize, ToSchema)]
