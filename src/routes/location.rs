@@ -1,7 +1,10 @@
 use actix_web::{delete, get, post, put, web, Responder};
 use sqlx::PgPool;
 
-use crate::models::{ItemId, LoggedUser, NewLocationDTO, QuicksearchQuery, SearchDTO};
+use crate::models::{
+    ErrorMessage, ItemId, LocationAvailableDTO, LocationDTO, LocationPageResult, LoggedUser,
+    NewLocationDTO, QuicksearchQuery, SearchDTO,
+};
 use crate::services::{game_available_service, locations_service};
 
 use super::base::{

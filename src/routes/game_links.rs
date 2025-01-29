@@ -1,7 +1,7 @@
 use actix_web::{delete, get, post, web, Responder};
 use sqlx::PgPool;
 
-use crate::models::{ItemId, LoggedUser, NewLinkDTO};
+use crate::models::{ErrorMessage, ItemId, LinkDTO, LoggedUser, NewLinkDTO};
 use crate::services::game_links_service;
 
 use super::base::{handle_action_result, handle_delete_result, handle_get_result};

@@ -2,7 +2,8 @@ use actix_web::{delete, get, post, put, web, Responder};
 use sqlx::PgPool;
 
 use crate::models::{
-    DateDTO, ItemId, ItemIdAndRelatedId, LoggedUser, NewGameDTO, QuicksearchQuery, SearchDTO,
+    DateDTO, ErrorMessage, GameAvailableDTO, GameDTO, GamePageResult, ItemId, ItemIdAndRelatedId,
+    LoggedUser, NewGameDTO, QuicksearchQuery, SearchDTO,
 };
 use crate::services::{
     dlcs_service, game_available_service, game_genres_service, game_played_device_service,
@@ -488,7 +489,7 @@ pub async fn unlink_game_genre(
         ("id" = String, Path, description = "Game id"),
     ),
     responses(
-        (status = 200, description = "DLCs obtained", body = [DLCDTO], content_type = "application/json"),
+        (status = 200, description = "DLCs obtained", body = [GameDTO], content_type = "application/json"),
         (status = 401, description = "Unauthorized", body = ErrorMessage, content_type = "application/json"),
         (status = 403, description = "Forbidden", body = ErrorMessage, content_type = "application/json"),
         (status = 404, description = "Game not found", body = ErrorMessage, content_type = "application/json"),

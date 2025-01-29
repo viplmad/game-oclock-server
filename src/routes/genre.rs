@@ -1,7 +1,10 @@
 use actix_web::{delete, get, post, put, web, Responder};
 use sqlx::PgPool;
 
-use crate::models::{ItemId, LoggedUser, NewGenreDTO, QuicksearchQuery, SearchDTO};
+use crate::models::{
+    ErrorMessage, GenreDTO, GenrePageResult, ItemId, LoggedUser, NewGenreDTO, QuicksearchQuery,
+    SearchDTO,
+};
 use crate::services::{game_genres_service, genres_service};
 
 use super::base::{

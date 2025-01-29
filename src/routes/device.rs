@@ -1,7 +1,10 @@
 use actix_web::{delete, get, post, put, web, Responder};
 use sqlx::PgPool;
 
-use crate::models::{ItemId, LoggedUser, NewDeviceDTO, QuicksearchQuery, SearchDTO};
+use crate::models::{
+    DeviceDTO, DevicePageResult, ErrorMessage, ItemId, LoggedUser, NewDeviceDTO, QuicksearchQuery,
+    SearchDTO,
+};
 use crate::services::{devices_service, game_played_device_service};
 
 use super::base::{

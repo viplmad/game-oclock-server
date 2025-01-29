@@ -1,7 +1,9 @@
 use actix_web::{delete, get, post, put, web, Responder};
 use sqlx::PgPool;
 
-use crate::models::{ItemId, LoggedUser, NewTagDTO, QuicksearchQuery, SearchDTO};
+use crate::models::{
+    ErrorMessage, ItemId, LoggedUser, NewTagDTO, QuicksearchQuery, SearchDTO, TagDTO, TagPageResult,
+};
 use crate::services::{game_tags_service, tags_service};
 
 use super::base::{

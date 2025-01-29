@@ -60,7 +60,7 @@ pub fn get_openapi() -> utoipa::openapi::OpenApi {
             // Locations
             routes::get_location,
             routes::get_game_locations,
-            routes::get_location,
+            routes::get_locations,
             routes::post_location,
             routes::put_location,
             routes::delete_location,

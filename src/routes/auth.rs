@@ -2,7 +2,7 @@ use actix_web::{post, web, Responder};
 use jsonwebtoken::{DecodingKey, EncodingKey};
 use sqlx::PgPool;
 
-use crate::models::TokenRequest;
+use crate::models::{ErrorMessage, TokenRequest, TokenResponse};
 use crate::services::auth_service;
 
 use super::base::handle_get_result;

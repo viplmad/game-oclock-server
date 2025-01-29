@@ -2,7 +2,8 @@ use actix_web::{delete, get, post, put, web, Responder};
 use sqlx::PgPool;
 
 use crate::models::{
-    ItemId, LoggedUser, NewUserDTO, PasswordChangeDTO, PasswordQuery, QuicksearchQuery, SearchDTO,
+    ErrorMessage, ItemId, LoggedUser, NewUserDTO, PasswordChangeDTO, PasswordQuery,
+    QuicksearchQuery, SearchDTO, UserDTO, UserPageResult,
 };
 use crate::routes::base::require_admin_or_current_user;
 use crate::services::users_service;

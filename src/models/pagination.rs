@@ -6,11 +6,16 @@ use super::{
     TagDTO, UserDTO,
 };
 
+pub type GamePageResult = PageResultDTO<GameDTO>;
+pub type GameWithFinishPageResult = PageResultDTO<GameWithFinishDTO>;
+pub type GameWithLogPageResult = PageResultDTO<GameWithLogDTO>;
+pub type LocationPageResult = PageResultDTO<LocationDTO>;
+pub type GenrePageResult = PageResultDTO<GenreDTO>;
+pub type DevicePageResult = PageResultDTO<DeviceDTO>;
+pub type TagPageResult = PageResultDTO<TagDTO>;
+pub type UserPageResult = PageResultDTO<UserDTO>;
+
 #[derive(Serialize, ToSchema)]
-#[aliases(GamePageResult = PageResultDTO<GameDTO>, GameWithFinishPageResult = PageResultDTO<GameWithFinishDTO>,
-    GameWithLogPageResult = PageResultDTO<GameWithLogDTO>, LocationPageResult = PageResultDTO<LocationDTO>,
-    GenrePageResult = PageResultDTO<GenreDTO>, DevicePageResult = PageResultDTO<DeviceDTO>,
-    TagPageResult = PageResultDTO<TagDTO>, UserPageResult = PageResultDTO<UserDTO>)]
 pub struct PageResultDTO<T>
 where
     T: ModelInfo,

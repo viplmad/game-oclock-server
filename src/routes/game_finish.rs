@@ -2,8 +2,9 @@ use actix_web::{delete, get, post, web, Responder};
 use sqlx::PgPool;
 
 use crate::models::{
-    DateDTO, ItemId, LoggedUser, NewFinishDTO, OptionalStartEndDateQuery, QuicksearchQuery,
-    SearchDTO, StartEndDateQuery,
+    DateDTO, ErrorMessage, FinishDTO, GameWithFinishPageResult, GamesFinishedReviewDTO, ItemId,
+    LoggedUser, NewFinishDTO, OptionalStartEndDateQuery, QuicksearchQuery, SearchDTO,
+    StartEndDateQuery,
 };
 use crate::services::{game_finishes_service, game_review_service, game_with_finish_service};
 

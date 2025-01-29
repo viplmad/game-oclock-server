@@ -2,8 +2,9 @@ use actix_web::{delete, get, post, web, Responder};
 use sqlx::PgPool;
 
 use crate::models::{
-    DateTimeDTO, ItemId, LoggedUser, NewLogDTO, OptionalStartEndDateQuery, QuicksearchQuery,
-    SearchDTO, StartEndDateQuery,
+    DateTimeDTO, ErrorMessage, GameWithLogPageResult, GamesPlayedReviewDTO, ItemId, LogDTO,
+    LoggedUser, NewLogDTO, OptionalStartEndDateQuery, QuicksearchQuery, SearchDTO,
+    StartEndDateQuery,
 };
 use crate::services::{game_logs_service, game_review_service, game_with_logs_service};
 
@@ -187,7 +188,7 @@ pub async fn get_last_played_games(
     params(
         ("id" = String, Path, description = "Game id"),
     ),
-    request_body(content = NewGameLogDTO, description = "Game log to be added", content_type = "application/json"),
+    request_body(content = NewLogDTO, description = "Game log to be added", content_type = "application/json"),
     responses(
         (status = 204, description = "Game log added"),
         (status = 400, description = "Bad request", body = ErrorMessage, content_type = "application/json"),
