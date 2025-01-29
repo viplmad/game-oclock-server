@@ -1,7 +1,10 @@
+pub mod device_query;
 pub mod game_available_query;
 pub mod game_finish_query;
 pub mod game_genre_query;
+pub mod game_link_query;
 pub mod game_log_query;
+pub mod game_played_device_query;
 pub mod game_query;
 pub mod game_tag_query;
 pub mod genre_query;

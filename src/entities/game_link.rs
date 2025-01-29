@@ -1,6 +1,5 @@
 use sea_query::Iden;
 use sqlx::FromRow;
-use uuid::Uuid;
 
 use super::TableIden;
 
@@ -24,7 +23,6 @@ impl TableIden for GameLinkIden {
 
 #[derive(FromRow)]
 pub struct GameLink {
-    pub game_id: Uuid,
     pub url: String,
-    pub description: String,
+    pub description: Option<String>,
 }

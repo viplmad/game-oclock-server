@@ -5,7 +5,8 @@ use crate::models::{
     DateDTO, ItemId, ItemIdAndRelatedId, LoggedUser, NewGameDTO, QuicksearchQuery, SearchDTO,
 };
 use crate::services::{
-    game_available_service, game_genres_service, game_tags_service, games_service,
+    game_available_service, game_genres_service, game_played_device_service, game_tags_service,
+    games_service,
 };
 
 use super::base::{
@@ -137,7 +138,7 @@ pub async fn get_genre_games(
         ("id" = String, Path, description = "Device id"),
     ),
     responses(
-        (status = 200, description = "Games obtained", body = [GameAvailableDTO], content_type = "application/json"),
+        (status = 200, description = "Games obtained", body = [GameDTO], content_type = "application/json"),
         (status = 401, description = "Unauthorized", body = ErrorMessage, content_type = "application/json"),
         (status = 403, description = "Forbidden", body = ErrorMessage, content_type = "application/json"),
         (status = 404, description = "Device not found", body = ErrorMessage, content_type = "application/json"),
@@ -154,7 +155,8 @@ pub async fn get_device_games(
     logged_user: LoggedUser,
 ) -> impl Responder {
     let ItemId(id) = path.into_inner();
-    let get_result = game_device_service::get_device_games(&pool, &logged_user.id, &id).await;
+    let get_result =
+        game_played_device_service::get_device_played_games(&pool, &logged_user.id, &id).await;
     handle_get_result(get_result)
 }
 

@@ -1,6 +1,6 @@
 use std::str::FromStr;
 
-use chrono::{NaiveDate, NaiveDateTime};
+use chrono::NaiveDateTime;
 use sea_query::Iden;
 use sqlx::FromRow;
 use uuid::Uuid;
@@ -39,17 +39,6 @@ pub struct Device {
     pub icon_url: Option<String>,
     pub added_datetime: NaiveDateTime,
     pub updated_datetime: NaiveDateTime,
-}
-
-#[derive(FromRow)]
-pub struct DeviceWithDate {
-    pub id: Uuid,
-    pub user_id: Uuid,
-    pub name: String,
-    pub icon_url: Option<String>,
-    pub added_datetime: NaiveDateTime,
-    pub updated_datetime: NaiveDateTime,
-    pub query_date: NaiveDate,
 }
 
 impl FromStr for FieldIden<DeviceIden> {

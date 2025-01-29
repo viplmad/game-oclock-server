@@ -1,5 +1,7 @@
+mod device_mapper;
 mod duration_mapper;
 mod game_finish_mapper;
+mod game_link_mapper;
 mod game_log_mapper;
 mod game_mapper;
 mod game_review_mapper;

@@ -2,8 +2,7 @@ use actix_web::{delete, get, post, put, web, Responder};
 use sqlx::PgPool;
 
 use crate::models::{ItemId, LoggedUser, NewDeviceDTO, QuicksearchQuery, SearchDTO};
-use crate::providers::ImageClientProvider;
-use crate::services::{devices_service, game_devices_service};
+use crate::services::{devices_service, game_played_device_service};
 
 use super::base::{
     handle_create_result, handle_delete_result, handle_get_result, handle_update_result,
@@ -30,7 +29,6 @@ use super::base::{
 #[get("/devices/{id}")]
 pub async fn get_device(
     pool: web::Data<PgPool>,
-    image_client_provider: web::Data<ImageClientProvider>,
     path: web::Path<ItemId>,
     logged_user: LoggedUser,
 ) -> impl Responder {
@@ -47,7 +45,7 @@ pub async fn get_device(
         ("id" = String, Path, description = "Game id"),
     ),
     responses(
-        (status = 200, description = "Devices obtained", body = [DeviceAvailableDTO], content_type = "application/json"),
+        (status = 200, description = "Devices obtained", body = [DeviceDTO], content_type = "application/json"),
         (status = 401, description = "Unauthorized", body = ErrorMessage, content_type = "application/json"),
         (status = 403, description = "Forbidden", body = ErrorMessage, content_type = "application/json"),
         (status = 404, description = "Game not found", body = ErrorMessage, content_type = "application/json"),
@@ -60,12 +58,12 @@ pub async fn get_device(
 #[get("/games/{id}/devices")]
 pub async fn get_game_devices(
     pool: web::Data<PgPool>,
-    image_client_provider: web::Data<ImageClientProvider>,
     path: web::Path<ItemId>,
     logged_user: LoggedUser,
 ) -> impl Responder {
     let ItemId(id) = path.into_inner();
-    let get_result = game_devices_service::get_game_devices(&pool, &logged_user.id, &id).await;
+    let get_result =
+        game_played_device_service::get_game_played_devices(&pool, &logged_user.id, &id).await;
     handle_get_result(get_result)
 }
 
@@ -90,7 +88,6 @@ pub async fn get_game_devices(
 #[post("/devices/list")]
 pub async fn get_devices(
     pool: web::Data<PgPool>,
-    image_client_provider: web::Data<ImageClientProvider>,
     query: web::Query<QuicksearchQuery>,
     body: web::Json<SearchDTO>,
     logged_user: LoggedUser,
@@ -180,12 +177,10 @@ pub async fn put_device(
 #[delete("/devices/{id}")]
 pub async fn delete_device(
     pool: web::Data<PgPool>,
-    image_client_provider: web::Data<ImageClientProvider>,
     path: web::Path<ItemId>,
     logged_user: LoggedUser,
 ) -> impl Responder {
     let ItemId(id) = path.into_inner();
-    let delete_result =
-        devices_service::delete_device(&pool, &image_client_provider, &logged_user.id, &id).await;
+    let delete_result = devices_service::delete_device(&pool, &logged_user.id, &id).await;
     handle_delete_result(delete_result)
 }

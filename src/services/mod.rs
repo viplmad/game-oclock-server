@@ -1,9 +1,12 @@
 pub mod auth_service;
 mod base;
+pub mod devices_service;
 pub mod game_available_service;
 pub mod game_finishes_service;
 pub mod game_genres_service;
+pub mod game_links_service;
 pub mod game_logs_service;
+pub mod game_played_device_service;
 pub mod game_review_service;
 pub mod game_tags_service;
 pub mod game_with_finish_service;

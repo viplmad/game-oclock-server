@@ -96,6 +96,6 @@ pub async fn delete_game_link(
 ) -> impl Responder {
     let ItemId(id) = path.into_inner();
     let delete_result =
-        game_links_service::delete_game_link(&pool, &logged_user.id, &id, body.0).await;
+        game_links_service::delete_game_link(&pool, &logged_user.id, &id, &body.0).await;
     handle_delete_result(delete_result)
 }
