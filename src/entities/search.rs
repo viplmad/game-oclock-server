@@ -1,4 +1,4 @@
-use sea_query::{BinOper, Iden, Order, SelectStatement};
+use sea_query::{BinOper, Iden, Order, SeaRc, SelectStatement};
 
 use super::TableIden;
 
@@ -16,8 +16,8 @@ pub struct Search<I: TableIden> {
 }
 
 pub struct Filter<I: TableIden> {
-    pub table: std::rc::Rc<dyn Iden>,
-    pub field: std::rc::Rc<dyn Iden>,
+    pub table: SeaRc<dyn Iden>,
+    pub field: SeaRc<dyn Iden>,
     pub value: FieldValue,
     pub operator: FilterOperator,
     pub chain_operator: BinOper,
@@ -26,8 +26,8 @@ pub struct Filter<I: TableIden> {
 
 impl<T: TableIden> Filter<T> {
     pub fn new<I: TableIden>(
-        table: std::rc::Rc<dyn Iden>,
-        field: std::rc::Rc<dyn Iden>,
+        table: SeaRc<dyn Iden>,
+        field: SeaRc<dyn Iden>,
         value: FieldValue,
         operator: FilterOperator,
         chain_operator: BinOper,
@@ -77,16 +77,16 @@ pub enum FilterOperator {
 }
 
 pub struct Sort<I: TableIden> {
-    pub table: std::rc::Rc<dyn Iden>,
-    pub field: std::rc::Rc<dyn Iden>,
+    pub table: SeaRc<dyn Iden>,
+    pub field: SeaRc<dyn Iden>,
     pub order: Order,
     resource_type: std::marker::PhantomData<I>,
 }
 
 impl<T: TableIden> Sort<T> {
     pub fn new<I: TableIden>(
-        table: std::rc::Rc<dyn Iden>,
-        field: std::rc::Rc<dyn Iden>,
+        table: SeaRc<dyn Iden>,
+        field: SeaRc<dyn Iden>,
         order: Order,
     ) -> Self {
         Self {
@@ -99,8 +99,8 @@ impl<T: TableIden> Sort<T> {
 }
 
 pub struct FieldIden<I: TableIden> {
-    pub table: std::rc::Rc<dyn Iden>,
-    pub iden: std::rc::Rc<dyn Iden>,
+    pub table: SeaRc<dyn Iden>,
+    pub iden: SeaRc<dyn Iden>,
     pub _type: FieldType,
     resource_type: std::marker::PhantomData<I>,
 }
@@ -108,8 +108,8 @@ pub struct FieldIden<I: TableIden> {
 impl<T: TableIden> FieldIden<T> {
     pub fn new<I: 'static + TableIden>(iden: I, _type: FieldType) -> Self {
         Self {
-            table: std::rc::Rc::new(I::TABLE),
-            iden: std::rc::Rc::new(iden),
+            table: SeaRc::new(I::TABLE),
+            iden: SeaRc::new(iden),
             _type,
             resource_type: std::marker::PhantomData,
         }
