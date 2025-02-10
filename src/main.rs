@@ -3,18 +3,18 @@ use std::{env, fs::File, io::BufReader};
 use actix_web_httpauth::middleware::HttpAuthentication;
 use dotenvy::dotenv;
 use game_oclock_server::{
-    clients::cloudinary::{CloudinaryClient, CloudinaryClientBuilder},
+    clients::{
+        cloudinary::{CloudinaryClient, CloudinaryClientBuilder},
+        sqlx::SqlxPostgresPoolBuilder,
+    },
     migrations, openapi,
     providers::ImageClientProvider,
+    repository::LocationRepository,
     routes,
 };
 
 use actix_web::{web, App, HttpServer};
 use jsonwebtoken::{DecodingKey, EncodingKey};
-use sqlx::{
-    postgres::{PgConnectOptions, PgPoolOptions, PgSslMode},
-    PgPool,
-};
 use utoipa_swagger_ui::{Config, SwaggerUi};
 
 const DEFAULT_HOST: &str = "0.0.0.0";
@@ -59,46 +59,8 @@ fn init_logger() {
     env_logger::init();
 }
 
-async fn get_connection_pool() -> Result<PgPool, sqlx::Error> {
-    let host = env::var("DB_HOST").expect("Database host not set.");
-    let port = env::var("DB_PORT")
-        .expect("Database port not set.")
-        .parse()
-        .expect("Database port is not a number.");
-    let database = env::var("DB_DATABASE").expect("Database not set.");
-    let user = env::var("DB_USER").expect("Database user not set.");
-    let password = env::var("DB_PASSWORD").expect("Database password not set.");
-
-    // Manually-constructed options
-    let conn = PgConnectOptions::new()
-        .username(&user)
-        .password(&password)
-        .host(&host)
-        .port(port)
-        .database(&database)
-        .ssl_mode(PgSslMode::Prefer);
-
-    PgPoolOptions::new()
-        .acquire_timeout(std::time::Duration::from_secs(2))
-        .max_connections(5)
-        .connect_with(conn)
-        .await
-        .map(|res| {
-            log::info!(
-                "Postgres database connected to {}:<redacted>@{}:{}/{}",
-                user,
-                // Hide password from info log
-                host,
-                port,
-                database
-            );
-            res
-        })
-}
-
 fn get_cloudinary_client_provider() -> Option<CloudinaryClient> {
-    CloudinaryClientBuilder::try_from_env()
-        .map(|client| CloudinaryClient::default().connect_with(client))
+    CloudinaryClientBuilder::try_from_env().map(|client| CloudinaryClient::with_connection(client))
 }
 
 fn generate_encoding_key(key: &str) -> EncodingKey {
@@ -121,12 +83,14 @@ async fn run(
     let data_decoding_key = web::Data::new(decoding_key);
 
     // Repository
-    let database_connection_pool = get_connection_pool()
+    let database_connection_pool = SqlxPostgresPoolBuilder::from_env()
         .await
         .expect("Could not open database connection.");
     migrations::apply_migrations(&database_connection_pool).await;
 
-    let data_database_connection = web::Data::new(database_connection_pool);
+    let location_repository = LocationRepository::with_connection(database_connection_pool.clone());
+
+    let data_location_repository = web::Data::new(location_repository);
 
     // Image client
     let image_client_provider =
@@ -145,7 +109,7 @@ async fn run(
         let auth = HttpAuthentication::bearer(game_oclock_server::auth::token_validator);
 
         App::new()
-            .app_data(data_database_connection.clone())
+            .app_data(data_location_repository.clone())
             .app_data(data_image_client.clone())
             .app_data(data_encoding_key.clone())
             .app_data(data_decoding_key.clone())

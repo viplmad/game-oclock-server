@@ -9,15 +9,14 @@ use crate::errors::ImageClientError;
 const ASSET_URL: &str = "https://res.cloudinary.com";
 
 /// A Cloudinary client.
-#[derive(Clone, Default)]
+#[derive(Clone)]
 pub struct CloudinaryClient {
     client: Cloudinary,
 }
 
 impl CloudinaryClient {
-    pub fn connect_with(mut self, client: Cloudinary) -> Self {
-        self.client = client;
-        self
+    pub fn with_connection(client: Cloudinary) -> Self {
+        Self { client }
     }
 }
 

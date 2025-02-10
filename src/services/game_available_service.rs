@@ -4,6 +4,7 @@ use sqlx::PgPool;
 use crate::errors::ApiErrors;
 use crate::models::{GameAvailableDTO, GameStatus, LocationAvailableDTO, NewGameDTO};
 use crate::repository::game_available_repository;
+use crate::repository::LocationRepository;
 
 use super::base::{
     handle_action_result, handle_already_exists_result, handle_get_list_result,
@@ -13,10 +14,11 @@ use super::{games_service, locations_service};
 
 pub async fn get_location_games(
     pool: &PgPool,
+    location_repository: &LocationRepository,
     user_id: &str,
     location_id: &str,
 ) -> Result<Vec<GameAvailableDTO>, ApiErrors> {
-    locations_service::exists_location(pool, user_id, location_id).await?;
+    locations_service::exists_location(location_repository, user_id, location_id).await?;
 
     let find_result =
         game_available_repository::find_all_games_with_location(pool, user_id, location_id).await;
@@ -37,13 +39,14 @@ pub async fn get_game_locations(
 
 pub async fn create_game_available(
     pool: &PgPool,
+    location_repository: &LocationRepository,
     user_id: &str,
     game_id: &str,
     location_id: &str,
     available_date: NaiveDate,
 ) -> Result<(), ApiErrors> {
     let game = games_service::get_game(pool, user_id, game_id).await?;
-    locations_service::exists_location(pool, user_id, location_id).await?;
+    locations_service::exists_location(location_repository, user_id, location_id).await?;
 
     let exists_result =
         game_available_repository::exists_by_id(pool, user_id, game_id, location_id).await;

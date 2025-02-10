@@ -5,6 +5,7 @@ use crate::models::{
     DateDTO, ErrorMessage, GameAvailableDTO, GameDTO, GamePageResult, ItemId, ItemIdAndRelatedId,
     LoggedUser, NewGameDTO, QuicksearchQuery, SearchDTO,
 };
+use crate::repository::LocationRepository;
 use crate::services::{
     dlcs_service, game_available_service, game_genres_service, game_played_device_service,
     game_tags_service, games_service,
@@ -94,11 +95,18 @@ pub async fn get_tag_games(
 #[get("/locations/{id}/games")]
 pub async fn get_location_games(
     pool: web::Data<PgPool>,
+    location_repository: web::Data<LocationRepository>,
     path: web::Path<ItemId>,
     logged_user: LoggedUser,
 ) -> impl Responder {
     let ItemId(id) = path.into_inner();
-    let get_result = game_available_service::get_location_games(&pool, &logged_user.id, &id).await;
+    let get_result = game_available_service::get_location_games(
+        &pool,
+        &location_repository,
+        &logged_user.id,
+        &id,
+    )
+    .await;
     handle_get_result(get_result)
 }
 
@@ -306,6 +314,7 @@ pub async fn link_game_tag(
 #[put("/games/{id}/locations/{other_id}")]
 pub async fn link_game_location(
     pool: web::Data<PgPool>,
+    location_repository: web::Data<LocationRepository>,
     path: web::Path<ItemIdAndRelatedId>,
     body: web::Json<DateDTO>,
     logged_user: LoggedUser,
@@ -313,6 +322,7 @@ pub async fn link_game_location(
     let ItemIdAndRelatedId(id, location_id) = path.into_inner();
     let create_result = game_available_service::create_game_available(
         &pool,
+        &location_repository,
         &logged_user.id,
         &id,
         &location_id,

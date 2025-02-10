@@ -195,7 +195,7 @@ pub fn insert(user_id: &str, game_id: &str, finish: &Finish) -> impl QueryStatem
             game_id.into(),
             finish.date.into(),
             finish.status.into(),
-            finish.device_id.to_string().into(),
+            crate::uuid_utils::to_string(finish.device_id).into(),
         ]);
 
     insert

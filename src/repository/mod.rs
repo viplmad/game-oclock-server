@@ -11,6 +11,8 @@ pub mod game_tag_repository;
 pub mod game_with_finish_repository;
 pub mod game_with_log_repository;
 pub mod genre_repository;
-pub mod location_repository;
+mod location_repository;
 pub mod tag_repository;
 pub mod user_repository;
+
+pub use location_repository::*;

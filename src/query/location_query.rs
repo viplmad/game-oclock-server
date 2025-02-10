@@ -33,38 +33,42 @@ pub(super) fn select_all(user_id: &str) -> SelectStatement {
     select
 }
 
-pub fn insert(user_id: &str, id: &str, location: &Location) -> impl QueryStatementWriter {
+pub fn insert(location: &Location) -> impl QueryStatementWriter {
     let mut insert = Query::insert();
 
     insert
         .into_table(LocationIden::Table)
         .columns([
-            LocationIden::UserId,
             LocationIden::Id,
+            LocationIden::UserId,
             LocationIden::Name,
             LocationIden::IconUrl,
-            LocationIden::AddedDateTime,
-            LocationIden::UpdatedDateTime,
+            LocationIden::AddedDatetime,
+            LocationIden::UpdatedDatetime,
         ])
         .values_panic([
-            user_id.into(),
-            id.into(),
+            crate::uuid_utils::to_string(location.id).into(),
+            crate::uuid_utils::to_string(location.user_id).into(),
             location.name.clone().into(),
             location.icon_url.clone().into(),
-            crate::date_utils::now().into(),
-            crate::date_utils::now().into(),
+            location.added_datetime.into(),
+            location.updated_datetime.into(),
         ]);
 
     insert
 }
 
-pub fn update_by_id(user_id: &str, id: &str, location: &Location) -> impl QueryStatementWriter {
+pub fn update_by_id(location: &Location) -> impl QueryStatementWriter {
     update_values_by_id(
-        user_id,
-        id,
+        &crate::uuid_utils::to_string(location.id),
+        &crate::uuid_utils::to_string(location.user_id),
         vec![
             (LocationIden::Name, location.name.clone().into()),
             (LocationIden::IconUrl, location.icon_url.clone().into()),
+            (
+                LocationIden::UpdatedDatetime,
+                location.updated_datetime.into(),
+            ),
         ],
     )
 }
@@ -72,14 +76,10 @@ pub fn update_by_id(user_id: &str, id: &str, location: &Location) -> impl QueryS
 fn update_values_by_id(
     user_id: &str,
     id: &str,
-    mut values: Vec<(LocationIden, SimpleExpr)>,
+    values: Vec<(LocationIden, SimpleExpr)>,
 ) -> impl QueryStatementWriter {
     let mut update = Query::update();
 
-    values.push((
-        LocationIden::UpdatedDateTime,
-        crate::date_utils::now().into(),
-    ));
     update
         .table(LocationIden::Table)
         .values(values)
@@ -145,9 +145,10 @@ fn add_id_field(select: &mut SelectStatement) {
 fn add_fields(select: &mut SelectStatement) {
     add_id_field(select);
     select
+        .column((LocationIden::Table, LocationIden::Id))
         .column((LocationIden::Table, LocationIden::UserId))
         .column((LocationIden::Table, LocationIden::Name))
         .column((LocationIden::Table, LocationIden::IconUrl))
-        .column((LocationIden::Table, LocationIden::AddedDateTime))
-        .column((LocationIden::Table, LocationIden::UpdatedDateTime));
+        .column((LocationIden::Table, LocationIden::AddedDatetime))
+        .column((LocationIden::Table, LocationIden::UpdatedDatetime));
 }
