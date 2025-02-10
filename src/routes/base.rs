@@ -1,8 +1,8 @@
 use actix_web::HttpResponse;
 use serde::Serialize;
-use sqlx::PgPool;
 
 use crate::errors::{forbidden_error, ToError};
+use crate::repository::UserRepository;
 use crate::services::users_service;
 
 pub(super) fn handle_get_result(
@@ -41,8 +41,11 @@ pub(super) fn handle_action_result(service_result: Result<(), impl ToError>) -> 
     }
 }
 
-pub(super) async fn require_admin(pool: &PgPool, user_id: &str) -> Result<(), HttpResponse> {
-    let admin_result = users_service::is_user_admin(pool, user_id).await;
+pub(super) async fn require_admin(
+    user_repository: &UserRepository,
+    user_id: &str,
+) -> Result<(), HttpResponse> {
+    let admin_result = users_service::is_user_admin(user_repository, user_id).await;
     match admin_result {
         Ok(admin) => {
             if !admin {
@@ -55,12 +58,12 @@ pub(super) async fn require_admin(pool: &PgPool, user_id: &str) -> Result<(), Ht
 }
 
 pub(super) async fn require_admin_or_current_user(
-    pool: &PgPool,
+    user_repository: &UserRepository,
     user_id: &str,
     id: &str,
 ) -> Result<(), HttpResponse> {
     match user_id == id {
         true => Ok(()),
-        false => require_admin(pool, user_id).await,
+        false => require_admin(user_repository, user_id).await,
     }
 }

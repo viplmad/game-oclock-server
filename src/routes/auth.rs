@@ -1,8 +1,8 @@
 use actix_web::{post, web, Responder};
 use jsonwebtoken::{DecodingKey, EncodingKey};
-use sqlx::PgPool;
 
 use crate::models::{ErrorMessage, TokenRequest, TokenResponse};
+use crate::repository::UserRepository;
 use crate::services::auth_service;
 
 use super::base::handle_get_result;
@@ -21,11 +21,12 @@ use super::base::handle_get_result;
 )]
 #[post("/token")]
 pub async fn token(
-    pool: web::Data<PgPool>,
+    user_repository: web::Data<UserRepository>,
     encoding_key: web::Data<EncodingKey>,
     decoding_key: web::Data<DecodingKey>,
     form: web::Form<TokenRequest>,
 ) -> impl Responder {
-    let get_result = auth_service::get_token(&pool, &encoding_key, &decoding_key, form.0).await;
+    let get_result =
+        auth_service::get_token(&user_repository, &encoding_key, &decoding_key, form.0).await;
     handle_get_result(get_result)
 }

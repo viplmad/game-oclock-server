@@ -2,6 +2,7 @@ use std::path::Path;
 
 use sqlx::PgPool;
 
+use crate::repository::UserRepository;
 use crate::temp_file_utils;
 
 use crate::models::NewUserDTO;
@@ -16,14 +17,18 @@ pub async fn apply_migrations(pool: &PgPool) {
         .await
         .expect("Could not apply database migrations.");
 
-    let exists_admin = users_service::exists_admin_user(pool)
+    log::info!("Database migrations applied.");
+}
+
+pub async fn check_admin_user(user_repository: &UserRepository) {
+    let exists_admin = users_service::exists_admin_user(user_repository)
         .await
         .expect("Could not check if admin user exists");
     match exists_admin {
         true => log::info!("Database admin present."),
         false => {
             let admin_user = users_service::create_user(
-                pool,
+                user_repository,
                 NewUserDTO {
                     username: String::from("admin"),
                 },
@@ -31,15 +36,13 @@ pub async fn apply_migrations(pool: &PgPool) {
             )
             .await
             .expect("Could not create admin user");
-            users_service::promote_user(pool, &admin_user.id)
+            users_service::promote_user(user_repository, &admin_user.id)
                 .await
                 .expect("Could not promote admin user");
 
             log::info!("Database admin not present, created 'admin' user with default 'admin' password. PLEASE CHANGE PASSWORD.");
         }
     }
-
-    log::info!("Database migrations applied.");
 }
 
 pub async fn delete_old_temp_files() {

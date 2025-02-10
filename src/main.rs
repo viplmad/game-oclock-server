@@ -9,7 +9,7 @@ use game_oclock_server::{
     },
     migrations, openapi,
     providers::ImageClientProvider,
-    repository::{DeviceRepository, LocationRepository},
+    repository::{DeviceRepository, LocationRepository, UserRepository},
     routes,
 };
 
@@ -88,11 +88,15 @@ async fn run(
         .expect("Could not open database connection.");
     migrations::apply_migrations(&database_connection_pool).await;
 
+    let user_repository = UserRepository::with_connection(database_connection_pool.clone());
+    migrations::check_admin_user(&user_repository).await;
+
     let location_repository = LocationRepository::with_connection(database_connection_pool.clone());
     let device_repository = DeviceRepository::with_connection(database_connection_pool.clone());
 
     let data_location_repository = web::Data::new(location_repository);
     let data_device_repository = web::Data::new(device_repository);
+    let data_user_repository = web::Data::new(user_repository);
 
     // Image client
     let image_client_provider =
@@ -111,6 +115,7 @@ async fn run(
         let auth = HttpAuthentication::bearer(game_oclock_server::auth::token_validator);
 
         App::new()
+            .app_data(data_user_repository.clone())
             .app_data(data_location_repository.clone())
             .app_data(data_device_repository.clone())
             .app_data(data_image_client.clone())

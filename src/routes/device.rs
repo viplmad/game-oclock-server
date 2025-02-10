@@ -32,12 +32,12 @@ use super::base::{
 )]
 #[get("/devices/{id}")]
 pub async fn get_device(
-    repository: web::Data<DeviceRepository>,
+    device_repository: web::Data<DeviceRepository>,
     path: web::Path<ItemId>,
     logged_user: LoggedUser,
 ) -> impl Responder {
     let ItemId(id) = path.into_inner();
-    let get_result = devices_service::get_device(&repository, &logged_user.id, &id).await;
+    let get_result = devices_service::get_device(&device_repository, &logged_user.id, &id).await;
     handle_get_result(get_result)
 }
 
@@ -91,13 +91,14 @@ pub async fn get_game_devices(
 )]
 #[post("/devices/list")]
 pub async fn get_devices(
-    repository: web::Data<DeviceRepository>,
+    device_repository: web::Data<DeviceRepository>,
     query: web::Query<QuicksearchQuery>,
     body: web::Json<SearchDTO>,
     logged_user: LoggedUser,
 ) -> impl Responder {
     let search_result =
-        devices_service::search_devices(&repository, &logged_user.id, body.0, query.0.q).await;
+        devices_service::search_devices(&device_repository, &logged_user.id, body.0, query.0.q)
+            .await;
     handle_get_result(search_result)
 }
 
@@ -120,11 +121,12 @@ pub async fn get_devices(
 )]
 #[post("/devices")]
 pub async fn post_device(
-    repository: web::Data<DeviceRepository>,
+    device_repository: web::Data<DeviceRepository>,
     body: web::Json<NewDeviceDTO>,
     logged_user: LoggedUser,
 ) -> impl Responder {
-    let create_result = devices_service::create_device(&repository, &logged_user.id, body.0).await;
+    let create_result =
+        devices_service::create_device(&device_repository, &logged_user.id, body.0).await;
     handle_create_result(create_result)
 }
 
@@ -150,14 +152,14 @@ pub async fn post_device(
 )]
 #[put("/devices/{id}")]
 pub async fn put_device(
-    repository: web::Data<DeviceRepository>,
+    device_repository: web::Data<DeviceRepository>,
     path: web::Path<ItemId>,
     body: web::Json<NewDeviceDTO>,
     logged_user: LoggedUser,
 ) -> impl Responder {
     let ItemId(id) = path.into_inner();
     let update_result =
-        devices_service::update_device(&repository, &logged_user.id, &id, body.0).await;
+        devices_service::update_device(&device_repository, &logged_user.id, &id, body.0).await;
     handle_update_result(update_result)
 }
 
@@ -181,11 +183,12 @@ pub async fn put_device(
 )]
 #[delete("/devices/{id}")]
 pub async fn delete_device(
-    repository: web::Data<DeviceRepository>,
+    device_repository: web::Data<DeviceRepository>,
     path: web::Path<ItemId>,
     logged_user: LoggedUser,
 ) -> impl Responder {
     let ItemId(id) = path.into_inner();
-    let delete_result = devices_service::delete_device(&repository, &logged_user.id, &id).await;
+    let delete_result =
+        devices_service::delete_device(&device_repository, &logged_user.id, &id).await;
     handle_delete_result(delete_result)
 }

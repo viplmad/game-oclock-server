@@ -1,15 +1,14 @@
 use jsonwebtoken::{DecodingKey, EncodingKey};
-use sqlx::PgPool;
 
 use crate::entities::User;
 use crate::errors::{ApiErrors, TokenErrors};
 use crate::models::{GrantType, TokenRequest, TokenResponse};
-use crate::repository::user_repository;
+use crate::repository::UserRepository;
 
 use super::users_service;
 
 pub async fn get_token(
-    pool: &PgPool,
+    user_repository: &UserRepository,
     encoding_key: &EncodingKey,
     decoding_key: &DecodingKey,
     token_request: TokenRequest,
@@ -29,7 +28,7 @@ pub async fn get_token(
             }
 
             get_token_from_password(
-                pool,
+                user_repository,
                 encoding_key,
                 &token_request.username.unwrap(), // Safe unwrap: already checked before
                 &token_request.password.unwrap(), // Safe unwrap: already checked before
@@ -44,7 +43,7 @@ pub async fn get_token(
             }
 
             get_token_from_refresh(
-                pool,
+                user_repository,
                 encoding_key,
                 decoding_key,
                 &token_request.refresh_token.unwrap(), // Safe unwrap: already checked before
@@ -55,12 +54,13 @@ pub async fn get_token(
 }
 
 async fn get_token_from_password(
-    pool: &PgPool,
+    user_repository: &UserRepository,
     encoding_key: &EncodingKey,
     username: &str,
     password: &str,
 ) -> Result<TokenResponse, TokenErrors> {
-    let user: User = user_repository::find_first_by_username(pool, username)
+    let user: User = user_repository
+        .find_first_by_username(username)
         .await
         .map_err(|_| TokenErrors::UnknownError(String::from("User could not be retrieved.")))?
         .ok_or_else(|| TokenErrors::InvalidRequest(String::from("User does not exist.")))?;
@@ -76,7 +76,7 @@ async fn get_token_from_password(
 }
 
 async fn get_token_from_refresh(
-    pool: &PgPool,
+    user_repository: &UserRepository,
     encoding_key: &EncodingKey,
     decoding_key: &DecodingKey,
     refresh_token: &str,
@@ -92,7 +92,7 @@ async fn get_token_from_refresh(
     }
 
     let user_id = token_data.claims.sub_as_user_id();
-    let user = users_service::get_user(pool, &user_id)
+    let user = users_service::get_user(user_repository, &user_id)
         .await
         .map_err(|err| match err {
             ApiErrors::NotFound(msg) => TokenErrors::InvalidRequest(msg),

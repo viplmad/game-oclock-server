@@ -14,7 +14,8 @@ pub mod genre_repository;
 mod location_repository;
 mod query;
 pub mod tag_repository;
-pub mod user_repository;
+mod user_repository;
 
 pub use device_repository::*;
 pub use location_repository::*;
+pub use user_repository::*;
