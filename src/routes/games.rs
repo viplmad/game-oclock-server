@@ -5,7 +5,7 @@ use crate::models::{
     DateDTO, ErrorMessage, GameAvailableDTO, GameDTO, GamePageResult, ItemId, ItemIdAndRelatedId,
     LoggedUser, NewGameDTO, QuicksearchQuery, SearchDTO,
 };
-use crate::repository::LocationRepository;
+use crate::repository::{DeviceRepository, LocationRepository};
 use crate::services::{
     dlcs_service, game_available_service, game_genres_service, game_played_device_service,
     game_tags_service, games_service,
@@ -160,12 +160,18 @@ pub async fn get_genre_games(
 #[get("/devices/{id}/games")]
 pub async fn get_device_games(
     pool: web::Data<PgPool>,
+    device_repository: web::Data<DeviceRepository>,
     path: web::Path<ItemId>,
     logged_user: LoggedUser,
 ) -> impl Responder {
     let ItemId(id) = path.into_inner();
-    let get_result =
-        game_played_device_service::get_device_played_games(&pool, &logged_user.id, &id).await;
+    let get_result = game_played_device_service::get_device_played_games(
+        &pool,
+        &device_repository,
+        &logged_user.id,
+        &id,
+    )
+    .await;
     handle_get_result(get_result)
 }
 

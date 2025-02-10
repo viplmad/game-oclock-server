@@ -1,5 +1,5 @@
 mod base;
-pub mod device_repository;
+mod device_repository;
 pub mod game_available_repository;
 pub mod game_finish_repository;
 pub mod game_genre_repository;
@@ -16,4 +16,5 @@ mod query;
 pub mod tag_repository;
 pub mod user_repository;
 
+pub use device_repository::*;
 pub use location_repository::*;

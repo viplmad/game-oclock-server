@@ -2,17 +2,18 @@ use sqlx::PgPool;
 
 use crate::errors::ApiErrors;
 use crate::models::{DeviceDTO, GameDTO};
-use crate::repository::game_played_device_repository;
+use crate::repository::{game_played_device_repository, DeviceRepository};
 
 use super::base::handle_get_list_result;
 use super::{devices_service, games_service};
 
 pub async fn get_device_played_games(
     pool: &PgPool,
+    device_repository: &DeviceRepository,
     user_id: &str,
     device_id: &str,
 ) -> Result<Vec<GameDTO>, ApiErrors> {
-    devices_service::exists_device(pool, user_id, device_id).await?;
+    devices_service::exists_device(device_repository, user_id, device_id).await?;
 
     let find_result =
         game_played_device_repository::find_all_games_with_played_device(pool, user_id, device_id)

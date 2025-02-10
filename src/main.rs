@@ -9,7 +9,7 @@ use game_oclock_server::{
     },
     migrations, openapi,
     providers::ImageClientProvider,
-    repository::LocationRepository,
+    repository::{DeviceRepository, LocationRepository},
     routes,
 };
 
@@ -89,8 +89,10 @@ async fn run(
     migrations::apply_migrations(&database_connection_pool).await;
 
     let location_repository = LocationRepository::with_connection(database_connection_pool.clone());
+    let device_repository = DeviceRepository::with_connection(database_connection_pool.clone());
 
     let data_location_repository = web::Data::new(location_repository);
+    let data_device_repository = web::Data::new(device_repository);
 
     // Image client
     let image_client_provider =
@@ -110,6 +112,7 @@ async fn run(
 
         App::new()
             .app_data(data_location_repository.clone())
+            .app_data(data_device_repository.clone())
             .app_data(data_image_client.clone())
             .app_data(data_encoding_key.clone())
             .app_data(data_decoding_key.clone())
