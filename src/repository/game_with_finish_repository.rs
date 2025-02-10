@@ -1,9 +1,9 @@
 use chrono::NaiveDate;
 use sqlx::PgPool;
 
+use super::query::game_finish_query;
 use crate::entities::{GameSearch, GameWithFinish, PageResult};
 use crate::errors::{RepositoryError, SearchErrors};
-use crate::query::game_finish_query;
 
 use super::base::{fetch_all, fetch_all_search};
 

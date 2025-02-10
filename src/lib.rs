@@ -5,7 +5,6 @@ pub mod entities;
 pub mod extractors;
 pub mod mapper;
 pub mod models;
-pub mod query;
 pub mod repository;
 pub mod routes;
 pub mod services;

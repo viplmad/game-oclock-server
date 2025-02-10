@@ -1,8 +1,8 @@
 use sqlx::PgPool;
 
+use super::query::tag_query;
 use crate::entities::{PageResult, Tag, TagSearch};
 use crate::errors::{RepositoryError, SearchErrors};
-use crate::query::tag_query;
 
 use super::base::{execute, exists_id, fetch_all_search, fetch_optional};
 

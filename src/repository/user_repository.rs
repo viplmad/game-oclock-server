@@ -1,8 +1,8 @@
 use sqlx::PgPool;
 
+use super::query::user_query;
 use crate::entities::{PageResult, User, UserSearch};
 use crate::errors::{RepositoryError, SearchErrors};
-use crate::query::user_query;
 
 use super::base::{execute, exists_id, fetch_all_search, fetch_optional};
 

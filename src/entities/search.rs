@@ -84,11 +84,7 @@ pub struct Sort<I: TableIden> {
 }
 
 impl<T: TableIden> Sort<T> {
-    pub fn new<I: TableIden>(
-        table: SeaRc<dyn Iden>,
-        field: SeaRc<dyn Iden>,
-        order: Order,
-    ) -> Self {
+    pub fn new<I: TableIden>(table: SeaRc<dyn Iden>, field: SeaRc<dyn Iden>, order: Order) -> Self {
         Self {
             table,
             field,

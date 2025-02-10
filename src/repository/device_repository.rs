@@ -1,8 +1,8 @@
 use sqlx::PgPool;
 
+use super::query::device_query;
 use crate::entities::{Device, DeviceSearch, PageResult};
 use crate::errors::{RepositoryError, SearchErrors};
-use crate::query::device_query;
 
 use super::base::{execute, exists_id, fetch_all_search, fetch_optional};
 

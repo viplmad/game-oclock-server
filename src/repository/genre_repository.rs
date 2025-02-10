@@ -1,8 +1,8 @@
 use sqlx::PgPool;
 
+use super::query::genre_query;
 use crate::entities::{Genre, GenreSearch, PageResult};
 use crate::errors::{RepositoryError, SearchErrors};
-use crate::query::genre_query;
 
 use super::base::{execute, exists_id, fetch_all_search, fetch_optional};
 

@@ -1,9 +1,9 @@
 use chrono::NaiveDate;
 use sqlx::PgPool;
 
+use super::query::game_available_query;
 use crate::entities::{GameWithDate, LocationWithDate};
 use crate::errors::RepositoryError;
-use crate::query::game_available_query;
 
 use super::base::{execute, exists_id, fetch_all};
 

@@ -1,8 +1,8 @@
 use sqlx::PgPool;
 
+use super::query::game_link_query;
 use crate::entities::Link;
 use crate::errors::RepositoryError;
-use crate::query::game_link_query;
 
 use super::base::{execute, exists_id, fetch_all};
 

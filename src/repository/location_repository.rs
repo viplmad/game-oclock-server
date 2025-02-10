@@ -1,8 +1,8 @@
 use sqlx::PgPool;
 
+use super::query::location_query;
 use crate::entities::{Location, LocationSearch, PageResult};
 use crate::errors::{RepositoryError, SearchErrors};
-use crate::query::location_query;
 
 use super::base::{execute, exists_id, fetch_all_search, fetch_optional};
 

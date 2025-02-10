@@ -1,8 +1,8 @@
 use sqlx::PgPool;
 
+use super::query::game_tag_query;
 use crate::entities::{Game, Tag};
 use crate::errors::RepositoryError;
-use crate::query::game_tag_query;
 
 use super::base::{execute, exists_id, fetch_all};
 
