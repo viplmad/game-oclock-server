@@ -16,6 +16,7 @@ use game_oclock_server::{
         LocationRepository, TagRepository, UserRepository,
     },
     routes,
+    services::LocationService,
 };
 
 use actix_web::{web, App, HttpServer};
@@ -118,6 +119,8 @@ async fn run(
     let location_repository = LocationRepository::with_connection(database_connection_pool.clone());
     let tag_repository = TagRepository::with_connection(database_connection_pool.clone());
 
+    let location_service = LocationService::with_repository(location_repository);
+
     let data_user_repository = web::Data::new(user_repository);
     let data_device_repository = web::Data::new(device_repository);
     let data_game_available_repository = web::Data::new(game_available_repository);
@@ -131,7 +134,7 @@ async fn run(
     let data_game_with_finish_repository = web::Data::new(game_with_finish_repository);
     let data_game_with_log_repository = web::Data::new(game_with_log_repository);
     let data_genre_repository = web::Data::new(genre_repository);
-    let data_location_repository = web::Data::new(location_repository);
+    let data_location_service = web::Data::new(location_service);
     let data_tag_repository = web::Data::new(tag_repository);
 
     // Image client
@@ -165,7 +168,7 @@ async fn run(
             .app_data(data_game_with_finish_repository.clone())
             .app_data(data_game_with_log_repository.clone())
             .app_data(data_genre_repository.clone())
-            .app_data(data_location_repository.clone())
+            .app_data(data_location_service.clone())
             .app_data(data_tag_repository.clone())
             .app_data(data_image_client.clone())
             .app_data(data_encoding_key.clone())
@@ -225,7 +228,7 @@ async fn run(
                         // Locations
                         .service(routes::get_location)
                         .service(routes::get_game_locations)
-                        .service(routes::get_location)
+                        .service(routes::get_locations)
                         .service(routes::post_location)
                         .service(routes::put_location)
                         .service(routes::delete_location)

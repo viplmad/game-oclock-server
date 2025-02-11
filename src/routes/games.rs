@@ -6,11 +6,11 @@ use crate::models::{
 };
 use crate::repository::{
     DeviceRepository, GameAvailableRepository, GameGenreRepository, GamePlayedDeviceRepository,
-    GameRepository, GameTagRepository, GenreRepository, LocationRepository, TagRepository,
+    GameRepository, GameTagRepository, GenreRepository, TagRepository,
 };
 use crate::services::{
     dlcs_service, game_available_service, game_genres_service, game_played_device_service,
-    game_tags_service, games_service,
+    game_tags_service, games_service, LocationService,
 };
 
 use super::base::{
@@ -104,14 +104,14 @@ pub async fn get_tag_games(
 #[get("/locations/{id}/games")]
 pub async fn get_location_games(
     game_available_repository: web::Data<GameAvailableRepository>,
-    location_repository: web::Data<LocationRepository>,
+    location_service: web::Data<LocationService>,
     path: web::Path<ItemId>,
     logged_user: LoggedUser,
 ) -> impl Responder {
     let ItemId(id) = path.into_inner();
     let get_result = game_available_service::get_location_games(
         &game_available_repository,
-        &location_repository,
+        &location_service,
         &logged_user.id,
         &id,
     )
@@ -354,7 +354,7 @@ pub async fn link_game_tag(
 pub async fn link_game_location(
     game_available_repository: web::Data<GameAvailableRepository>,
     game_repository: web::Data<GameRepository>,
-    location_repository: web::Data<LocationRepository>,
+    location_service: web::Data<LocationService>,
     path: web::Path<ItemIdAndRelatedId>,
     body: web::Json<DateDTO>,
     logged_user: LoggedUser,
@@ -363,7 +363,7 @@ pub async fn link_game_location(
     let create_result = game_available_service::create_game_available(
         &game_available_repository,
         &game_repository,
-        &location_repository,
+        &location_service,
         &logged_user.id,
         &id,
         &location_id,

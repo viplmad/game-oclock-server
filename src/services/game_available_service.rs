@@ -2,21 +2,23 @@ use chrono::NaiveDate;
 
 use crate::errors::ApiErrors;
 use crate::models::{GameAvailableDTO, GameStatus, LocationAvailableDTO, NewGameDTO};
-use crate::repository::{GameAvailableRepository, GameRepository, LocationRepository};
+use crate::repository::{GameAvailableRepository, GameRepository};
 
 use super::base::{
     handle_action_result, handle_already_exists_result, handle_get_list_result,
     handle_not_found_result, handle_result,
 };
-use super::{games_service, locations_service};
+use super::{games_service, LocationService};
 
 pub async fn get_location_games(
     repository: &GameAvailableRepository,
-    location_repository: &LocationRepository,
+    location_service: &LocationService,
     user_id: &str,
     location_id: &str,
 ) -> Result<Vec<GameAvailableDTO>, ApiErrors> {
-    locations_service::exists_location(location_repository, user_id, location_id).await?;
+    location_service
+        .exists_location(user_id, location_id)
+        .await?;
 
     let find_result = repository
         .find_all_games_with_location(user_id, location_id)
@@ -41,14 +43,16 @@ pub async fn get_game_locations(
 pub async fn create_game_available(
     repository: &GameAvailableRepository,
     game_repository: &GameRepository,
-    location_repository: &LocationRepository,
+    location_service: &LocationService,
     user_id: &str,
     game_id: &str,
     location_id: &str,
     available_date: NaiveDate,
 ) -> Result<(), ApiErrors> {
     let game = games_service::get_game(game_repository, user_id, game_id).await?;
-    locations_service::exists_location(location_repository, user_id, location_id).await?;
+    location_service
+        .exists_location(user_id, location_id)
+        .await?;
 
     let exists_result = repository.exists_by_id(user_id, game_id, location_id).await;
     handle_already_exists_result::<GameAvailableDTO>(exists_result)?;

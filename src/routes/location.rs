@@ -4,8 +4,8 @@ use crate::models::{
     ErrorMessage, ItemId, LocationAvailableDTO, LocationDTO, LocationPageResult, LoggedUser,
     NewLocationDTO, QuicksearchQuery, SearchDTO,
 };
-use crate::repository::{GameAvailableRepository, GameRepository, LocationRepository};
-use crate::services::{game_available_service, locations_service};
+use crate::repository::{GameAvailableRepository, GameRepository};
+use crate::services::{game_available_service, LocationService};
 
 use super::base::{
     handle_create_result, handle_delete_result, handle_get_result, handle_update_result,
@@ -31,13 +31,12 @@ use super::base::{
 )]
 #[get("/locations/{id}")]
 pub async fn get_location(
-    location_repository: web::Data<LocationRepository>,
+    location_service: web::Data<LocationService>,
     path: web::Path<ItemId>,
     logged_user: LoggedUser,
 ) -> impl Responder {
     let ItemId(id) = path.into_inner();
-    let get_result =
-        locations_service::get_location(&location_repository, &logged_user.id, &id).await;
+    let get_result = location_service.get_location(&logged_user.id, &id).await;
     handle_get_result(get_result)
 }
 
@@ -97,18 +96,14 @@ pub async fn get_game_locations(
 )]
 #[post("/locations/list")]
 pub async fn get_locations(
-    location_repository: web::Data<LocationRepository>,
+    location_service: web::Data<LocationService>,
     query: web::Query<QuicksearchQuery>,
     body: web::Json<SearchDTO>,
     logged_user: LoggedUser,
 ) -> impl Responder {
-    let search_result = locations_service::search_locations(
-        &location_repository,
-        &logged_user.id,
-        body.0,
-        query.0.q,
-    )
-    .await;
+    let search_result = location_service
+        .search_locations(&logged_user.id, body.0, query.0.q)
+        .await;
     handle_get_result(search_result)
 }
 
@@ -131,12 +126,13 @@ pub async fn get_locations(
 )]
 #[post("/locations")]
 pub async fn post_location(
-    location_repository: web::Data<LocationRepository>,
+    location_service: web::Data<LocationService>,
     body: web::Json<NewLocationDTO>,
     logged_user: LoggedUser,
 ) -> impl Responder {
-    let create_result =
-        locations_service::create_location(&location_repository, &logged_user.id, body.0).await;
+    let create_result = location_service
+        .create_location(&logged_user.id, body.0)
+        .await;
     handle_create_result(create_result)
 }
 
@@ -162,15 +158,15 @@ pub async fn post_location(
 )]
 #[put("/locations/{id}")]
 pub async fn put_location(
-    location_repository: web::Data<LocationRepository>,
+    location_service: web::Data<LocationService>,
     path: web::Path<ItemId>,
     body: web::Json<NewLocationDTO>,
     logged_user: LoggedUser,
 ) -> impl Responder {
     let ItemId(id) = path.into_inner();
-    let update_result =
-        locations_service::update_location(&location_repository, &logged_user.id, &id, body.0)
-            .await;
+    let update_result = location_service
+        .update_location(&logged_user.id, &id, body.0)
+        .await;
     handle_update_result(update_result)
 }
 
@@ -194,12 +190,11 @@ pub async fn put_location(
 )]
 #[delete("/locations/{id}")]
 pub async fn delete_location(
-    location_repository: web::Data<LocationRepository>,
+    location_service: web::Data<LocationService>,
     path: web::Path<ItemId>,
     logged_user: LoggedUser,
 ) -> impl Responder {
     let ItemId(id) = path.into_inner();
-    let delete_result =
-        locations_service::delete_location(&location_repository, &logged_user.id, &id).await;
+    let delete_result = location_service.delete_location(&logged_user.id, &id).await;
     handle_delete_result(delete_result)
 }

@@ -14,7 +14,9 @@ pub mod game_with_finish_service;
 pub mod game_with_logs_service;
 pub mod games_service;
 pub mod genres_service;
-pub mod locations_service;
+mod location_service;
 mod logs_utils;
 pub mod tags_service;
 pub mod users_service;
+
+pub use location_service::*;
