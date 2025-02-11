@@ -169,5 +169,5 @@ where
 }
 
 fn build_sql(query: impl QueryStatementWriter) -> String {
-    query.to_string(PostgresQueryBuilder)
+    query.to_string(PostgresQueryBuilder) // TODO search a way to use CommonSqlQueryBuilder
 }

@@ -1,11 +1,11 @@
 use actix_web::{delete, get, post, web, Responder};
-use sqlx::PgPool;
 
 use crate::models::{
     DateDTO, ErrorMessage, FinishDTO, GameWithFinishPageResult, GamesFinishedReviewDTO, ItemId,
     LoggedUser, NewFinishDTO, OptionalStartEndDateQuery, QuicksearchQuery, SearchDTO,
     StartEndDateQuery,
 };
+use crate::repository::{GameFinishRepository, GameRepository, GameWithFinishRepository};
 use crate::services::{game_finishes_service, game_review_service, game_with_finish_service};
 
 use super::base::{handle_action_result, handle_delete_result, handle_get_result};
@@ -30,12 +30,19 @@ use super::base::{handle_action_result, handle_delete_result, handle_get_result}
 )]
 #[get("/games/{id}/finishes")]
 pub async fn get_game_finishes(
-    pool: web::Data<PgPool>,
+    game_finish_repository: web::Data<GameFinishRepository>,
+    game_repository: web::Data<GameRepository>,
     path: web::Path<ItemId>,
     logged_user: LoggedUser,
 ) -> impl Responder {
     let ItemId(id) = path.into_inner();
-    let get_result = game_finishes_service::get_game_finishes(&pool, &logged_user.id, &id).await;
+    let get_result = game_finishes_service::get_game_finishes(
+        &game_finish_repository,
+        &game_repository,
+        &logged_user.id,
+        &id,
+    )
+    .await;
     handle_get_result(get_result)
 }
 
@@ -59,13 +66,19 @@ pub async fn get_game_finishes(
 )]
 #[get("/games/{id}/finishes/first")]
 pub async fn get_first_game_finish(
-    pool: web::Data<PgPool>,
+    game_finish_repository: web::Data<GameFinishRepository>,
+    game_repository: web::Data<GameRepository>,
     path: web::Path<ItemId>,
     logged_user: LoggedUser,
 ) -> impl Responder {
     let ItemId(id) = path.into_inner();
-    let get_result =
-        game_finishes_service::get_first_game_finish(&pool, &logged_user.id, &id).await;
+    let get_result = game_finishes_service::get_first_game_finish(
+        &game_finish_repository,
+        &game_repository,
+        &logged_user.id,
+        &id,
+    )
+    .await;
     handle_get_result(get_result)
 }
 
@@ -88,12 +101,14 @@ pub async fn get_first_game_finish(
 )]
 #[post("/games/finished/review")]
 pub async fn get_finished_games_review(
-    pool: web::Data<PgPool>,
+    game_finish_repository: web::Data<GameFinishRepository>,
+    game_with_finish_repository: web::Data<GameWithFinishRepository>,
     query: web::Query<StartEndDateQuery>,
     logged_user: LoggedUser,
 ) -> impl Responder {
     let get_result = game_review_service::get_finished_games_review(
-        &pool,
+        &game_finish_repository,
+        &game_with_finish_repository,
         &logged_user.id,
         query.start_date,
         query.end_date,
@@ -124,14 +139,14 @@ pub async fn get_finished_games_review(
 )]
 #[post("/games/finished/first")]
 pub async fn get_first_finished_games(
-    pool: web::Data<PgPool>,
+    game_with_finish_repository: web::Data<GameWithFinishRepository>,
     query: web::Query<OptionalStartEndDateQuery>,
     quick_query: web::Query<QuicksearchQuery>,
     body: web::Json<SearchDTO>,
     logged_user: LoggedUser,
 ) -> impl Responder {
     let get_result = game_with_finish_service::search_first_finished_games(
-        &pool,
+        &game_with_finish_repository,
         &logged_user.id,
         query.start_date,
         query.end_date,
@@ -164,14 +179,14 @@ pub async fn get_first_finished_games(
 )]
 #[post("/games/finished/last")]
 pub async fn get_last_finished_games(
-    pool: web::Data<PgPool>,
+    game_with_finish_repository: web::Data<GameWithFinishRepository>,
     query: web::Query<OptionalStartEndDateQuery>,
     quick_query: web::Query<QuicksearchQuery>,
     body: web::Json<SearchDTO>,
     logged_user: LoggedUser,
 ) -> impl Responder {
     let get_result = game_with_finish_service::search_last_finished_games(
-        &pool,
+        &game_with_finish_repository,
         &logged_user.id,
         query.start_date,
         query.end_date,
@@ -204,14 +219,21 @@ pub async fn get_last_finished_games(
 )]
 #[post("/games/{id}/finishes")]
 pub async fn post_game_finish(
-    pool: web::Data<PgPool>,
+    game_finish_repository: web::Data<GameFinishRepository>,
+    game_repository: web::Data<GameRepository>,
     path: web::Path<ItemId>,
     body: web::Json<NewFinishDTO>,
     logged_user: LoggedUser,
 ) -> impl Responder {
     let ItemId(id) = path.into_inner();
-    let create_result =
-        game_finishes_service::create_game_finish(&pool, &logged_user.id, &id, body.0).await;
+    let create_result = game_finishes_service::create_game_finish(
+        &game_finish_repository,
+        &game_repository,
+        &logged_user.id,
+        &id,
+        body.0,
+    )
+    .await;
     handle_action_result(create_result)
 }
 
@@ -236,13 +258,20 @@ pub async fn post_game_finish(
 )]
 #[delete("/games/{id}/finishes")]
 pub async fn delete_game_finish(
-    pool: web::Data<PgPool>,
+    game_finish_repository: web::Data<GameFinishRepository>,
+    game_repository: web::Data<GameRepository>,
     path: web::Path<ItemId>,
     body: web::Json<DateDTO>, // TODO Add status and device
     logged_user: LoggedUser,
 ) -> impl Responder {
     let ItemId(id) = path.into_inner();
-    let delete_result =
-        game_finishes_service::delete_game_finish(&pool, &logged_user.id, &id, body.date).await;
+    let delete_result = game_finishes_service::delete_game_finish(
+        &game_finish_repository,
+        &game_repository,
+        &logged_user.id,
+        &id,
+        body.date,
+    )
+    .await;
     handle_delete_result(delete_result)
 }

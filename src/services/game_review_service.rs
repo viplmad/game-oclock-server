@@ -1,13 +1,15 @@
 use std::collections::{HashMap, HashSet};
 
 use chrono::{Datelike, NaiveDate, NaiveDateTime};
-use sqlx::PgPool;
 
 use crate::entities::{GameFinish, GameLogWithTime, GameWithFinish, GameWithLog};
 use crate::errors::ApiErrors;
 use crate::models::{
     DurationDef, FinishDTO, GameFinishedReviewDTO, GameLogDTO, GamePlayedReviewDTO, GameStatus,
     GamesFinishedReviewDTO, GamesPlayedReviewDTO, GamesStreakDTO, LogDTO, StreakDTO,
+};
+use crate::repository::{
+    GameFinishRepository, GameLogRepository, GameWithFinishRepository, GameWithLogRepository,
 };
 
 use super::{
@@ -16,14 +18,19 @@ use super::{
 };
 
 pub async fn get_played_games_review(
-    pool: &PgPool,
+    game_log_repository: &GameLogRepository,
+    game_with_logs_repository: &GameWithLogRepository,
     user_id: &str,
     start_date: NaiveDate,
     end_date: NaiveDate,
 ) -> Result<GamesPlayedReviewDTO, ApiErrors> {
-    let game_with_logs =
-        game_with_logs_service::find_game_with_logs_between(pool, user_id, start_date, end_date)
-            .await?;
+    let game_with_logs = game_with_logs_service::find_game_with_logs_between(
+        game_with_logs_repository,
+        user_id,
+        start_date,
+        end_date,
+    )
+    .await?;
 
     let game_ids = game_with_logs
         .iter()
@@ -32,20 +39,25 @@ pub async fn get_played_games_review(
         .into_iter()
         .collect();
     let first_logs =
-        game_logs_service::find_first_game_logs_by_games(pool, user_id, game_ids).await?;
+        game_logs_service::find_first_game_logs_by_games(game_log_repository, user_id, game_ids)
+            .await?;
 
     let review = build_played_review(game_with_logs, first_logs);
     Ok(review)
 }
 
 pub async fn get_finished_games_review(
-    pool: &PgPool,
+    game_finish_repository: &GameFinishRepository,
+    game_with_finish_repository: &GameWithFinishRepository,
     user_id: &str,
     start_date: NaiveDate,
     end_date: NaiveDate,
 ) -> Result<GamesFinishedReviewDTO, ApiErrors> {
     let game_with_finishes = game_with_finish_service::find_game_with_finishes_between(
-        pool, user_id, start_date, end_date,
+        game_with_finish_repository,
+        user_id,
+        start_date,
+        end_date,
     )
     .await?;
 
@@ -55,8 +67,12 @@ pub async fn get_finished_games_review(
         .collect::<HashSet<String>>()
         .into_iter()
         .collect();
-    let first_finishes =
-        game_finishes_service::find_first_game_finishes_by_games(pool, user_id, game_ids).await?;
+    let first_finishes = game_finishes_service::find_first_game_finishes_by_games(
+        game_finish_repository,
+        user_id,
+        game_ids,
+    )
+    .await?;
 
     let review = build_finished_review(game_with_finishes, first_finishes);
     Ok(review)

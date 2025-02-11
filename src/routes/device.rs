@@ -1,11 +1,10 @@
 use actix_web::{delete, get, post, put, web, Responder};
-use sqlx::PgPool;
 
 use crate::models::{
     DeviceDTO, DevicePageResult, ErrorMessage, ItemId, LoggedUser, NewDeviceDTO, QuicksearchQuery,
     SearchDTO,
 };
-use crate::repository::DeviceRepository;
+use crate::repository::{DeviceRepository, GamePlayedDeviceRepository, GameRepository};
 use crate::services::{devices_service, game_played_device_service};
 
 use super::base::{
@@ -61,13 +60,19 @@ pub async fn get_device(
 )]
 #[get("/games/{id}/devices")]
 pub async fn get_game_devices(
-    pool: web::Data<PgPool>,
+    game_repository: web::Data<GameRepository>,
+    game_played_device_repository: web::Data<GamePlayedDeviceRepository>,
     path: web::Path<ItemId>,
     logged_user: LoggedUser,
 ) -> impl Responder {
     let ItemId(id) = path.into_inner();
-    let get_result =
-        game_played_device_service::get_game_played_devices(&pool, &logged_user.id, &id).await;
+    let get_result = game_played_device_service::get_game_played_devices(
+        &game_played_device_repository,
+        &game_repository,
+        &logged_user.id,
+        &id,
+    )
+    .await;
     handle_get_result(get_result)
 }
 

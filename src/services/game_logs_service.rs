@@ -1,11 +1,10 @@
 use chrono::{Duration, NaiveDateTime};
-use sqlx::postgres::types::PgInterval;
-use sqlx::PgPool;
+use sqlx::postgres::types::PgInterval; // TODO remove reference to sqlx in service
 
 use crate::entities::{GameLogWithTime, LogWithTime};
 use crate::errors::ApiErrors;
 use crate::models::{DurationDef, LogDTO, Merge, NewLogDTO};
-use crate::repository::game_log_repository;
+use crate::repository::{GameLogRepository, GameRepository};
 
 use super::base::{
     handle_action_result, handle_already_exists_result, handle_get_list_result,
@@ -14,47 +13,50 @@ use super::base::{
 use super::games_service;
 
 pub async fn get_sum_game_logs(
-    pool: &PgPool,
+    repository: &GameLogRepository,
+    game_repository: &GameRepository,
     user_id: &str,
     game_id: &str,
 ) -> Result<DurationDef, ApiErrors> {
-    games_service::exists_game(pool, user_id, game_id).await?;
+    games_service::exists_game(game_repository, user_id, game_id).await?;
 
-    let find_result = game_log_repository::find_sum_time_by_game_id(pool, user_id, game_id).await;
+    let find_result = repository.find_sum_time_by_game_id(user_id, game_id).await;
     let duration = handle_result::<PgInterval, LogDTO>(find_result)?;
     Ok(DurationDef::from(duration))
 }
 
 pub async fn get_game_logs(
-    pool: &PgPool,
+    repository: &GameLogRepository,
+    game_repository: &GameRepository,
     user_id: &str,
     game_id: &str,
 ) -> Result<Vec<LogDTO>, ApiErrors> {
-    games_service::exists_game(pool, user_id, game_id).await?;
+    games_service::exists_game(game_repository, user_id, game_id).await?;
 
-    let find_result = game_log_repository::find_all_by_game_id(pool, user_id, game_id).await;
+    let find_result = repository.find_all_by_game_id(user_id, game_id).await;
     handle_get_list_result::<LogWithTime, LogDTO>(find_result)
 }
 
 // For review
 pub(super) async fn find_first_game_logs_by_games(
-    pool: &PgPool,
+    repository: &GameLogRepository,
     user_id: &str,
     game_ids: Vec<String>,
 ) -> Result<Vec<GameLogWithTime>, ApiErrors> {
-    let find_result =
-        game_log_repository::find_all_first_by_user_id_and_game_id_in(pool, user_id, game_ids)
-            .await;
+    let find_result = repository
+        .find_all_first_by_user_id_and_game_id_in(user_id, game_ids)
+        .await;
     handle_result::<Vec<GameLogWithTime>, LogDTO>(find_result)
 }
 
 pub async fn create_game_log(
-    pool: &PgPool,
+    repository: &GameLogRepository,
+    game_repository: &GameRepository,
     user_id: &str,
     game_id: &str,
     log: NewLogDTO,
 ) -> Result<(), ApiErrors> {
-    games_service::exists_game(pool, user_id, game_id).await?;
+    games_service::exists_game(game_repository, user_id, game_id).await?;
 
     let start_datetime = log.start_datetime;
     let end_datetime = log.end_datetime;
@@ -73,8 +75,9 @@ pub async fn create_game_log(
         )));
     }
 
-    let exists_result =
-        game_log_repository::exists_gap(pool, user_id, start_datetime, end_datetime).await;
+    let exists_result = repository
+        .exists_gap(user_id, start_datetime, end_datetime)
+        .await;
     handle_already_exists_result::<LogDTO>(exists_result)?;
 
     let logs_to_create: Vec<LogWithTime> = logs
@@ -82,31 +85,33 @@ pub async fn create_game_log(
         .map(LogDTO::merge_with_default)
         .map(LogWithTime::from)
         .collect();
-    let create_result =
-        game_log_repository::create_multiple(pool, user_id, game_id, logs_to_create).await;
+    let create_result = repository
+        .create_multiple(user_id, game_id, logs_to_create)
+        .await;
     handle_action_result::<LogDTO>(create_result)
 }
 
 pub async fn delete_game_log(
-    pool: &PgPool,
+    repository: &GameLogRepository,
+    game_repository: &GameRepository,
     user_id: &str,
     game_id: &str,
     datetime: NaiveDateTime,
 ) -> Result<(), ApiErrors> {
-    games_service::exists_game(pool, user_id, game_id).await?;
-    exists_game_log(pool, user_id, game_id, datetime).await?;
+    games_service::exists_game(game_repository, user_id, game_id).await?;
+    exists_game_log(repository, user_id, game_id, datetime).await?;
 
-    let delete_result = game_log_repository::delete_by_id(pool, user_id, game_id, datetime).await;
+    let delete_result = repository.delete_by_id(user_id, game_id, datetime).await;
     handle_action_result::<LogDTO>(delete_result)
 }
 
 pub async fn exists_game_log(
-    pool: &PgPool,
+    repository: &GameLogRepository,
     user_id: &str,
     game_id: &str,
     datetime: NaiveDateTime,
 ) -> Result<(), ApiErrors> {
-    let exists_result = game_log_repository::exists_by_id(pool, user_id, game_id, datetime).await;
+    let exists_result = repository.exists_by_id(user_id, game_id, datetime).await;
     handle_not_found_result::<LogDTO>(exists_result)
 }
 

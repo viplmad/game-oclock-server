@@ -1,12 +1,11 @@
 use std::collections::HashMap;
 
 use chrono::NaiveDate;
-use sqlx::PgPool;
 
 use crate::entities::{GameSearch, GameWithLog};
 use crate::errors::ApiErrors;
 use crate::models::{GameWithLogDTO, GameWithLogPageResult, GameWithLogsDTO, LogDTO, SearchDTO};
-use crate::repository::game_with_log_repository;
+use crate::repository::GameWithLogRepository;
 
 use super::base::{
     check_optional_start_end, check_start_end, handle_get_list_paged_result, handle_query_mapping,
@@ -14,7 +13,7 @@ use super::base::{
 };
 
 pub async fn search_first_played_games(
-    pool: &PgPool,
+    repository: &GameWithLogRepository,
     user_id: &str,
     start_date: Option<NaiveDate>,
     end_date: Option<NaiveDate>,
@@ -25,19 +24,14 @@ pub async fn search_first_played_games(
 
     let (start_datetime, end_datetime) = optional_start_end_to_datetime(start_date, end_date);
     let search = handle_query_mapping::<GameWithLogDTO, GameSearch>(search, quicksearch)?;
-    let find_result = game_with_log_repository::search_first_by_start_datetime_between(
-        pool,
-        user_id,
-        start_datetime,
-        end_datetime,
-        search,
-    )
-    .await;
+    let find_result = repository
+        .search_first_by_start_datetime_between(user_id, start_datetime, end_datetime, search)
+        .await;
     handle_get_list_paged_result(find_result)
 }
 
 pub async fn search_last_played_games(
-    pool: &PgPool,
+    repository: &GameWithLogRepository,
     user_id: &str,
     start_date: Option<NaiveDate>,
     end_date: Option<NaiveDate>,
@@ -48,31 +42,27 @@ pub async fn search_last_played_games(
 
     let (start_datetime, end_datetime) = optional_start_end_to_datetime(start_date, end_date);
     let search = handle_query_mapping::<GameWithLogDTO, GameSearch>(search, quicksearch)?;
-    let find_result = game_with_log_repository::search_last_by_start_datetime_between(
-        pool,
-        user_id,
-        start_datetime,
-        end_datetime,
-        search,
-    )
-    .await;
+    let find_result = repository
+        .search_last_by_start_datetime_between(user_id, start_datetime, end_datetime, search)
+        .await;
     handle_get_list_paged_result(find_result)
 }
 
 pub async fn get_game_with_logs(
-    pool: &PgPool,
+    repository: &GameWithLogRepository,
     user_id: &str,
     start_date: NaiveDate,
     end_date: NaiveDate,
 ) -> Result<Vec<GameWithLogsDTO>, ApiErrors> {
-    let entity_list = find_game_with_logs_between(pool, user_id, start_date, end_date).await?;
+    let entity_list =
+        find_game_with_logs_between(repository, user_id, start_date, end_date).await?;
 
     let game_with_logs = build_game_with_logs_list(entity_list);
     Ok(game_with_logs)
 }
 
 pub(super) async fn find_game_with_logs_between(
-    pool: &PgPool,
+    repository: &GameWithLogRepository,
     user_id: &str,
     start_date: NaiveDate,
     end_date: NaiveDate,
@@ -80,13 +70,9 @@ pub(super) async fn find_game_with_logs_between(
     check_start_end(start_date, end_date)?;
 
     let (start_datetime, end_datetime) = start_end_to_datetime(start_date, end_date);
-    let find_result = game_with_log_repository::find_all_by_start_datetime_between(
-        pool,
-        user_id,
-        start_datetime,
-        end_datetime,
-    )
-    .await;
+    let find_result = repository
+        .find_all_by_start_datetime_between(user_id, start_datetime, end_datetime)
+        .await;
     handle_result::<Vec<GameWithLog>, GameWithLogDTO>(find_result)
 }
 

@@ -1,11 +1,10 @@
 use actix_web::{delete, get, post, put, web, Responder};
-use sqlx::PgPool;
 
 use crate::models::{
     ErrorMessage, ItemId, LocationAvailableDTO, LocationDTO, LocationPageResult, LoggedUser,
     NewLocationDTO, QuicksearchQuery, SearchDTO,
 };
-use crate::repository::LocationRepository;
+use crate::repository::{GameAvailableRepository, GameRepository, LocationRepository};
 use crate::services::{game_available_service, locations_service};
 
 use super::base::{
@@ -62,12 +61,19 @@ pub async fn get_location(
 )]
 #[get("/games/{id}/locations")]
 pub async fn get_game_locations(
-    pool: web::Data<PgPool>,
+    game_available_repository: web::Data<GameAvailableRepository>,
+    game_repository: web::Data<GameRepository>,
     path: web::Path<ItemId>,
     logged_user: LoggedUser,
 ) -> impl Responder {
     let ItemId(id) = path.into_inner();
-    let get_result = game_available_service::get_game_locations(&pool, &logged_user.id, &id).await;
+    let get_result = game_available_service::get_game_locations(
+        &game_available_repository,
+        &game_repository,
+        &logged_user.id,
+        &id,
+    )
+    .await;
     handle_get_result(get_result)
 }
 

@@ -1,11 +1,11 @@
 use actix_web::{delete, get, post, web, Responder};
-use sqlx::PgPool;
 
 use crate::models::{
     DateTimeDTO, ErrorMessage, GameWithLogPageResult, GamesPlayedReviewDTO, ItemId, LogDTO,
     LoggedUser, NewLogDTO, OptionalStartEndDateQuery, QuicksearchQuery, SearchDTO,
     StartEndDateQuery,
 };
+use crate::repository::{GameLogRepository, GameRepository, GameWithLogRepository};
 use crate::services::{game_logs_service, game_review_service, game_with_logs_service};
 
 use super::base::{handle_action_result, handle_delete_result, handle_get_result};
@@ -30,12 +30,19 @@ use super::base::{handle_action_result, handle_delete_result, handle_get_result}
 )]
 #[get("/games/{id}/logs")]
 pub async fn get_game_logs(
-    pool: web::Data<PgPool>,
+    game_log_repository: web::Data<GameLogRepository>,
+    game_repository: web::Data<GameRepository>,
     path: web::Path<ItemId>,
     logged_user: LoggedUser,
 ) -> impl Responder {
     let ItemId(id) = path.into_inner();
-    let get_result = game_logs_service::get_game_logs(&pool, &logged_user.id, &id).await;
+    let get_result = game_logs_service::get_game_logs(
+        &game_log_repository,
+        &game_repository,
+        &logged_user.id,
+        &id,
+    )
+    .await;
     handle_get_result(get_result)
 }
 
@@ -59,12 +66,19 @@ pub async fn get_game_logs(
 )]
 #[get("/games/{id}/logs/total")]
 pub async fn get_total_game_logs(
-    pool: web::Data<PgPool>,
+    game_log_repository: web::Data<GameLogRepository>,
+    game_repository: web::Data<GameRepository>,
     path: web::Path<ItemId>,
     logged_user: LoggedUser,
 ) -> impl Responder {
     let ItemId(id) = path.into_inner();
-    let get_result = game_logs_service::get_sum_game_logs(&pool, &logged_user.id, &id).await;
+    let get_result = game_logs_service::get_sum_game_logs(
+        &game_log_repository,
+        &game_repository,
+        &logged_user.id,
+        &id,
+    )
+    .await;
     handle_get_result(get_result)
 }
 
@@ -87,12 +101,14 @@ pub async fn get_total_game_logs(
 )]
 #[post("/games/played/review")]
 pub async fn get_played_games_review(
-    pool: web::Data<PgPool>,
+    game_log_repository: web::Data<GameLogRepository>,
+    game_with_logs_repository: web::Data<GameWithLogRepository>,
     query: web::Query<StartEndDateQuery>,
     logged_user: LoggedUser,
 ) -> impl Responder {
     let get_result = game_review_service::get_played_games_review(
-        &pool,
+        &game_log_repository,
+        &game_with_logs_repository,
         &logged_user.id,
         query.start_date,
         query.end_date,
@@ -123,14 +139,14 @@ pub async fn get_played_games_review(
 )]
 #[post("/games/played/first")]
 pub async fn get_first_played_games(
-    pool: web::Data<PgPool>,
+    game_with_logs_repository: web::Data<GameWithLogRepository>,
     query: web::Query<OptionalStartEndDateQuery>,
     quick_query: web::Query<QuicksearchQuery>,
     body: web::Json<SearchDTO>,
     logged_user: LoggedUser,
 ) -> impl Responder {
     let get_result = game_with_logs_service::search_first_played_games(
-        &pool,
+        &game_with_logs_repository,
         &logged_user.id,
         query.start_date,
         query.end_date,
@@ -163,14 +179,14 @@ pub async fn get_first_played_games(
 )]
 #[post("/games/played/last")]
 pub async fn get_last_played_games(
-    pool: web::Data<PgPool>,
+    game_with_logs_repository: web::Data<GameWithLogRepository>,
     query: web::Query<OptionalStartEndDateQuery>,
     quick_query: web::Query<QuicksearchQuery>,
     body: web::Json<SearchDTO>,
     logged_user: LoggedUser,
 ) -> impl Responder {
     let get_result = game_with_logs_service::search_last_played_games(
-        &pool,
+        &game_with_logs_repository,
         &logged_user.id,
         query.start_date,
         query.end_date,
@@ -203,14 +219,21 @@ pub async fn get_last_played_games(
 )]
 #[post("/games/{id}/logs")]
 pub async fn post_game_log(
-    pool: web::Data<PgPool>,
+    game_log_repository: web::Data<GameLogRepository>,
+    game_repository: web::Data<GameRepository>,
     path: web::Path<ItemId>,
     body: web::Json<NewLogDTO>,
     logged_user: LoggedUser,
 ) -> impl Responder {
     let ItemId(id) = path.into_inner();
-    let create_result =
-        game_logs_service::create_game_log(&pool, &logged_user.id, &id, body.0).await;
+    let create_result = game_logs_service::create_game_log(
+        &game_log_repository,
+        &game_repository,
+        &logged_user.id,
+        &id,
+        body.0,
+    )
+    .await;
     handle_action_result(create_result)
 }
 
@@ -235,13 +258,20 @@ pub async fn post_game_log(
 )]
 #[delete("/games/{id}/logs")]
 pub async fn delete_game_log(
-    pool: web::Data<PgPool>,
+    game_log_repository: web::Data<GameLogRepository>,
+    game_repository: web::Data<GameRepository>,
     path: web::Path<ItemId>,
     body: web::Json<DateTimeDTO>,
     logged_user: LoggedUser,
 ) -> impl Responder {
     let ItemId(id) = path.into_inner();
-    let delete_result =
-        game_logs_service::delete_game_log(&pool, &logged_user.id, &id, body.datetime).await;
+    let delete_result = game_logs_service::delete_game_log(
+        &game_log_repository,
+        &game_repository,
+        &logged_user.id,
+        &id,
+        body.datetime,
+    )
+    .await;
     handle_delete_result(delete_result)
 }
