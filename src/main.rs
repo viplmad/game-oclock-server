@@ -16,7 +16,7 @@ use game_oclock_server::{
         LocationRepository, TagRepository, UserRepository,
     },
     routes,
-    services::{LocationService, UserService},
+    services::{AuthService, LocationService, UserService},
 };
 
 use actix_web::{web, App, HttpServer};
@@ -98,6 +98,7 @@ async fn run(
     let user_service = UserService::with_repository(user_repository);
     migrations::check_admin_user(&user_service).await;
 
+    let auth_service = AuthService::with(user_service.clone());
     let device_repository = DeviceRepository::with_connection(database_connection_pool.clone());
     let game_available_repository =
         GameAvailableRepository::with_connection(database_connection_pool.clone());
@@ -123,6 +124,7 @@ async fn run(
     let location_service = LocationService::with_repository(location_repository);
 
     let data_user_service = web::Data::new(user_service);
+    let data_auth_service = web::Data::new(auth_service);
     let data_device_repository = web::Data::new(device_repository);
     let data_game_available_repository = web::Data::new(game_available_repository);
     let data_game_finish_repository = web::Data::new(game_finish_repository);
@@ -157,6 +159,7 @@ async fn run(
         App::new()
             // Data injection
             .app_data(data_user_service.clone())
+            .app_data(data_auth_service.clone())
             .app_data(data_device_repository.clone())
             .app_data(data_game_available_repository.clone())
             .app_data(data_game_finish_repository.clone())

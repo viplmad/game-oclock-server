@@ -11,7 +11,7 @@ pub struct AuthService {
 }
 
 impl AuthService {
-    pub fn with_repository(user_service: UserService) -> Self {
+    pub fn with(user_service: UserService) -> Self {
         Self { user_service }
     }
 }
