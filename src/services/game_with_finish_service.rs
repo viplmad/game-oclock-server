@@ -5,7 +5,7 @@ use crate::errors::ApiErrors;
 use crate::models::{GameWithFinishDTO, GameWithFinishPageResult, SearchDTO};
 use crate::repository::GameWithFinishRepository;
 
-use super::base::{
+use super::helpers::{
     check_optional_start_end, check_start_end, handle_get_list_paged_result, handle_query_mapping,
     handle_result,
 };

@@ -4,7 +4,7 @@ use super::query::game_query;
 use crate::entities::{Game, GameSearch, PageResult};
 use crate::errors::{RepositoryError, SearchErrors};
 
-use super::base::{
+use super::helpers::{
     begin_transaction, commit_transaction, execute, exists_id, fetch_all, fetch_all_search,
     fetch_optional,
 };

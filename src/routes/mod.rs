@@ -1,11 +1,11 @@
 mod auth;
-mod base;
 mod device;
 mod game_finish;
 mod game_links;
 mod game_logs;
 mod games;
 mod genre;
+mod helpers;
 mod liveness;
 mod location;
 mod tags;

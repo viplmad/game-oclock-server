@@ -1,5 +1,4 @@
 mod auth_service;
-mod base;
 mod device_service;
 mod game_available_service;
 mod game_finish_service;
@@ -13,6 +12,7 @@ mod game_tag_service;
 mod game_with_finish_service;
 mod game_with_log_service;
 mod genre_service;
+mod helpers;
 mod location_service;
 mod logs_utils;
 mod tag_service;

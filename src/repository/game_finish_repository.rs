@@ -5,7 +5,7 @@ use super::query::game_finish_query;
 use crate::entities::{Finish, GameFinish};
 use crate::errors::RepositoryError;
 
-use super::base::{execute, execute_return_single, exists_id, fetch_all};
+use super::helpers::{execute, execute_return_single, exists_id, fetch_all};
 
 #[derive(Clone)]
 pub struct GameFinishRepository {

@@ -2,8 +2,6 @@ use std::path::Path;
 
 use sqlx::PgPool;
 
-use crate::temp_file_utils;
-
 use crate::models::NewUserDTO;
 use crate::services::UserService;
 
@@ -44,10 +42,4 @@ pub async fn check_admin_user(user_service: &UserService) {
             log::info!("Database admin not present, created 'admin' user with default 'admin' password. PLEASE CHANGE PASSWORD.");
         }
     }
-}
-
-pub async fn delete_old_temp_files() {
-    temp_file_utils::delete_all_temp_dirs().await;
-
-    log::info!("Old temp images deleted.");
 }

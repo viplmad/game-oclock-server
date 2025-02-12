@@ -5,7 +5,7 @@ use crate::errors::ApiErrors;
 use crate::models::{GameWithLogDTO, GameWithLogPageResult, SearchDTO};
 use crate::repository::GameWithLogRepository;
 
-use super::base::{
+use super::helpers::{
     check_optional_start_end, check_start_end, handle_get_list_paged_result, handle_query_mapping,
     handle_result, optional_start_end_to_datetime, start_end_to_datetime,
 };

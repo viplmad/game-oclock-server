@@ -4,7 +4,7 @@ use super::query::game_played_device_query;
 use crate::entities::{Device, Game};
 use crate::errors::RepositoryError;
 
-use super::base::fetch_all;
+use super::helpers::fetch_all;
 
 #[derive(Clone)]
 pub struct GamePlayedDeviceRepository {

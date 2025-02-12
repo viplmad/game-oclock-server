@@ -4,7 +4,7 @@ use super::query::game_genre_query;
 use crate::entities::{Game, Genre};
 use crate::errors::RepositoryError;
 
-use super::base::{execute, exists_id, fetch_all};
+use super::helpers::{execute, exists_id, fetch_all};
 
 #[derive(Clone)]
 pub struct GameGenreRepository {

@@ -4,10 +4,10 @@ use crate::models::{
     ErrorMessage, ItemId, LoggedUser, NewUserDTO, PasswordChangeDTO, PasswordQuery,
     QuicksearchQuery, SearchDTO, UserDTO, UserPageResult,
 };
-use crate::routes::base::require_admin_or_current_user;
+use crate::routes::helpers::require_admin_or_current_user;
 use crate::services::UserService;
 
-use super::base::{
+use super::helpers::{
     handle_action_result, handle_create_result, handle_delete_result, handle_get_result,
     handle_update_result, require_admin,
 };

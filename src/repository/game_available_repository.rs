@@ -5,7 +5,7 @@ use super::query::game_available_query;
 use crate::entities::{GameWithDate, LocationWithDate};
 use crate::errors::RepositoryError;
 
-use super::base::{execute, exists_id, fetch_all};
+use super::helpers::{execute, exists_id, fetch_all};
 
 #[derive(Clone)]
 pub struct GameAvailableRepository {

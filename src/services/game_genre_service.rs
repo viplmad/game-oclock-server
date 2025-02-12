@@ -2,7 +2,7 @@ use crate::errors::ApiErrors;
 use crate::models::{GameDTO, GameGenreDTO, GenreDTO};
 use crate::repository::GameGenreRepository;
 
-use super::base::{
+use super::helpers::{
     handle_action_result, handle_already_exists_result, handle_get_list_result,
     handle_not_found_result,
 };

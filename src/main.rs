@@ -3,15 +3,7 @@ use std::{env, fs::File, io::BufReader};
 use actix_web_httpauth::middleware::HttpAuthentication;
 use dotenvy::dotenv;
 use game_oclock_server::{
-    clients::{
-        cloudinary::{CloudinaryClient, CloudinaryClientBuilder},
-        sqlx::SqlxPostgresPoolBuilder,
-    },
-    migrations, openapi,
-    providers::ImageClientProvider,
-    repository::*,
-    routes,
-    services::*,
+    migrations, openapi, providers::SqlxPostgresPoolBuilder, repository::*, routes, services::*,
 };
 
 use actix_web::{web, App, HttpServer};
@@ -58,10 +50,6 @@ async fn main() -> std::io::Result<()> {
 
 fn init_logger() {
     env_logger::init();
-}
-
-fn get_cloudinary_client_provider() -> Option<CloudinaryClient> {
-    CloudinaryClientBuilder::try_from_env().map(|client| CloudinaryClient::with_connection(client))
 }
 
 fn generate_encoding_key(key: &str) -> EncodingKey {
@@ -170,16 +158,6 @@ async fn run(
     let data_game_with_log_service = web::Data::new(game_with_log_service.clone());
     let data_game_review_service = web::Data::new(game_review_service.clone());
 
-    // Image client
-    let image_client_provider =
-        if let Some(cloudinary_client_provider) = get_cloudinary_client_provider() {
-            ImageClientProvider::new(cloudinary_client_provider)
-        } else {
-            ImageClientProvider::empty()
-        };
-    let data_image_client = web::Data::new(image_client_provider);
-    migrations::delete_old_temp_files().await;
-
     // OpenAPI
     let openapi = openapi::get_openapi();
 
@@ -204,7 +182,6 @@ async fn run(
             .app_data(data_game_with_finish_service.clone())
             .app_data(data_game_with_log_service.clone())
             .app_data(data_game_review_service.clone())
-            .app_data(data_image_client.clone())
             .app_data(data_encoding_key.clone())
             .app_data(data_decoding_key.clone())
             .service(

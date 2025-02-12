@@ -1,20 +1,47 @@
-use crate::clients::image_client::ImageClient;
+use sqlx::{
+    postgres::{PgConnectOptions, PgPoolOptions, PgSslMode},
+    PgPool,
+};
 
-pub struct ImageClientProvider(Option<Box<dyn ImageClient>>);
+/// Connection options to Sqlx Postgres.
+#[derive(Debug)]
+pub struct SqlxPostgresPoolBuilder;
 
-impl ImageClientProvider {
-    pub fn new(client: impl ImageClient) -> Self {
-        Self(Some(Box::new(client)))
-    }
+impl SqlxPostgresPoolBuilder {
+    pub async fn from_env() -> Result<PgPool, sqlx::Error> {
+        let host = std::env::var("DB_HOST").expect("Database host not set.");
+        let port = std::env::var("DB_PORT")
+            .expect("Database port not set.")
+            .parse()
+            .expect("Database port is not a number.");
+        let database = std::env::var("DB_DATABASE").expect("Database not set.");
+        let user = std::env::var("DB_USER").expect("Database user not set.");
+        let password = std::env::var("DB_PASSWORD").expect("Database password not set.");
 
-    pub fn empty() -> Self {
-        Self(None)
-    }
+        // Manually-constructed options
+        let conn = PgConnectOptions::new()
+            .username(&user)
+            .password(&password)
+            .host(&host)
+            .port(port)
+            .database(&database)
+            .ssl_mode(PgSslMode::Prefer);
 
-    pub fn get_client(&self) -> Option<&dyn ImageClient> {
-        match &self.0 {
-            Some(client_ref) => Some(client_ref.as_ref()),
-            None => None,
-        }
+        PgPoolOptions::new()
+            .acquire_timeout(std::time::Duration::from_secs(2))
+            .max_connections(5)
+            .connect_with(conn)
+            .await
+            .map(|res| {
+                log::info!(
+                    "Postgres database connected to {}:<redacted>@{}:{}/{}",
+                    user,
+                    // Hide password from info log
+                    host,
+                    port,
+                    database
+                );
+                res
+            })
     }
 }

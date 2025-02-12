@@ -4,7 +4,7 @@ use super::query::game_tag_query;
 use crate::entities::{Game, Tag};
 use crate::errors::RepositoryError;
 
-use super::base::{execute, exists_id, fetch_all};
+use super::helpers::{execute, exists_id, fetch_all};
 
 #[derive(Clone)]
 pub struct GameTagRepository {

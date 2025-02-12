@@ -5,7 +5,7 @@ use super::query::game_finish_query;
 use crate::entities::{GameSearch, GameWithFinish, PageResult};
 use crate::errors::{RepositoryError, SearchErrors};
 
-use super::base::{fetch_all, fetch_all_search};
+use super::helpers::{fetch_all, fetch_all_search};
 
 #[derive(Clone)]
 pub struct GameWithFinishRepository {

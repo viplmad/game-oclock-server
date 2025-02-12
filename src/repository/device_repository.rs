@@ -4,7 +4,7 @@ use super::query::device_query;
 use crate::entities::{Device, DeviceSearch, PageResult};
 use crate::errors::{RepositoryError, SearchErrors};
 
-use super::base::{execute, exists_id, fetch_all_search, fetch_optional};
+use super::helpers::{execute, exists_id, fetch_all_search, fetch_optional};
 
 #[derive(Clone)]
 pub struct DeviceRepository {

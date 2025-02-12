@@ -7,7 +7,7 @@ use crate::models::{
 };
 use crate::services::{GameLogService, GameReviewService, GameWithLogService};
 
-use super::base::{handle_action_result, handle_delete_result, handle_get_result};
+use super::helpers::{handle_action_result, handle_delete_result, handle_get_result};
 
 #[utoipa::path(
     get,

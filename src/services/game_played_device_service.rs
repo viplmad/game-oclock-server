@@ -2,7 +2,7 @@ use crate::errors::ApiErrors;
 use crate::models::{DeviceDTO, GameDTO};
 use crate::repository::GamePlayedDeviceRepository;
 
-use super::base::handle_get_list_result;
+use super::helpers::handle_get_list_result;
 use super::{DeviceService, GameService};
 
 #[derive(Clone)]

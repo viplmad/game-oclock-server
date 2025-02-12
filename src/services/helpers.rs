@@ -2,13 +2,11 @@ use std::future::Future;
 
 use chrono::{NaiveDate, NaiveDateTime};
 
-use crate::clients::image_client::ImageClient;
 use crate::entities::PageResult;
 use crate::errors::{
     error_message_builder, ApiErrors, MappingError, RepositoryError, SearchErrors,
 };
 use crate::models::{FilterDTO, Merge, ModelInfo, PageResultDTO, SearchDTO};
-use crate::providers::ImageClientProvider;
 
 pub fn handle_result<E, T>(repository_result: Result<E, RepositoryError>) -> Result<E, ApiErrors>
 where
@@ -267,17 +265,5 @@ where
             quicksearch_filters.append(filters)
         }
         search.filter = Some(quicksearch_filters);
-    }
-}
-
-pub(super) fn handle_image_client_provider(
-    provider: &ImageClientProvider,
-) -> Result<&dyn ImageClient, ApiErrors> {
-    if let Some(client) = provider.get_client() {
-        Ok(client)
-    } else {
-        Err(ApiErrors::InvalidParameter(String::from(
-            "Image client not set",
-        )))
     }
 }

@@ -3,7 +3,7 @@ use crate::errors::ApiErrors;
 use crate::models::{GenreDTO, GenrePageResult, NewGenreDTO, SearchDTO};
 use crate::repository::GenreRepository;
 
-use super::base::{
+use super::helpers::{
     create_merged, handle_action_result, handle_already_exists_result, handle_create_result,
     handle_get_list_paged_result, handle_get_result, handle_not_found_result, handle_query_mapping,
     handle_update_result, update_merged,

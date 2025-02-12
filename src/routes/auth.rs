@@ -4,7 +4,7 @@ use jsonwebtoken::{DecodingKey, EncodingKey};
 use crate::models::{ErrorMessage, TokenRequest, TokenResponse};
 use crate::services::AuthService;
 
-use super::base::handle_get_result;
+use super::helpers::handle_get_result;
 
 #[utoipa::path(
     post,

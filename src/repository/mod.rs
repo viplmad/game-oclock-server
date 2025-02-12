@@ -1,4 +1,3 @@
-mod base;
 mod device_repository;
 mod game_available_repository;
 mod game_finish_repository;
@@ -11,6 +10,7 @@ mod game_tag_repository;
 mod game_with_finish_repository;
 mod game_with_log_repository;
 mod genre_repository;
+mod helpers;
 mod location_repository;
 mod query;
 mod tag_repository;

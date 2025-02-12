@@ -5,7 +5,7 @@ use super::query::game_log_query;
 use crate::entities::{GameLogWithTime, LogWithTime};
 use crate::errors::RepositoryError;
 
-use super::base::{
+use super::helpers::{
     begin_transaction, commit_transaction, execute, execute_return_single, exists_id, fetch_all,
 };
 

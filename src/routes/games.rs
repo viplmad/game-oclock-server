@@ -8,7 +8,7 @@ use crate::services::{
     GameAvailableService, GameGenreService, GamePlayedDeviceService, GameService, GameTagService,
 };
 
-use super::base::{
+use super::helpers::{
     handle_action_result, handle_create_result, handle_delete_result, handle_get_result,
     handle_update_result,
 };

@@ -3,7 +3,7 @@ use actix_web::{delete, get, post, web, Responder};
 use crate::models::{ErrorMessage, ItemId, LinkDTO, LoggedUser, NewLinkDTO};
 use crate::services::GameLinkService;
 
-use super::base::{handle_action_result, handle_delete_result, handle_get_result};
+use super::helpers::{handle_action_result, handle_delete_result, handle_get_result};
 
 #[utoipa::path(
     get,
