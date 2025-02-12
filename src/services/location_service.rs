@@ -15,7 +15,7 @@ pub struct LocationService {
 }
 
 impl LocationService {
-    pub fn with_repository(repository: LocationRepository) -> Self {
+    pub fn with(repository: LocationRepository) -> Self {
         Self { repository }
     }
 }

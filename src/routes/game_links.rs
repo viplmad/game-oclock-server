@@ -1,8 +1,7 @@
 use actix_web::{delete, get, post, web, Responder};
 
 use crate::models::{ErrorMessage, ItemId, LinkDTO, LoggedUser, NewLinkDTO};
-use crate::repository::{GameLinkRepository, GameRepository};
-use crate::services::game_links_service;
+use crate::services::GameLinkService;
 
 use super::base::{handle_action_result, handle_delete_result, handle_get_result};
 
@@ -26,19 +25,12 @@ use super::base::{handle_action_result, handle_delete_result, handle_get_result}
 )]
 #[get("/games/{id}/links")]
 pub async fn get_game_links(
-    game_link_repository: web::Data<GameLinkRepository>,
-    game_repository: web::Data<GameRepository>,
+    game_link_service: web::Data<GameLinkService>,
     path: web::Path<ItemId>,
     logged_user: LoggedUser,
 ) -> impl Responder {
     let ItemId(id) = path.into_inner();
-    let get_result = game_links_service::get_game_links(
-        &game_link_repository,
-        &game_repository,
-        &logged_user.id,
-        &id,
-    )
-    .await;
+    let get_result = game_link_service.get_game_links(&logged_user.id, &id).await;
     handle_get_result(get_result)
 }
 
@@ -64,21 +56,15 @@ pub async fn get_game_links(
 )]
 #[post("/games/{id}/links")]
 pub async fn post_game_link(
-    game_link_repository: web::Data<GameLinkRepository>,
-    game_repository: web::Data<GameRepository>,
+    game_link_service: web::Data<GameLinkService>,
     path: web::Path<ItemId>,
     body: web::Json<NewLinkDTO>,
     logged_user: LoggedUser,
 ) -> impl Responder {
     let ItemId(id) = path.into_inner();
-    let create_result = game_links_service::create_game_link(
-        &game_link_repository,
-        &game_repository,
-        &logged_user.id,
-        &id,
-        body.0,
-    )
-    .await;
+    let create_result = game_link_service
+        .create_game_link(&logged_user.id, &id, body.0)
+        .await;
     handle_action_result(create_result)
 }
 
@@ -103,20 +89,14 @@ pub async fn post_game_link(
 )]
 #[delete("/games/{id}/links")]
 pub async fn delete_game_link(
-    game_link_repository: web::Data<GameLinkRepository>,
-    game_repository: web::Data<GameRepository>,
+    game_link_service: web::Data<GameLinkService>,
     path: web::Path<ItemId>,
     body: web::Json<String>,
     logged_user: LoggedUser,
 ) -> impl Responder {
     let ItemId(id) = path.into_inner();
-    let delete_result = game_links_service::delete_game_link(
-        &game_link_repository,
-        &game_repository,
-        &logged_user.id,
-        &id,
-        &body.0,
-    )
-    .await;
+    let delete_result = game_link_service
+        .delete_game_link(&logged_user.id, &id, &body.0)
+        .await;
     handle_delete_result(delete_result)
 }

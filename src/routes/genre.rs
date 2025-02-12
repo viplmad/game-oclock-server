@@ -4,8 +4,7 @@ use crate::models::{
     ErrorMessage, GenreDTO, GenrePageResult, ItemId, LoggedUser, NewGenreDTO, QuicksearchQuery,
     SearchDTO,
 };
-use crate::repository::{GameGenreRepository, GameRepository, GenreRepository};
-use crate::services::{game_genres_service, genres_service};
+use crate::services::{GameGenreService, GenreService};
 
 use super::base::{
     handle_create_result, handle_delete_result, handle_get_result, handle_update_result,
@@ -31,12 +30,12 @@ use super::base::{
 )]
 #[get("/genres/{id}")]
 pub async fn get_genre(
-    genre_repository: web::Data<GenreRepository>,
+    genre_service: web::Data<GenreService>,
     path: web::Path<ItemId>,
     logged_user: LoggedUser,
 ) -> impl Responder {
     let ItemId(id) = path.into_inner();
-    let get_result = genres_service::get_genre(&genre_repository, &logged_user.id, &id).await;
+    let get_result = genre_service.get_genre(&logged_user.id, &id).await;
     handle_get_result(get_result)
 }
 
@@ -60,19 +59,14 @@ pub async fn get_genre(
 )]
 #[get("/games/{id}/genres")]
 pub async fn get_game_genres(
-    game_genre_repository: web::Data<GameGenreRepository>,
-    game_repository: web::Data<GameRepository>,
+    game_genre_service: web::Data<GameGenreService>,
     path: web::Path<ItemId>,
     logged_user: LoggedUser,
 ) -> impl Responder {
     let ItemId(id) = path.into_inner();
-    let get_result = game_genres_service::get_game_genres(
-        &game_genre_repository,
-        &game_repository,
-        &logged_user.id,
-        &id,
-    )
-    .await;
+    let get_result = game_genre_service
+        .get_game_genres(&logged_user.id, &id)
+        .await;
     handle_get_result(get_result)
 }
 
@@ -96,13 +90,14 @@ pub async fn get_game_genres(
 )]
 #[post("/genres/list")]
 pub async fn get_genres(
-    genre_repository: web::Data<GenreRepository>,
+    genre_service: web::Data<GenreService>,
     query: web::Query<QuicksearchQuery>,
     body: web::Json<SearchDTO>,
     logged_user: LoggedUser,
 ) -> impl Responder {
-    let search_result =
-        genres_service::search_genres(&genre_repository, &logged_user.id, body.0, query.0.q).await;
+    let search_result = genre_service
+        .search_genres(&logged_user.id, body.0, query.0.q)
+        .await;
     handle_get_result(search_result)
 }
 
@@ -125,12 +120,11 @@ pub async fn get_genres(
 )]
 #[post("/genres")]
 pub async fn post_genre(
-    genre_repository: web::Data<GenreRepository>,
+    genre_service: web::Data<GenreService>,
     body: web::Json<NewGenreDTO>,
     logged_user: LoggedUser,
 ) -> impl Responder {
-    let create_result =
-        genres_service::create_genre(&genre_repository, &logged_user.id, body.0).await;
+    let create_result = genre_service.create_genre(&logged_user.id, body.0).await;
     handle_create_result(create_result)
 }
 
@@ -156,14 +150,15 @@ pub async fn post_genre(
 )]
 #[put("/genres/{id}")]
 pub async fn put_genre(
-    genre_repository: web::Data<GenreRepository>,
+    genre_service: web::Data<GenreService>,
     path: web::Path<ItemId>,
     body: web::Json<NewGenreDTO>,
     logged_user: LoggedUser,
 ) -> impl Responder {
     let ItemId(id) = path.into_inner();
-    let update_result =
-        genres_service::update_genre(&genre_repository, &logged_user.id, &id, body.0).await;
+    let update_result = genre_service
+        .update_genre(&logged_user.id, &id, body.0)
+        .await;
     handle_update_result(update_result)
 }
 
@@ -187,11 +182,11 @@ pub async fn put_genre(
 )]
 #[delete("/genres/{id}")]
 pub async fn delete_genre(
-    genre_repository: web::Data<GenreRepository>,
+    genre_service: web::Data<GenreService>,
     path: web::Path<ItemId>,
     logged_user: LoggedUser,
 ) -> impl Responder {
     let ItemId(id) = path.into_inner();
-    let delete_result = genres_service::delete_genre(&genre_repository, &logged_user.id, &id).await;
+    let delete_result = genre_service.delete_genre(&logged_user.id, &id).await;
     handle_delete_result(delete_result)
 }

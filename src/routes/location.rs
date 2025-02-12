@@ -4,8 +4,7 @@ use crate::models::{
     ErrorMessage, ItemId, LocationAvailableDTO, LocationDTO, LocationPageResult, LoggedUser,
     NewLocationDTO, QuicksearchQuery, SearchDTO,
 };
-use crate::repository::{GameAvailableRepository, GameRepository};
-use crate::services::{game_available_service, LocationService};
+use crate::services::{GameAvailableService, LocationService};
 
 use super::base::{
     handle_create_result, handle_delete_result, handle_get_result, handle_update_result,
@@ -60,19 +59,14 @@ pub async fn get_location(
 )]
 #[get("/games/{id}/locations")]
 pub async fn get_game_locations(
-    game_available_repository: web::Data<GameAvailableRepository>,
-    game_repository: web::Data<GameRepository>,
+    game_available_service: web::Data<GameAvailableService>,
     path: web::Path<ItemId>,
     logged_user: LoggedUser,
 ) -> impl Responder {
     let ItemId(id) = path.into_inner();
-    let get_result = game_available_service::get_game_locations(
-        &game_available_repository,
-        &game_repository,
-        &logged_user.id,
-        &id,
-    )
-    .await;
+    let get_result = game_available_service
+        .get_game_locations(&logged_user.id, &id)
+        .await;
     handle_get_result(get_result)
 }
 

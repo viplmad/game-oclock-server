@@ -4,13 +4,8 @@ use crate::models::{
     DateDTO, ErrorMessage, GameAvailableDTO, GameDTO, GamePageResult, ItemId, ItemIdAndRelatedId,
     LoggedUser, NewGameDTO, QuicksearchQuery, SearchDTO,
 };
-use crate::repository::{
-    DeviceRepository, GameAvailableRepository, GameGenreRepository, GamePlayedDeviceRepository,
-    GameRepository, GameTagRepository, GenreRepository, TagRepository,
-};
 use crate::services::{
-    dlcs_service, game_available_service, game_genres_service, game_played_device_service,
-    game_tags_service, games_service, LocationService,
+    GameAvailableService, GameGenreService, GamePlayedDeviceService, GameService, GameTagService,
 };
 
 use super::base::{
@@ -38,12 +33,12 @@ use super::base::{
 )]
 #[get("/games/{id}")]
 pub async fn get_game(
-    game_repository: web::Data<GameRepository>,
+    game_service: web::Data<GameService>,
     path: web::Path<ItemId>,
     logged_user: LoggedUser,
 ) -> impl Responder {
     let ItemId(id) = path.into_inner();
-    let get_result = games_service::get_game(&game_repository, &logged_user.id, &id).await;
+    let get_result = game_service.get_game(&logged_user.id, &id).await;
     handle_get_result(get_result)
 }
 
@@ -67,19 +62,12 @@ pub async fn get_game(
 )]
 #[get("/tags/{id}/games")]
 pub async fn get_tag_games(
-    game_tag_repository: web::Data<GameTagRepository>,
-    tag_repository: web::Data<TagRepository>,
+    game_tag_service: web::Data<GameTagService>,
     path: web::Path<ItemId>,
     logged_user: LoggedUser,
 ) -> impl Responder {
     let ItemId(id) = path.into_inner();
-    let get_result = game_tags_service::get_tag_games(
-        &game_tag_repository,
-        &tag_repository,
-        &logged_user.id,
-        &id,
-    )
-    .await;
+    let get_result = game_tag_service.get_tag_games(&logged_user.id, &id).await;
     handle_get_result(get_result)
 }
 
@@ -103,19 +91,14 @@ pub async fn get_tag_games(
 )]
 #[get("/locations/{id}/games")]
 pub async fn get_location_games(
-    game_available_repository: web::Data<GameAvailableRepository>,
-    location_service: web::Data<LocationService>,
+    game_available_service: web::Data<GameAvailableService>,
     path: web::Path<ItemId>,
     logged_user: LoggedUser,
 ) -> impl Responder {
     let ItemId(id) = path.into_inner();
-    let get_result = game_available_service::get_location_games(
-        &game_available_repository,
-        &location_service,
-        &logged_user.id,
-        &id,
-    )
-    .await;
+    let get_result = game_available_service
+        .get_location_games(&logged_user.id, &id)
+        .await;
     handle_get_result(get_result)
 }
 
@@ -139,19 +122,14 @@ pub async fn get_location_games(
 )]
 #[get("/genres/{id}/games")]
 pub async fn get_genre_games(
-    game_genre_repository: web::Data<GameGenreRepository>,
-    genre_repository: web::Data<GenreRepository>,
+    game_genre_service: web::Data<GameGenreService>,
     path: web::Path<ItemId>,
     logged_user: LoggedUser,
 ) -> impl Responder {
     let ItemId(id) = path.into_inner();
-    let get_result = game_genres_service::get_genre_games(
-        &game_genre_repository,
-        &genre_repository,
-        &logged_user.id,
-        &id,
-    )
-    .await;
+    let get_result = game_genre_service
+        .get_genre_games(&logged_user.id, &id)
+        .await;
     handle_get_result(get_result)
 }
 
@@ -175,19 +153,14 @@ pub async fn get_genre_games(
 )]
 #[get("/devices/{id}/games")]
 pub async fn get_device_games(
-    game_played_device_repository: web::Data<GamePlayedDeviceRepository>,
-    device_repository: web::Data<DeviceRepository>,
+    game_played_device_service: web::Data<GamePlayedDeviceService>,
     path: web::Path<ItemId>,
     logged_user: LoggedUser,
 ) -> impl Responder {
     let ItemId(id) = path.into_inner();
-    let get_result = game_played_device_service::get_device_played_games(
-        &game_played_device_repository,
-        &device_repository,
-        &logged_user.id,
-        &id,
-    )
-    .await;
+    let get_result = game_played_device_service
+        .get_device_played_games(&logged_user.id, &id)
+        .await;
     handle_get_result(get_result)
 }
 
@@ -211,13 +184,14 @@ pub async fn get_device_games(
 )]
 #[post("/games/list")]
 pub async fn get_games(
-    game_repository: web::Data<GameRepository>,
+    game_service: web::Data<GameService>,
     query: web::Query<QuicksearchQuery>,
     body: web::Json<SearchDTO>,
     logged_user: LoggedUser,
 ) -> impl Responder {
-    let search_result =
-        games_service::search_games(&game_repository, &logged_user.id, body.0, query.0.q).await;
+    let search_result = game_service
+        .search_games(&logged_user.id, body.0, query.0.q)
+        .await;
     handle_get_result(search_result)
 }
 
@@ -240,11 +214,11 @@ pub async fn get_games(
 )]
 #[post("/games")]
 pub async fn post_game(
-    game_repository: web::Data<GameRepository>,
+    game_service: web::Data<GameService>,
     body: web::Json<NewGameDTO>,
     logged_user: LoggedUser,
 ) -> impl Responder {
-    let create_result = games_service::create_game(&game_repository, &logged_user.id, body.0).await;
+    let create_result = game_service.create_game(&logged_user.id, body.0).await;
     handle_create_result(create_result)
 }
 
@@ -270,21 +244,16 @@ pub async fn post_game(
 )]
 #[put("/games/{id}")]
 pub async fn put_game(
-    game_repository: web::Data<GameRepository>,
-    game_available_repository: web::Data<GameAvailableRepository>,
+    game_service: web::Data<GameService>,
+    game_available_service: web::Data<GameAvailableService>,
     path: web::Path<ItemId>,
     body: web::Json<NewGameDTO>,
     logged_user: LoggedUser,
 ) -> impl Responder {
     let ItemId(id) = path.into_inner();
-    let update_result = games_service::update_game(
-        &game_repository,
-        &game_available_repository,
-        &logged_user.id,
-        &id,
-        body.0,
-    )
-    .await;
+    let update_result = game_service
+        .update_game(&game_available_service, &logged_user.id, &id, body.0)
+        .await;
     handle_update_result(update_result)
 }
 
@@ -310,22 +279,14 @@ pub async fn put_game(
 )]
 #[put("/games/{id}/tags/{other_id}")]
 pub async fn link_game_tag(
-    game_tag_repository: web::Data<GameTagRepository>,
-    game_repository: web::Data<GameRepository>,
-    tag_repository: web::Data<TagRepository>,
+    game_tag_service: web::Data<GameTagService>,
     path: web::Path<ItemIdAndRelatedId>,
     logged_user: LoggedUser,
 ) -> impl Responder {
     let ItemIdAndRelatedId(id, tag_id) = path.into_inner();
-    let create_result = game_tags_service::create_game_tag(
-        &game_tag_repository,
-        &game_repository,
-        &tag_repository,
-        &logged_user.id,
-        &id,
-        &tag_id,
-    )
-    .await;
+    let create_result = game_tag_service
+        .create_game_tag(&logged_user.id, &id, &tag_id)
+        .await;
     handle_action_result(create_result)
 }
 
@@ -352,24 +313,15 @@ pub async fn link_game_tag(
 )]
 #[put("/games/{id}/locations/{other_id}")]
 pub async fn link_game_location(
-    game_available_repository: web::Data<GameAvailableRepository>,
-    game_repository: web::Data<GameRepository>,
-    location_service: web::Data<LocationService>,
+    game_available_service: web::Data<GameAvailableService>,
     path: web::Path<ItemIdAndRelatedId>,
     body: web::Json<DateDTO>,
     logged_user: LoggedUser,
 ) -> impl Responder {
     let ItemIdAndRelatedId(id, location_id) = path.into_inner();
-    let create_result = game_available_service::create_game_available(
-        &game_available_repository,
-        &game_repository,
-        &location_service,
-        &logged_user.id,
-        &id,
-        &location_id,
-        body.date,
-    )
-    .await;
+    let create_result = game_available_service
+        .create_game_available(&logged_user.id, &id, &location_id, body.date)
+        .await;
     handle_action_result(create_result)
 }
 
@@ -395,22 +347,14 @@ pub async fn link_game_location(
 )]
 #[put("/games/{id}/genres/{other_id}")]
 pub async fn link_game_genre(
-    game_genre_repository: web::Data<GameGenreRepository>,
-    game_repository: web::Data<GameRepository>,
-    genre_repository: web::Data<GenreRepository>,
+    game_genre_service: web::Data<GameGenreService>,
     path: web::Path<ItemIdAndRelatedId>,
     logged_user: LoggedUser,
 ) -> impl Responder {
     let ItemIdAndRelatedId(id, genre_id) = path.into_inner();
-    let create_result = game_genres_service::create_game_genre(
-        &game_genre_repository,
-        &game_repository,
-        &genre_repository,
-        &logged_user.id,
-        &id,
-        &genre_id,
-    )
-    .await;
+    let create_result = game_genre_service
+        .create_game_genre(&logged_user.id, &id, &genre_id)
+        .await;
     handle_action_result(create_result)
 }
 
@@ -434,12 +378,12 @@ pub async fn link_game_genre(
 )]
 #[delete("/games/{id}")]
 pub async fn delete_game(
-    game_repository: web::Data<GameRepository>,
+    game_service: web::Data<GameService>,
     path: web::Path<ItemId>,
     logged_user: LoggedUser,
 ) -> impl Responder {
     let ItemId(id) = path.into_inner();
-    let delete_result = games_service::delete_game(&game_repository, &logged_user.id, &id).await;
+    let delete_result = game_service.delete_game(&logged_user.id, &id).await;
     handle_delete_result(delete_result)
 }
 
@@ -465,14 +409,14 @@ pub async fn delete_game(
 )]
 #[delete("/games/{id}/tags/{other_id}")]
 pub async fn unlink_game_tag(
-    game_tag_repository: web::Data<GameTagRepository>,
+    game_tag_service: web::Data<GameTagService>,
     path: web::Path<ItemIdAndRelatedId>,
     logged_user: LoggedUser,
 ) -> impl Responder {
     let ItemIdAndRelatedId(id, tag_id) = path.into_inner();
-    let delete_result =
-        game_tags_service::delete_game_tag(&game_tag_repository, &logged_user.id, &id, &tag_id)
-            .await;
+    let delete_result = game_tag_service
+        .delete_game_tag(&logged_user.id, &id, &tag_id)
+        .await;
     handle_action_result(delete_result)
 }
 
@@ -498,18 +442,14 @@ pub async fn unlink_game_tag(
 )]
 #[delete("/games/{id}/locations/{other_id}")]
 pub async fn unlink_game_location(
-    game_available_repository: web::Data<GameAvailableRepository>,
+    game_available_service: web::Data<GameAvailableService>,
     path: web::Path<ItemIdAndRelatedId>,
     logged_user: LoggedUser,
 ) -> impl Responder {
     let ItemIdAndRelatedId(id, location_id) = path.into_inner();
-    let delete_result = game_available_service::delete_game_available(
-        &game_available_repository,
-        &logged_user.id,
-        &id,
-        &location_id,
-    )
-    .await;
+    let delete_result = game_available_service
+        .delete_game_available(&logged_user.id, &id, &location_id)
+        .await;
     handle_action_result(delete_result)
 }
 
@@ -535,18 +475,14 @@ pub async fn unlink_game_location(
 )]
 #[delete("/games/{id}/genres/{other_id}")]
 pub async fn unlink_game_genre(
-    game_genre_repository: web::Data<GameGenreRepository>,
+    game_genre_service: web::Data<GameGenreService>,
     path: web::Path<ItemIdAndRelatedId>,
     logged_user: LoggedUser,
 ) -> impl Responder {
     let ItemIdAndRelatedId(id, genre_id) = path.into_inner();
-    let delete_result = game_genres_service::delete_game_genre(
-        &game_genre_repository,
-        &logged_user.id,
-        &id,
-        &genre_id,
-    )
-    .await;
+    let delete_result = game_genre_service
+        .delete_game_genre(&logged_user.id, &id, &genre_id)
+        .await;
     handle_action_result(delete_result)
 }
 
@@ -571,12 +507,12 @@ pub async fn unlink_game_genre(
 )]
 #[get("/games/{id}/dlcs")]
 pub async fn get_game_dlcs(
-    game_repository: web::Data<GameRepository>,
+    game_service: web::Data<GameService>,
     path: web::Path<ItemId>,
     logged_user: LoggedUser,
 ) -> impl Responder {
     let ItemId(id) = path.into_inner();
-    let get_result = dlcs_service::get_game_dlcs(&game_repository, &logged_user.id, &id).await;
+    let get_result = game_service.get_game_dlcs(&logged_user.id, &id).await;
     handle_get_result(get_result)
 }
 
@@ -600,12 +536,12 @@ pub async fn get_game_dlcs(
 )]
 #[get("/games/{id}/base-game")]
 pub async fn get_dlc_base_game(
-    game_repository: web::Data<GameRepository>,
+    game_service: web::Data<GameService>,
     path: web::Path<ItemId>,
     logged_user: LoggedUser,
 ) -> impl Responder {
     let ItemId(id) = path.into_inner();
-    let get_result = dlcs_service::get_dlc_base_game(&game_repository, &logged_user.id, &id).await;
+    let get_result = game_service.get_game_base_game(&logged_user.id, &id).await;
     handle_get_result(get_result)
 }
 
@@ -630,14 +566,14 @@ pub async fn get_dlc_base_game(
 )]
 #[put("/games/{id}/base-game/{other_id}")]
 pub async fn link_dlc_game(
-    game_repository: web::Data<GameRepository>,
+    game_service: web::Data<GameService>,
     path: web::Path<ItemIdAndRelatedId>,
     logged_user: LoggedUser,
 ) -> impl Responder {
     let ItemIdAndRelatedId(id, game_id) = path.into_inner();
-    let update_result =
-        dlcs_service::set_dlc_base_game(&game_repository, &logged_user.id, &id, Some(game_id))
-            .await;
+    let update_result = game_service
+        .set_game_base_game(&logged_user.id, &id, Some(game_id))
+        .await;
     handle_action_result(update_result)
 }
 
@@ -662,12 +598,13 @@ pub async fn link_dlc_game(
 )]
 #[delete("/games/{id}/base-game")]
 pub async fn unlink_dlc_game(
-    game_repository: web::Data<GameRepository>,
+    game_service: web::Data<GameService>,
     path: web::Path<ItemId>,
     logged_user: LoggedUser,
 ) -> impl Responder {
     let ItemId(id) = path.into_inner();
-    let update_result =
-        dlcs_service::set_dlc_base_game(&game_repository, &logged_user.id, &id, None).await;
+    let update_result = game_service
+        .set_game_base_game(&logged_user.id, &id, None)
+        .await;
     handle_action_result(update_result)
 }

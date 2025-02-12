@@ -9,14 +9,9 @@ use game_oclock_server::{
     },
     migrations, openapi,
     providers::ImageClientProvider,
-    repository::{
-        DeviceRepository, GameAvailableRepository, GameFinishRepository, GameGenreRepository,
-        GameLinkRepository, GameLogRepository, GamePlayedDeviceRepository, GameRepository,
-        GameTagRepository, GameWithFinishRepository, GameWithLogRepository, GenreRepository,
-        LocationRepository, TagRepository, UserRepository,
-    },
+    repository::*,
     routes,
-    services::{AuthService, LocationService, UserService},
+    services::*,
 };
 
 use actix_web::{web, App, HttpServer};
@@ -95,10 +90,9 @@ async fn run(
     migrations::apply_migrations(&database_connection_pool).await;
 
     let user_repository = UserRepository::with_connection(database_connection_pool.clone());
-    let user_service = UserService::with_repository(user_repository);
+    let user_service = UserService::with(user_repository);
     migrations::check_admin_user(&user_service).await;
 
-    let auth_service = AuthService::with(user_service.clone());
     let device_repository = DeviceRepository::with_connection(database_connection_pool.clone());
     let game_available_repository =
         GameAvailableRepository::with_connection(database_connection_pool.clone());
@@ -121,24 +115,60 @@ async fn run(
     let location_repository = LocationRepository::with_connection(database_connection_pool.clone());
     let tag_repository = TagRepository::with_connection(database_connection_pool.clone());
 
-    let location_service = LocationService::with_repository(location_repository);
+    let auth_service = AuthService::with(user_service.clone());
+    let device_service = DeviceService::with(device_repository);
+    let game_service = GameService::with(game_repository);
+    let genre_service = GenreService::with(genre_repository);
+    let location_service = LocationService::with(location_repository);
+    let tag_service = TagService::with(tag_repository);
+    let game_available_service = GameAvailableService::with(
+        game_available_repository,
+        game_service.clone(),
+        location_service.clone(),
+    );
+    let game_finish_service = GameFinishService::with(game_finish_repository, game_service.clone());
+    let game_genre_service = GameGenreService::with(
+        game_genre_repository,
+        game_service.clone(),
+        genre_service.clone(),
+    );
+    let game_link_service = GameLinkService::with(game_link_repository, game_service.clone());
+    let game_log_service = GameLogService::with(game_log_repository, game_service.clone());
+    let game_played_device_service = GamePlayedDeviceService::with(
+        game_played_device_repository,
+        game_service.clone(),
+        device_service.clone(),
+    );
+    let game_tag_service = GameTagService::with(
+        game_tag_repository,
+        game_service.clone(),
+        tag_service.clone(),
+    );
+    let game_with_finish_service = GameWithFinishService::with(game_with_finish_repository);
+    let game_with_log_service = GameWithLogService::with(game_with_log_repository);
+    let game_review_service = GameReviewService::with(
+        game_log_service.clone(),
+        game_finish_service.clone(),
+        game_with_log_service.clone(),
+        game_with_finish_service.clone(),
+    );
 
-    let data_user_service = web::Data::new(user_service);
-    let data_auth_service = web::Data::new(auth_service);
-    let data_device_repository = web::Data::new(device_repository);
-    let data_game_available_repository = web::Data::new(game_available_repository);
-    let data_game_finish_repository = web::Data::new(game_finish_repository);
-    let data_game_genre_repository = web::Data::new(game_genre_repository);
-    let data_game_link_repository = web::Data::new(game_link_repository);
-    let data_game_log_repository = web::Data::new(game_log_repository);
-    let data_game_played_device_repository = web::Data::new(game_played_device_repository);
-    let data_game_repository = web::Data::new(game_repository);
-    let data_game_tag_repository = web::Data::new(game_tag_repository);
-    let data_game_with_finish_repository = web::Data::new(game_with_finish_repository);
-    let data_game_with_log_repository = web::Data::new(game_with_log_repository);
-    let data_genre_repository = web::Data::new(genre_repository);
-    let data_location_service = web::Data::new(location_service);
-    let data_tag_repository = web::Data::new(tag_repository);
+    let data_auth_service = web::Data::new(auth_service.clone());
+    let data_device_service = web::Data::new(device_service.clone());
+    let data_game_service = web::Data::new(game_service.clone());
+    let data_genre_service = web::Data::new(genre_service.clone());
+    let data_location_service = web::Data::new(location_service.clone());
+    let data_tag_service = web::Data::new(tag_service.clone());
+    let data_game_available_service = web::Data::new(game_available_service.clone());
+    let data_game_finish_service = web::Data::new(game_finish_service.clone());
+    let data_game_genre_service = web::Data::new(game_genre_service.clone());
+    let data_game_link_service = web::Data::new(game_link_service.clone());
+    let data_game_log_service = web::Data::new(game_log_service.clone());
+    let data_game_played_device_service = web::Data::new(game_played_device_service.clone());
+    let data_game_tag_service = web::Data::new(game_tag_service.clone());
+    let data_game_with_finish_service = web::Data::new(game_with_finish_service.clone());
+    let data_game_with_log_service = web::Data::new(game_with_log_service.clone());
+    let data_game_review_service = web::Data::new(game_review_service.clone());
 
     // Image client
     let image_client_provider =
@@ -158,22 +188,22 @@ async fn run(
 
         App::new()
             // Data injection
-            .app_data(data_user_service.clone())
             .app_data(data_auth_service.clone())
-            .app_data(data_device_repository.clone())
-            .app_data(data_game_available_repository.clone())
-            .app_data(data_game_finish_repository.clone())
-            .app_data(data_game_genre_repository.clone())
-            .app_data(data_game_link_repository.clone())
-            .app_data(data_game_log_repository.clone())
-            .app_data(data_game_played_device_repository.clone())
-            .app_data(data_game_repository.clone())
-            .app_data(data_game_tag_repository.clone())
-            .app_data(data_game_with_finish_repository.clone())
-            .app_data(data_game_with_log_repository.clone())
-            .app_data(data_genre_repository.clone())
+            .app_data(data_device_service.clone())
+            .app_data(data_game_service.clone())
+            .app_data(data_genre_service.clone())
             .app_data(data_location_service.clone())
-            .app_data(data_tag_repository.clone())
+            .app_data(data_tag_service.clone())
+            .app_data(data_game_available_service.clone())
+            .app_data(data_game_finish_service.clone())
+            .app_data(data_game_genre_service.clone())
+            .app_data(data_game_link_service.clone())
+            .app_data(data_game_log_service.clone())
+            .app_data(data_game_played_device_service.clone())
+            .app_data(data_game_tag_service.clone())
+            .app_data(data_game_with_finish_service.clone())
+            .app_data(data_game_with_log_service.clone())
+            .app_data(data_game_review_service.clone())
             .app_data(data_image_client.clone())
             .app_data(data_encoding_key.clone())
             .app_data(data_decoding_key.clone())

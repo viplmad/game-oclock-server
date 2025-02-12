@@ -16,7 +16,7 @@ pub struct UserService {
 }
 
 impl UserService {
-    pub fn with_repository(repository: UserRepository) -> Self {
+    pub fn with(repository: UserRepository) -> Self {
         Self { repository }
     }
 }
@@ -28,7 +28,7 @@ impl UserService {
     }
 
     // For auth
-    pub(super) async fn get_user_by_username(&self, username: &str) -> Result<User, ApiErrors> {
+    pub(super) async fn find_user_by_username(&self, username: &str) -> Result<User, ApiErrors> {
         let repository_result = self.repository.find_first_by_username(username).await;
         handle_get_result_raw::<User, UserDTO>(repository_result)
     }

@@ -100,7 +100,6 @@ pub fn get_openapi() -> utoipa::openapi::OpenApi {
             models::GameAvailableDTO,
             models::GameWithFinishDTO,
             models::GameWithLogDTO,
-            models::GameWithLogsDTO,
             models::GamesPlayedReviewDTO,
             models::GamePlayedReviewDTO,
             models::GamesFinishedReviewDTO,

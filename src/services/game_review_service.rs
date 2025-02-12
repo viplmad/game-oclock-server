@@ -8,74 +8,87 @@ use crate::models::{
     DurationDef, FinishDTO, GameFinishedReviewDTO, GameLogDTO, GamePlayedReviewDTO, GameStatus,
     GamesFinishedReviewDTO, GamesPlayedReviewDTO, GamesStreakDTO, LogDTO, StreakDTO,
 };
-use crate::repository::{
-    GameFinishRepository, GameLogRepository, GameWithFinishRepository, GameWithLogRepository,
-};
 
 use super::{
-    game_finishes_service, game_logs_service, game_with_finish_service, game_with_logs_service,
-    logs_utils,
+    logs_utils, GameFinishService, GameLogService, GameWithFinishService, GameWithLogService,
 };
 
-pub async fn get_played_games_review(
-    game_log_repository: &GameLogRepository,
-    game_with_logs_repository: &GameWithLogRepository,
-    user_id: &str,
-    start_date: NaiveDate,
-    end_date: NaiveDate,
-) -> Result<GamesPlayedReviewDTO, ApiErrors> {
-    let game_with_logs = game_with_logs_service::find_game_with_logs_between(
-        game_with_logs_repository,
-        user_id,
-        start_date,
-        end_date,
-    )
-    .await?;
-
-    let game_ids = game_with_logs
-        .iter()
-        .map(|game| game.id.to_string())
-        .collect::<HashSet<String>>()
-        .into_iter()
-        .collect();
-    let first_logs =
-        game_logs_service::find_first_game_logs_by_games(game_log_repository, user_id, game_ids)
-            .await?;
-
-    let review = build_played_review(game_with_logs, first_logs);
-    Ok(review)
+#[derive(Clone)]
+pub struct GameReviewService {
+    game_log_service: GameLogService,
+    game_finish_service: GameFinishService,
+    game_with_log_service: GameWithLogService,
+    game_with_finish_service: GameWithFinishService,
 }
 
-pub async fn get_finished_games_review(
-    game_finish_repository: &GameFinishRepository,
-    game_with_finish_repository: &GameWithFinishRepository,
-    user_id: &str,
-    start_date: NaiveDate,
-    end_date: NaiveDate,
-) -> Result<GamesFinishedReviewDTO, ApiErrors> {
-    let game_with_finishes = game_with_finish_service::find_game_with_finishes_between(
-        game_with_finish_repository,
-        user_id,
-        start_date,
-        end_date,
-    )
-    .await?;
+impl GameReviewService {
+    pub fn with(
+        game_log_service: GameLogService,
+        game_finish_service: GameFinishService,
+        game_with_log_service: GameWithLogService,
+        game_with_finish_service: GameWithFinishService,
+    ) -> Self {
+        Self {
+            game_log_service,
+            game_finish_service,
+            game_with_log_service,
+            game_with_finish_service,
+        }
+    }
+}
 
-    let game_ids = game_with_finishes
-        .iter()
-        .map(|game| game.id.to_string())
-        .collect::<HashSet<String>>()
-        .into_iter()
-        .collect();
-    let first_finishes = game_finishes_service::find_first_game_finishes_by_games(
-        game_finish_repository,
-        user_id,
-        game_ids,
-    )
-    .await?;
+impl GameReviewService {
+    pub async fn get_played_games_review(
+        &self,
+        user_id: &str,
+        start_date: NaiveDate,
+        end_date: NaiveDate,
+    ) -> Result<GamesPlayedReviewDTO, ApiErrors> {
+        let game_with_logs = self
+            .game_with_log_service
+            .find_game_with_logs_between(user_id, start_date, end_date)
+            .await?;
 
-    let review = build_finished_review(game_with_finishes, first_finishes);
-    Ok(review)
+        let game_ids = game_with_logs
+            .iter()
+            .map(|game| game.id.to_string())
+            .collect::<HashSet<String>>()
+            .into_iter()
+            .collect();
+        let first_logs = self
+            .game_log_service
+            .find_first_game_logs_by_games(user_id, game_ids)
+            .await?;
+
+        let review = build_played_review(game_with_logs, first_logs);
+        Ok(review)
+    }
+
+    pub async fn get_finished_games_review(
+        &self,
+        user_id: &str,
+        start_date: NaiveDate,
+        end_date: NaiveDate,
+    ) -> Result<GamesFinishedReviewDTO, ApiErrors> {
+        let game_with_finishes = self
+            .game_with_finish_service
+            .find_game_with_finishes_between(user_id, start_date, end_date)
+            .await?;
+
+        let game_ids = game_with_finishes
+            .iter()
+            .map(|game| game.id.to_string())
+            .collect::<HashSet<String>>()
+            .into_iter()
+            .collect();
+        let first_finishes = self
+            .game_finish_service
+            .find_first_game_finishes_by_games(user_id, game_ids)
+            .await?;
+
+        let review = build_finished_review(game_with_finishes, first_finishes);
+        Ok(review)
+    }
 }
 
 fn build_played_review(

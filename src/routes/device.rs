@@ -4,8 +4,7 @@ use crate::models::{
     DeviceDTO, DevicePageResult, ErrorMessage, ItemId, LoggedUser, NewDeviceDTO, QuicksearchQuery,
     SearchDTO,
 };
-use crate::repository::{DeviceRepository, GamePlayedDeviceRepository, GameRepository};
-use crate::services::{devices_service, game_played_device_service};
+use crate::services::{DeviceService, GamePlayedDeviceService};
 
 use super::base::{
     handle_create_result, handle_delete_result, handle_get_result, handle_update_result,
@@ -31,12 +30,12 @@ use super::base::{
 )]
 #[get("/devices/{id}")]
 pub async fn get_device(
-    device_repository: web::Data<DeviceRepository>,
+    device_service: web::Data<DeviceService>,
     path: web::Path<ItemId>,
     logged_user: LoggedUser,
 ) -> impl Responder {
     let ItemId(id) = path.into_inner();
-    let get_result = devices_service::get_device(&device_repository, &logged_user.id, &id).await;
+    let get_result = device_service.get_device(&logged_user.id, &id).await;
     handle_get_result(get_result)
 }
 
@@ -60,19 +59,14 @@ pub async fn get_device(
 )]
 #[get("/games/{id}/devices")]
 pub async fn get_game_devices(
-    game_repository: web::Data<GameRepository>,
-    game_played_device_repository: web::Data<GamePlayedDeviceRepository>,
+    game_played_device_service: web::Data<GamePlayedDeviceService>,
     path: web::Path<ItemId>,
     logged_user: LoggedUser,
 ) -> impl Responder {
     let ItemId(id) = path.into_inner();
-    let get_result = game_played_device_service::get_game_played_devices(
-        &game_played_device_repository,
-        &game_repository,
-        &logged_user.id,
-        &id,
-    )
-    .await;
+    let get_result = game_played_device_service
+        .get_game_played_devices(&logged_user.id, &id)
+        .await;
     handle_get_result(get_result)
 }
 
@@ -96,14 +90,14 @@ pub async fn get_game_devices(
 )]
 #[post("/devices/list")]
 pub async fn get_devices(
-    device_repository: web::Data<DeviceRepository>,
+    device_service: web::Data<DeviceService>,
     query: web::Query<QuicksearchQuery>,
     body: web::Json<SearchDTO>,
     logged_user: LoggedUser,
 ) -> impl Responder {
-    let search_result =
-        devices_service::search_devices(&device_repository, &logged_user.id, body.0, query.0.q)
-            .await;
+    let search_result = device_service
+        .search_devices(&logged_user.id, body.0, query.0.q)
+        .await;
     handle_get_result(search_result)
 }
 
@@ -126,12 +120,11 @@ pub async fn get_devices(
 )]
 #[post("/devices")]
 pub async fn post_device(
-    device_repository: web::Data<DeviceRepository>,
+    device_service: web::Data<DeviceService>,
     body: web::Json<NewDeviceDTO>,
     logged_user: LoggedUser,
 ) -> impl Responder {
-    let create_result =
-        devices_service::create_device(&device_repository, &logged_user.id, body.0).await;
+    let create_result = device_service.create_device(&logged_user.id, body.0).await;
     handle_create_result(create_result)
 }
 
@@ -157,14 +150,15 @@ pub async fn post_device(
 )]
 #[put("/devices/{id}")]
 pub async fn put_device(
-    device_repository: web::Data<DeviceRepository>,
+    device_service: web::Data<DeviceService>,
     path: web::Path<ItemId>,
     body: web::Json<NewDeviceDTO>,
     logged_user: LoggedUser,
 ) -> impl Responder {
     let ItemId(id) = path.into_inner();
-    let update_result =
-        devices_service::update_device(&device_repository, &logged_user.id, &id, body.0).await;
+    let update_result = device_service
+        .update_device(&logged_user.id, &id, body.0)
+        .await;
     handle_update_result(update_result)
 }
 
@@ -188,12 +182,11 @@ pub async fn put_device(
 )]
 #[delete("/devices/{id}")]
 pub async fn delete_device(
-    device_repository: web::Data<DeviceRepository>,
+    device_service: web::Data<DeviceService>,
     path: web::Path<ItemId>,
     logged_user: LoggedUser,
 ) -> impl Responder {
     let ItemId(id) = path.into_inner();
-    let delete_result =
-        devices_service::delete_device(&device_repository, &logged_user.id, &id).await;
+    let delete_result = device_service.delete_device(&logged_user.id, &id).await;
     handle_delete_result(delete_result)
 }

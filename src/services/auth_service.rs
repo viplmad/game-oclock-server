@@ -71,7 +71,7 @@ impl AuthService {
     ) -> Result<TokenResponse, TokenErrors> {
         let user = self
             .user_service
-            .get_user_by_username(username)
+            .find_user_by_username(username)
             .await
             .map_err(|err| match err {
                 ApiErrors::NotFound(msg) => TokenErrors::InvalidRequest(msg),

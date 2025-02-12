@@ -10,50 +10,67 @@ use super::base::{
     handle_result,
 };
 
-pub async fn search_first_finished_games(
-    repository: &GameWithFinishRepository,
-    user_id: &str,
-    start_date: Option<NaiveDate>,
-    end_date: Option<NaiveDate>,
-    search: SearchDTO,
-    quicksearch: Option<String>,
-) -> Result<GameWithFinishPageResult, ApiErrors> {
-    check_optional_start_end(start_date, end_date)?;
-
-    let search = handle_query_mapping::<GameWithFinishDTO, GameSearch>(search, quicksearch)?;
-    let find_result = repository
-        .search_first_by_date_between(user_id, start_date, end_date, search)
-        .await;
-    handle_get_list_paged_result(find_result)
+#[derive(Clone)]
+pub struct GameWithFinishService {
+    repository: GameWithFinishRepository,
 }
 
-pub async fn search_last_finished_games(
-    repository: &GameWithFinishRepository,
-    user_id: &str,
-    start_date: Option<NaiveDate>,
-    end_date: Option<NaiveDate>,
-    search: SearchDTO,
-    quicksearch: Option<String>,
-) -> Result<GameWithFinishPageResult, ApiErrors> {
-    check_optional_start_end(start_date, end_date)?;
-
-    let search = handle_query_mapping::<GameWithFinishDTO, GameSearch>(search, quicksearch)?;
-    let find_result = repository
-        .search_last_by_date_between(user_id, start_date, end_date, search)
-        .await;
-    handle_get_list_paged_result(find_result)
+impl GameWithFinishService {
+    pub fn with(repository: GameWithFinishRepository) -> Self {
+        Self { repository }
+    }
 }
 
-pub(super) async fn find_game_with_finishes_between(
-    repository: &GameWithFinishRepository,
-    user_id: &str,
-    start_date: NaiveDate,
-    end_date: NaiveDate,
-) -> Result<Vec<GameWithFinish>, ApiErrors> {
-    check_start_end(start_date, end_date)?;
+impl GameWithFinishService {
+    pub async fn search_first_finished_games(
+        &self,
+        user_id: &str,
+        start_date: Option<NaiveDate>,
+        end_date: Option<NaiveDate>,
+        search: SearchDTO,
+        quicksearch: Option<String>,
+    ) -> Result<GameWithFinishPageResult, ApiErrors> {
+        check_optional_start_end(start_date, end_date)?;
 
-    let find_result = repository
-        .find_all_by_date_between(user_id, start_date, end_date)
-        .await;
-    handle_result::<Vec<GameWithFinish>, GameWithFinishDTO>(find_result)
+        let search = handle_query_mapping::<GameWithFinishDTO, GameSearch>(search, quicksearch)?;
+        let find_result = self
+            .repository
+            .search_first_by_date_between(user_id, start_date, end_date, search)
+            .await;
+        handle_get_list_paged_result(find_result)
+    }
+
+    pub async fn search_last_finished_games(
+        &self,
+        user_id: &str,
+        start_date: Option<NaiveDate>,
+        end_date: Option<NaiveDate>,
+        search: SearchDTO,
+        quicksearch: Option<String>,
+    ) -> Result<GameWithFinishPageResult, ApiErrors> {
+        check_optional_start_end(start_date, end_date)?;
+
+        let search = handle_query_mapping::<GameWithFinishDTO, GameSearch>(search, quicksearch)?;
+        let find_result = self
+            .repository
+            .search_last_by_date_between(user_id, start_date, end_date, search)
+            .await;
+        handle_get_list_paged_result(find_result)
+    }
+
+    // For review
+    pub(super) async fn find_game_with_finishes_between(
+        &self,
+        user_id: &str,
+        start_date: NaiveDate,
+        end_date: NaiveDate,
+    ) -> Result<Vec<GameWithFinish>, ApiErrors> {
+        check_start_end(start_date, end_date)?;
+
+        let find_result = self
+            .repository
+            .find_all_by_date_between(user_id, start_date, end_date)
+            .await;
+        handle_result::<Vec<GameWithFinish>, GameWithFinishDTO>(find_result)
+    }
 }
