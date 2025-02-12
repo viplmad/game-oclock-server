@@ -4,9 +4,8 @@ use crate::models::{
     ErrorMessage, ItemId, LoggedUser, NewUserDTO, PasswordChangeDTO, PasswordQuery,
     QuicksearchQuery, SearchDTO, UserDTO, UserPageResult,
 };
-use crate::repository::UserRepository;
 use crate::routes::base::require_admin_or_current_user;
-use crate::services::users_service;
+use crate::services::UserService;
 
 use super::base::{
     handle_action_result, handle_create_result, handle_delete_result, handle_get_result,
@@ -33,18 +32,17 @@ use super::base::{
 )]
 #[get("/users/{id}")]
 pub async fn get_user(
-    user_repository: web::Data<UserRepository>,
+    user_service: web::Data<UserService>,
     path: web::Path<ItemId>,
     logged_user: LoggedUser,
 ) -> impl Responder {
     let ItemId(id) = path.into_inner();
 
-    if let Err(error) = require_admin_or_current_user(&user_repository, &logged_user.id, &id).await
-    {
+    if let Err(error) = require_admin_or_current_user(&user_service, &logged_user.id, &id).await {
         return error;
     }
 
-    let get_result = users_service::get_user(&user_repository, &id).await;
+    let get_result = user_service.get_user(&id).await;
     handle_get_result(get_result)
 }
 
@@ -65,10 +63,10 @@ pub async fn get_user(
 )]
 #[get("/myself")]
 pub async fn get_current_user(
-    user_repository: web::Data<UserRepository>,
+    user_service: web::Data<UserService>,
     logged_user: LoggedUser,
 ) -> impl Responder {
-    let get_result = users_service::get_user(&user_repository, &logged_user.id).await;
+    let get_result = user_service.get_user(&logged_user.id).await;
     handle_get_result(get_result)
 }
 
@@ -92,16 +90,16 @@ pub async fn get_current_user(
 )]
 #[post("/users/list")]
 pub async fn get_users(
-    user_repository: web::Data<UserRepository>,
+    user_service: web::Data<UserService>,
     query: web::Query<QuicksearchQuery>,
     body: web::Json<SearchDTO>,
     logged_user: LoggedUser,
 ) -> impl Responder {
-    if let Err(error) = require_admin(&user_repository, &logged_user.id).await {
+    if let Err(error) = require_admin(&user_service, &logged_user.id).await {
         return error;
     }
 
-    let search_result = users_service::search_users(&user_repository, body.0, query.0.q).await;
+    let search_result = user_service.search_users(body.0, query.0.q).await;
     handle_get_result(search_result)
 }
 
@@ -127,17 +125,16 @@ pub async fn get_users(
 )]
 #[post("/users")]
 pub async fn post_user(
-    user_repository: web::Data<UserRepository>,
+    user_service: web::Data<UserService>,
     query: web::Query<PasswordQuery>,
     body: web::Json<NewUserDTO>,
     logged_user: LoggedUser,
 ) -> impl Responder {
-    if let Err(error) = require_admin(&user_repository, &logged_user.id).await {
+    if let Err(error) = require_admin(&user_service, &logged_user.id).await {
         return error;
     }
 
-    let create_result =
-        users_service::create_user(&user_repository, body.0, &query.0.password).await;
+    let create_result = user_service.create_user(body.0, &query.0.password).await;
     handle_create_result(create_result)
 }
 
@@ -163,19 +160,18 @@ pub async fn post_user(
 )]
 #[put("/users/{id}")]
 pub async fn put_user(
-    user_repository: web::Data<UserRepository>,
+    user_service: web::Data<UserService>,
     path: web::Path<ItemId>,
     body: web::Json<NewUserDTO>,
     logged_user: LoggedUser,
 ) -> impl Responder {
     let ItemId(id) = path.into_inner();
 
-    if let Err(error) = require_admin_or_current_user(&user_repository, &logged_user.id, &id).await
-    {
+    if let Err(error) = require_admin_or_current_user(&user_service, &logged_user.id, &id).await {
         return error;
     }
 
-    let update_result = users_service::update_user(&user_repository, &id, body.0).await;
+    let update_result = user_service.update_user(&id, body.0).await;
     handle_update_result(update_result)
 }
 
@@ -198,12 +194,13 @@ pub async fn put_user(
 )]
 #[put("/myself/change-password")]
 pub async fn change_password(
-    user_repository: web::Data<UserRepository>,
+    user_service: web::Data<UserService>,
     form: web::Form<PasswordChangeDTO>,
     logged_user: LoggedUser,
 ) -> impl Responder {
-    let change_password_result =
-        users_service::change_user_password(&user_repository, &logged_user.id, form.0).await;
+    let change_password_result = user_service
+        .change_user_password(&logged_user.id, form.0)
+        .await;
     handle_action_result(change_password_result)
 }
 
@@ -228,16 +225,16 @@ pub async fn change_password(
 )]
 #[put("/users/{id}/promote")]
 pub async fn promote_user(
-    user_repository: web::Data<UserRepository>,
+    user_service: web::Data<UserService>,
     path: web::Path<ItemId>,
     logged_user: LoggedUser,
 ) -> impl Responder {
-    if let Err(error) = require_admin(&user_repository, &logged_user.id).await {
+    if let Err(error) = require_admin(&user_service, &logged_user.id).await {
         return error;
     }
 
     let ItemId(id) = path.into_inner();
-    let update_result = users_service::promote_user(&user_repository, &id).await;
+    let update_result = user_service.promote_user(&id).await;
     handle_update_result(update_result)
 }
 
@@ -262,16 +259,16 @@ pub async fn promote_user(
 )]
 #[put("/users/{id}/demote")]
 pub async fn demote_user(
-    user_repository: web::Data<UserRepository>,
+    user_service: web::Data<UserService>,
     path: web::Path<ItemId>,
     logged_user: LoggedUser,
 ) -> impl Responder {
-    if let Err(error) = require_admin(&user_repository, &logged_user.id).await {
+    if let Err(error) = require_admin(&user_service, &logged_user.id).await {
         return error;
     }
 
     let ItemId(id) = path.into_inner();
-    let update_result = users_service::demote_user(&user_repository, &id).await;
+    let update_result = user_service.demote_user(&id).await;
     handle_update_result(update_result)
 }
 
@@ -295,17 +292,16 @@ pub async fn demote_user(
 )]
 #[delete("/users/{id}")]
 pub async fn delete_user(
-    user_repository: web::Data<UserRepository>,
+    user_service: web::Data<UserService>,
     path: web::Path<ItemId>,
     logged_user: LoggedUser,
 ) -> impl Responder {
     let ItemId(id) = path.into_inner();
 
-    if let Err(error) = require_admin_or_current_user(&user_repository, &logged_user.id, &id).await
-    {
+    if let Err(error) = require_admin_or_current_user(&user_service, &logged_user.id, &id).await {
         return error;
     }
 
-    let delete_result = users_service::delete_user(&user_repository, &id).await;
+    let delete_result = user_service.delete_user(&id).await;
     handle_delete_result(delete_result)
 }

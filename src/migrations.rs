@@ -2,11 +2,10 @@ use std::path::Path;
 
 use sqlx::PgPool;
 
-use crate::repository::UserRepository;
 use crate::temp_file_utils;
 
 use crate::models::NewUserDTO;
-use crate::services::users_service;
+use crate::services::UserService;
 
 pub async fn apply_migrations(pool: &PgPool) {
     let migrator = sqlx::migrate::Migrator::new(Path::new("./migrations"))
@@ -20,23 +19,25 @@ pub async fn apply_migrations(pool: &PgPool) {
     log::info!("Database migrations applied.");
 }
 
-pub async fn check_admin_user(user_repository: &UserRepository) {
-    let exists_admin = users_service::exists_admin_user(user_repository)
+pub async fn check_admin_user(user_service: &UserService) {
+    let exists_admin = user_service
+        .exists_admin_user()
         .await
         .expect("Could not check if admin user exists");
     match exists_admin {
         true => log::info!("Database admin present."),
         false => {
-            let admin_user = users_service::create_user(
-                user_repository,
-                NewUserDTO {
-                    username: String::from("admin"),
-                },
-                "admin",
-            )
-            .await
-            .expect("Could not create admin user");
-            users_service::promote_user(user_repository, &admin_user.id)
+            let admin_user = user_service
+                .create_user(
+                    NewUserDTO {
+                        username: String::from("admin"),
+                    },
+                    "admin",
+                )
+                .await
+                .expect("Could not create admin user");
+            user_service
+                .promote_user(&admin_user.id)
                 .await
                 .expect("Could not promote admin user");
 

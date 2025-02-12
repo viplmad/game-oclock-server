@@ -2,8 +2,7 @@ use actix_web::HttpResponse;
 use serde::Serialize;
 
 use crate::errors::{forbidden_error, ToError};
-use crate::repository::UserRepository;
-use crate::services::users_service;
+use crate::services::UserService;
 
 pub(super) fn handle_get_result(
     service_result: Result<impl Serialize, impl ToError>,
@@ -42,10 +41,10 @@ pub(super) fn handle_action_result(service_result: Result<(), impl ToError>) -> 
 }
 
 pub(super) async fn require_admin(
-    user_repository: &UserRepository,
+    user_service: &UserService,
     user_id: &str,
 ) -> Result<(), HttpResponse> {
-    let admin_result = users_service::is_user_admin(user_repository, user_id).await;
+    let admin_result = user_service.is_user_admin(user_id).await;
     match admin_result {
         Ok(admin) => {
             if !admin {
@@ -58,12 +57,12 @@ pub(super) async fn require_admin(
 }
 
 pub(super) async fn require_admin_or_current_user(
-    user_repository: &UserRepository,
+    user_service: &UserService,
     user_id: &str,
     id: &str,
 ) -> Result<(), HttpResponse> {
     match user_id == id {
         true => Ok(()),
-        false => require_admin(user_repository, user_id).await,
+        false => require_admin(user_service, user_id).await,
     }
 }

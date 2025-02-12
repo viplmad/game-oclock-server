@@ -1,4 +1,4 @@
-pub mod auth_service;
+mod auth_service;
 mod base;
 pub mod devices_service;
 pub mod dlcs_service;
@@ -17,6 +17,8 @@ pub mod genres_service;
 mod location_service;
 mod logs_utils;
 pub mod tags_service;
-pub mod users_service;
+mod user_service;
 
+pub use auth_service::*;
 pub use location_service::*;
+pub use user_service::*;
