@@ -1,10 +1,12 @@
-use crate::entities::GameSearch;
+use uuid::Uuid;
+
+use crate::entities::{GameSearch, GameWithUserInfo};
 use crate::errors::{error_message_builder, ApiErrors};
 use crate::models::{GameDTO, GamePageResult, GameStatus, NewGameDTO, SearchDTO};
 use crate::repository::GameRepository;
 
 use super::helpers::{
-    create_merged, handle_action_result, handle_already_exists_result, handle_create_result,
+    create_merged, handle_action_result, handle_already_exists_result,
     handle_get_list_paged_result, handle_get_list_result, handle_get_result,
     handle_not_found_result, handle_query_mapping, handle_update_result, update_merged,
 };
@@ -22,14 +24,14 @@ impl GameService {
 }
 
 impl GameService {
-    pub async fn get_game(&self, user_id: &str, game_id: &str) -> Result<GameDTO, ApiErrors> {
+    pub async fn get_game(&self, user_id: &Uuid, game_id: &Uuid) -> Result<GameDTO, ApiErrors> {
         let find_result = self.repository.find_by_id(user_id, game_id).await;
         handle_get_result(find_result)
     }
 
     pub async fn search_games(
         &self,
-        user_id: &str,
+        user_id: &Uuid,
         search: SearchDTO,
         quicksearch: Option<String>,
     ) -> Result<GamePageResult, ApiErrors> {
@@ -38,20 +40,33 @@ impl GameService {
         handle_get_list_paged_result(find_result)
     }
 
-    pub async fn create_game(&self, user_id: &str, game: NewGameDTO) -> Result<GameDTO, ApiErrors> {
+    pub async fn create_game(
+        &self,
+        user_id: &Uuid,
+        game: NewGameDTO,
+    ) -> Result<GameDTO, ApiErrors> {
         // TODO check image is reachable
+        let new_id = crate::uuid_utils::new_model_uuid();
         create_merged(
             game,
-            async move |created_game_id| self.get_game(user_id, &created_game_id).await,
-            async move |game_to_create| {
+            async move || self.get_game(user_id, &new_id).await,
+            async move |mut game_to_create: GameWithUserInfo| {
                 let exists_result = self
                     .repository
-                    .exists_with_unique(user_id, &game_to_create)
+                    .exists_by_title_and_edition(
+                        user_id,
+                        &game_to_create.title,
+                        &game_to_create.edition,
+                    )
                     .await;
                 handle_already_exists_result::<GameDTO>(exists_result)?;
 
-                let create_result = self.repository.create(user_id, &game_to_create).await;
-                handle_create_result::<String, GameDTO>(create_result)
+                game_to_create.user_id = user_id.clone();
+                game_to_create.id = new_id.clone();
+                game_to_create.added_datetime = crate::date_utils::now();
+                game_to_create.updated_datetime = crate::date_utils::now();
+                let create_result = self.repository.create(&game_to_create).await;
+                handle_action_result::<GameDTO>(create_result)
             },
         )
         .await
@@ -60,19 +75,24 @@ impl GameService {
     pub async fn update_game(
         &self,
         game_available_service: &GameAvailableService,
-        user_id: &str,
-        game_id: &str,
+        user_id: &Uuid,
+        id: &Uuid,
         game: NewGameDTO,
     ) -> Result<(), ApiErrors> {
         let new_status = game.status.clone();
 
         update_merged(
             game,
-            async move || self.get_game(user_id, game_id).await,
-            async move |game_to_update| {
+            async move || self.get_game(user_id, id).await,
+            async move |mut game_to_update: GameWithUserInfo| {
                 let exists_result = self
                     .repository
-                    .exists_with_unique_except_id(user_id, &game_to_update, game_id)
+                    .exists_by_title_and_edition_except_id(
+                        user_id,
+                        &game_to_update.title,
+                        &game_to_update.edition,
+                        id,
+                    )
                     .await;
                 handle_already_exists_result::<GameDTO>(exists_result)?;
 
@@ -83,35 +103,35 @@ impl GameService {
                 {
                     // Check only if change is from owned status to wishlist -> cannot change to wishlist if there are available locations
                     game_available_service
-                        .exists_no_game_available(user_id, game_id)
+                        .exists_no_game_available(user_id, id)
                         .await?
                 }
 
-                let update_result = self
-                    .repository
-                    .update_by_id(user_id, game_id, &game_to_update)
-                    .await;
+                game_to_update.user_id = user_id.clone();
+                game_to_update.id = id.clone();
+                game_to_update.updated_datetime = crate::date_utils::now();
+                let update_result = self.repository.update(&game_to_update).await;
                 handle_update_result::<GameDTO>(update_result)
             },
         )
         .await
     }
 
-    pub async fn delete_game(&self, user_id: &str, game_id: &str) -> Result<(), ApiErrors> {
+    pub async fn delete_game(&self, user_id: &Uuid, game_id: &Uuid) -> Result<(), ApiErrors> {
         // TODO Error if game is used -> use sql contraints
         let delete_result = self.repository.delete_by_id(user_id, game_id).await;
         handle_action_result::<GameDTO>(delete_result)
     }
 
-    pub async fn exists_game(&self, user_id: &str, game_id: &str) -> Result<(), ApiErrors> {
+    pub async fn exists_game(&self, user_id: &Uuid, game_id: &Uuid) -> Result<(), ApiErrors> {
         let exists_result = self.repository.exists_by_id(user_id, game_id).await;
         handle_not_found_result::<GameDTO>(exists_result)
     }
 
     pub async fn get_game_base_game(
         &self,
-        user_id: &str,
-        game_id: &str,
+        user_id: &Uuid,
+        game_id: &Uuid,
     ) -> Result<GameDTO, ApiErrors> {
         let game = self.get_game(user_id, game_id).await?;
         let base_game_id = game.base_game_id.ok_or_else(|| {
@@ -122,8 +142,8 @@ impl GameService {
 
     pub async fn get_game_dlcs(
         &self,
-        user_id: &str,
-        game_id: &str,
+        user_id: &Uuid,
+        game_id: &Uuid,
     ) -> Result<Vec<GameDTO>, ApiErrors> {
         self.exists_game(user_id, game_id).await?;
 
@@ -136,9 +156,9 @@ impl GameService {
 
     pub async fn set_game_base_game(
         &self,
-        user_id: &str,
-        game_id: &str,
-        base_game_id: Option<String>,
+        user_id: &Uuid,
+        game_id: &Uuid,
+        base_game_id: Option<Uuid>,
     ) -> Result<(), ApiErrors> {
         self.exists_game(user_id, game_id).await?;
 

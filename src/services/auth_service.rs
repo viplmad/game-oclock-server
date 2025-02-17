@@ -85,7 +85,7 @@ impl AuthService {
             })?;
 
         if verify_pass {
-            crate::auth::generate_token_response(&user.id.to_string(), encoding_key)
+            crate::auth::generate_token_response(&user.id, encoding_key)
         } else {
             Err(TokenErrors::InvalidGrant(String::from("Wrong password.")))
         }

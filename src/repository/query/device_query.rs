@@ -1,11 +1,12 @@
 use sea_query::{Expr, Query, QueryStatementWriter, SelectStatement, SimpleExpr};
+use uuid::Uuid;
 
 use crate::entities::{Device, DeviceIden, DeviceSearch, SearchQuery};
 use crate::errors::SearchErrors;
 
 use super::search::apply_search;
 
-pub fn select_by_id(user_id: &str, id: &str) -> impl QueryStatementWriter {
+pub fn select_by_id(user_id: &Uuid, id: &Uuid) -> impl QueryStatementWriter {
     let mut select = Query::select();
 
     from_and_where_user_id(&mut select, user_id);
@@ -16,7 +17,7 @@ pub fn select_by_id(user_id: &str, id: &str) -> impl QueryStatementWriter {
 }
 
 pub fn select_all_with_search(
-    user_id: &str,
+    user_id: &Uuid,
     search: DeviceSearch,
 ) -> Result<SearchQuery, SearchErrors> {
     let select = select_all(user_id);
@@ -24,7 +25,7 @@ pub fn select_all_with_search(
     apply_search(select, search)
 }
 
-pub(super) fn select_all(user_id: &str) -> SelectStatement {
+pub(super) fn select_all(user_id: &Uuid) -> SelectStatement {
     let mut select = Query::select();
 
     from_and_where_user_id(&mut select, user_id);
@@ -33,71 +34,71 @@ pub(super) fn select_all(user_id: &str) -> SelectStatement {
     select
 }
 
-pub fn insert(user_id: &str, id: &str, device: &Device) -> impl QueryStatementWriter {
+pub fn insert(device: &Device) -> impl QueryStatementWriter {
     let mut insert = Query::insert();
 
     insert
         .into_table(DeviceIden::Table)
         .columns([
-            DeviceIden::UserId,
             DeviceIden::Id,
+            DeviceIden::UserId,
             DeviceIden::Name,
             DeviceIden::IconUrl,
-            DeviceIden::AddedDateTime,
-            DeviceIden::UpdatedDateTime,
+            DeviceIden::AddedDatetime,
+            DeviceIden::UpdatedDatetime,
         ])
         .values_panic([
-            user_id.into(),
-            id.into(),
+            crate::uuid_utils::to_string(&device.id).into(),
+            crate::uuid_utils::to_string(&device.user_id).into(),
             device.name.clone().into(),
             device.icon_url.clone().into(),
-            crate::date_utils::now().into(),
-            crate::date_utils::now().into(),
+            device.added_datetime.into(),
+            device.updated_datetime.into(),
         ]);
 
     insert
 }
 
-pub fn update_by_id(user_id: &str, id: &str, device: &Device) -> impl QueryStatementWriter {
+pub fn update_by_id(device: &Device) -> impl QueryStatementWriter {
     update_values_by_id(
-        user_id,
-        id,
+        &device.user_id,
+        &device.id,
         vec![
             (DeviceIden::Name, device.name.clone().into()),
             (DeviceIden::IconUrl, device.icon_url.clone().into()),
+            (DeviceIden::UpdatedDatetime, device.updated_datetime.into()),
         ],
     )
 }
 
 fn update_values_by_id(
-    user_id: &str,
-    id: &str,
-    mut values: Vec<(DeviceIden, SimpleExpr)>,
+    user_id: &Uuid,
+    id: &Uuid,
+    values: Vec<(DeviceIden, SimpleExpr)>,
 ) -> impl QueryStatementWriter {
     let mut update = Query::update();
 
-    values.push((DeviceIden::UpdatedDateTime, crate::date_utils::now().into()));
     update
         .table(DeviceIden::Table)
         .values(values)
-        .and_where(Expr::col(DeviceIden::UserId).eq(user_id))
-        .and_where(Expr::col(DeviceIden::Id).eq(id));
+        .and_where(Expr::col(DeviceIden::UserId).eq(crate::uuid_utils::to_string(user_id)))
+        .and_where(Expr::col(DeviceIden::Id).eq(crate::uuid_utils::to_string(id)));
 
     update
 }
 
-pub fn delete_by_id(user_id: &str, id: &str) -> impl QueryStatementWriter {
+pub fn delete_by_id(user_id: &Uuid, id: &Uuid) -> impl QueryStatementWriter {
     let mut delete = Query::delete();
 
     delete
         .from_table(DeviceIden::Table)
-        .and_where(Expr::col(DeviceIden::UserId).eq(user_id))
-        .and_where(Expr::col(DeviceIden::Id).eq(id));
+        .and_where(Expr::col(DeviceIden::UserId).eq(crate::uuid_utils::to_string(user_id)))
+        .and_where(Expr::col(DeviceIden::Id).eq(crate::uuid_utils::to_string(id)));
 
     delete
 }
 
-pub fn exists_by_id(user_id: &str, id: &str) -> impl QueryStatementWriter {
+pub fn exists_by_id(user_id: &Uuid, id: &Uuid) -> impl QueryStatementWriter {
     let mut select = Query::select();
 
     from_and_where_user_id(&mut select, user_id);
@@ -107,7 +108,7 @@ pub fn exists_by_id(user_id: &str, id: &str) -> impl QueryStatementWriter {
     select
 }
 
-pub fn exists_by_name(user_id: &str, name: &str) -> SelectStatement {
+pub fn exists_by_name(user_id: &Uuid, name: &str) -> SelectStatement {
     let mut select = Query::select();
 
     from_and_where_user_id(&mut select, user_id);
@@ -117,22 +118,29 @@ pub fn exists_by_name(user_id: &str, name: &str) -> SelectStatement {
     select
 }
 
-pub fn exists_by_name_and_id_not(user_id: &str, name: &str, id: &str) -> impl QueryStatementWriter {
+pub fn exists_by_name_and_id_not(
+    user_id: &Uuid,
+    name: &str,
+    id: &Uuid,
+) -> impl QueryStatementWriter {
     let mut select = exists_by_name(user_id, name);
 
-    select.and_where(Expr::col(DeviceIden::Id).ne(id));
+    select.and_where(Expr::col(DeviceIden::Id).ne(crate::uuid_utils::to_string(id)));
 
     select
 }
 
-fn from_and_where_user_id(select: &mut SelectStatement, user_id: &str) {
-    select
-        .from(DeviceIden::Table)
-        .and_where(Expr::col((DeviceIden::Table, DeviceIden::UserId)).eq(user_id));
+fn from_and_where_user_id(select: &mut SelectStatement, user_id: &Uuid) {
+    select.from(DeviceIden::Table).and_where(
+        Expr::col((DeviceIden::Table, DeviceIden::UserId))
+            .eq(crate::uuid_utils::to_string(user_id)),
+    );
 }
 
-fn where_id(select: &mut SelectStatement, id: &str) {
-    select.and_where(Expr::col((DeviceIden::Table, DeviceIden::Id)).eq(id));
+fn where_id(select: &mut SelectStatement, id: &Uuid) {
+    select.and_where(
+        Expr::col((DeviceIden::Table, DeviceIden::Id)).eq(crate::uuid_utils::to_string(id)),
+    );
 }
 
 fn add_id_field(select: &mut SelectStatement) {
@@ -145,6 +153,6 @@ fn add_fields(select: &mut SelectStatement) {
         .column((DeviceIden::Table, DeviceIden::UserId))
         .column((DeviceIden::Table, DeviceIden::Name))
         .column((DeviceIden::Table, DeviceIden::IconUrl))
-        .column((DeviceIden::Table, DeviceIden::AddedDateTime))
-        .column((DeviceIden::Table, DeviceIden::UpdatedDateTime));
+        .column((DeviceIden::Table, DeviceIden::AddedDatetime))
+        .column((DeviceIden::Table, DeviceIden::UpdatedDatetime));
 }

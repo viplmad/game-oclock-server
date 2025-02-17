@@ -28,7 +28,7 @@ pub async fn check_admin_user(user_service: &UserService) {
             let admin_user = user_service
                 .create_user(
                     NewUserDTO {
-                        username: String::from("admin"),
+                        username: Some(String::from("admin")),
                     },
                     "admin",
                 )

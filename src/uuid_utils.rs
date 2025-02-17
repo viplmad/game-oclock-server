@@ -1,22 +1,17 @@
-use uuid::Uuid;
+use uuid::{Error, Uuid};
 
-pub fn new_model_uuid() -> String {
-    Uuid::now_v7().to_string()
-}
-
-// TODO
-pub fn new_model_uuid_real() -> Uuid {
+pub fn new_model_uuid() -> Uuid {
     Uuid::now_v7()
 }
 
-pub fn new_random_uuid() -> String {
-    Uuid::new_v4().to_string()
+pub fn new_random_uuid() -> Uuid {
+    Uuid::new_v4()
 }
 
-pub fn parse_uuid(uuid: &str) -> Uuid {
-    Uuid::parse_str(uuid).expect("Id was not valid Uuid")
+pub fn parse_uuid(uuid: &str) -> Result<Uuid, Error> {
+    Uuid::parse_str(uuid)
 }
 
-pub fn to_string(uuid: Uuid) -> String {
+pub fn to_string(uuid: &Uuid) -> String {
     uuid.to_string()
 }

@@ -1,11 +1,12 @@
 use sea_query::{Expr, Query, QueryStatementWriter, SelectStatement, SimpleExpr};
+use uuid::Uuid;
 
 use crate::entities::{SearchQuery, User, UserIden, UserSearch};
 use crate::errors::SearchErrors;
 
 use super::search::apply_search;
 
-pub fn select_by_id(id: &str) -> impl QueryStatementWriter {
+pub fn select_by_id(id: &Uuid) -> impl QueryStatementWriter {
     let mut select = Query::select();
 
     from(&mut select);
@@ -40,7 +41,7 @@ pub(super) fn select_all() -> SelectStatement {
     select
 }
 
-pub fn insert(id: &str, password: &str, user: &User) -> impl QueryStatementWriter {
+pub fn insert(user: &User) -> impl QueryStatementWriter {
     let mut insert = Query::insert();
 
     insert
@@ -49,58 +50,75 @@ pub fn insert(id: &str, password: &str, user: &User) -> impl QueryStatementWrite
             UserIden::Id,
             UserIden::Password,
             UserIden::Username,
-            UserIden::AddedDateTime,
-            UserIden::UpdatedDateTime,
+            UserIden::AddedDatetime,
+            UserIden::UpdatedDatetime,
         ])
         .values_panic([
-            id.into(),
-            password.into(),
+            crate::uuid_utils::to_string(&user.id).into(),
+            user.password.clone().into(),
             user.username.clone().into(),
-            crate::date_utils::now().into(),
-            crate::date_utils::now().into(),
+            user.added_datetime.into(),
+            user.updated_datetime.into(),
         ]);
 
     insert
 }
 
-pub fn update_by_id(id: &str, user: &User) -> impl QueryStatementWriter {
-    update_values_by_id(id, vec![(UserIden::Username, user.username.clone().into())])
+pub fn update_by_id(user: &User) -> impl QueryStatementWriter {
+    update_values_by_id(
+        &user.id,
+        vec![
+            (UserIden::Username, user.username.clone().into()),
+            (UserIden::UpdatedDatetime, user.updated_datetime.into()),
+        ],
+    )
 }
 
-pub fn update_password_by_id(id: &str, password: &str) -> impl QueryStatementWriter {
-    update_values_by_id(id, vec![(UserIden::Password, password.into())])
+pub fn update_password_by_id(id: &Uuid, password: &str) -> impl QueryStatementWriter {
+    update_values_by_id(
+        id,
+        vec![
+            (UserIden::Password, password.into()),
+            (UserIden::UpdatedDatetime, crate::date_utils::now().into()),
+        ],
+    )
 }
 
-pub fn update_admin_by_id(id: &str, admin: bool) -> impl QueryStatementWriter {
-    update_values_by_id(id, vec![(UserIden::Admin, admin.into())])
+pub fn update_admin_by_id(id: &Uuid, admin: bool) -> impl QueryStatementWriter {
+    update_values_by_id(
+        id,
+        vec![
+            (UserIden::Admin, admin.into()),
+            (UserIden::UpdatedDatetime, crate::date_utils::now().into()),
+        ],
+    )
 }
 
 fn update_values_by_id(
-    id: &str,
-    mut values: Vec<(UserIden, SimpleExpr)>,
+    id: &Uuid,
+    values: Vec<(UserIden, SimpleExpr)>,
 ) -> impl QueryStatementWriter {
     let mut update = Query::update();
 
-    values.push((UserIden::UpdatedDateTime, crate::date_utils::now().into()));
     update
         .table(UserIden::Table)
         .values(values)
-        .and_where(Expr::col(UserIden::Id).eq(id));
+        .and_where(Expr::col(UserIden::Id).eq(crate::uuid_utils::to_string(id)));
 
     update
 }
 
-pub fn delete_by_id(id: &str) -> impl QueryStatementWriter {
+pub fn delete_by_id(id: &Uuid) -> impl QueryStatementWriter {
     let mut delete = Query::delete();
 
     delete
         .from_table(UserIden::Table)
-        .and_where(Expr::col(UserIden::Id).eq(id));
+        .and_where(Expr::col(UserIden::Id).eq(crate::uuid_utils::to_string(id)));
 
     delete
 }
 
-pub fn exists_by_id(id: &str) -> SelectStatement {
+pub fn exists_by_id(id: &Uuid) -> SelectStatement {
     let mut select = Query::select();
 
     from(&mut select);
@@ -120,7 +138,7 @@ pub fn exists_by_username(username: &str) -> SelectStatement {
     select
 }
 
-pub fn exists_by_username_and_id_not(username: &str, id: &str) -> impl QueryStatementWriter {
+pub fn exists_by_username_and_id_not(username: &str, id: &Uuid) -> impl QueryStatementWriter {
     let mut select = exists_by_username(username);
 
     where_id_not(&mut select, id);
@@ -128,7 +146,7 @@ pub fn exists_by_username_and_id_not(username: &str, id: &str) -> impl QueryStat
     select
 }
 
-pub fn exists_by_admin_and_id_not(id: &str) -> impl QueryStatementWriter {
+pub fn exists_by_admin_and_id_not(id: &Uuid) -> impl QueryStatementWriter {
     let mut select = Query::select();
 
     from(&mut select);
@@ -139,7 +157,7 @@ pub fn exists_by_admin_and_id_not(id: &str) -> impl QueryStatementWriter {
     select
 }
 
-pub fn exists_by_admin_and_id(id: &str) -> impl QueryStatementWriter {
+pub fn exists_by_admin_and_id(id: &Uuid) -> impl QueryStatementWriter {
     let mut select = exists_by_id(id);
 
     where_admin(&mut select, true);
@@ -161,16 +179,18 @@ fn from(select: &mut SelectStatement) {
     select.from(UserIden::Table);
 }
 
-fn where_id(select: &mut SelectStatement, id: &str) {
-    select.and_where(Expr::col((UserIden::Table, UserIden::Id)).eq(id));
+fn where_id(select: &mut SelectStatement, id: &Uuid) {
+    select
+        .and_where(Expr::col((UserIden::Table, UserIden::Id)).eq(crate::uuid_utils::to_string(id)));
 }
 
 fn where_admin(select: &mut SelectStatement, admin: bool) {
     select.and_where(Expr::col((UserIden::Table, UserIden::Admin)).eq(admin));
 }
 
-fn where_id_not(select: &mut SelectStatement, id: &str) {
-    select.and_where(Expr::col((UserIden::Table, UserIden::Id)).ne(id));
+fn where_id_not(select: &mut SelectStatement, id: &Uuid) {
+    select
+        .and_where(Expr::col((UserIden::Table, UserIden::Id)).ne(crate::uuid_utils::to_string(id)));
 }
 
 fn add_id_field(select: &mut SelectStatement) {
@@ -183,6 +203,6 @@ fn add_fields(select: &mut SelectStatement) {
         .column((UserIden::Table, UserIden::Username))
         .column((UserIden::Table, UserIden::Password))
         .column((UserIden::Table, UserIden::Admin))
-        .column((UserIden::Table, UserIden::AddedDateTime))
-        .column((UserIden::Table, UserIden::UpdatedDateTime));
+        .column((UserIden::Table, UserIden::AddedDatetime))
+        .column((UserIden::Table, UserIden::UpdatedDatetime));
 }

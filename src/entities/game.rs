@@ -1,7 +1,7 @@
 use std::str::FromStr;
 
 use chrono::{NaiveDate, NaiveDateTime};
-use sea_query::Iden;
+use sea_query::enum_def;
 use sqlx::FromRow;
 use uuid::Uuid;
 
@@ -11,28 +11,18 @@ pub type GameSearch = Search<GameIden>;
 
 pub const QUERY_DATE_ALIAS: &str = "query_date";
 
-#[derive(Clone, Copy, Iden)]
-#[iden = "Game"]
-pub enum GameIden {
-    Table,
-    #[iden = "id"]
-    Id,
-    #[iden = "user_id"]
-    UserId,
-    #[iden = "title"]
-    Title,
-    #[iden = "edition"]
-    Edition,
-    #[iden = "release_date"]
-    ReleaseDate,
-    #[iden = "base_game_id"]
-    BaseGameId,
-    #[iden = "cover_url"]
-    CoverUrl,
-    #[iden = "added_datetime"]
-    AddedDateTime,
-    #[iden = "updated_datetime"]
-    UpdatedDateTime,
+#[derive(FromRow)]
+#[enum_def(table_name = "Game")]
+pub struct Game {
+    pub id: Uuid,
+    pub user_id: Uuid,
+    pub title: String,
+    pub edition: String,
+    pub release_date: Option<NaiveDate>,
+    pub base_game_id: Option<Uuid>,
+    pub cover_url: Option<String>,
+    pub added_datetime: NaiveDateTime,
+    pub updated_datetime: NaiveDateTime,
 }
 
 impl TableIden for GameIden {
@@ -40,7 +30,7 @@ impl TableIden for GameIden {
 }
 
 #[derive(FromRow)]
-pub struct Game {
+pub struct GameWithUserInfo {
     pub id: Uuid,
     pub user_id: Uuid,
     pub title: String,
@@ -56,7 +46,7 @@ pub struct Game {
 }
 
 #[derive(FromRow)]
-pub struct GameWithDate {
+pub struct GameWithUserInfoWithDate {
     pub id: Uuid,
     pub user_id: Uuid,
     pub title: String,
@@ -67,9 +57,25 @@ pub struct GameWithDate {
     pub added_datetime: NaiveDateTime,
     pub updated_datetime: NaiveDateTime,
     pub status: i16,
-    pub rating: i32,
+    pub rating: i16,
     pub notes: String,
     pub query_date: NaiveDate,
+}
+
+impl From<&GameWithUserInfo> for Game {
+    fn from(game: &GameWithUserInfo) -> Self {
+        Self {
+            id: game.id,
+            user_id: game.user_id,
+            title: game.title.clone(),
+            edition: game.edition.clone(),
+            release_date: game.release_date,
+            base_game_id: game.base_game_id,
+            cover_url: game.cover_url.clone(),
+            added_datetime: game.added_datetime,
+            updated_datetime: game.updated_datetime,
+        }
+    }
 }
 
 impl FromStr for FieldIden<GameIden> {
@@ -89,9 +95,9 @@ impl FromStr for FieldIden<GameIden> {
             )),
             "rating" => Ok(FieldIden::new(GameUserInfoIden::Rating, FieldType::Integer)),
             "notes" => Ok(FieldIden::new(GameUserInfoIden::Notes, FieldType::String)),
-            "added_datetime" => Ok(FieldIden::new(GameIden::AddedDateTime, FieldType::DateTime)),
+            "added_datetime" => Ok(FieldIden::new(GameIden::AddedDatetime, FieldType::DateTime)),
             "updated_datetime" => Ok(FieldIden::new(
-                GameIden::UpdatedDateTime,
+                GameIden::UpdatedDatetime,
                 FieldType::DateTime,
             )),
             _ => Err(()),

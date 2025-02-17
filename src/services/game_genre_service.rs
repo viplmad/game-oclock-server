@@ -1,3 +1,6 @@
+use uuid::Uuid;
+
+use crate::entities::GameGenre;
 use crate::errors::ApiErrors;
 use crate::models::{GameDTO, GameGenreDTO, GenreDTO};
 use crate::repository::GameGenreRepository;
@@ -32,8 +35,8 @@ impl GameGenreService {
 impl GameGenreService {
     pub async fn get_genre_games(
         &self,
-        user_id: &str,
-        genre_id: &str,
+        user_id: &Uuid,
+        genre_id: &Uuid,
     ) -> Result<Vec<GameDTO>, ApiErrors> {
         self.genre_service.exists_genre(user_id, genre_id).await?;
 
@@ -46,8 +49,8 @@ impl GameGenreService {
 
     pub async fn get_game_genres(
         &self,
-        user_id: &str,
-        game_id: &str,
+        user_id: &Uuid,
+        game_id: &Uuid,
     ) -> Result<Vec<GenreDTO>, ApiErrors> {
         self.game_service.exists_game(user_id, game_id).await?;
 
@@ -60,9 +63,9 @@ impl GameGenreService {
 
     pub async fn create_game_genre(
         &self,
-        user_id: &str,
-        game_id: &str,
-        genre_id: &str,
+        user_id: &Uuid,
+        game_id: &Uuid,
+        genre_id: &Uuid,
     ) -> Result<(), ApiErrors> {
         self.game_service.exists_game(user_id, game_id).await?;
         self.genre_service.exists_genre(user_id, genre_id).await?;
@@ -73,15 +76,22 @@ impl GameGenreService {
             .await;
         handle_already_exists_result::<GameGenreDTO>(exists_result)?;
 
-        let create_result = self.repository.create(user_id, game_id, genre_id).await;
+        let create_result = self
+            .repository
+            .create(&GameGenre {
+                user_id: user_id.clone(),
+                game_id: game_id.clone(),
+                genre_id: genre_id.clone(),
+            })
+            .await;
         handle_action_result::<GameGenreDTO>(create_result)
     }
 
     pub async fn delete_game_genre(
         &self,
-        user_id: &str,
-        game_id: &str,
-        genre_id: &str,
+        user_id: &Uuid,
+        game_id: &Uuid,
+        genre_id: &Uuid,
     ) -> Result<(), ApiErrors> {
         self.exists_game_genre(user_id, game_id, genre_id).await?;
 
@@ -94,9 +104,9 @@ impl GameGenreService {
 
     pub async fn exists_game_genre(
         &self,
-        user_id: &str,
-        game_id: &str,
-        genre_id: &str,
+        user_id: &Uuid,
+        game_id: &Uuid,
+        genre_id: &Uuid,
     ) -> Result<(), ApiErrors> {
         let exists_result = self
             .repository

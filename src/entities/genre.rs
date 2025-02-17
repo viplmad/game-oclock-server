@@ -1,7 +1,7 @@
 use std::str::FromStr;
 
 use chrono::NaiveDateTime;
-use sea_query::Iden;
+use sea_query::enum_def;
 use sqlx::FromRow;
 use uuid::Uuid;
 
@@ -9,33 +9,18 @@ use super::{FieldIden, FieldType, Search, TableIden};
 
 pub type GenreSearch = Search<GenreIden>;
 
-#[derive(Clone, Copy, Iden)]
-#[iden = "Genre"]
-pub enum GenreIden {
-    Table,
-    #[iden = "id"]
-    Id,
-    #[iden = "user_id"]
-    UserId,
-    #[iden = "name"]
-    Name,
-    #[iden = "added_datetime"]
-    AddedDateTime,
-    #[iden = "updated_datetime"]
-    UpdatedDateTime,
-}
-
-impl TableIden for GenreIden {
-    const TABLE: Self = Self::Table;
-}
-
 #[derive(FromRow)]
+#[enum_def(table_name = "Genre")]
 pub struct Genre {
     pub id: Uuid,
     pub user_id: Uuid,
     pub name: String,
     pub added_datetime: NaiveDateTime,
     pub updated_datetime: NaiveDateTime,
+}
+
+impl TableIden for GenreIden {
+    const TABLE: Self = Self::Table;
 }
 
 impl FromStr for FieldIden<GenreIden> {
@@ -46,11 +31,11 @@ impl FromStr for FieldIden<GenreIden> {
             "id" => Ok(FieldIden::new(GenreIden::Id, FieldType::String)),
             "name" => Ok(FieldIden::new(GenreIden::Name, FieldType::String)),
             "added_datetime" => Ok(FieldIden::new(
-                GenreIden::AddedDateTime,
+                GenreIden::AddedDatetime,
                 FieldType::DateTime,
             )),
             "updated_datetime" => Ok(FieldIden::new(
-                GenreIden::UpdatedDateTime,
+                GenreIden::UpdatedDatetime,
                 FieldType::DateTime,
             )),
             _ => Err(()),

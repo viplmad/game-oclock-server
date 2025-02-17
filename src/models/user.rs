@@ -1,12 +1,14 @@
 use chrono::NaiveDateTime;
 use serde::{Deserialize, Serialize};
 use utoipa::{IntoParams, ToSchema};
+use uuid::Uuid;
 
 use super::{Merge, ModelInfo};
 
 #[derive(Default, Serialize, ToSchema)]
 pub struct UserDTO {
-    pub id: String,
+    #[schema(value_type = String)]
+    pub id: Uuid,
     pub username: String,
     pub admin: bool,
     #[schema(value_type = String, format = DateTime)]
@@ -19,7 +21,7 @@ impl Merge<NewUserDTO> for UserDTO {
     fn merge(self, other: NewUserDTO) -> Self {
         Self {
             id: self.id,
-            username: other.username,
+            username: other.username.unwrap_or(self.username),
             admin: self.admin,
             added_datetime: self.added_datetime,
             updated_datetime: self.updated_datetime,
@@ -35,7 +37,7 @@ impl ModelInfo for UserDTO {
 
 #[derive(Deserialize, ToSchema)]
 pub struct NewUserDTO {
-    pub username: String,
+    pub username: Option<String>,
 }
 
 #[derive(Deserialize, IntoParams)]

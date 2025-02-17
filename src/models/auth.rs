@@ -1,5 +1,6 @@
 use serde::{Deserialize, Serialize};
 use utoipa::ToSchema;
+use uuid::Uuid;
 
 #[derive(Deserialize, ToSchema)]
 pub struct TokenRequest {
@@ -30,17 +31,17 @@ pub struct UserClaims {
     // Issuer
     pub iss: String,
     // Subject
-    pub sub: String,
+    pub sub: Uuid,
     // Issued at
     pub iat: i64,
     // Expiration time
     pub exp: i64,
     // Key id
-    pub kid: String,
+    pub kid: Uuid,
     // JWT id
-    pub jti: String,
+    pub jti: Uuid,
     // Refresh id
-    pub ati: Option<String>,
+    pub ati: Option<Uuid>,
 }
 
 impl UserClaims {
@@ -52,11 +53,11 @@ impl UserClaims {
         !self.is_access()
     }
 
-    pub fn sub_as_user_id(&self) -> String {
-        self.sub.parse().unwrap()
+    pub fn sub_as_user_id(&self) -> Uuid {
+        self.sub
     }
 }
 
 pub struct LoggedUser {
-    pub id: String,
+    pub id: Uuid,
 }

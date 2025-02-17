@@ -19,7 +19,7 @@ pub struct GameWithLog {
     pub added_datetime: NaiveDateTime,
     pub updated_datetime: NaiveDateTime,
     pub status: i16,
-    pub rating: i32,
+    pub rating: i16,
     pub notes: String,
     pub log_start_datetime: NaiveDateTime,
     pub log_end_datetime: NaiveDateTime,

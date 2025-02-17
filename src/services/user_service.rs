@@ -1,10 +1,12 @@
+use uuid::Uuid;
+
 use crate::entities::{User, UserSearch};
 use crate::errors::ApiErrors;
 use crate::models::{NewUserDTO, PasswordChangeDTO, SearchDTO, UserDTO, UserPageResult};
 use crate::repository::UserRepository;
 
 use super::helpers::{
-    create_merged, handle_action_result, handle_already_exists_result, handle_create_result,
+    create_merged, handle_action_result, handle_already_exists_result,
     handle_get_list_paged_result, handle_get_result, handle_get_result_raw,
     handle_not_found_result, handle_query_mapping, handle_result, handle_update_result,
     update_merged,
@@ -22,7 +24,7 @@ impl UserService {
 }
 
 impl UserService {
-    pub async fn get_user(&self, user_id: &str) -> Result<UserDTO, ApiErrors> {
+    pub async fn get_user(&self, user_id: &Uuid) -> Result<UserDTO, ApiErrors> {
         let repository_result = self.repository.find_by_id(user_id).await;
         handle_get_result(repository_result)
     }
@@ -48,38 +50,45 @@ impl UserService {
         user: NewUserDTO,
         password: &str,
     ) -> Result<UserDTO, ApiErrors> {
+        let new_id = crate::uuid_utils::new_model_uuid();
         create_merged(
             user,
-            async move |created_user_id| self.get_user(&created_user_id).await,
-            async move |user_to_create| {
-                let exists_result = self.repository.exists_with_unique(&user_to_create).await;
+            async move || self.get_user(&new_id).await,
+            async move |mut user_to_create: User| {
+                let exists_result = self
+                    .repository
+                    .exists_by_username(&user_to_create.username)
+                    .await;
                 handle_already_exists_result::<UserDTO>(exists_result)?;
 
                 let password_hash = crate::auth::hash_password(password).map_err(|_| {
                     ApiErrors::UnknownError(String::from("Password hashing error."))
                 })?;
-                let create_result = self
-                    .repository
-                    .create(&password_hash, &user_to_create)
-                    .await;
-                handle_create_result::<String, UserDTO>(create_result)
+                user_to_create.id = new_id.clone();
+                user_to_create.password = password_hash;
+                user_to_create.added_datetime = crate::date_utils::now();
+                user_to_create.updated_datetime = crate::date_utils::now();
+                let create_result = self.repository.create(&user_to_create).await;
+                handle_action_result::<UserDTO>(create_result)
             },
         )
         .await
     }
 
-    pub async fn update_user(&self, user_id: &str, user: NewUserDTO) -> Result<(), ApiErrors> {
+    pub async fn update_user(&self, id: &Uuid, user: NewUserDTO) -> Result<(), ApiErrors> {
         update_merged(
             user,
-            async move || self.get_user(user_id).await,
-            async move |user_to_update| {
+            async move || self.get_user(id).await,
+            async move |mut user_to_update: User| {
                 let exists_result = self
                     .repository
-                    .exists_with_unique_except_id(&user_to_update, user_id)
+                    .exists_by_username_except_id(&user_to_update.username, id)
                     .await;
                 handle_already_exists_result::<UserDTO>(exists_result)?;
 
-                let update_result = self.repository.update_by_id(user_id, &user_to_update).await;
+                user_to_update.id = id.clone();
+                user_to_update.updated_datetime = crate::date_utils::now();
+                let update_result = self.repository.update(&user_to_update).await;
                 handle_update_result::<UserDTO>(update_result)
             },
         )
@@ -88,7 +97,7 @@ impl UserService {
 
     pub async fn change_user_password(
         &self,
-        user_id: &str,
+        user_id: &Uuid,
         password_change: PasswordChangeDTO,
     ) -> Result<(), ApiErrors> {
         let get_result = self.repository.find_by_id(user_id).await;
@@ -106,7 +115,7 @@ impl UserService {
 
             let update_result = self
                 .repository
-                .update_password(user_id, &password_hash)
+                .update_password_by_id(user_id, &password_hash)
                 .await;
             handle_update_result::<UserDTO>(update_result)
         } else {
@@ -114,11 +123,11 @@ impl UserService {
         }
     }
 
-    pub async fn promote_user(&self, user_id: &str) -> Result<(), ApiErrors> {
+    pub async fn promote_user(&self, user_id: &Uuid) -> Result<(), ApiErrors> {
         self.change_user_admin(user_id, true).await
     }
 
-    pub async fn demote_user(&self, user_id: &str) -> Result<(), ApiErrors> {
+    pub async fn demote_user(&self, user_id: &Uuid) -> Result<(), ApiErrors> {
         // First check if there would be admins left
         let exists_more_admins_result = self.repository.exists_with_admin_except_id(user_id).await;
         let exists_more_admins = handle_result::<bool, UserDTO>(exists_more_admins_result)?;
@@ -131,26 +140,26 @@ impl UserService {
         self.change_user_admin(user_id, false).await
     }
 
-    async fn change_user_admin(&self, user_id: &str, admin: bool) -> Result<(), ApiErrors> {
+    async fn change_user_admin(&self, user_id: &Uuid, admin: bool) -> Result<(), ApiErrors> {
         self.exists_user(user_id).await?;
 
-        let update_result = self.repository.update_admin(user_id, admin).await;
+        let update_result = self.repository.update_admin_by_id(user_id, admin).await;
         handle_update_result::<UserDTO>(update_result)
     }
 
-    pub async fn delete_user(&self, user_id: &str) -> Result<(), ApiErrors> {
+    pub async fn delete_user(&self, user_id: &Uuid) -> Result<(), ApiErrors> {
         self.exists_user(user_id).await?;
 
         let delete_result = self.repository.delete_by_id(user_id).await;
         handle_action_result::<UserDTO>(delete_result)
     }
 
-    pub async fn is_user_admin(&self, user_id: &str) -> Result<bool, ApiErrors> {
+    pub async fn is_user_admin(&self, user_id: &Uuid) -> Result<bool, ApiErrors> {
         let exists_result = self.repository.exists_by_id_and_admin(user_id).await;
         handle_result::<bool, UserDTO>(exists_result)
     }
 
-    pub async fn exists_user(&self, user_id: &str) -> Result<(), ApiErrors> {
+    pub async fn exists_user(&self, user_id: &Uuid) -> Result<(), ApiErrors> {
         let exists_result = self.repository.exists_by_id(user_id).await;
         handle_not_found_result::<UserDTO>(exists_result)
     }

@@ -1,4 +1,5 @@
 use sqlx::PgPool;
+use uuid::Uuid;
 
 use super::query::location_query;
 use crate::entities::{Location, LocationSearch, PageResult};
@@ -20,8 +21,8 @@ impl LocationRepository {
 impl LocationRepository {
     pub async fn find_by_id(
         &self,
-        user_id: &str,
-        id: &str,
+        user_id: &Uuid,
+        id: &Uuid,
     ) -> Result<Option<Location>, RepositoryError> {
         let query = location_query::select_by_id(user_id, id);
         fetch_optional(&self.pool, query).await
@@ -29,7 +30,7 @@ impl LocationRepository {
 
     pub async fn search_all(
         &self,
-        user_id: &str,
+        user_id: &Uuid,
         search: LocationSearch,
     ) -> Result<PageResult<Location>, SearchErrors> {
         let search_query = location_query::select_all_with_search(user_id, search)?;
@@ -46,26 +47,30 @@ impl LocationRepository {
         execute(&self.pool, query).await
     }
 
-    pub async fn delete_by_id(&self, user_id: &str, id: &str) -> Result<(), RepositoryError> {
+    pub async fn delete_by_id(&self, user_id: &Uuid, id: &Uuid) -> Result<(), RepositoryError> {
         let query = location_query::delete_by_id(user_id, id);
         execute(&self.pool, query).await
     }
 
-    pub async fn exists_by_id(&self, user_id: &str, id: &str) -> Result<bool, RepositoryError> {
+    pub async fn exists_by_id(&self, user_id: &Uuid, id: &Uuid) -> Result<bool, RepositoryError> {
         let query = location_query::exists_by_id(user_id, id);
         exists_id(&self.pool, query).await
     }
 
-    pub async fn exists_by_name(&self, user_id: &str, name: &str) -> Result<bool, RepositoryError> {
+    pub async fn exists_by_name(
+        &self,
+        user_id: &Uuid,
+        name: &str,
+    ) -> Result<bool, RepositoryError> {
         let query = location_query::exists_by_name(user_id, name);
         exists_id(&self.pool, query).await
     }
 
     pub async fn exists_by_name_except_id(
         &self,
-        user_id: &str,
+        user_id: &Uuid,
         name: &str,
-        excluded_id: &str,
+        excluded_id: &Uuid,
     ) -> Result<bool, RepositoryError> {
         let query = location_query::exists_by_name_and_id_not(user_id, name, excluded_id);
         exists_id(&self.pool, query).await

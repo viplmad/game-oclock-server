@@ -1,3 +1,6 @@
+use uuid::Uuid;
+
+use crate::entities::GameTag;
 use crate::errors::ApiErrors;
 use crate::models::{GameDTO, GameTagDTO, TagDTO};
 use crate::repository::GameTagRepository;
@@ -32,8 +35,8 @@ impl GameTagService {
 impl GameTagService {
     pub async fn get_tag_games(
         &self,
-        user_id: &str,
-        tag_id: &str,
+        user_id: &Uuid,
+        tag_id: &Uuid,
     ) -> Result<Vec<GameDTO>, ApiErrors> {
         self.tag_service.exists_tag(user_id, tag_id).await?;
 
@@ -46,8 +49,8 @@ impl GameTagService {
 
     pub async fn get_game_tags(
         &self,
-        user_id: &str,
-        game_id: &str,
+        user_id: &Uuid,
+        game_id: &Uuid,
     ) -> Result<Vec<TagDTO>, ApiErrors> {
         self.game_service.exists_game(user_id, game_id).await?;
 
@@ -60,9 +63,9 @@ impl GameTagService {
 
     pub async fn create_game_tag(
         &self,
-        user_id: &str,
-        game_id: &str,
-        tag_id: &str,
+        user_id: &Uuid,
+        game_id: &Uuid,
+        tag_id: &Uuid,
     ) -> Result<(), ApiErrors> {
         self.game_service.exists_game(user_id, game_id).await?;
         self.tag_service.exists_tag(user_id, tag_id).await?;
@@ -70,15 +73,22 @@ impl GameTagService {
         let exists_result = self.repository.exists_by_id(user_id, game_id, tag_id).await;
         handle_already_exists_result::<GameTagDTO>(exists_result)?;
 
-        let create_result = self.repository.create(user_id, game_id, tag_id).await;
+        let create_result = self
+            .repository
+            .create(&GameTag {
+                user_id: user_id.clone(),
+                game_id: game_id.clone(),
+                tag_id: tag_id.clone(),
+            })
+            .await;
         handle_action_result::<GameTagDTO>(create_result)
     }
 
     pub async fn delete_game_tag(
         &self,
-        user_id: &str,
-        game_id: &str,
-        tag_id: &str,
+        user_id: &Uuid,
+        game_id: &Uuid,
+        tag_id: &Uuid,
     ) -> Result<(), ApiErrors> {
         self.exists_game_tag(user_id, game_id, tag_id).await?;
 
@@ -88,9 +98,9 @@ impl GameTagService {
 
     pub async fn exists_game_tag(
         &self,
-        user_id: &str,
-        game_id: &str,
-        tag_id: &str,
+        user_id: &Uuid,
+        game_id: &Uuid,
+        tag_id: &Uuid,
     ) -> Result<(), ApiErrors> {
         let exists_result = self.repository.exists_by_id(user_id, game_id, tag_id).await;
         handle_not_found_result::<GameTagDTO>(exists_result)

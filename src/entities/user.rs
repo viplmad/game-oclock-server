@@ -1,7 +1,7 @@
 use std::str::FromStr;
 
 use chrono::NaiveDateTime;
-use sea_query::Iden;
+use sea_query::enum_def;
 use sqlx::FromRow;
 use uuid::Uuid;
 
@@ -9,36 +9,19 @@ use super::{FieldIden, FieldType, Search, TableIden};
 
 pub type UserSearch = Search<UserIden>;
 
-#[derive(Clone, Copy, Iden)]
-#[iden = "User"]
-pub enum UserIden {
-    Table,
-    #[iden = "id"]
-    Id,
-    #[iden = "username"]
-    Username,
-    #[iden = "password"]
-    Password,
-    #[iden = "admin"]
-    Admin,
-    #[iden = "added_datetime"]
-    AddedDateTime,
-    #[iden = "updated_datetime"]
-    UpdatedDateTime,
-}
-
-impl TableIden for UserIden {
-    const TABLE: Self = Self::Table;
-}
-
 #[derive(FromRow)]
+#[enum_def(table_name = "User")]
 pub struct User {
     pub id: Uuid,
     pub username: String,
     pub password: String,
     pub admin: bool,
-    pub added_datetime: NaiveDateTime,
+    pub added_datetime: NaiveDateTime, // TODO remove naive
     pub updated_datetime: NaiveDateTime,
+}
+
+impl TableIden for UserIden {
+    const TABLE: Self = Self::Table;
 }
 
 impl FromStr for FieldIden<UserIden> {
@@ -49,9 +32,9 @@ impl FromStr for FieldIden<UserIden> {
             "id" => Ok(FieldIden::new(UserIden::Id, FieldType::String)),
             "name" => Ok(FieldIden::new(UserIden::Username, FieldType::String)),
             "admin" => Ok(FieldIden::new(UserIden::Admin, FieldType::Boolean)),
-            "added_datetime" => Ok(FieldIden::new(UserIden::AddedDateTime, FieldType::DateTime)),
+            "added_datetime" => Ok(FieldIden::new(UserIden::AddedDatetime, FieldType::DateTime)),
             "updated_datetime" => Ok(FieldIden::new(
-                UserIden::UpdatedDateTime,
+                UserIden::UpdatedDatetime,
                 FieldType::DateTime,
             )),
             _ => Err(()),

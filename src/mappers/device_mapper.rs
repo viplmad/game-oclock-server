@@ -6,9 +6,9 @@ use crate::models::DeviceDTO;
 impl From<Device> for DeviceDTO {
     fn from(device: Device) -> Self {
         Self {
-            id: device.id.to_string(),
+            id: device.id,
+            user_id: device.user_id,
             name: device.name,
-            icon_filename: None, // TODO extract filename from url
             icon_url: device.icon_url,
             added_datetime: device.added_datetime,
             updated_datetime: device.updated_datetime,

@@ -1,7 +1,7 @@
 use std::str::FromStr;
 
 use chrono::NaiveDateTime;
-use sea_query::Iden;
+use sea_query::enum_def;
 use sqlx::FromRow;
 use uuid::Uuid;
 
@@ -9,33 +9,18 @@ use super::{FieldIden, FieldType, Search, TableIden};
 
 pub type TagSearch = Search<TagIden>;
 
-#[derive(Clone, Copy, Iden)]
-#[iden = "Tag"]
-pub enum TagIden {
-    Table,
-    #[iden = "id"]
-    Id,
-    #[iden = "user_id"]
-    UserId,
-    #[iden = "name"]
-    Name,
-    #[iden = "added_datetime"]
-    AddedDateTime,
-    #[iden = "updated_datetime"]
-    UpdatedDateTime,
-}
-
-impl TableIden for TagIden {
-    const TABLE: Self = Self::Table;
-}
-
 #[derive(FromRow)]
+#[enum_def(table_name = "Tag")]
 pub struct Tag {
     pub id: Uuid,
     pub user_id: Uuid,
     pub name: String,
     pub added_datetime: NaiveDateTime,
     pub updated_datetime: NaiveDateTime,
+}
+
+impl TableIden for TagIden {
+    const TABLE: Self = Self::Table;
 }
 
 impl FromStr for FieldIden<TagIden> {
@@ -45,9 +30,9 @@ impl FromStr for FieldIden<TagIden> {
         match field {
             "id" => Ok(FieldIden::new(TagIden::Id, FieldType::String)),
             "name" => Ok(FieldIden::new(TagIden::Name, FieldType::String)),
-            "added_datetime" => Ok(FieldIden::new(TagIden::AddedDateTime, FieldType::DateTime)),
+            "added_datetime" => Ok(FieldIden::new(TagIden::AddedDatetime, FieldType::DateTime)),
             "updated_datetime" => Ok(FieldIden::new(
-                TagIden::UpdatedDateTime,
+                TagIden::UpdatedDatetime,
                 FieldType::DateTime,
             )),
             _ => Err(()),

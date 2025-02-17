@@ -1,15 +1,13 @@
-use sea_query::Iden;
+use chrono::NaiveDate;
+use sea_query::enum_def;
+use sqlx::FromRow;
+use uuid::Uuid;
 
-#[derive(Iden)]
-#[iden = "GameAvailable"]
-pub enum GameAvailableIden {
-    Table,
-    #[iden = "user_id"]
-    UserId,
-    #[iden = "game_id"]
-    GameId,
-    #[iden = "location_id"]
-    LocationId,
-    #[iden = "date"]
-    Date,
+#[derive(FromRow)]
+#[enum_def(table_name = "GameAvailable")]
+pub struct GameAvailable {
+    pub user_id: Uuid,
+    pub game_id: Uuid,
+    pub location_id: Uuid,
+    pub date: NaiveDate,
 }

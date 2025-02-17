@@ -143,21 +143,21 @@ where
 
 pub(super) async fn create_merged<E, T, N, GF, CF>(
     new: N,
-    get_function: impl FnOnce(String) -> GF,
+    get_function: impl FnOnce() -> GF,
     create_function: impl FnOnce(E) -> CF,
 ) -> Result<T, ApiErrors>
 where
     T: From<E> + Merge<N> + Default + ModelInfo,
     E: From<T>,
     GF: Future<Output = Result<T, ApiErrors>>,
-    CF: Future<Output = Result<String, ApiErrors>>,
+    CF: Future<Output = Result<(), ApiErrors>>,
 {
     let merged_new = T::merge_with_default(new);
     let entity_to_create = E::from(merged_new);
 
-    let created_id = create_function(entity_to_create).await?;
+    create_function(entity_to_create).await?;
 
-    get_function(created_id).await.map_err(|err| match err {
+    get_function().await.map_err(|err| match err {
         ApiErrors::NotFound(_) => {
             ApiErrors::NotFound(error_message_builder::created_but_error_get(T::MODEL_NAME))
         }

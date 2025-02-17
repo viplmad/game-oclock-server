@@ -1,11 +1,12 @@
 use sea_query::{Expr, Query, QueryStatementWriter, SelectStatement, SimpleExpr};
+use uuid::Uuid;
 
-use crate::entities::{Game, GameIden, GameSearch, GameUserInfoIden, SearchQuery};
+use crate::entities::{Game, GameIden, GameSearch, GameUserInfo, GameUserInfoIden, SearchQuery};
 use crate::errors::SearchErrors;
 
 use super::search::apply_search;
 
-pub fn select_by_id(user_id: &str, id: &str) -> impl QueryStatementWriter {
+pub fn select_by_id(user_id: &Uuid, id: &Uuid) -> impl QueryStatementWriter {
     let mut select = Query::select();
 
     from_and_where_user_id(&mut select, user_id);
@@ -16,18 +17,22 @@ pub fn select_by_id(user_id: &str, id: &str) -> impl QueryStatementWriter {
     select
 }
 
-pub fn select_all_by_base_game_id(user_id: &str, base_game_id: &str) -> impl QueryStatementWriter {
+pub fn select_all_by_base_game_id(
+    user_id: &Uuid,
+    base_game_id: &Uuid,
+) -> impl QueryStatementWriter {
     let mut select = Query::select();
 
     from_and_where_user_id(&mut select, user_id);
     add_fields(&mut select);
-    select.and_where(Expr::col(GameIden::BaseGameId).eq(base_game_id));
+    select
+        .and_where(Expr::col(GameIden::BaseGameId).eq(crate::uuid_utils::to_string(base_game_id)));
 
     select
 }
 
 pub fn select_all_with_search(
-    user_id: &str,
+    user_id: &Uuid,
     search: GameSearch,
 ) -> Result<SearchQuery, SearchErrors> {
     let select = select_all(user_id);
@@ -35,7 +40,7 @@ pub fn select_all_with_search(
     apply_search(select, search)
 }
 
-pub(super) fn select_all(user_id: &str) -> SelectStatement {
+pub(super) fn select_all(user_id: &Uuid) -> SelectStatement {
     let mut select = Query::select();
 
     from_and_where_user_id(&mut select, user_id);
@@ -45,7 +50,7 @@ pub(super) fn select_all(user_id: &str) -> SelectStatement {
     select
 }
 
-pub(super) fn select_all_group_by_id(user_id: &str) -> SelectStatement {
+pub(super) fn select_all_group_by_id(user_id: &Uuid) -> SelectStatement {
     let mut select = select_all(user_id);
 
     select
@@ -56,36 +61,36 @@ pub(super) fn select_all_group_by_id(user_id: &str) -> SelectStatement {
     select
 }
 
-pub fn insert(user_id: &str, id: &str, game: &Game) -> impl QueryStatementWriter {
+pub fn insert(game: &Game) -> impl QueryStatementWriter {
     let mut insert = Query::insert();
 
     insert
         .into_table(GameIden::Table)
         .columns([
-            GameIden::UserId,
             GameIden::Id,
+            GameIden::UserId,
             GameIden::Title,
             GameIden::Edition,
             GameIden::ReleaseDate,
             GameIden::CoverUrl,
-            GameIden::AddedDateTime,
-            GameIden::UpdatedDateTime,
+            GameIden::AddedDatetime,
+            GameIden::UpdatedDatetime,
         ])
         .values_panic([
-            user_id.into(),
-            id.into(),
+            crate::uuid_utils::to_string(&game.id).into(),
+            crate::uuid_utils::to_string(&game.user_id).into(),
             game.title.clone().into(),
             game.edition.clone().into(),
             game.release_date.into(),
             game.cover_url.clone().into(),
-            crate::date_utils::now().into(),
-            crate::date_utils::now().into(),
+            game.added_datetime.into(),
+            game.updated_datetime.into(),
         ]);
 
     insert
 }
 
-pub fn insert_user_info(user_id: &str, game_id: &str, game: &Game) -> impl QueryStatementWriter {
+pub fn insert_user_info(game: &GameUserInfo) -> impl QueryStatementWriter {
     let mut insert = Query::insert();
 
     insert
@@ -96,123 +101,127 @@ pub fn insert_user_info(user_id: &str, game_id: &str, game: &Game) -> impl Query
             GameUserInfoIden::Status,
             GameUserInfoIden::Rating,
             GameUserInfoIden::Notes,
-            GameUserInfoIden::AddedDateTime,
-            GameUserInfoIden::UpdatedDateTime,
+            GameUserInfoIden::AddedDatetime,
+            GameUserInfoIden::UpdatedDatetime,
         ])
         .values_panic([
-            user_id.into(),
-            game_id.into(),
+            crate::uuid_utils::to_string(&game.user_id).into(),
+            crate::uuid_utils::to_string(&game.game_id).into(),
             game.status.into(),
             game.rating.into(),
             game.notes.clone().into(),
-            crate::date_utils::now().into(),
-            crate::date_utils::now().into(),
+            game.added_datetime.into(),
+            game.updated_datetime.into(),
         ]);
 
     insert
 }
 
-pub fn update_by_id(user_id: &str, id: &str, game: &Game) -> impl QueryStatementWriter {
+pub fn update_by_id(game: &Game) -> impl QueryStatementWriter {
     update_values_by_id(
-        user_id,
-        id,
+        &game.user_id,
+        &game.id,
         vec![
             (GameIden::Title, game.title.clone().into()),
             (GameIden::Edition, game.edition.clone().into()),
             (GameIden::ReleaseDate, game.release_date.into()),
             (GameIden::CoverUrl, game.cover_url.clone().into()),
+            (GameIden::UpdatedDatetime, game.updated_datetime.into()),
         ],
     )
 }
 
 pub fn update_base_game_id_by_id(
-    user_id: &str,
-    id: &str,
-    base_game_id: Option<String>,
+    user_id: &Uuid,
+    id: &Uuid,
+    base_game_id: Option<Uuid>,
 ) -> impl QueryStatementWriter {
     update_values_by_id(
         user_id,
         id,
-        vec![(GameIden::BaseGameId, base_game_id.into())],
+        vec![
+            (
+                GameIden::BaseGameId,
+                base_game_id
+                    .map(|id| crate::uuid_utils::to_string(&id))
+                    .into(),
+            ),
+            (GameIden::UpdatedDatetime, crate::date_utils::now().into()),
+        ],
     )
 }
 
 fn update_values_by_id(
-    user_id: &str,
-    id: &str,
-    mut values: Vec<(GameIden, SimpleExpr)>,
+    user_id: &Uuid,
+    id: &Uuid,
+    values: Vec<(GameIden, SimpleExpr)>,
 ) -> impl QueryStatementWriter {
     let mut update = Query::update();
 
-    values.push((GameIden::UpdatedDateTime, crate::date_utils::now().into()));
     update
         .table(GameIden::Table)
         .values(values)
-        .and_where(Expr::col(GameIden::UserId).eq(user_id))
-        .and_where(Expr::col(GameIden::Id).eq(id));
+        .and_where(Expr::col(GameIden::UserId).eq(crate::uuid_utils::to_string(user_id)))
+        .and_where(Expr::col(GameIden::Id).eq(crate::uuid_utils::to_string(id)));
 
     update
 }
 
-pub fn update_user_info_by_id(
-    user_id: &str,
-    game_id: &str,
-    game: &Game,
-) -> impl QueryStatementWriter {
+pub fn update_user_info_by_id(game: &GameUserInfo) -> impl QueryStatementWriter {
     update_user_info_values_by_id(
-        user_id,
-        game_id,
+        &game.user_id,
+        &game.game_id,
         vec![
             (GameUserInfoIden::Status, game.status.into()),
             (GameUserInfoIden::Rating, game.rating.into()),
             (GameUserInfoIden::Notes, game.notes.clone().into()),
+            (
+                GameUserInfoIden::UpdatedDatetime,
+                game.updated_datetime.into(),
+            ),
         ],
     )
 }
 
 fn update_user_info_values_by_id(
-    user_id: &str,
-    game_id: &str,
-    mut values: Vec<(GameUserInfoIden, SimpleExpr)>,
+    user_id: &Uuid,
+    game_id: &Uuid,
+    values: Vec<(GameUserInfoIden, SimpleExpr)>,
 ) -> impl QueryStatementWriter {
     let mut update = Query::update();
 
-    values.push((
-        GameUserInfoIden::UpdatedDateTime,
-        crate::date_utils::now().into(),
-    ));
     update
         .table(GameUserInfoIden::Table)
         .values(values)
-        .and_where(Expr::col(GameUserInfoIden::UserId).eq(user_id))
-        .and_where(Expr::col(GameUserInfoIden::GameId).eq(game_id));
+        .and_where(Expr::col(GameUserInfoIden::UserId).eq(crate::uuid_utils::to_string(user_id)))
+        .and_where(Expr::col(GameUserInfoIden::GameId).eq(crate::uuid_utils::to_string(game_id)));
 
     update
 }
 
-pub fn delete_by_id(user_id: &str, id: &str) -> impl QueryStatementWriter {
+pub fn delete_by_id(user_id: &Uuid, id: &Uuid) -> impl QueryStatementWriter {
     let mut delete = Query::delete();
 
     delete
         .from_table(GameIden::Table)
-        .and_where(Expr::col(GameIden::UserId).eq(user_id))
-        .and_where(Expr::col(GameIden::Id).eq(id));
+        .and_where(Expr::col(GameIden::UserId).eq(crate::uuid_utils::to_string(user_id)))
+        .and_where(Expr::col(GameIden::Id).eq(crate::uuid_utils::to_string(id)));
 
     delete
 }
 
-pub fn delete_user_info_by_id(user_id: &str, game_id: &str) -> impl QueryStatementWriter {
+pub fn delete_user_info_by_id(user_id: &Uuid, game_id: &Uuid) -> impl QueryStatementWriter {
     let mut delete = Query::delete();
 
     delete
         .from_table(GameUserInfoIden::Table)
-        .and_where(Expr::col(GameUserInfoIden::UserId).eq(user_id))
-        .and_where(Expr::col(GameUserInfoIden::GameId).eq(game_id));
+        .and_where(Expr::col(GameUserInfoIden::UserId).eq(crate::uuid_utils::to_string(user_id)))
+        .and_where(Expr::col(GameUserInfoIden::GameId).eq(crate::uuid_utils::to_string(game_id)));
 
     delete
 }
 
-pub fn exists_by_id(user_id: &str, id: &str) -> impl QueryStatementWriter {
+pub fn exists_by_id(user_id: &Uuid, id: &Uuid) -> impl QueryStatementWriter {
     let mut select = Query::select();
 
     from_and_where_user_id(&mut select, user_id);
@@ -222,8 +231,7 @@ pub fn exists_by_id(user_id: &str, id: &str) -> impl QueryStatementWriter {
     select
 }
 
-// TODO rename to title
-pub fn exists_by_name_and_edition(user_id: &str, name: &str, edition: &str) -> SelectStatement {
+pub fn exists_by_title_and_edition(user_id: &Uuid, name: &str, edition: &str) -> SelectStatement {
     let mut select = Query::select();
 
     from_and_where_user_id(&mut select, user_id);
@@ -235,27 +243,28 @@ pub fn exists_by_name_and_edition(user_id: &str, name: &str, edition: &str) -> S
     select
 }
 
-pub fn exists_by_name_and_edition_and_id_not(
-    user_id: &str,
+pub fn exists_by_title_and_edition_and_id_not(
+    user_id: &Uuid,
     name: &str,
     edition: &str,
-    id: &str,
+    id: &Uuid,
 ) -> impl QueryStatementWriter {
-    let mut select = exists_by_name_and_edition(user_id, name, edition);
+    let mut select = exists_by_title_and_edition(user_id, name, edition);
 
-    select.and_where(Expr::col(GameIden::Id).ne(id));
+    select.and_where(Expr::col(GameIden::Id).ne(crate::uuid_utils::to_string(id)));
 
     select
 }
 
-fn from_and_where_user_id(select: &mut SelectStatement, user_id: &str) {
-    select
-        .from(GameIden::Table)
-        .and_where(Expr::col((GameIden::Table, GameIden::UserId)).eq(user_id));
+fn from_and_where_user_id(select: &mut SelectStatement, user_id: &Uuid) {
+    select.from(GameIden::Table).and_where(
+        Expr::col((GameIden::Table, GameIden::UserId)).eq(crate::uuid_utils::to_string(user_id)),
+    );
 }
 
-fn where_id(select: &mut SelectStatement, id: &str) {
-    select.and_where(Expr::col((GameIden::Table, GameIden::Id)).eq(id));
+fn where_id(select: &mut SelectStatement, id: &Uuid) {
+    select
+        .and_where(Expr::col((GameIden::Table, GameIden::Id)).eq(crate::uuid_utils::to_string(id)));
 }
 
 fn join_user_info(select: &mut SelectStatement) {
@@ -283,8 +292,8 @@ fn add_fields(select: &mut SelectStatement) {
         .column((GameIden::Table, GameIden::ReleaseDate))
         .column((GameIden::Table, GameIden::BaseGameId))
         .column((GameIden::Table, GameIden::CoverUrl))
-        .column((GameIden::Table, GameIden::AddedDateTime))
-        .column((GameIden::Table, GameIden::UpdatedDateTime))
+        .column((GameIden::Table, GameIden::AddedDatetime))
+        .column((GameIden::Table, GameIden::UpdatedDatetime))
         .column((GameUserInfoIden::Table, GameUserInfoIden::Status))
         .column((GameUserInfoIden::Table, GameUserInfoIden::Rating))
         .column((GameUserInfoIden::Table, GameUserInfoIden::Notes));

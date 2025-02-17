@@ -6,9 +6,9 @@ use crate::models::{LocationAvailableDTO, LocationDTO};
 impl From<Location> for LocationDTO {
     fn from(location: Location) -> Self {
         Self {
-            id: location.id.to_string(),
+            id: location.id,
+            user_id: location.user_id,
             name: location.name,
-            icon_filename: None, // TODO extract filename from url
             icon_url: location.icon_url,
             added_datetime: location.added_datetime,
             updated_datetime: location.updated_datetime,

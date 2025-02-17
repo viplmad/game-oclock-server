@@ -1,3 +1,5 @@
+use uuid::Uuid;
+
 use crate::entities::{Location, LocationSearch};
 use crate::errors::ApiErrors;
 use crate::models::{LocationDTO, LocationPageResult, NewLocationDTO, SearchDTO};
@@ -21,18 +23,14 @@ impl LocationService {
 }
 
 impl LocationService {
-    pub async fn get_location(
-        &self,
-        user_id: &str,
-        location_id: &str,
-    ) -> Result<LocationDTO, ApiErrors> {
-        let find_result = self.repository.find_by_id(user_id, location_id).await;
+    pub async fn get_location(&self, user_id: &Uuid, id: &Uuid) -> Result<LocationDTO, ApiErrors> {
+        let find_result = self.repository.find_by_id(user_id, id).await;
         handle_get_result(find_result)
     }
 
     pub async fn search_locations(
         &self,
-        user_id: &str,
+        user_id: &Uuid,
         search: SearchDTO,
         quicksearch: Option<String>,
     ) -> Result<LocationPageResult, ApiErrors> {
@@ -43,12 +41,13 @@ impl LocationService {
 
     pub async fn create_location(
         &self,
-        user_id: &str,
+        user_id: &Uuid,
         location: NewLocationDTO,
     ) -> Result<LocationDTO, ApiErrors> {
+        let new_id = crate::uuid_utils::new_model_uuid();
         create_merged(
             location,
-            async move |created_location_id| self.get_location(user_id, &created_location_id).await,
+            async move || self.get_location(user_id, &new_id).await,
             async move |mut location_to_create: Location| {
                 let exists_result = self
                     .repository
@@ -56,14 +55,12 @@ impl LocationService {
                     .await;
                 handle_already_exists_result::<LocationDTO>(exists_result)?;
 
-                location_to_create.user_id = crate::uuid_utils::parse_uuid(user_id);
-                location_to_create.id = crate::uuid_utils::new_model_uuid_real();
+                location_to_create.user_id = user_id.clone();
+                location_to_create.id = new_id.clone();
                 location_to_create.added_datetime = crate::date_utils::now();
                 location_to_create.updated_datetime = crate::date_utils::now();
                 let create_result = self.repository.create(&location_to_create).await;
-                handle_action_result::<LocationDTO>(create_result)?;
-
-                Ok(location_to_create.id.to_string()) //TODO
+                handle_action_result::<LocationDTO>(create_result)
             },
         )
         .await
@@ -71,22 +68,22 @@ impl LocationService {
 
     pub async fn update_location(
         &self,
-        user_id: &str,
-        location_id: &str,
+        user_id: &Uuid,
+        id: &Uuid,
         location: NewLocationDTO,
     ) -> Result<(), ApiErrors> {
         update_merged(
             location,
-            async move || self.get_location(user_id, location_id).await,
+            async move || self.get_location(user_id, id).await,
             async move |mut location_to_update: Location| {
                 let exists_result = self
                     .repository
-                    .exists_by_name_except_id(user_id, &location_to_update.name, location_id)
+                    .exists_by_name_except_id(user_id, &location_to_update.name, id)
                     .await;
                 handle_already_exists_result::<LocationDTO>(exists_result)?;
 
-                location_to_update.user_id = crate::uuid_utils::parse_uuid(user_id);
-                location_to_update.id = crate::uuid_utils::parse_uuid(location_id);
+                location_to_update.user_id = user_id.clone();
+                location_to_update.id = id.clone();
                 location_to_update.updated_datetime = crate::date_utils::now();
                 let update_result = self.repository.update(&location_to_update).await;
                 handle_update_result::<LocationDTO>(update_result)
@@ -95,13 +92,13 @@ impl LocationService {
         .await
     }
 
-    pub async fn delete_location(&self, user_id: &str, location_id: &str) -> Result<(), ApiErrors> {
-        let delete_result = self.repository.delete_by_id(user_id, location_id).await;
+    pub async fn delete_location(&self, user_id: &Uuid, id: &Uuid) -> Result<(), ApiErrors> {
+        let delete_result = self.repository.delete_by_id(user_id, id).await;
         handle_action_result::<LocationDTO>(delete_result)
     }
 
-    pub async fn exists_location(&self, user_id: &str, location_id: &str) -> Result<(), ApiErrors> {
-        let exists_result = self.repository.exists_by_id(user_id, location_id).await;
+    pub async fn exists_location(&self, user_id: &Uuid, id: &Uuid) -> Result<(), ApiErrors> {
+        let exists_result = self.repository.exists_by_id(user_id, id).await;
         handle_not_found_result::<LocationDTO>(exists_result)
     }
 }

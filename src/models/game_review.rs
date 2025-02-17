@@ -3,6 +3,7 @@ use std::collections::HashMap;
 use chrono::{NaiveDate, NaiveDateTime};
 use serde::Serialize;
 use utoipa::ToSchema;
+use uuid::Uuid;
 
 use super::{DurationDef, FinishDTO, GameStatus, LogDTO};
 
@@ -27,21 +28,23 @@ pub struct GamesPlayedReviewDTO {
     pub total_time_by_hour: HashMap<u32, DurationDef>,
     pub total_played_by_release_year: HashMap<i32, i32>,
     pub total_rated: i32,
-    pub total_rated_by_rating: HashMap<i32, i32>,
+    pub total_rated_by_rating: HashMap<i16, i32>,
     pub games: Vec<GamePlayedReviewDTO>,
 }
 
 #[derive(Serialize, ToSchema)]
 pub struct GamePlayedReviewDTO {
-    pub id: String,
+    #[schema(value_type = String)]
+    pub id: Uuid,
+    #[schema(value_type = String)]
+    pub user_id: Uuid,
     pub title: String,
     pub edition: String,
     #[serde(skip_serializing_if = "Option::is_none")]
     pub release_date: Option<NaiveDate>,
+    #[schema(value_type = String)]
     #[serde(skip_serializing_if = "Option::is_none")]
-    pub base_game_id: Option<String>,
-    #[serde(skip_serializing_if = "Option::is_none")]
-    pub cover_filename: Option<String>,
+    pub base_game_id: Option<Uuid>,
     #[serde(skip_serializing_if = "Option::is_none")]
     pub cover_url: Option<String>,
     #[schema(value_type = String, format = DateTime)]
@@ -49,7 +52,7 @@ pub struct GamePlayedReviewDTO {
     #[schema(value_type = String, format = DateTime)]
     pub updated_datetime: NaiveDateTime,
     pub status: GameStatus,
-    pub rating: i32,
+    pub rating: i16,
     pub notes: String,
     pub first_played: bool,
     pub longest_streak: StreakDTO,
@@ -84,15 +87,17 @@ pub struct GamesFinishedReviewDTO {
 
 #[derive(Serialize, ToSchema)]
 pub struct GameFinishedReviewDTO {
-    pub id: String,
+    #[schema(value_type = String)]
+    pub id: Uuid,
+    #[schema(value_type = String)]
+    pub user_id: Uuid,
     pub title: String,
     pub edition: String,
     #[serde(skip_serializing_if = "Option::is_none")]
     pub release_date: Option<NaiveDate>,
+    #[schema(value_type = String)]
     #[serde(skip_serializing_if = "Option::is_none")]
-    pub base_game_id: Option<String>,
-    #[serde(skip_serializing_if = "Option::is_none")]
-    pub cover_filename: Option<String>,
+    pub base_game_id: Option<Uuid>,
     #[serde(skip_serializing_if = "Option::is_none")]
     pub cover_url: Option<String>,
     #[schema(value_type = String, format = DateTime)]
@@ -100,7 +105,7 @@ pub struct GameFinishedReviewDTO {
     #[schema(value_type = String, format = DateTime)]
     pub updated_datetime: NaiveDateTime,
     pub status: GameStatus,
-    pub rating: i32,
+    pub rating: i16,
     pub notes: String,
     pub total_finished: i32,
     pub total_finished_grouped: HashMap<u32, i32>,

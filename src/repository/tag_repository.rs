@@ -1,4 +1,5 @@
 use sqlx::PgPool;
+use uuid::Uuid;
 
 use super::query::tag_query;
 use crate::entities::{PageResult, Tag, TagSearch};
@@ -20,8 +21,8 @@ impl TagRepository {
 impl TagRepository {
     pub async fn find_by_id(
         &self,
-        user_id: &str,
-        id: &str,
+        user_id: &Uuid,
+        id: &Uuid,
     ) -> Result<Option<Tag>, RepositoryError> {
         let query = tag_query::select_by_id(user_id, id);
         fetch_optional(&self.pool, query).await
@@ -29,56 +30,49 @@ impl TagRepository {
 
     pub async fn search_all(
         &self,
-        user_id: &str,
+        user_id: &Uuid,
         search: TagSearch,
     ) -> Result<PageResult<Tag>, SearchErrors> {
         let search_query = tag_query::select_all_with_query(user_id, search)?;
         fetch_all_search(&self.pool, search_query).await
     }
 
-    pub async fn create(&self, user_id: &str, tag: &Tag) -> Result<String, RepositoryError> {
-        let id = crate::uuid_utils::new_model_uuid();
-
-        let query = tag_query::insert(user_id, &id, tag);
-        execute(&self.pool, query).await.map(|_| id)
-    }
-
-    pub async fn update_by_id(
-        &self,
-        user_id: &str,
-        id: &str,
-        tag: &Tag,
-    ) -> Result<(), RepositoryError> {
-        let query = tag_query::update_by_id(user_id, id, tag);
+    pub async fn create(&self, tag: &Tag) -> Result<(), RepositoryError> {
+        let query = tag_query::insert(tag);
         execute(&self.pool, query).await
     }
 
-    pub async fn delete_by_id(&self, user_id: &str, id: &str) -> Result<(), RepositoryError> {
+    pub async fn update(&self, tag: &Tag) -> Result<(), RepositoryError> {
+        let query = tag_query::update_by_id(tag);
+        execute(&self.pool, query).await
+    }
+
+    pub async fn delete_by_id(&self, user_id: &Uuid, id: &Uuid) -> Result<(), RepositoryError> {
         let query = tag_query::delete_by_id(user_id, id);
         execute(&self.pool, query).await
     }
 
-    pub async fn exists_by_id(&self, user_id: &str, id: &str) -> Result<bool, RepositoryError> {
+    pub async fn exists_by_id(&self, user_id: &Uuid, id: &Uuid) -> Result<bool, RepositoryError> {
         let query = tag_query::exists_by_id(user_id, id);
         exists_id(&self.pool, query).await
     }
 
-    pub async fn exists_with_unique(
+    pub async fn exists_by_name(
         &self,
-        user_id: &str,
-        tag: &Tag,
+        user_id: &Uuid,
+        name: &str,
     ) -> Result<bool, RepositoryError> {
-        let query = tag_query::exists_by_name(user_id, &tag.name);
+        let query = tag_query::exists_by_name(user_id, name);
         exists_id(&self.pool, query).await
     }
 
-    pub async fn exists_with_unique_except_id(
+    pub async fn exists_by_name_except_id(
         &self,
-        user_id: &str,
-        tag: &Tag,
-        excluded_id: &str,
+        user_id: &Uuid,
+        name: &str,
+        excluded_id: &Uuid,
     ) -> Result<bool, RepositoryError> {
-        let query = tag_query::exists_by_name_and_id_not(user_id, &tag.name, excluded_id);
+        let query = tag_query::exists_by_name_and_id_not(user_id, name, excluded_id);
         exists_id(&self.pool, query).await
     }
 }

@@ -1,3 +1,5 @@
+use uuid::Uuid;
+
 use crate::errors::ApiErrors;
 use crate::models::{DeviceDTO, GameDTO};
 use crate::repository::GamePlayedDeviceRepository;
@@ -29,8 +31,8 @@ impl GamePlayedDeviceService {
 impl GamePlayedDeviceService {
     pub async fn get_device_played_games(
         &self,
-        user_id: &str,
-        device_id: &str,
+        user_id: &Uuid,
+        device_id: &Uuid,
     ) -> Result<Vec<GameDTO>, ApiErrors> {
         self.device_service
             .exists_device(user_id, device_id)
@@ -45,8 +47,8 @@ impl GamePlayedDeviceService {
 
     pub async fn get_game_played_devices(
         &self,
-        user_id: &str,
-        game_id: &str,
+        user_id: &Uuid,
+        game_id: &Uuid,
     ) -> Result<Vec<DeviceDTO>, ApiErrors> {
         self.game_service.exists_game(user_id, game_id).await?;
 

@@ -157,7 +157,7 @@ fn build_played_review(
     let mut total_time_by_weekday = HashMap::<u32, DurationDef>::new();
     let mut total_time_by_hour = HashMap::<u32, DurationDef>::new();
     let mut total_played_by_release_year = HashMap::<i32, i32>::new();
-    let mut total_rated_by_rating = HashMap::<i32, i32>::new();
+    let mut total_rated_by_rating = HashMap::<i16, i32>::new();
     let mut longest_session = GameLogDTO::default();
     let mut first_session = GameLogDTO {
         game_id: String::default(),

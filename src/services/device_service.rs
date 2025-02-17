@@ -1,10 +1,12 @@
-use crate::entities::DeviceSearch;
+use uuid::Uuid;
+
+use crate::entities::{Device, DeviceSearch};
 use crate::errors::ApiErrors;
 use crate::models::{DeviceDTO, DevicePageResult, NewDeviceDTO, SearchDTO};
 use crate::repository::DeviceRepository;
 
 use super::helpers::{
-    create_merged, handle_action_result, handle_already_exists_result, handle_create_result,
+    create_merged, handle_action_result, handle_already_exists_result,
     handle_get_list_paged_result, handle_get_result, handle_not_found_result, handle_query_mapping,
     handle_update_result, update_merged,
 };
@@ -21,14 +23,14 @@ impl DeviceService {
 }
 
 impl DeviceService {
-    pub async fn get_device(&self, user_id: &str, device_id: &str) -> Result<DeviceDTO, ApiErrors> {
-        let find_result = self.repository.find_by_id(user_id, device_id).await;
+    pub async fn get_device(&self, user_id: &Uuid, id: &Uuid) -> Result<DeviceDTO, ApiErrors> {
+        let find_result = self.repository.find_by_id(user_id, id).await;
         handle_get_result(find_result)
     }
 
     pub async fn search_devices(
         &self,
-        user_id: &str,
+        user_id: &Uuid,
         search: SearchDTO,
         quicksearch: Option<String>,
     ) -> Result<DevicePageResult, ApiErrors> {
@@ -39,21 +41,26 @@ impl DeviceService {
 
     pub async fn create_device(
         &self,
-        user_id: &str,
+        user_id: &Uuid,
         device: NewDeviceDTO,
     ) -> Result<DeviceDTO, ApiErrors> {
+        let new_id = crate::uuid_utils::new_model_uuid();
         create_merged(
             device,
-            async move |created_device_id| self.get_device(user_id, &created_device_id).await,
-            async move |device_to_create| {
+            async move || self.get_device(user_id, &new_id).await,
+            async move |mut device_to_create: Device| {
                 let exists_result = self
                     .repository
-                    .exists_with_unique(user_id, &device_to_create)
+                    .exists_by_name(user_id, &device_to_create.name)
                     .await;
                 handle_already_exists_result::<DeviceDTO>(exists_result)?;
 
-                let create_result = self.repository.create(user_id, &device_to_create).await;
-                handle_create_result::<String, DeviceDTO>(create_result)
+                device_to_create.user_id = user_id.clone();
+                device_to_create.id = new_id.clone();
+                device_to_create.added_datetime = crate::date_utils::now();
+                device_to_create.updated_datetime = crate::date_utils::now();
+                let create_result = self.repository.create(&device_to_create).await;
+                handle_action_result::<DeviceDTO>(create_result)
             },
         )
         .await
@@ -61,37 +68,37 @@ impl DeviceService {
 
     pub async fn update_device(
         &self,
-        user_id: &str,
-        device_id: &str,
+        user_id: &Uuid,
+        id: &Uuid,
         device: NewDeviceDTO,
     ) -> Result<(), ApiErrors> {
         update_merged(
             device,
-            async move || self.get_device(user_id, device_id).await,
-            async move |device_to_update| {
+            async move || self.get_device(user_id, id).await,
+            async move |mut device_to_update: Device| {
                 let exists_result = self
                     .repository
-                    .exists_with_unique_except_id(user_id, &device_to_update, device_id)
+                    .exists_by_name_except_id(user_id, &device_to_update.name, id)
                     .await;
                 handle_already_exists_result::<DeviceDTO>(exists_result)?;
 
-                let update_result = self
-                    .repository
-                    .update_by_id(user_id, device_id, &device_to_update)
-                    .await;
+                device_to_update.user_id = user_id.clone();
+                device_to_update.id = id.clone();
+                device_to_update.updated_datetime = crate::date_utils::now();
+                let update_result = self.repository.update(&device_to_update).await;
                 handle_update_result::<DeviceDTO>(update_result)
             },
         )
         .await
     }
 
-    pub async fn delete_device(&self, user_id: &str, device_id: &str) -> Result<(), ApiErrors> {
-        let delete_result = self.repository.delete_by_id(user_id, device_id).await;
+    pub async fn delete_device(&self, user_id: &Uuid, id: &Uuid) -> Result<(), ApiErrors> {
+        let delete_result = self.repository.delete_by_id(user_id, id).await;
         handle_action_result::<DeviceDTO>(delete_result)
     }
 
-    pub async fn exists_device(&self, user_id: &str, device_id: &str) -> Result<(), ApiErrors> {
-        let exists_result = self.repository.exists_by_id(user_id, device_id).await;
+    pub async fn exists_device(&self, user_id: &Uuid, id: &Uuid) -> Result<(), ApiErrors> {
+        let exists_result = self.repository.exists_by_id(user_id, id).await;
         handle_not_found_result::<DeviceDTO>(exists_result)
     }
 }

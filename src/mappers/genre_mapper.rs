@@ -6,7 +6,8 @@ use crate::models::GenreDTO;
 impl From<Genre> for GenreDTO {
     fn from(genre: Genre) -> Self {
         Self {
-            id: genre.id.to_string(),
+            id: genre.id,
+            user_id: genre.user_id,
             name: genre.name,
             added_datetime: genre.added_datetime,
             updated_datetime: genre.updated_datetime,

@@ -1,7 +1,8 @@
 use sqlx::PgPool;
+use uuid::Uuid;
 
 use super::query::game_tag_query;
-use crate::entities::{Game, Tag};
+use crate::entities::{GameTag, GameWithUserInfo, Tag};
 use crate::errors::RepositoryError;
 
 use super::helpers::{execute, exists_id, fetch_all};
@@ -20,37 +21,32 @@ impl GameTagRepository {
 impl GameTagRepository {
     pub async fn find_all_games_with_tag(
         &self,
-        user_id: &str,
-        tag_id: &str,
-    ) -> Result<Vec<Game>, RepositoryError> {
+        user_id: &Uuid,
+        tag_id: &Uuid,
+    ) -> Result<Vec<GameWithUserInfo>, RepositoryError> {
         let query = game_tag_query::select_all_games_by_tag_id(user_id, tag_id);
         fetch_all(&self.pool, query).await
     }
 
     pub async fn find_all_tags_with_game(
         &self,
-        user_id: &str,
-        game_id: &str,
+        user_id: &Uuid,
+        game_id: &Uuid,
     ) -> Result<Vec<Tag>, RepositoryError> {
         let query = game_tag_query::select_all_tags_by_game_id(user_id, game_id);
         fetch_all(&self.pool, query).await
     }
 
-    pub async fn create(
-        &self,
-        user_id: &str,
-        game_id: &str,
-        tag_id: &str,
-    ) -> Result<(), RepositoryError> {
-        let query = game_tag_query::insert(user_id, game_id, tag_id);
+    pub async fn create(&self, game_tag: &GameTag) -> Result<(), RepositoryError> {
+        let query = game_tag_query::insert(game_tag);
         execute(&self.pool, query).await
     }
 
     pub async fn delete_by_id(
         &self,
-        user_id: &str,
-        game_id: &str,
-        tag_id: &str,
+        user_id: &Uuid,
+        game_id: &Uuid,
+        tag_id: &Uuid,
     ) -> Result<(), RepositoryError> {
         let query = game_tag_query::delete_by_id(user_id, game_id, tag_id);
         execute(&self.pool, query).await
@@ -58,9 +54,9 @@ impl GameTagRepository {
 
     pub async fn exists_by_id(
         &self,
-        user_id: &str,
-        game_id: &str,
-        tag_id: &str,
+        user_id: &Uuid,
+        game_id: &Uuid,
+        tag_id: &Uuid,
     ) -> Result<bool, RepositoryError> {
         let query = game_tag_query::exists_by_id(user_id, game_id, tag_id);
         exists_id(&self.pool, query).await

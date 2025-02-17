@@ -1,12 +1,16 @@
 use chrono::NaiveDateTime;
 use serde::{Deserialize, Serialize};
 use utoipa::ToSchema;
+use uuid::Uuid;
 
 use super::{Merge, ModelInfo};
 
 #[derive(Default, Serialize, ToSchema)]
 pub struct TagDTO {
-    pub id: String,
+    #[schema(value_type = String)]
+    pub id: Uuid,
+    #[schema(value_type = String)]
+    pub user_id: Uuid,
     pub name: String,
     #[schema(value_type = String, format = DateTime)]
     pub added_datetime: NaiveDateTime,
@@ -18,6 +22,7 @@ impl Merge<NewTagDTO> for TagDTO {
     fn merge(self, other: NewTagDTO) -> Self {
         Self {
             id: self.id,
+            user_id: self.user_id,
             name: other.name.unwrap_or(self.name),
             added_datetime: self.added_datetime,
             updated_datetime: self.updated_datetime,

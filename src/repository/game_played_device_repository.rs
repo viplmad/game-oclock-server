@@ -1,7 +1,8 @@
 use sqlx::PgPool;
+use uuid::Uuid;
 
 use super::query::game_played_device_query;
-use crate::entities::{Device, Game};
+use crate::entities::{Device, GameWithUserInfo};
 use crate::errors::RepositoryError;
 
 use super::helpers::fetch_all;
@@ -20,9 +21,9 @@ impl GamePlayedDeviceRepository {
 impl GamePlayedDeviceRepository {
     pub async fn find_all_games_with_played_device(
         &self,
-        user_id: &str,
-        device_id: &str,
-    ) -> Result<Vec<Game>, RepositoryError> {
+        user_id: &Uuid,
+        device_id: &Uuid,
+    ) -> Result<Vec<GameWithUserInfo>, RepositoryError> {
         let query = game_played_device_query::select_all_games_by_device_id_order_by_date(
             user_id, device_id,
         );
@@ -31,8 +32,8 @@ impl GamePlayedDeviceRepository {
 
     pub async fn find_all_devices_with_played_game(
         &self,
-        user_id: &str,
-        game_id: &str,
+        user_id: &Uuid,
+        game_id: &Uuid,
     ) -> Result<Vec<Device>, RepositoryError> {
         let query =
             game_played_device_query::select_all_devices_by_game_id_order_by_date(user_id, game_id);

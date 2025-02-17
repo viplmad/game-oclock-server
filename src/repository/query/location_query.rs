@@ -1,11 +1,12 @@
 use sea_query::{Expr, Query, QueryStatementWriter, SelectStatement, SimpleExpr};
+use uuid::Uuid;
 
 use crate::entities::{Location, LocationIden, LocationSearch, SearchQuery};
 use crate::errors::SearchErrors;
 
 use super::search::apply_search;
 
-pub fn select_by_id(user_id: &str, id: &str) -> impl QueryStatementWriter {
+pub fn select_by_id(user_id: &Uuid, id: &Uuid) -> impl QueryStatementWriter {
     let mut select = Query::select();
 
     from_and_where_user_id(&mut select, user_id);
@@ -16,7 +17,7 @@ pub fn select_by_id(user_id: &str, id: &str) -> impl QueryStatementWriter {
 }
 
 pub fn select_all_with_search(
-    user_id: &str,
+    user_id: &Uuid,
     search: LocationSearch,
 ) -> Result<SearchQuery, SearchErrors> {
     let select = select_all(user_id);
@@ -24,7 +25,7 @@ pub fn select_all_with_search(
     apply_search(select, search)
 }
 
-pub(super) fn select_all(user_id: &str) -> SelectStatement {
+pub(super) fn select_all(user_id: &Uuid) -> SelectStatement {
     let mut select = Query::select();
 
     from_and_where_user_id(&mut select, user_id);
@@ -47,8 +48,8 @@ pub fn insert(location: &Location) -> impl QueryStatementWriter {
             LocationIden::UpdatedDatetime,
         ])
         .values_panic([
-            crate::uuid_utils::to_string(location.id).into(),
-            crate::uuid_utils::to_string(location.user_id).into(),
+            crate::uuid_utils::to_string(&location.id).into(),
+            crate::uuid_utils::to_string(&location.user_id).into(),
             location.name.clone().into(),
             location.icon_url.clone().into(),
             location.added_datetime.into(),
@@ -60,8 +61,8 @@ pub fn insert(location: &Location) -> impl QueryStatementWriter {
 
 pub fn update_by_id(location: &Location) -> impl QueryStatementWriter {
     update_values_by_id(
-        &crate::uuid_utils::to_string(location.id),
-        &crate::uuid_utils::to_string(location.user_id),
+        &location.user_id,
+        &location.id,
         vec![
             (LocationIden::Name, location.name.clone().into()),
             (LocationIden::IconUrl, location.icon_url.clone().into()),
@@ -74,8 +75,8 @@ pub fn update_by_id(location: &Location) -> impl QueryStatementWriter {
 }
 
 fn update_values_by_id(
-    user_id: &str,
-    id: &str,
+    user_id: &Uuid,
+    id: &Uuid,
     values: Vec<(LocationIden, SimpleExpr)>,
 ) -> impl QueryStatementWriter {
     let mut update = Query::update();
@@ -83,24 +84,24 @@ fn update_values_by_id(
     update
         .table(LocationIden::Table)
         .values(values)
-        .and_where(Expr::col(LocationIden::UserId).eq(user_id))
-        .and_where(Expr::col(LocationIden::Id).eq(id));
+        .and_where(Expr::col(LocationIden::UserId).eq(crate::uuid_utils::to_string(user_id)))
+        .and_where(Expr::col(LocationIden::Id).eq(crate::uuid_utils::to_string(id)));
 
     update
 }
 
-pub fn delete_by_id(user_id: &str, id: &str) -> impl QueryStatementWriter {
+pub fn delete_by_id(user_id: &Uuid, id: &Uuid) -> impl QueryStatementWriter {
     let mut delete = Query::delete();
 
     delete
         .from_table(LocationIden::Table)
-        .and_where(Expr::col(LocationIden::UserId).eq(user_id))
-        .and_where(Expr::col(LocationIden::Id).eq(id));
+        .and_where(Expr::col(LocationIden::UserId).eq(crate::uuid_utils::to_string(user_id)))
+        .and_where(Expr::col(LocationIden::Id).eq(crate::uuid_utils::to_string(id)));
 
     delete
 }
 
-pub fn exists_by_id(user_id: &str, id: &str) -> impl QueryStatementWriter {
+pub fn exists_by_id(user_id: &Uuid, id: &Uuid) -> impl QueryStatementWriter {
     let mut select = Query::select();
 
     from_and_where_user_id(&mut select, user_id);
@@ -110,7 +111,7 @@ pub fn exists_by_id(user_id: &str, id: &str) -> impl QueryStatementWriter {
     select
 }
 
-pub fn exists_by_name(user_id: &str, name: &str) -> SelectStatement {
+pub fn exists_by_name(user_id: &Uuid, name: &str) -> SelectStatement {
     let mut select = Query::select();
 
     from_and_where_user_id(&mut select, user_id);
@@ -120,22 +121,29 @@ pub fn exists_by_name(user_id: &str, name: &str) -> SelectStatement {
     select
 }
 
-pub fn exists_by_name_and_id_not(user_id: &str, name: &str, id: &str) -> impl QueryStatementWriter {
+pub fn exists_by_name_and_id_not(
+    user_id: &Uuid,
+    name: &str,
+    id: &Uuid,
+) -> impl QueryStatementWriter {
     let mut select = exists_by_name(user_id, name);
 
-    select.and_where(Expr::col(LocationIden::Id).ne(id));
+    select.and_where(Expr::col(LocationIden::Id).ne(crate::uuid_utils::to_string(id)));
 
     select
 }
 
-fn from_and_where_user_id(select: &mut SelectStatement, user_id: &str) {
-    select
-        .from(LocationIden::Table)
-        .and_where(Expr::col((LocationIden::Table, LocationIden::UserId)).eq(user_id));
+fn from_and_where_user_id(select: &mut SelectStatement, user_id: &Uuid) {
+    select.from(LocationIden::Table).and_where(
+        Expr::col((LocationIden::Table, LocationIden::UserId))
+            .eq(crate::uuid_utils::to_string(user_id)),
+    );
 }
 
-fn where_id(select: &mut SelectStatement, id: &str) {
-    select.and_where(Expr::col((LocationIden::Table, LocationIden::Id)).eq(id));
+fn where_id(select: &mut SelectStatement, id: &Uuid) {
+    select.and_where(
+        Expr::col((LocationIden::Table, LocationIden::Id)).eq(crate::uuid_utils::to_string(id)),
+    );
 }
 
 fn add_id_field(select: &mut SelectStatement) {
@@ -145,7 +153,6 @@ fn add_id_field(select: &mut SelectStatement) {
 fn add_fields(select: &mut SelectStatement) {
     add_id_field(select);
     select
-        .column((LocationIden::Table, LocationIden::Id))
         .column((LocationIden::Table, LocationIden::UserId))
         .column((LocationIden::Table, LocationIden::Name))
         .column((LocationIden::Table, LocationIden::IconUrl))

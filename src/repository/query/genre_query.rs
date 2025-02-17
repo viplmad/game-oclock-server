@@ -1,11 +1,12 @@
 use sea_query::{Expr, Query, QueryStatementWriter, SelectStatement, SimpleExpr};
+use uuid::Uuid;
 
 use crate::entities::{Genre, GenreIden, GenreSearch, SearchQuery};
 use crate::errors::SearchErrors;
 
 use super::search::apply_search;
 
-pub fn select_by_id(user_id: &str, id: &str) -> impl QueryStatementWriter {
+pub fn select_by_id(user_id: &Uuid, id: &Uuid) -> impl QueryStatementWriter {
     let mut select = Query::select();
 
     from_and_where_user_id(&mut select, user_id);
@@ -16,7 +17,7 @@ pub fn select_by_id(user_id: &str, id: &str) -> impl QueryStatementWriter {
 }
 
 pub fn select_all_with_search(
-    user_id: &str,
+    user_id: &Uuid,
     search: GenreSearch,
 ) -> Result<SearchQuery, SearchErrors> {
     let select = select_all(user_id);
@@ -24,7 +25,7 @@ pub fn select_all_with_search(
     apply_search(select, search)
 }
 
-pub(super) fn select_all(user_id: &str) -> SelectStatement {
+pub(super) fn select_all(user_id: &Uuid) -> SelectStatement {
     let mut select = Query::select();
 
     from_and_where_user_id(&mut select, user_id);
@@ -33,66 +34,68 @@ pub(super) fn select_all(user_id: &str) -> SelectStatement {
     select
 }
 
-pub fn insert(user_id: &str, id: &str, genre: &Genre) -> impl QueryStatementWriter {
+pub fn insert(genre: &Genre) -> impl QueryStatementWriter {
     let mut insert = Query::insert();
 
     insert
         .into_table(GenreIden::Table)
         .columns([
-            GenreIden::UserId,
             GenreIden::Id,
+            GenreIden::UserId,
             GenreIden::Name,
-            GenreIden::AddedDateTime,
-            GenreIden::UpdatedDateTime,
+            GenreIden::AddedDatetime,
+            GenreIden::UpdatedDatetime,
         ])
         .values_panic([
-            user_id.into(),
-            id.into(),
+            crate::uuid_utils::to_string(&genre.id).into(),
+            crate::uuid_utils::to_string(&genre.user_id).into(),
             genre.name.clone().into(),
-            crate::date_utils::now().into(),
-            crate::date_utils::now().into(),
+            genre.added_datetime.into(),
+            genre.updated_datetime.into(),
         ]);
 
     insert
 }
 
-pub fn update_by_id(user_id: &str, id: &str, genre: &Genre) -> impl QueryStatementWriter {
+pub fn update_by_id(genre: &Genre) -> impl QueryStatementWriter {
     update_values_by_id(
-        user_id,
-        id,
-        vec![(GenreIden::Name, genre.name.clone().into())],
+        &genre.user_id,
+        &genre.id,
+        vec![
+            (GenreIden::Name, genre.name.clone().into()),
+            (GenreIden::UpdatedDatetime, genre.updated_datetime.into()),
+        ],
     )
 }
 
 fn update_values_by_id(
-    user_id: &str,
-    id: &str,
-    mut values: Vec<(GenreIden, SimpleExpr)>,
+    user_id: &Uuid,
+    id: &Uuid,
+    values: Vec<(GenreIden, SimpleExpr)>,
 ) -> impl QueryStatementWriter {
     let mut update = Query::update();
 
-    values.push((GenreIden::UpdatedDateTime, crate::date_utils::now().into()));
     update
         .table(GenreIden::Table)
         .values(values)
-        .and_where(Expr::col(GenreIden::UserId).eq(user_id))
-        .and_where(Expr::col(GenreIden::Id).eq(id));
+        .and_where(Expr::col(GenreIden::UserId).eq(crate::uuid_utils::to_string(user_id)))
+        .and_where(Expr::col(GenreIden::Id).eq(crate::uuid_utils::to_string(id)));
 
     update
 }
 
-pub fn delete_by_id(user_id: &str, id: &str) -> impl QueryStatementWriter {
+pub fn delete_by_id(user_id: &Uuid, id: &Uuid) -> impl QueryStatementWriter {
     let mut delete = Query::delete();
 
     delete
         .from_table(GenreIden::Table)
-        .and_where(Expr::col(GenreIden::UserId).eq(user_id))
-        .and_where(Expr::col(GenreIden::Id).eq(id));
+        .and_where(Expr::col(GenreIden::UserId).eq(crate::uuid_utils::to_string(user_id)))
+        .and_where(Expr::col(GenreIden::Id).eq(crate::uuid_utils::to_string(id)));
 
     delete
 }
 
-pub fn exists_by_id(user_id: &str, id: &str) -> impl QueryStatementWriter {
+pub fn exists_by_id(user_id: &Uuid, id: &Uuid) -> impl QueryStatementWriter {
     let mut select = Query::select();
 
     from_and_where_user_id(&mut select, user_id);
@@ -102,7 +105,7 @@ pub fn exists_by_id(user_id: &str, id: &str) -> impl QueryStatementWriter {
     select
 }
 
-pub fn exists_by_name(user_id: &str, name: &str) -> SelectStatement {
+pub fn exists_by_name(user_id: &Uuid, name: &str) -> SelectStatement {
     let mut select = Query::select();
 
     from_and_where_user_id(&mut select, user_id);
@@ -112,22 +115,28 @@ pub fn exists_by_name(user_id: &str, name: &str) -> SelectStatement {
     select
 }
 
-pub fn exists_by_name_and_id_not(user_id: &str, name: &str, id: &str) -> impl QueryStatementWriter {
+pub fn exists_by_name_and_id_not(
+    user_id: &Uuid,
+    name: &str,
+    id: &Uuid,
+) -> impl QueryStatementWriter {
     let mut select = exists_by_name(user_id, name);
 
-    select.and_where(Expr::col(GenreIden::Id).ne(id));
+    select.and_where(Expr::col(GenreIden::Id).ne(crate::uuid_utils::to_string(id)));
 
     select
 }
 
-fn from_and_where_user_id(select: &mut SelectStatement, user_id: &str) {
-    select
-        .from(GenreIden::Table)
-        .and_where(Expr::col((GenreIden::Table, GenreIden::UserId)).eq(user_id));
+fn from_and_where_user_id(select: &mut SelectStatement, user_id: &Uuid) {
+    select.from(GenreIden::Table).and_where(
+        Expr::col((GenreIden::Table, GenreIden::UserId)).eq(crate::uuid_utils::to_string(user_id)),
+    );
 }
 
-fn where_id(select: &mut SelectStatement, id: &str) {
-    select.and_where(Expr::col((GenreIden::Table, GenreIden::Id)).eq(id));
+fn where_id(select: &mut SelectStatement, id: &Uuid) {
+    select.and_where(
+        Expr::col((GenreIden::Table, GenreIden::Id)).eq(crate::uuid_utils::to_string(id)),
+    );
 }
 
 fn add_id_field(select: &mut SelectStatement) {
@@ -139,6 +148,6 @@ fn add_fields(select: &mut SelectStatement) {
     select
         .column((GenreIden::Table, GenreIden::UserId))
         .column((GenreIden::Table, GenreIden::Name))
-        .column((GenreIden::Table, GenreIden::AddedDateTime))
-        .column((GenreIden::Table, GenreIden::UpdatedDateTime));
+        .column((GenreIden::Table, GenreIden::AddedDatetime))
+        .column((GenreIden::Table, GenreIden::UpdatedDatetime));
 }

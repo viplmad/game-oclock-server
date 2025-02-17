@@ -1,18 +1,17 @@
 use uuid::Uuid;
 
-use crate::entities::{Game, GameWithDate};
+use crate::entities::{GameWithUserInfo, GameWithUserInfoWithDate};
 use crate::models::{GameAvailableDTO, GameDTO, GameStatus};
-use crate::uuid_utils;
 
-impl From<Game> for GameDTO {
-    fn from(game: Game) -> Self {
+impl From<GameWithUserInfo> for GameDTO {
+    fn from(game: GameWithUserInfo) -> Self {
         Self {
-            id: game.id.to_string(),
+            id: game.id,
+            user_id: game.user_id,
             title: game.title,
             edition: game.edition,
             release_date: game.release_date,
-            base_game_id: game.base_game_id.map(|id| id.to_string()),
-            cover_filename: None, // TODO extract filename from url
+            base_game_id: game.base_game_id,
             cover_url: game.cover_url,
             added_datetime: game.added_datetime,
             updated_datetime: game.updated_datetime,
@@ -23,7 +22,7 @@ impl From<Game> for GameDTO {
     }
 }
 
-impl From<GameDTO> for Game {
+impl From<GameDTO> for GameWithUserInfo {
     fn from(game: GameDTO) -> Self {
         Self {
             id: Uuid::default(),
@@ -31,7 +30,7 @@ impl From<GameDTO> for Game {
             title: game.title,
             edition: game.edition,
             release_date: game.release_date,
-            base_game_id: game.base_game_id.map(|id| uuid_utils::parse_uuid(&id)),
+            base_game_id: game.base_game_id,
             cover_url: game.cover_url,
             added_datetime: game.added_datetime,
             updated_datetime: game.updated_datetime,
@@ -42,15 +41,15 @@ impl From<GameDTO> for Game {
     }
 }
 
-impl From<GameWithDate> for GameAvailableDTO {
-    fn from(game: GameWithDate) -> Self {
+impl From<GameWithUserInfoWithDate> for GameAvailableDTO {
+    fn from(game: GameWithUserInfoWithDate) -> Self {
         Self {
-            id: game.id.to_string(),
+            id: game.id,
+            user_id: game.user_id,
             title: game.title,
             edition: game.edition,
             release_date: game.release_date,
-            base_game_id: game.base_game_id.map(|id| id.to_string()),
-            cover_filename: None, // TODO extract filename from url
+            base_game_id: game.base_game_id,
             cover_url: game.cover_url,
             added_datetime: game.added_datetime,
             updated_datetime: game.updated_datetime,

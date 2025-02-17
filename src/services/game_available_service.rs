@@ -1,5 +1,7 @@
 use chrono::NaiveDate;
+use uuid::Uuid;
 
+use crate::entities::GameAvailable;
 use crate::errors::ApiErrors;
 use crate::models::{GameAvailableDTO, GameStatus, LocationAvailableDTO, NewGameDTO};
 use crate::repository::GameAvailableRepository;
@@ -34,8 +36,8 @@ impl GameAvailableService {
 impl GameAvailableService {
     pub async fn get_location_games(
         &self,
-        user_id: &str,
-        location_id: &str,
+        user_id: &Uuid,
+        location_id: &Uuid,
     ) -> Result<Vec<GameAvailableDTO>, ApiErrors> {
         self.location_service
             .exists_location(user_id, location_id)
@@ -50,8 +52,8 @@ impl GameAvailableService {
 
     pub async fn get_game_locations(
         &self,
-        user_id: &str,
-        game_id: &str,
+        user_id: &Uuid,
+        game_id: &Uuid,
     ) -> Result<Vec<LocationAvailableDTO>, ApiErrors> {
         self.game_service.exists_game(user_id, game_id).await?;
 
@@ -64,9 +66,9 @@ impl GameAvailableService {
 
     pub async fn create_game_available(
         &self,
-        user_id: &str,
-        game_id: &str,
-        location_id: &str,
+        user_id: &Uuid,
+        game_id: &Uuid,
+        location_id: &Uuid,
         available_date: NaiveDate,
     ) -> Result<(), ApiErrors> {
         let game = self.game_service.get_game(user_id, game_id).await?;
@@ -91,7 +93,8 @@ impl GameAvailableService {
                         status: Some(GameStatus::NextUp),
                         title: None,
                         edition: None,
-                        release_date: None,
+                        release_date: None, // TODO Careful, migth remove value
+                        cover_url: None,
                         rating: None,
                         notes: None,
                     },
@@ -101,16 +104,21 @@ impl GameAvailableService {
 
         let create_result = self
             .repository
-            .create(user_id, game_id, location_id, available_date)
+            .create(&GameAvailable {
+                user_id: user_id.clone(),
+                game_id: game_id.clone(),
+                location_id: location_id.clone(),
+                date: available_date,
+            })
             .await;
         handle_action_result::<GameAvailableDTO>(create_result)
     }
 
     pub async fn delete_game_available(
         &self,
-        user_id: &str,
-        game_id: &str,
-        location_id: &str,
+        user_id: &Uuid,
+        game_id: &Uuid,
+        location_id: &Uuid,
     ) -> Result<(), ApiErrors> {
         self.exists_game_available(user_id, game_id, location_id)
             .await?;
@@ -124,9 +132,9 @@ impl GameAvailableService {
 
     pub async fn exists_game_available(
         &self,
-        user_id: &str,
-        game_id: &str,
-        location_id: &str,
+        user_id: &Uuid,
+        game_id: &Uuid,
+        location_id: &Uuid,
     ) -> Result<(), ApiErrors> {
         let exists_result = self
             .repository
@@ -137,8 +145,8 @@ impl GameAvailableService {
 
     pub(super) async fn exists_no_game_available(
         &self,
-        user_id: &str,
-        game_id: &str,
+        user_id: &Uuid,
+        game_id: &Uuid,
     ) -> Result<(), ApiErrors> {
         let exists_result = self
             .repository

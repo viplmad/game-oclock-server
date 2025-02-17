@@ -1,28 +1,18 @@
-use sea_query::Iden;
+use sea_query::enum_def;
 use sqlx::FromRow;
+use uuid::Uuid;
 
 use super::TableIden;
 
-#[derive(Iden)]
-#[iden = "GameLink"]
-pub enum GameLinkIden {
-    Table,
-    #[iden = "user_id"]
-    UserId,
-    #[iden = "game_id"]
-    GameId,
-    #[iden = "url"]
-    Url,
-    #[iden = "description"]
-    Description,
+#[derive(FromRow)]
+#[enum_def(table_name = "GameLink")]
+pub struct GameLink {
+    pub user_id: Uuid,
+    pub game_id: Uuid,
+    pub url: String,
+    pub description: String,
 }
 
 impl TableIden for GameLinkIden {
     const TABLE: Self = Self::Table;
-}
-
-#[derive(FromRow)]
-pub struct Link {
-    pub url: String,
-    pub description: String,
 }

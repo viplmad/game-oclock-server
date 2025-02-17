@@ -6,7 +6,7 @@ use crate::models::UserDTO;
 impl From<User> for UserDTO {
     fn from(user: User) -> Self {
         Self {
-            id: user.id.to_string(),
+            id: user.id,
             username: user.username,
             admin: user.admin,
             added_datetime: user.added_datetime,
