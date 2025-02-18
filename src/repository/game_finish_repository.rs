@@ -1,8 +1,9 @@
 use chrono::NaiveDate;
 use sqlx::PgPool;
+use uuid::Uuid;
 
 use super::query::game_finish_query;
-use crate::entities::{Finish, GameFinish};
+use crate::entities::GameFinish;
 use crate::errors::RepositoryError;
 
 use super::helpers::{execute, execute_return_single, exists_id, fetch_all};
@@ -21,8 +22,8 @@ impl GameFinishRepository {
 impl GameFinishRepository {
     pub async fn find_first_by_game_id(
         &self,
-        user_id: &str,
-        game_id: &str,
+        user_id: &Uuid,
+        game_id: &Uuid,
     ) -> Result<Option<NaiveDate>, RepositoryError> {
         let query = game_finish_query::select_min_date_by_user_id_and_game_id(user_id, game_id);
         execute_return_single(&self.pool, query).await
@@ -30,9 +31,9 @@ impl GameFinishRepository {
 
     pub async fn find_all_by_game_id(
         &self,
-        user_id: &str,
-        game_id: &str,
-    ) -> Result<Vec<Finish>, RepositoryError> {
+        user_id: &Uuid,
+        game_id: &Uuid,
+    ) -> Result<Vec<GameFinish>, RepositoryError> {
         let query = game_finish_query::select_all_by_user_id_and_game_id(user_id, game_id);
         fetch_all(&self.pool, query).await
     }
@@ -40,8 +41,8 @@ impl GameFinishRepository {
     // For review
     pub async fn find_all_first_by_user_id_and_game_id_in(
         &self,
-        user_id: &str,
-        game_ids: Vec<String>,
+        user_id: &Uuid,
+        game_ids: Vec<Uuid>,
     ) -> Result<Vec<GameFinish>, RepositoryError> {
         if game_ids.is_empty() {
             return Ok(vec![]);
@@ -52,20 +53,15 @@ impl GameFinishRepository {
         fetch_all(&self.pool, query).await
     }
 
-    pub async fn create(
-        &self,
-        user_id: &str,
-        game_id: &str,
-        finish: &Finish,
-    ) -> Result<(), RepositoryError> {
-        let query = game_finish_query::insert(user_id, game_id, finish);
+    pub async fn create(&self, game_finish: &GameFinish) -> Result<(), RepositoryError> {
+        let query = game_finish_query::insert(game_finish);
         execute(&self.pool, query).await
     }
 
     pub async fn delete_by_id(
         &self,
-        user_id: &str,
-        game_id: &str,
+        user_id: &Uuid,
+        game_id: &Uuid,
         date: NaiveDate,
     ) -> Result<(), RepositoryError> {
         let query = game_finish_query::delete_by_id(user_id, game_id, date);
@@ -74,8 +70,8 @@ impl GameFinishRepository {
 
     pub async fn exists_by_id(
         &self,
-        user_id: &str,
-        game_id: &str,
+        user_id: &Uuid,
+        game_id: &Uuid,
         date: NaiveDate,
     ) -> Result<bool, RepositoryError> {
         let query = game_finish_query::exists_by_id(user_id, game_id, date);

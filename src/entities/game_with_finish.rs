@@ -22,5 +22,5 @@ pub struct GameWithFinish {
     pub notes: String,
     pub finish_date: NaiveDate,
     pub finish_status: i16,
-    pub finish_device_id: Uuid,
+    pub finish_device_id: Option<Uuid>,
 }

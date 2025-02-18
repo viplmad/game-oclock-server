@@ -9,8 +9,6 @@ pub struct LocationAvailableDTO {
     pub id: String,
     pub name: String,
     #[serde(skip_serializing_if = "Option::is_none")]
-    pub icon_filename: Option<String>,
-    #[serde(skip_serializing_if = "Option::is_none")]
     pub icon_url: Option<String>,
     #[schema(value_type = String, format = DateTime)]
     pub added_datetime: NaiveDateTime,

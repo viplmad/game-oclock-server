@@ -35,7 +35,6 @@ impl From<LocationWithDate> for LocationAvailableDTO {
             id: location.id.to_string(),
             date: location.query_date,
             name: location.name,
-            icon_filename: None, // TODO extract filename from url
             icon_url: location.icon_url,
             added_datetime: location.added_datetime,
             updated_datetime: location.updated_datetime,

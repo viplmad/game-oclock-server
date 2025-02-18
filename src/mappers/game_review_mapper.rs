@@ -16,7 +16,6 @@ impl From<GameWithLog> for GamePlayedReviewDTO {
             edition: game.edition,
             release_date: game.release_date,
             base_game_id: game.base_game_id.map(|id| id.to_string()),
-            cover_filename: None, // TODO extract filename from url
             cover_url: game.cover_url,
             added_datetime: game.added_datetime,
             updated_datetime: game.updated_datetime,
@@ -62,7 +61,6 @@ impl From<GameWithFinish> for GameFinishedReviewDTO {
             edition: game.edition,
             release_date: game.release_date,
             base_game_id: game.base_game_id.map(|id| id.to_string()),
-            cover_filename: None, // TODO extract filename from url
             cover_url: game.cover_url,
             added_datetime: game.added_datetime,
             updated_datetime: game.updated_datetime,

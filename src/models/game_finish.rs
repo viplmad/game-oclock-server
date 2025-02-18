@@ -1,6 +1,7 @@
 use chrono::NaiveDate;
 use serde::{Deserialize, Serialize};
 use utoipa::ToSchema;
+use uuid::Uuid;
 
 use super::{GameStatus, Merge, ModelInfo};
 
@@ -9,7 +10,9 @@ pub struct FinishDTO {
     #[schema(value_type = String, format = Date)]
     pub date: NaiveDate,
     pub status: GameStatus,
-    pub device_id: String,
+    #[schema(value_type = String)]
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub device_id: Option<Uuid>,
 }
 
 impl Merge<NewFinishDTO> for FinishDTO {
@@ -33,5 +36,6 @@ pub struct NewFinishDTO {
     #[schema(value_type = String, format = Date)]
     pub date: NaiveDate,
     pub status: GameStatus,
-    pub device_id: String,
+    #[schema(value_type = String)]
+    pub device_id: Option<Uuid>,
 }
