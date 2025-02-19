@@ -48,15 +48,17 @@ pub fn insert(user: &User) -> impl QueryStatementWriter {
         .into_table(UserIden::Table)
         .columns([
             UserIden::Id,
-            UserIden::Password,
             UserIden::Username,
+            UserIden::Password,
+            UserIden::Admin,
             UserIden::AddedDatetime,
             UserIden::UpdatedDatetime,
         ])
         .values_panic([
             crate::uuid_utils::to_string(&user.id).into(),
-            user.password.clone().into(),
             user.username.clone().into(),
+            user.password.clone().into(),
+            user.admin.into(),
             user.added_datetime.into(),
             user.updated_datetime.into(),
         ]);
