@@ -200,23 +200,25 @@ pub(super) fn fill_streaks(
     let game_id_clone = game_id.clone();
     match streaks.last_mut() {
         Some(last_streak) => {
-            let previous_date = last_streak.start_date - Duration::days(1);
+            let previous_date = last_streak.streak.start_date - Duration::days(1);
             match start_datetime.date().cmp(&previous_date) {
                 Ordering::Equal => {
                     // Continued the streak
                     if !last_streak.games_ids.contains(&game_id_clone) {
                         last_streak.games_ids.push(game_id_clone);
                     }
-                    last_streak.start_date = start_datetime.date();
-                    last_streak.days += 1;
+                    last_streak.streak.start_date = start_datetime.date();
+                    last_streak.streak.days += 1;
                 }
                 Ordering::Less => {
                     // Lost the streak, start a new one
                     streaks.push(GamesStreakDTO {
                         games_ids: vec![game_id_clone],
-                        start_date: start_datetime.date(),
-                        end_date: end_datetime.date(),
-                        days: 1,
+                        streak: StreakDTO {
+                            start_date: start_datetime.date(),
+                            end_date: end_datetime.date(),
+                            days: 1,
+                        },
                     });
                 }
                 Ordering::Greater => {
@@ -231,9 +233,11 @@ pub(super) fn fill_streaks(
             // Start first streak
             streaks.push(GamesStreakDTO {
                 games_ids: vec![game_id_clone],
-                start_date: start_datetime.date(),
-                end_date: end_datetime.date(),
-                days: 1,
+                streak: StreakDTO {
+                    start_date: start_datetime.date(),
+                    end_date: end_datetime.date(),
+                    days: 1,
+                },
             });
         }
     }

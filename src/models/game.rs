@@ -61,6 +61,6 @@ pub struct NewGameDTO {
     pub release_date: Option<NaiveDate>,
     pub cover_url: Option<String>,
     pub status: Option<GameStatus>,
-    pub rating: Option<u32>, // TODO check within valid range
+    pub rating: Option<u32>,
     pub notes: Option<String>,
 }

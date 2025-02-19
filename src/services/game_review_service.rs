@@ -101,9 +101,11 @@ fn build_played_review(
     let mut total_streaks: Vec<GamesStreakDTO> = vec![];
     let mut longest_streak = GamesStreakDTO {
         games_ids: vec![],
-        start_date: NaiveDate::default(),
-        end_date: NaiveDate::default(),
-        days: 0,
+        streak: StreakDTO {
+            start_date: NaiveDate::default(),
+            end_date: NaiveDate::default(),
+            days: 0,
+        },
     };
 
     // Fill logs map and global streaks
@@ -163,36 +165,50 @@ fn build_played_review(
     let mut first_session = GameLogDTO {
         user_id: Uuid::default(),
         game_id: Uuid::default(),
-        start_datetime: NaiveDateTime::MAX,
-        end_datetime: NaiveDateTime::default(),
-        time: DurationDef::default(),
-        device_id: None,
+        log: LogDTO {
+            start_datetime: NaiveDateTime::MAX,
+            end_datetime: NaiveDateTime::default(),
+            time: DurationDef::default(),
+            device_id: None,
+        },
     };
     let mut last_session = GameLogDTO {
         user_id: Uuid::default(),
         game_id: Uuid::default(),
-        start_datetime: NaiveDateTime::MIN,
-        end_datetime: NaiveDateTime::default(),
-        time: DurationDef::default(),
-        device_id: None,
+        log: LogDTO {
+            start_datetime: NaiveDateTime::MIN,
+            end_datetime: NaiveDateTime::default(),
+            time: DurationDef::default(),
+            device_id: None,
+        },
     };
-    for game in map.values_mut() {
+    for game_played in map.values_mut() {
+        let game = &game_played.game;
         let user_id = game.user_id;
         let game_id = game.id;
 
         total_played += 1;
-        total_first_played += if game.first_played { 1 } else { 0 };
-        total_sessions += game.total_sessions;
+        total_first_played += if game_played.first_played { 1 } else { 0 };
+        total_sessions += game_played.total_sessions;
 
         // Fill global total time
-        total_time = DurationDef::microseconds(total_time.micros + game.total_time.micros);
-        logs_utils::merge_total_time_grouped(&mut total_time_by_month, &game.total_time_by_month);
-        logs_utils::merge_total_time_grouped(&mut total_time_by_week, &game.total_time_by_week);
+        total_time = DurationDef::microseconds(total_time.micros + game_played.total_time.micros);
+        logs_utils::merge_total_time_grouped(
+            &mut total_time_by_month,
+            &game_played.total_time_by_month,
+        );
+        logs_utils::merge_total_time_grouped(
+            &mut total_time_by_week,
+            &game_played.total_time_by_week,
+        );
         logs_utils::merge_total_time_grouped(
             &mut total_time_by_weekday,
-            &game.total_time_by_weekday,
+            &game_played.total_time_by_weekday,
         );
-        logs_utils::merge_total_time_grouped(&mut total_time_by_hour, &game.total_time_by_hour);
+        logs_utils::merge_total_time_grouped(
+            &mut total_time_by_hour,
+            &game_played.total_time_by_hour,
+        );
 
         // Fill global total by release year
         logs_utils::fill_total_optional_map(
@@ -209,20 +225,26 @@ fn build_played_review(
         }
 
         // Found longer global session
-        if let Some(new_longest_session) =
-            get_longest_session(&game.longest_session, &longest_session, &user_id, &game_id)
-        {
+        if let Some(new_longest_session) = get_longest_session(
+            &game_played.longest_session,
+            &longest_session,
+            &user_id,
+            &game_id,
+        ) {
             longest_session = new_longest_session;
         };
 
-        if let Some(new_first_session) =
-            get_first_session(&game.first_session, &first_session, &user_id, &game_id)
-        {
+        if let Some(new_first_session) = get_first_session(
+            &game_played.first_session,
+            &first_session,
+            &user_id,
+            &game_id,
+        ) {
             first_session = new_first_session;
         }
 
         if let Some(new_last_session) =
-            get_last_session(&game.last_session, &last_session, &user_id, &game_id)
+            get_last_session(&game_played.last_session, &last_session, &user_id, &game_id)
         {
             last_session = new_last_session;
         }
@@ -293,28 +315,33 @@ fn build_finished_review(
     let mut first_finish = GameFinishDTO {
         user_id: Uuid::default(),
         game_id: Uuid::default(),
-        date: NaiveDate::MAX,
-        status: GameStatus::LowPriority,
-        device_id: None,
+        finish: FinishDTO {
+            date: NaiveDate::MAX,
+            status: GameStatus::LowPriority,
+            device_id: None,
+        },
     };
     let mut last_finish = GameFinishDTO {
         user_id: Uuid::default(),
         game_id: Uuid::default(),
-        date: NaiveDate::MIN,
-        status: GameStatus::LowPriority,
-        device_id: None,
+        finish: FinishDTO {
+            date: NaiveDate::MIN,
+            status: GameStatus::LowPriority,
+            device_id: None,
+        },
     };
-    for game in map.values_mut() {
+    for game_finished in map.values_mut() {
+        let game = &game_finished.game;
         let user_id = game.user_id;
         let game_id = game.id;
 
         total_finished += 1;
-        total_first_finished += if game.first_finished { 1 } else { 0 };
+        total_first_finished += if game_finished.first_finished { 1 } else { 0 };
 
         // Fill global total finished
         logs_utils::merge_total_finished_by_month(
             &mut total_finished_by_month,
-            &game.total_finished_grouped,
+            &game_finished.total_finished_grouped,
         );
 
         // Fill global total by release year
@@ -325,14 +352,17 @@ fn build_finished_review(
                 .map(|d| u32::try_from(d.year()).expect("Year is not AC")),
         );
 
-        if let Some(new_first_session) =
-            get_first_finish(&game.first_finish, &first_finish, &user_id, &game_id)
-        {
+        if let Some(new_first_session) = get_first_finish(
+            &game_finished.first_finish,
+            &first_finish,
+            &user_id,
+            &game_id,
+        ) {
             first_finish = new_first_session;
         }
 
         if let Some(new_last_session) =
-            get_last_finish(&game.last_finish, &last_finish, &user_id, &game_id)
+            get_last_finish(&game_finished.last_finish, &last_finish, &user_id, &game_id)
         {
             last_finish = new_last_session;
         }
@@ -354,13 +384,15 @@ fn get_longest_streak(
     current_longest_streak: &GamesStreakDTO,
 ) -> Option<GamesStreakDTO> {
     if let Some(last_streak) = streaks.last() {
-        let last_streak_days = last_streak.days;
-        if last_streak_days > current_longest_streak.days {
+        let last_streak_days = last_streak.streak.days;
+        if last_streak_days > current_longest_streak.streak.days {
             return Some(GamesStreakDTO {
                 games_ids: last_streak.games_ids.clone(),
-                start_date: last_streak.start_date,
-                end_date: last_streak.end_date,
-                days: last_streak_days,
+                streak: StreakDTO {
+                    start_date: last_streak.streak.start_date,
+                    end_date: last_streak.streak.end_date,
+                    days: last_streak_days,
+                },
             });
         }
     }
@@ -374,14 +406,16 @@ fn get_longest_session(
     game_id: &Uuid,
 ) -> Option<GameLogDTO> {
     let longest_session_time = longest_session.time.clone();
-    if longest_session_time.micros > current_longest_session.time.micros {
+    if longest_session_time.micros > current_longest_session.log.time.micros {
         return Some(GameLogDTO {
             user_id: user_id.clone(),
             game_id: game_id.clone(),
-            start_datetime: longest_session.start_datetime,
-            end_datetime: longest_session.end_datetime,
-            device_id: longest_session.device_id,
-            time: longest_session_time,
+            log: LogDTO {
+                start_datetime: longest_session.start_datetime,
+                end_datetime: longest_session.end_datetime,
+                device_id: longest_session.device_id,
+                time: longest_session_time,
+            },
         });
     }
     None
@@ -394,14 +428,16 @@ fn get_first_session(
     game_id: &Uuid,
 ) -> Option<GameLogDTO> {
     let first_session_start_datetime = first_sesion.start_datetime;
-    if first_session_start_datetime < current_first_session.start_datetime {
+    if first_session_start_datetime < current_first_session.log.start_datetime {
         return Some(GameLogDTO {
             user_id: user_id.clone(),
             game_id: game_id.clone(),
-            start_datetime: first_session_start_datetime,
-            end_datetime: first_sesion.end_datetime,
-            device_id: first_sesion.device_id,
-            time: first_sesion.time.clone(),
+            log: LogDTO {
+                start_datetime: first_session_start_datetime,
+                end_datetime: first_sesion.end_datetime,
+                device_id: first_sesion.device_id,
+                time: first_sesion.time.clone(),
+            },
         });
     }
     None
@@ -414,14 +450,16 @@ fn get_last_session(
     game_id: &Uuid,
 ) -> Option<GameLogDTO> {
     let last_session_start_datetime = last_sesion.start_datetime;
-    if last_session_start_datetime > current_last_session.start_datetime {
+    if last_session_start_datetime > current_last_session.log.start_datetime {
         return Some(GameLogDTO {
             user_id: user_id.clone(),
             game_id: game_id.clone(),
-            start_datetime: last_session_start_datetime,
-            end_datetime: last_sesion.end_datetime,
-            device_id: last_sesion.device_id,
-            time: last_sesion.time.clone(),
+            log: LogDTO {
+                start_datetime: last_session_start_datetime,
+                end_datetime: last_sesion.end_datetime,
+                device_id: last_sesion.device_id,
+                time: last_sesion.time.clone(),
+            },
         });
     }
     None
@@ -434,13 +472,15 @@ fn get_first_finish(
     game_id: &Uuid,
 ) -> Option<GameFinishDTO> {
     let first_finish_date = first_finish.date;
-    if first_finish_date < current_first_finish.date {
+    if first_finish_date < current_first_finish.finish.date {
         return Some(GameFinishDTO {
             user_id: user_id.clone(),
             game_id: game_id.clone(),
-            date: first_finish_date,
-            status: first_finish.status.clone(),
-            device_id: first_finish.device_id,
+            finish: FinishDTO {
+                date: first_finish_date,
+                status: first_finish.status.clone(),
+                device_id: first_finish.device_id,
+            },
         });
     }
     None
@@ -453,13 +493,15 @@ fn get_last_finish(
     game_id: &Uuid,
 ) -> Option<GameFinishDTO> {
     let last_finish_date = last_finish.date;
-    if last_finish_date > current_last_finish.date {
+    if last_finish_date > current_last_finish.finish.date {
         return Some(GameFinishDTO {
             user_id: user_id.clone(),
             game_id: game_id.clone(),
-            date: last_finish_date,
-            status: last_finish.status.clone(),
-            device_id: last_finish.device_id,
+            finish: FinishDTO {
+                date: last_finish_date,
+                status: last_finish.status.clone(),
+                device_id: last_finish.device_id,
+            },
         });
     }
     None

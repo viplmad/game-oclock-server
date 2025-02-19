@@ -4,25 +4,28 @@ use chrono::{NaiveDate, NaiveDateTime};
 
 use crate::entities::{GameWithFinish, GameWithLog};
 use crate::models::{
-    DurationDef, FinishDTO, GameFinishedReviewDTO, GamePlayedReviewDTO, GameStatus, LogDTO,
-    StreakDTO,
+    DurationDef, FinishDTO, GameDTO, GameFinishedReviewDTO, GamePlayedReviewDTO, GameStatus,
+    LogDTO, StreakDTO,
 };
 
 impl From<GameWithLog> for GamePlayedReviewDTO {
     fn from(game: GameWithLog) -> Self {
         Self {
-            id: game.id,
-            user_id: game.user_id,
-            title: game.title,
-            edition: game.edition,
-            release_date: game.release_date,
-            base_game_id: game.base_game_id,
-            cover_url: game.cover_url,
-            added_datetime: game.added_datetime,
-            updated_datetime: game.updated_datetime,
-            status: GameStatus::try_from(game.status).expect("Status is not within valid range"),
-            rating: u32::try_from(game.rating).expect("Rating is not positive"),
-            notes: game.notes,
+            game: GameDTO {
+                id: game.id,
+                user_id: game.user_id,
+                title: game.title,
+                edition: game.edition,
+                release_date: game.release_date,
+                base_game_id: game.base_game_id,
+                cover_url: game.cover_url,
+                added_datetime: game.added_datetime,
+                updated_datetime: game.updated_datetime,
+                status: GameStatus::try_from(game.status)
+                    .expect("Status is not within valid range"),
+                rating: u32::try_from(game.rating).expect("Rating is not positive"),
+                notes: game.notes,
+            },
             first_played: false,
             longest_streak: StreakDTO {
                 start_date: NaiveDate::default(),
@@ -57,18 +60,21 @@ impl From<GameWithLog> for GamePlayedReviewDTO {
 impl From<GameWithFinish> for GameFinishedReviewDTO {
     fn from(game: GameWithFinish) -> Self {
         Self {
-            id: game.id,
-            user_id: game.user_id,
-            title: game.title,
-            edition: game.edition,
-            release_date: game.release_date,
-            base_game_id: game.base_game_id,
-            cover_url: game.cover_url,
-            added_datetime: game.added_datetime,
-            updated_datetime: game.updated_datetime,
-            status: GameStatus::try_from(game.status).expect("Status is not within valid range"),
-            rating: u32::try_from(game.rating).expect("Rating is not positive"),
-            notes: game.notes,
+            game: GameDTO {
+                id: game.id,
+                user_id: game.user_id,
+                title: game.title,
+                edition: game.edition,
+                release_date: game.release_date,
+                base_game_id: game.base_game_id,
+                cover_url: game.cover_url,
+                added_datetime: game.added_datetime,
+                updated_datetime: game.updated_datetime,
+                status: GameStatus::try_from(game.status)
+                    .expect("Status is not within valid range"),
+                rating: u32::try_from(game.rating).expect("Rating is not positive"),
+                notes: game.notes,
+            },
             total_finished: 0,
             total_finished_grouped: HashMap::<u32, u32>::new(),
             first_finished: false,

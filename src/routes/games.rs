@@ -486,7 +486,6 @@ pub async fn unlink_game_genre(
     handle_action_result(delete_result)
 }
 
-// TODO dlcs
 #[utoipa::path(
     get,
     path = "/api/v1/games/{id}/dlcs",

@@ -1,6 +1,5 @@
 use chrono::{Duration, NaiveDateTime};
-use sqlx::postgres::types::PgInterval;
-use uuid::Uuid; // TODO remove reference to sqlx in service
+use uuid::Uuid;
 
 use crate::entities::{GameLog, GameLogWithTime};
 use crate::errors::ApiErrors;
@@ -11,19 +10,25 @@ use super::helpers::{
     handle_action_result, handle_already_exists_result, handle_get_list_result,
     handle_not_found_result, handle_result,
 };
-use super::GameService;
+use super::{DeviceService, GameService};
 
 #[derive(Clone)]
 pub struct GameLogService {
     repository: GameLogRepository,
     game_service: GameService,
+    device_service: DeviceService,
 }
 
 impl GameLogService {
-    pub fn with(repository: GameLogRepository, game_service: GameService) -> Self {
+    pub fn with(
+        repository: GameLogRepository,
+        game_service: GameService,
+        device_service: DeviceService,
+    ) -> Self {
         Self {
             repository,
             game_service,
+            device_service,
         }
     }
 }
@@ -40,8 +45,7 @@ impl GameLogService {
             .repository
             .find_sum_time_by_game_id(user_id, game_id)
             .await;
-        let duration = handle_result::<PgInterval, LogDTO>(find_result)?;
-        Ok(DurationDef::from(duration))
+        handle_result::<DurationDef, LogDTO>(find_result)
     }
 
     pub async fn get_game_logs(
@@ -75,6 +79,11 @@ impl GameLogService {
         log: NewLogDTO,
     ) -> Result<(), ApiErrors> {
         self.game_service.exists_game(user_id, game_id).await?;
+        if let Some(device_id) = log.device_id {
+            self.device_service
+                .exists_device(user_id, &device_id)
+                .await?;
+        }
 
         let start_datetime = log.start_datetime;
         let end_datetime = log.end_datetime;

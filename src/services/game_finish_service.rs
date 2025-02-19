@@ -3,26 +3,32 @@ use uuid::Uuid;
 
 use crate::entities::GameFinish;
 use crate::errors::ApiErrors;
-use crate::models::{FinishDTO, Merge, NewFinishDTO};
+use crate::models::{FinishDTO, GameStatus, Merge, NewFinishDTO};
 use crate::repository::GameFinishRepository;
 
 use super::helpers::{
     handle_action_result, handle_already_exists_result, handle_get_list_result,
     handle_get_result_raw, handle_not_found_result, handle_result,
 };
-use super::GameService;
+use super::{DeviceService, GameService};
 
 #[derive(Clone)]
 pub struct GameFinishService {
     repository: GameFinishRepository,
     game_service: GameService,
+    device_service: DeviceService,
 }
 
 impl GameFinishService {
-    pub fn with(repository: GameFinishRepository, game_service: GameService) -> Self {
+    pub fn with(
+        repository: GameFinishRepository,
+        game_service: GameService,
+        device_service: DeviceService,
+    ) -> Self {
         Self {
             repository,
             game_service,
+            device_service,
         }
     }
 }
@@ -73,6 +79,16 @@ impl GameFinishService {
         finish: NewFinishDTO,
     ) -> Result<(), ApiErrors> {
         self.game_service.exists_game(user_id, game_id).await?;
+        if let Some(device_id) = finish.device_id {
+            self.device_service
+                .exists_device(user_id, &device_id)
+                .await?;
+        }
+        if finish.status != GameStatus::Completed || finish.status != GameStatus::Retired {
+            return Err(ApiErrors::InvalidParameter(String::from(
+                "Status must be Completed or Retired",
+            )));
+        }
 
         let exists_result = self
             .repository
@@ -84,8 +100,6 @@ impl GameFinishService {
         let mut finish_to_create = GameFinish::from(merged_new);
         finish_to_create.user_id = user_id.clone();
         finish_to_create.game_id = game_id.clone();
-        // TODO check status is completed or above
-        // TODO check device exists
         let create_result = self.repository.create(&finish_to_create).await;
         handle_action_result::<FinishDTO>(create_result)
     }

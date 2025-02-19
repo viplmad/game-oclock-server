@@ -5,6 +5,7 @@ use uuid::Uuid;
 use super::query::game_log_query;
 use crate::entities::{GameLog, GameLogWithTime};
 use crate::errors::RepositoryError;
+use crate::models::DurationDef;
 
 use super::helpers::{
     begin_transaction, commit_transaction, execute, execute_return_single, exists_id, fetch_all,
@@ -26,9 +27,11 @@ impl GameLogRepository {
         &self,
         user_id: &Uuid,
         game_id: &Uuid,
-    ) -> Result<PgInterval, RepositoryError> {
+    ) -> Result<DurationDef, RepositoryError> {
         let query = game_log_query::select_sum_time_by_user_id_and_game_id(user_id, game_id);
-        execute_return_single(&self.pool, query).await
+        execute_return_single::<_, PgInterval>(&self.pool, query)
+            .await
+            .map(|interval| DurationDef::from(interval))
     }
 
     pub async fn find_all_by_game_id(

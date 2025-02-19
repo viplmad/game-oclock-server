@@ -45,6 +45,7 @@ impl GameService {
         user_id: &Uuid,
         game: NewGameDTO,
     ) -> Result<GameDTO, ApiErrors> {
+        check_game_rating(&game)?;
         // TODO check image is reachable
         let new_id = crate::uuid_utils::new_model_uuid();
         create_merged(
@@ -79,6 +80,7 @@ impl GameService {
         id: &Uuid,
         game: NewGameDTO,
     ) -> Result<(), ApiErrors> {
+        check_game_rating(&game)?;
         let new_status = game.status.clone();
 
         update_merged(
@@ -176,4 +178,13 @@ impl GameService {
             .await;
         handle_action_result::<GameDTO>(update_result)
     }
+}
+
+fn check_game_rating(game: &NewGameDTO) -> Result<(), ApiErrors> {
+    if game.rating.is_some_and(|rating| rating > 10) {
+        return Err(ApiErrors::InvalidParameter(String::from(
+            "Rating must be between 0 and 10, both inclusive",
+        )));
+    }
+    Ok(())
 }

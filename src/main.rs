@@ -115,14 +115,22 @@ async fn run(
         game_service.clone(),
         location_service.clone(),
     );
-    let game_finish_service = GameFinishService::with(game_finish_repository, game_service.clone());
+    let game_finish_service = GameFinishService::with(
+        game_finish_repository,
+        game_service.clone(),
+        device_service.clone(),
+    );
     let game_genre_service = GameGenreService::with(
         game_genre_repository,
         game_service.clone(),
         genre_service.clone(),
     );
     let game_link_service = GameLinkService::with(game_link_repository, game_service.clone());
-    let game_log_service = GameLogService::with(game_log_repository, game_service.clone());
+    let game_log_service = GameLogService::with(
+        game_log_repository,
+        game_service.clone(),
+        device_service.clone(),
+    );
     let game_played_device_service = GamePlayedDeviceService::with(
         game_played_device_repository,
         game_service.clone(),
