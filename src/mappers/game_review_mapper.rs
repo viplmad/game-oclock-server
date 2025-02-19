@@ -11,16 +11,17 @@ use crate::models::{
 impl From<GameWithLog> for GamePlayedReviewDTO {
     fn from(game: GameWithLog) -> Self {
         Self {
-            id: game.id.to_string(),
+            id: game.id,
+            user_id: game.user_id,
             title: game.title,
             edition: game.edition,
             release_date: game.release_date,
-            base_game_id: game.base_game_id.map(|id| id.to_string()),
+            base_game_id: game.base_game_id,
             cover_url: game.cover_url,
             added_datetime: game.added_datetime,
             updated_datetime: game.updated_datetime,
-            status: GameStatus::try_from(game.status).expect("Status was not within valid range"),
-            rating: game.rating,
+            status: GameStatus::try_from(game.status).expect("Status is not within valid range"),
+            rating: u32::try_from(game.rating).expect("Rating is not positive"),
             notes: game.notes,
             first_played: false,
             longest_streak: StreakDTO {
@@ -32,13 +33,13 @@ impl From<GameWithLog> for GamePlayedReviewDTO {
             first_session: LogDTO {
                 start_datetime: NaiveDateTime::MAX,
                 end_datetime: NaiveDateTime::default(),
-                device_id: String::default(),
+                device_id: None,
                 time: DurationDef::default(),
             },
             last_session: LogDTO {
                 start_datetime: NaiveDateTime::MIN,
                 end_datetime: NaiveDateTime::default(),
-                device_id: String::default(),
+                device_id: None,
                 time: DurationDef::default(),
             },
             total_sessions: 0,
@@ -56,29 +57,30 @@ impl From<GameWithLog> for GamePlayedReviewDTO {
 impl From<GameWithFinish> for GameFinishedReviewDTO {
     fn from(game: GameWithFinish) -> Self {
         Self {
-            id: game.id.to_string(),
+            id: game.id,
+            user_id: game.user_id,
             title: game.title,
             edition: game.edition,
             release_date: game.release_date,
-            base_game_id: game.base_game_id.map(|id| id.to_string()),
+            base_game_id: game.base_game_id,
             cover_url: game.cover_url,
             added_datetime: game.added_datetime,
             updated_datetime: game.updated_datetime,
-            status: GameStatus::try_from(game.status).expect("Status was not within valid range"),
-            rating: game.rating,
+            status: GameStatus::try_from(game.status).expect("Status is not within valid range"),
+            rating: u32::try_from(game.rating).expect("Rating is not positive"),
             notes: game.notes,
             total_finished: 0,
-            total_finished_grouped: HashMap::<u32, i32>::new(),
+            total_finished_grouped: HashMap::<u32, u32>::new(),
             first_finished: false,
             first_finish: FinishDTO {
                 date: NaiveDate::MAX,
                 status: GameStatus::LowPriority,
-                device_id: String::default(),
+                device_id: None,
             },
             last_finish: FinishDTO {
                 date: NaiveDate::MIN,
                 status: GameStatus::LowPriority,
-                device_id: String::default(),
+                device_id: None,
             },
             finishes: vec![],
         }

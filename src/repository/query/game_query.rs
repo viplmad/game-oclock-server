@@ -231,13 +231,13 @@ pub fn exists_by_id(user_id: &Uuid, id: &Uuid) -> impl QueryStatementWriter {
     select
 }
 
-pub fn exists_by_title_and_edition(user_id: &Uuid, name: &str, edition: &str) -> SelectStatement {
+pub fn exists_by_title_and_edition(user_id: &Uuid, title: &str, edition: &str) -> SelectStatement {
     let mut select = Query::select();
 
     from_and_where_user_id(&mut select, user_id);
     add_id_field(&mut select);
     select
-        .and_where(Expr::col(GameIden::Title).eq(name))
+        .and_where(Expr::col(GameIden::Title).eq(title))
         .and_where(Expr::col(GameIden::Edition).eq(edition));
 
     select
@@ -245,11 +245,11 @@ pub fn exists_by_title_and_edition(user_id: &Uuid, name: &str, edition: &str) ->
 
 pub fn exists_by_title_and_edition_and_id_not(
     user_id: &Uuid,
-    name: &str,
+    title: &str,
     edition: &str,
     id: &Uuid,
 ) -> impl QueryStatementWriter {
-    let mut select = exists_by_title_and_edition(user_id, name, edition);
+    let mut select = exists_by_title_and_edition(user_id, title, edition);
 
     select.and_where(Expr::col(GameIden::Id).ne(crate::uuid_utils::to_string(id)));
 

@@ -1,5 +1,5 @@
 use chrono::NaiveDateTime;
-use sea_query::Iden;
+use sea_query::enum_def;
 use sqlx::{postgres::types::PgInterval, FromRow};
 use uuid::Uuid;
 
@@ -7,20 +7,14 @@ use super::TableIden;
 
 pub const QUERY_TIME_ALIAS: &str = "query_time";
 
-#[derive(Iden)]
-#[iden = "GameLog"]
-pub enum GameLogIden {
-    Table,
-    #[iden = "user_id"]
-    UserId,
-    #[iden = "game_id"]
-    GameId,
-    #[iden = "start_datetime"]
-    StartDateTime,
-    #[iden = "end_datetime"]
-    EndDateTime,
-    #[iden = "device_id"]
-    DeviceId,
+#[derive(FromRow)]
+#[enum_def(table_name = "GameLog")]
+pub struct GameLog {
+    pub user_id: Uuid,
+    pub game_id: Uuid,
+    pub start_datetime: NaiveDateTime,
+    pub end_datetime: NaiveDateTime,
+    pub device_id: Option<Uuid>,
 }
 
 impl TableIden for GameLogIden {
@@ -28,18 +22,11 @@ impl TableIden for GameLogIden {
 }
 
 #[derive(FromRow)]
-pub struct LogWithTime {
-    pub start_datetime: NaiveDateTime,
-    pub end_datetime: NaiveDateTime,
-    pub device_id: Uuid,
-    pub query_time: PgInterval,
-}
-
-#[derive(FromRow)]
 pub struct GameLogWithTime {
+    pub user_id: Uuid,
     pub game_id: Uuid,
     pub start_datetime: NaiveDateTime,
     pub end_datetime: NaiveDateTime,
-    pub device_id: Uuid,
+    pub device_id: Option<Uuid>,
     pub query_time: PgInterval,
 }

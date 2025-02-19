@@ -15,8 +15,8 @@ impl From<GameWithUserInfo> for GameDTO {
             cover_url: game.cover_url,
             added_datetime: game.added_datetime,
             updated_datetime: game.updated_datetime,
-            status: GameStatus::try_from(game.status).expect("Status was not within valid range"),
-            rating: game.rating,
+            status: GameStatus::try_from(game.status).expect("Status is not within valid range"),
+            rating: u32::try_from(game.rating).expect("Rating is not positive"),
             notes: game.notes,
         }
     }
@@ -35,7 +35,7 @@ impl From<GameDTO> for GameWithUserInfo {
             added_datetime: game.added_datetime,
             updated_datetime: game.updated_datetime,
             status: i16::from(game.status),
-            rating: game.rating,
+            rating: i16::try_from(game.rating).expect("Rating is not within valid range"),
             notes: game.notes,
         }
     }
@@ -53,8 +53,8 @@ impl From<GameWithUserInfoWithDate> for GameAvailableDTO {
             cover_url: game.cover_url,
             added_datetime: game.added_datetime,
             updated_datetime: game.updated_datetime,
-            status: GameStatus::try_from(game.status).expect("Status was not within valid range"),
-            rating: game.rating,
+            status: GameStatus::try_from(game.status).expect("Status is not within valid range"),
+            rating: u32::try_from(game.rating).expect("Rating is not positive"),
             notes: game.notes,
             available_date: game.query_date,
         }

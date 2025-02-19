@@ -1,4 +1,5 @@
 use chrono::NaiveDate;
+use uuid::Uuid;
 
 use crate::entities::{GameSearch, GameWithFinish};
 use crate::errors::ApiErrors;
@@ -24,7 +25,7 @@ impl GameWithFinishService {
 impl GameWithFinishService {
     pub async fn search_first_finished_games(
         &self,
-        user_id: &str,
+        user_id: &Uuid,
         start_date: Option<NaiveDate>,
         end_date: Option<NaiveDate>,
         search: SearchDTO,
@@ -42,7 +43,7 @@ impl GameWithFinishService {
 
     pub async fn search_last_finished_games(
         &self,
-        user_id: &str,
+        user_id: &Uuid,
         start_date: Option<NaiveDate>,
         end_date: Option<NaiveDate>,
         search: SearchDTO,
@@ -61,7 +62,7 @@ impl GameWithFinishService {
     // For review
     pub(super) async fn find_game_with_finishes_between(
         &self,
-        user_id: &str,
+        user_id: &Uuid,
         start_date: NaiveDate,
         end_date: NaiveDate,
     ) -> Result<Vec<GameWithFinish>, ApiErrors> {

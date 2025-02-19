@@ -97,7 +97,7 @@ impl GameService {
                 handle_already_exists_result::<GameDTO>(exists_result)?;
 
                 let old_status = GameStatus::try_from(game_to_update.status)
-                    .expect("Status was not within valid range");
+                    .expect("Status is not within valid range");
                 if old_status != GameStatus::Wishlist
                     && new_status.is_some_and(|status| status == GameStatus::Wishlist)
                 {

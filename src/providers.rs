@@ -9,14 +9,18 @@ pub struct SqlxPostgresPoolBuilder;
 
 impl SqlxPostgresPoolBuilder {
     pub async fn from_env() -> Result<PgPool, sqlx::Error> {
-        let host = std::env::var("DB_HOST").expect("Database host not set.");
+        let host = std::env::var("DB_HOST")
+            .expect("Database host not set. Set through 'DB_HOST' environemnt variable.");
         let port = std::env::var("DB_PORT")
-            .expect("Database port not set.")
+            .expect("Database port not set. Set through 'DB_PORT' environemnt variable.")
             .parse()
             .expect("Database port is not a number.");
-        let database = std::env::var("DB_DATABASE").expect("Database not set.");
-        let user = std::env::var("DB_USER").expect("Database user not set.");
-        let password = std::env::var("DB_PASSWORD").expect("Database password not set.");
+        let database = std::env::var("DB_DATABASE")
+            .expect("Database not set. Set through 'DB_DATABASE' environemnt variable.");
+        let user = std::env::var("DB_USER")
+            .expect("Database user not set. Set through 'DB_USER' environemnt variable.");
+        let password = std::env::var("DB_PASSWORD")
+            .expect("Database password not set. Set through 'DB_PASSWORD' environemnt variable.");
 
         // Manually-constructed options
         let conn = PgConnectOptions::new()

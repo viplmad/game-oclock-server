@@ -25,7 +25,7 @@ pub struct GameDTO {
     #[schema(value_type = String, format = DateTime)]
     pub updated_datetime: NaiveDateTime,
     pub status: GameStatus,
-    pub rating: i16,
+    pub rating: u32,
     pub notes: String,
 }
 
@@ -61,6 +61,6 @@ pub struct NewGameDTO {
     pub release_date: Option<NaiveDate>,
     pub cover_url: Option<String>,
     pub status: Option<GameStatus>,
-    pub rating: Option<i16>,
+    pub rating: Option<u32>, // TODO check within valid range
     pub notes: Option<String>,
 }

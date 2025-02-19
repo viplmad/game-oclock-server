@@ -64,5 +64,5 @@ fn join_game_log_by_game_id(select: &mut SelectStatement, game_id: &Uuid) {
 }
 
 fn add_order_by_start_datetime(select: &mut SelectStatement) {
-    select.order_by((GameLogIden::Table, GameLogIden::StartDateTime), Order::Asc);
+    select.order_by((GameLogIden::Table, GameLogIden::StartDatetime), Order::Asc);
 }

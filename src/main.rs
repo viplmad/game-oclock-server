@@ -26,10 +26,11 @@ async fn main() -> std::io::Result<()> {
     let port = env::var("PORT")
         .unwrap_or_else(|_| String::from(DEFAULT_HTTP_PORT))
         .parse()
-        .expect("Port is not a number");
+        .expect("Port is not a number.");
 
     // Encoding/Decoding
-    let secret_key: String = env::var("SECRET_KEY").expect("Secret key not set.");
+    let secret_key: String = env::var("SECRET_KEY")
+        .expect("Secret key not set. Set through 'SECRET_KEY' environemnt variable.");
 
     let encoding_key = generate_encoding_key(&secret_key);
     let decoding_key = generate_decoding_key(&secret_key);

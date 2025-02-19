@@ -1,12 +1,16 @@
 use chrono::{NaiveDate, NaiveDateTime};
 use serde::Serialize;
 use utoipa::ToSchema;
+use uuid::Uuid;
 
 use super::ModelInfo;
 
 #[derive(Serialize, ToSchema)]
 pub struct LocationAvailableDTO {
-    pub id: String,
+    #[schema(value_type = String)]
+    pub id: Uuid,
+    #[schema(value_type = String)]
+    pub user_id: Uuid,
     pub name: String,
     #[serde(skip_serializing_if = "Option::is_none")]
     pub icon_url: Option<String>,

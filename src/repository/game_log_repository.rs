@@ -1,8 +1,9 @@
 use chrono::NaiveDateTime;
 use sqlx::{postgres::types::PgInterval, PgPool};
+use uuid::Uuid;
 
 use super::query::game_log_query;
-use crate::entities::{GameLogWithTime, LogWithTime};
+use crate::entities::{GameLog, GameLogWithTime};
 use crate::errors::RepositoryError;
 
 use super::helpers::{
@@ -23,8 +24,8 @@ impl GameLogRepository {
 impl GameLogRepository {
     pub async fn find_sum_time_by_game_id(
         &self,
-        user_id: &str,
-        game_id: &str,
+        user_id: &Uuid,
+        game_id: &Uuid,
     ) -> Result<PgInterval, RepositoryError> {
         let query = game_log_query::select_sum_time_by_user_id_and_game_id(user_id, game_id);
         execute_return_single(&self.pool, query).await
@@ -32,9 +33,9 @@ impl GameLogRepository {
 
     pub async fn find_all_by_game_id(
         &self,
-        user_id: &str,
-        game_id: &str,
-    ) -> Result<Vec<LogWithTime>, RepositoryError> {
+        user_id: &Uuid,
+        game_id: &Uuid,
+    ) -> Result<Vec<GameLogWithTime>, RepositoryError> {
         let query = game_log_query::select_all_by_user_id_and_game_id(user_id, game_id);
         fetch_all(&self.pool, query).await
     }
@@ -42,8 +43,8 @@ impl GameLogRepository {
     // For review
     pub async fn find_all_first_by_user_id_and_game_id_in(
         &self,
-        user_id: &str,
-        game_ids: Vec<String>,
+        user_id: &Uuid,
+        game_ids: Vec<Uuid>,
     ) -> Result<Vec<GameLogWithTime>, RepositoryError> {
         if game_ids.is_empty() {
             return Ok(vec![]);
@@ -53,16 +54,11 @@ impl GameLogRepository {
         fetch_all(&self.pool, query).await
     }
 
-    pub async fn create_multiple(
-        &self,
-        user_id: &str,
-        game_id: &str,
-        logs: Vec<LogWithTime>,
-    ) -> Result<(), RepositoryError> {
+    pub async fn create_multiple(&self, game_logs: Vec<GameLog>) -> Result<(), RepositoryError> {
         let mut transaction = begin_transaction(&self.pool).await?;
 
-        for log in logs.into_iter() {
-            let query = game_log_query::insert(user_id, game_id, &log);
+        for game_log in game_logs.into_iter() {
+            let query = game_log_query::insert(&game_log);
             execute(&mut *transaction, query).await?;
         }
 
@@ -73,17 +69,17 @@ impl GameLogRepository {
 
     pub async fn delete_by_id(
         &self,
-        user_id: &str,
-        game_id: &str,
-        datetime: NaiveDateTime,
+        user_id: &Uuid,
+        game_id: &Uuid,
+        start_datetime: NaiveDateTime,
     ) -> Result<(), RepositoryError> {
-        let query = game_log_query::delete_by_id(user_id, game_id, datetime);
+        let query = game_log_query::delete_by_id(user_id, game_id, start_datetime);
         execute(&self.pool, query).await
     }
 
     pub async fn exists_gap(
         &self,
-        user_id: &str,
+        user_id: &Uuid,
         start_datetime: NaiveDateTime,
         end_datetime: NaiveDateTime,
     ) -> Result<bool, RepositoryError> {
@@ -97,11 +93,11 @@ impl GameLogRepository {
 
     pub async fn exists_by_id(
         &self,
-        user_id: &str,
-        game_id: &str,
-        datetime: NaiveDateTime,
+        user_id: &Uuid,
+        game_id: &Uuid,
+        start_datetime: NaiveDateTime,
     ) -> Result<bool, RepositoryError> {
-        let query = game_log_query::exists_by_id(user_id, game_id, datetime);
+        let query = game_log_query::exists_by_id(user_id, game_id, start_datetime);
         exists_id(&self.pool, query).await
     }
 }

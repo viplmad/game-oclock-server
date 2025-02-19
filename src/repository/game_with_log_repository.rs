@@ -1,5 +1,6 @@
 use chrono::NaiveDateTime;
 use sqlx::PgPool;
+use uuid::Uuid;
 
 use super::query::game_log_query;
 use crate::entities::{GameSearch, GameWithLog, PageResult};
@@ -21,7 +22,7 @@ impl GameWithLogRepository {
 impl GameWithLogRepository {
     pub async fn search_first_by_start_datetime_between(
         &self,
-        user_id: &str,
+        user_id: &Uuid,
         start_datetime: Option<NaiveDateTime>,
         end_datetime: Option<NaiveDateTime>,
         search: GameSearch,
@@ -32,7 +33,7 @@ impl GameWithLogRepository {
 
     pub async fn search_last_by_start_datetime_between(
         &self,
-        user_id: &str,
+        user_id: &Uuid,
         start_datetime: Option<NaiveDateTime>,
         end_datetime: Option<NaiveDateTime>,
         search: GameSearch,
@@ -43,7 +44,7 @@ impl GameWithLogRepository {
 
     pub async fn find_all_by_start_datetime_between(
         &self,
-        user_id: &str,
+        user_id: &Uuid,
         start_datetime: NaiveDateTime,
         end_datetime: NaiveDateTime,
     ) -> Result<Vec<GameWithLog>, RepositoryError> {

@@ -7,7 +7,7 @@ impl From<GameFinish> for FinishDTO {
     fn from(finish: GameFinish) -> Self {
         Self {
             date: finish.date,
-            status: GameStatus::try_from(finish.status).expect("Status was not within valid range"),
+            status: GameStatus::try_from(finish.status).expect("Status is not within valid range"),
             device_id: finish.device_id,
         }
     }
@@ -30,7 +30,7 @@ impl From<&GameWithFinish> for FinishDTO {
         Self {
             date: game.finish_date,
             status: GameStatus::try_from(game.finish_status)
-                .expect("Status was not within valid range"),
+                .expect("Status is not within valid range"),
             device_id: game.finish_device_id,
         }
     }

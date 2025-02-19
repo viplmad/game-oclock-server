@@ -25,13 +25,15 @@ pub struct GameWithLogDTO {
     #[schema(value_type = String, format = DateTime)]
     pub updated_datetime: NaiveDateTime,
     pub status: GameStatus,
-    pub rating: i16,
+    pub rating: u32,
     pub notes: String,
     #[schema(value_type = String, format = DateTime)]
-    pub log_start_datetime: NaiveDateTime,
+    pub log_start_datetime: NaiveDateTime, // TODO Pass as typed field
     #[schema(value_type = String, format = DateTime)]
     pub log_end_datetime: NaiveDateTime,
-    pub log_device_id: String,
+    #[schema(value_type = String)]
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub log_device_id: Option<Uuid>,
     #[schema(value_type = String)]
     pub log_time: DurationDef,
 }

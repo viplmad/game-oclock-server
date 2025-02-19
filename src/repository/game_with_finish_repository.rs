@@ -1,5 +1,6 @@
 use chrono::NaiveDate;
 use sqlx::PgPool;
+use uuid::Uuid;
 
 use super::query::game_finish_query;
 use crate::entities::{GameSearch, GameWithFinish, PageResult};
@@ -21,7 +22,7 @@ impl GameWithFinishRepository {
 impl GameWithFinishRepository {
     pub async fn search_first_by_date_between(
         &self,
-        user_id: &str,
+        user_id: &Uuid,
         start_date: Option<NaiveDate>,
         end_date: Option<NaiveDate>,
         search: GameSearch,
@@ -35,7 +36,7 @@ impl GameWithFinishRepository {
 
     pub async fn search_last_by_date_between(
         &self,
-        user_id: &str,
+        user_id: &Uuid,
         start_date: Option<NaiveDate>,
         end_date: Option<NaiveDate>,
         search: GameSearch,
@@ -49,7 +50,7 @@ impl GameWithFinishRepository {
 
     pub async fn find_all_by_date_between(
         &self,
-        user_id: &str,
+        user_id: &Uuid,
         start_date: NaiveDate,
         end_date: NaiveDate,
     ) -> Result<Vec<GameWithFinish>, RepositoryError> {

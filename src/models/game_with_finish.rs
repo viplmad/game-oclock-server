@@ -25,12 +25,14 @@ pub struct GameWithFinishDTO {
     #[schema(value_type = String, format = DateTime)]
     pub updated_datetime: NaiveDateTime,
     pub status: GameStatus,
-    pub rating: i16,
+    pub rating: u32,
     pub notes: String,
     #[schema(value_type = String, format = Date)]
-    pub finish_date: NaiveDate,
+    pub finish_date: NaiveDate, // TODO Pass as typed field
     pub finish_status: GameStatus,
-    pub finish_device_id: String,
+    #[schema(value_type = String)]
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub finish_device_id: Option<Uuid>,
 }
 
 impl ModelInfo for GameWithFinishDTO {

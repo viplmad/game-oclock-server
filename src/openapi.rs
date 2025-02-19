@@ -141,8 +141,6 @@ pub fn get_openapi() -> utoipa::openapi::OpenApi {
             models::ChainOperatorType,
             models::SortDTO,
             models::OrderType,
-
-            models::Image,
         )),
         modifiers(&SecurityAddon)
     )]

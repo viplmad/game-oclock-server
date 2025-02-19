@@ -1,27 +1,28 @@
-use sqlx::postgres::types::PgInterval;
+use uuid::Uuid;
 
-use crate::entities::{GameLogWithTime, GameWithLog, LogWithTime};
+use crate::entities::{GameLog, GameLogWithTime, GameWithLog};
 use crate::models::{DurationDef, LogDTO};
-use crate::uuid_utils;
 
-impl From<LogWithTime> for LogDTO {
-    fn from(log: LogWithTime) -> Self {
+// Mapping to DTO only with time
+impl From<GameLogWithTime> for LogDTO {
+    fn from(log: GameLogWithTime) -> Self {
         Self {
             start_datetime: log.start_datetime,
             end_datetime: log.end_datetime,
-            device_id: log.device_id.to_string(),
-            time: DurationDef::from(log.query_time),
+            device_id: log.device_id,
+            time: DurationDef::from(log.query_time.clone()),
         }
     }
 }
 
-impl From<LogDTO> for LogWithTime {
+impl From<LogDTO> for GameLog {
     fn from(log: LogDTO) -> Self {
         Self {
+            user_id: Uuid::default(),
+            game_id: Uuid::default(),
             start_datetime: log.start_datetime,
             end_datetime: log.end_datetime,
-            device_id: uuid_utils::parse_uuid(&log.device_id),
-            query_time: PgInterval::default(), // Ignored
+            device_id: log.device_id,
         }
     }
 }
@@ -32,19 +33,8 @@ impl From<&GameWithLog> for LogDTO {
         Self {
             start_datetime: game.log_start_datetime,
             end_datetime: game.log_end_datetime,
-            device_id: game.log_device_id.to_string(),
+            device_id: game.log_device_id,
             time: DurationDef::from(game.log_time.clone()),
-        }
-    }
-}
-
-impl From<GameLogWithTime> for LogDTO {
-    fn from(log: GameLogWithTime) -> Self {
-        Self {
-            start_datetime: log.start_datetime,
-            end_datetime: log.end_datetime,
-            device_id: log.device_id.to_string(),
-            time: DurationDef::from(log.query_time.clone()),
         }
     }
 }

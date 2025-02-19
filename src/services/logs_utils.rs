@@ -1,6 +1,7 @@
 use std::{cmp::Ordering, collections::HashMap};
 
 use chrono::{Datelike, Duration, NaiveDate, NaiveDateTime, NaiveTime, Timelike};
+use uuid::Uuid;
 
 use crate::models::{DurationDef, FinishDTO, GameStatus, GamesStreakDTO, LogDTO, StreakDTO};
 
@@ -90,13 +91,13 @@ fn fill_single_total_time_grouped(
     }
 }
 
-pub(super) fn fill_total_optional_map(total_map: &mut HashMap<i32, i32>, value: &Option<i32>) {
+pub(super) fn fill_total_optional_map(total_map: &mut HashMap<u32, u32>, value: &Option<u32>) {
     if let Some(v) = value {
         fill_total_map(total_map, v.clone());
     }
 }
 
-pub(super) fn fill_total_map(total_map: &mut HashMap<i32, i32>, value: i32) {
+pub(super) fn fill_total_map(total_map: &mut HashMap<u32, u32>, value: u32) {
     match total_map.get(&value) {
         Some(total) => {
             // Continue the total
@@ -150,7 +151,7 @@ pub(super) fn fill_game_sessions(
     sessions: &mut Vec<LogDTO>,
     start_datetime: NaiveDateTime,
     end_datetime: NaiveDateTime,
-    device_id: &str,
+    device_id: Option<Uuid>,
     time: DurationDef,
 ) {
     match sessions.last_mut() {
@@ -173,7 +174,7 @@ pub(super) fn fill_game_sessions(
                 sessions.push(LogDTO {
                     start_datetime,
                     end_datetime,
-                    device_id: String::from(device_id),
+                    device_id: device_id.clone(),
                     time,
                 })
             }
@@ -183,7 +184,7 @@ pub(super) fn fill_game_sessions(
             sessions.push(LogDTO {
                 start_datetime,
                 end_datetime,
-                device_id: String::from(device_id),
+                device_id: device_id.clone(),
                 time,
             })
         }
@@ -192,11 +193,11 @@ pub(super) fn fill_game_sessions(
 
 pub(super) fn fill_streaks(
     streaks: &mut Vec<GamesStreakDTO>,
-    game_id: &str,
+    game_id: &Uuid,
     start_datetime: NaiveDateTime,
     end_datetime: NaiveDateTime,
 ) {
-    let game_id_clone = String::from(game_id);
+    let game_id_clone = game_id.clone();
     match streaks.last_mut() {
         Some(last_streak) => {
             let previous_date = last_streak.start_date - Duration::days(1);
@@ -239,7 +240,7 @@ pub(super) fn fill_streaks(
 }
 
 pub(super) fn fill_total_finished_by_month(
-    total_finished_by_month_map: &mut HashMap<u32, i32>,
+    total_finished_by_month_map: &mut HashMap<u32, u32>,
     finish_date: NaiveDate,
 ) {
     let month = finish_date.month();
@@ -247,8 +248,8 @@ pub(super) fn fill_total_finished_by_month(
 }
 
 pub(super) fn merge_total_finished_by_month(
-    total_finished_by_month_map: &mut HashMap<u32, i32>,
-    game_total_finished_by_month: &HashMap<u32, i32>,
+    total_finished_by_month_map: &mut HashMap<u32, u32>,
+    game_total_finished_by_month: &HashMap<u32, u32>,
 ) {
     for (month, amount) in game_total_finished_by_month {
         fill_single_total_finished_by_month(
@@ -260,9 +261,9 @@ pub(super) fn merge_total_finished_by_month(
 }
 
 fn fill_single_total_finished_by_month(
-    total_finished_by_month_map: &mut HashMap<u32, i32>,
+    total_finished_by_month_map: &mut HashMap<u32, u32>,
     month: u32,
-    amount: i32,
+    amount: u32,
 ) {
     match total_finished_by_month_map.get(&month) {
         Some(month_total_finished) => {
@@ -281,11 +282,11 @@ pub(super) fn fill_game_finishes(
     finishes: &mut Vec<FinishDTO>,
     date: NaiveDate,
     status: GameStatus,
-    device_id: &str,
+    device_id: Option<Uuid>,
 ) {
     finishes.push(FinishDTO {
         date,
         status,
-        device_id: String::from(device_id),
+        device_id: device_id.clone(),
     });
 }

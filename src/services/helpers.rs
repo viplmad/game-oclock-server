@@ -83,15 +83,6 @@ where
     })
 }
 
-pub(super) fn handle_create_result<I, T>(
-    repository_result: Result<I, RepositoryError>,
-) -> Result<I, ApiErrors>
-where
-    T: ModelInfo,
-{
-    handle_result::<I, T>(repository_result)
-}
-
 pub(super) fn handle_update_result<T>(
     repository_result: Result<(), RepositoryError>,
 ) -> Result<(), ApiErrors>
