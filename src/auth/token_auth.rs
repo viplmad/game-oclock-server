@@ -85,7 +85,7 @@ fn create_token_claims(
     expiry_seconds: i64,
     access_token_id: Option<Uuid>,
 ) -> UserClaims {
-    let now = crate::date_utils::now().and_utc().timestamp();
+    let now = crate::date_utils::now().timestamp();
     UserClaims {
         iss: String::from(ISSUER),
         sub: user_id.clone(),

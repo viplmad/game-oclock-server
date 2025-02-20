@@ -1,4 +1,4 @@
-use chrono::{NaiveDate, NaiveDateTime};
+use chrono::{DateTime, NaiveDate, Utc};
 use serde::Deserialize;
 use utoipa::ToSchema;
 
@@ -11,5 +11,5 @@ pub struct DateDTO {
 #[derive(Deserialize, ToSchema)]
 pub struct DateTimeDTO {
     #[schema(value_type = String, format = DateTime)]
-    pub datetime: NaiveDateTime,
+    pub datetime: DateTime<Utc>,
 }

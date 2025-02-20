@@ -1,4 +1,4 @@
-use chrono::{NaiveDate, NaiveDateTime};
+use chrono::{DateTime, NaiveDate, Utc};
 use sqlx::{FromRow, postgres::types::PgInterval};
 use uuid::Uuid;
 
@@ -16,13 +16,13 @@ pub struct GameWithLog {
     pub release_date: Option<NaiveDate>,
     pub base_game_id: Option<Uuid>,
     pub cover_url: Option<String>,
-    pub added_datetime: NaiveDateTime,
-    pub updated_datetime: NaiveDateTime,
+    pub added_datetime: DateTime<Utc>,
+    pub updated_datetime: DateTime<Utc>,
     pub status: i16,
     pub rating: i16,
     pub notes: String,
-    pub log_start_datetime: NaiveDateTime,
-    pub log_end_datetime: NaiveDateTime,
+    pub log_start_datetime: DateTime<Utc>,
+    pub log_end_datetime: DateTime<Utc>,
     pub log_device_id: Option<Uuid>,
     pub log_time: PgInterval,
 }

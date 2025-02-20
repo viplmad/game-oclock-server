@@ -1,6 +1,6 @@
 use std::str::FromStr;
 
-use chrono::{NaiveDate, NaiveDateTime};
+use chrono::{DateTime, NaiveDate, Utc};
 use sea_query::{BinOper, Order, Value};
 
 use crate::entities::{
@@ -160,7 +160,7 @@ impl TryFrom<FieldSearchValue> for Value {
                 Ok(date_value.into())
             }
             FieldType::DateTime => {
-                let date_time_value = convert_with_serde::<NaiveDateTime>(value, "date time")?;
+                let date_time_value = convert_with_serde::<DateTime<Utc>>(value, "date time")?;
                 Ok(date_time_value.into())
             }
             FieldType::GameStatus => {

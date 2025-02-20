@@ -1,6 +1,6 @@
 use std::collections::{HashMap, HashSet};
 
-use chrono::{Datelike, NaiveDate, NaiveDateTime};
+use chrono::{DateTime, Datelike, NaiveDate, Utc};
 use uuid::Uuid;
 
 use crate::entities::{GameFinish, GameLogWithTime, GameWithFinish, GameWithLog};
@@ -166,8 +166,8 @@ fn build_played_review(
         user_id: Uuid::default(),
         game_id: Uuid::default(),
         log: LogDTO {
-            start_datetime: NaiveDateTime::MAX,
-            end_datetime: NaiveDateTime::default(),
+            start_datetime: DateTime::<Utc>::MAX_UTC,
+            end_datetime: DateTime::default(),
             time: DurationDef::default(),
             device_id: None,
         },
@@ -176,8 +176,8 @@ fn build_played_review(
         user_id: Uuid::default(),
         game_id: Uuid::default(),
         log: LogDTO {
-            start_datetime: NaiveDateTime::MIN,
-            end_datetime: NaiveDateTime::default(),
+            start_datetime: DateTime::<Utc>::MIN_UTC,
+            end_datetime: DateTime::default(),
             time: DurationDef::default(),
             device_id: None,
         },
@@ -509,8 +509,8 @@ fn get_last_finish(
 
 fn fill_played_game_review(
     game: &mut GamePlayedReviewDTO,
-    start_datetime: NaiveDateTime,
-    end_datetime: NaiveDateTime, // TODO Pass object
+    start_datetime: DateTime<Utc>,
+    end_datetime: DateTime<Utc>, // TODO Pass object
     device_id: Option<Uuid>,
     time: DurationDef,
 ) {

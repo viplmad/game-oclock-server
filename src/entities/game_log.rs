@@ -1,4 +1,4 @@
-use chrono::NaiveDateTime;
+use chrono::{DateTime, Utc};
 use sea_query::enum_def;
 use sqlx::{FromRow, postgres::types::PgInterval};
 use uuid::Uuid;
@@ -12,8 +12,8 @@ pub const QUERY_TIME_ALIAS: &str = "query_time";
 pub struct GameLog {
     pub user_id: Uuid,
     pub game_id: Uuid,
-    pub start_datetime: NaiveDateTime,
-    pub end_datetime: NaiveDateTime,
+    pub start_datetime: DateTime<Utc>,
+    pub end_datetime: DateTime<Utc>,
     pub device_id: Option<Uuid>,
 }
 
@@ -25,8 +25,8 @@ impl TableIden for GameLogIden {
 pub struct GameLogWithTime {
     pub user_id: Uuid,
     pub game_id: Uuid,
-    pub start_datetime: NaiveDateTime,
-    pub end_datetime: NaiveDateTime,
+    pub start_datetime: DateTime<Utc>,
+    pub end_datetime: DateTime<Utc>,
     pub device_id: Option<Uuid>,
     pub query_time: PgInterval,
 }

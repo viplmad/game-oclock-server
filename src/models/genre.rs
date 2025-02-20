@@ -1,4 +1,4 @@
-use chrono::NaiveDateTime;
+use chrono::{DateTime, Utc};
 use serde::{Deserialize, Serialize};
 use utoipa::ToSchema;
 use uuid::Uuid;
@@ -13,9 +13,9 @@ pub struct GenreDTO {
     pub user_id: Uuid,
     pub name: String,
     #[schema(value_type = String, format = DateTime)]
-    pub added_datetime: NaiveDateTime,
+    pub added_datetime: DateTime<Utc>,
     #[schema(value_type = String, format = DateTime)]
-    pub updated_datetime: NaiveDateTime,
+    pub updated_datetime: DateTime<Utc>,
 }
 
 impl Merge<NewGenreDTO> for GenreDTO {

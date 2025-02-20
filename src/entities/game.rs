@@ -1,6 +1,6 @@
 use std::str::FromStr;
 
-use chrono::{NaiveDate, NaiveDateTime};
+use chrono::{DateTime, NaiveDate, Utc};
 use sea_query::enum_def;
 use sqlx::FromRow;
 use uuid::Uuid;
@@ -21,8 +21,8 @@ pub struct Game {
     pub release_date: Option<NaiveDate>,
     pub base_game_id: Option<Uuid>,
     pub cover_url: Option<String>,
-    pub added_datetime: NaiveDateTime,
-    pub updated_datetime: NaiveDateTime,
+    pub added_datetime: DateTime<Utc>,
+    pub updated_datetime: DateTime<Utc>,
 }
 
 impl TableIden for GameIden {
@@ -38,8 +38,8 @@ pub struct GameWithUserInfo {
     pub release_date: Option<NaiveDate>,
     pub base_game_id: Option<Uuid>,
     pub cover_url: Option<String>,
-    pub added_datetime: NaiveDateTime,
-    pub updated_datetime: NaiveDateTime,
+    pub added_datetime: DateTime<Utc>,
+    pub updated_datetime: DateTime<Utc>,
     pub status: i16,
     pub rating: i16,
     pub notes: String,
@@ -54,8 +54,8 @@ pub struct GameWithUserInfoWithDate {
     pub release_date: Option<NaiveDate>,
     pub base_game_id: Option<Uuid>,
     pub cover_url: Option<String>,
-    pub added_datetime: NaiveDateTime,
-    pub updated_datetime: NaiveDateTime,
+    pub added_datetime: DateTime<Utc>,
+    pub updated_datetime: DateTime<Utc>,
     pub status: i16,
     pub rating: i16,
     pub notes: String,

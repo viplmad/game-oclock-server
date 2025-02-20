@@ -1,4 +1,4 @@
-use chrono::{NaiveDate, NaiveDateTime};
+use chrono::{DateTime, NaiveDate, Utc};
 use serde::{Deserialize, Serialize};
 use utoipa::ToSchema;
 use uuid::Uuid;
@@ -21,9 +21,9 @@ pub struct GameDTO {
     #[serde(skip_serializing_if = "Option::is_none")]
     pub cover_url: Option<String>,
     #[schema(value_type = String, format = DateTime)]
-    pub added_datetime: NaiveDateTime,
+    pub added_datetime: DateTime<Utc>,
     #[schema(value_type = String, format = DateTime)]
-    pub updated_datetime: NaiveDateTime,
+    pub updated_datetime: DateTime<Utc>,
     pub status: GameStatus,
     pub rating: u32,
     pub notes: String,

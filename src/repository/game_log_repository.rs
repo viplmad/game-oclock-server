@@ -1,4 +1,4 @@
-use chrono::NaiveDateTime;
+use chrono::{DateTime, Utc};
 use sqlx::{PgPool, postgres::types::PgInterval};
 use uuid::Uuid;
 
@@ -74,7 +74,7 @@ impl GameLogRepository {
         &self,
         user_id: &Uuid,
         game_id: &Uuid,
-        start_datetime: NaiveDateTime,
+        start_datetime: DateTime<Utc>,
     ) -> Result<(), RepositoryError> {
         let query = game_log_query::delete_by_id(user_id, game_id, start_datetime);
         execute(&self.pool, query).await
@@ -83,8 +83,8 @@ impl GameLogRepository {
     pub async fn exists_gap(
         &self,
         user_id: &Uuid,
-        start_datetime: NaiveDateTime,
-        end_datetime: NaiveDateTime,
+        start_datetime: DateTime<Utc>,
+        end_datetime: DateTime<Utc>,
     ) -> Result<bool, RepositoryError> {
         let query = game_log_query::exists_by_start_datetime_lt_or_end_datetime_gt(
             user_id,
@@ -98,7 +98,7 @@ impl GameLogRepository {
         &self,
         user_id: &Uuid,
         game_id: &Uuid,
-        start_datetime: NaiveDateTime,
+        start_datetime: DateTime<Utc>,
     ) -> Result<bool, RepositoryError> {
         let query = game_log_query::exists_by_id(user_id, game_id, start_datetime);
         exists_some(&self.pool, query).await

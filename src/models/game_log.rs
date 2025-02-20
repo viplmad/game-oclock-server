@@ -1,4 +1,4 @@
-use chrono::NaiveDateTime;
+use chrono::{DateTime, Utc};
 use serde::{Deserialize, Serialize};
 use utoipa::ToSchema;
 use uuid::Uuid;
@@ -8,9 +8,9 @@ use super::{DurationDef, Merge, ModelInfo};
 #[derive(Default, Serialize, Deserialize, ToSchema)]
 pub struct LogDTO {
     #[schema(value_type = String, format = DateTime)]
-    pub start_datetime: NaiveDateTime,
+    pub start_datetime: DateTime<Utc>,
     #[schema(value_type = String, format = DateTime)]
-    pub end_datetime: NaiveDateTime,
+    pub end_datetime: DateTime<Utc>,
     #[schema(value_type = String)]
     #[serde(skip_serializing_if = "Option::is_none")]
     pub device_id: Option<Uuid>,
@@ -38,9 +38,9 @@ impl ModelInfo for LogDTO {
 #[derive(Deserialize, ToSchema)]
 pub struct NewLogDTO {
     #[schema(value_type = String, format = DateTime)]
-    pub start_datetime: NaiveDateTime,
+    pub start_datetime: DateTime<Utc>,
     #[schema(value_type = String, format = DateTime)]
-    pub end_datetime: NaiveDateTime,
+    pub end_datetime: DateTime<Utc>,
     #[schema(value_type = String)]
     pub device_id: Option<Uuid>,
 }

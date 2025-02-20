@@ -1,13 +1,13 @@
 use std::{cmp::Ordering, collections::HashMap};
 
-use chrono::{Datelike, Duration, NaiveDate, NaiveDateTime, NaiveTime, Timelike};
+use chrono::{DateTime, Datelike, Duration, NaiveDate, NaiveTime, Timelike, Utc};
 use uuid::Uuid;
 
 use crate::models::{DurationDef, FinishDTO, GameStatus, GamesStreakDTO, LogDTO, StreakDTO};
 
 pub(super) fn fill_total_time_by_month(
     total_time_by_month_map: &mut HashMap<u32, DurationDef>,
-    start_datetime: NaiveDateTime,
+    start_datetime: DateTime<Utc>,
     time: DurationDef,
 ) {
     let month = start_datetime.month();
@@ -16,7 +16,7 @@ pub(super) fn fill_total_time_by_month(
 
 pub(super) fn fill_total_time_by_week(
     total_time_by_week_map: &mut HashMap<u32, DurationDef>,
-    start_datetime: NaiveDateTime,
+    start_datetime: DateTime<Utc>,
     time: DurationDef,
 ) {
     let week = start_datetime.iso_week().week();
@@ -25,7 +25,7 @@ pub(super) fn fill_total_time_by_week(
 
 pub(super) fn fill_total_time_by_weekday(
     total_time_by_weekday_map: &mut HashMap<u32, DurationDef>,
-    start_datetime: NaiveDateTime,
+    start_datetime: DateTime<Utc>,
     time: DurationDef,
 ) {
     let weekday = start_datetime.weekday().number_from_monday();
@@ -34,8 +34,8 @@ pub(super) fn fill_total_time_by_weekday(
 
 pub(super) fn fill_total_time_by_hour(
     total_time_by_hour_map: &mut HashMap<u32, DurationDef>,
-    start_datetime: NaiveDateTime,
-    end_datetime: NaiveDateTime,
+    start_datetime: DateTime<Utc>,
+    end_datetime: DateTime<Utc>,
 ) {
     // If log spans differents hours
     let mut temp_time = start_datetime.time();
@@ -113,23 +113,23 @@ pub(super) fn fill_total_map(total_map: &mut HashMap<u32, u32>, value: u32) {
 
 pub(super) fn fill_game_streaks(
     streaks: &mut Vec<StreakDTO>,
-    start_datetime: NaiveDateTime,
-    end_datetime: NaiveDateTime,
+    start_datetime: DateTime<Utc>,
+    end_datetime: DateTime<Utc>,
 ) {
     match streaks.last_mut() {
         Some(last_streak) => {
             let previous_date = last_streak.start_date - Duration::days(1);
-            match start_datetime.date().cmp(&previous_date) {
+            match start_datetime.date_naive().cmp(&previous_date) {
                 Ordering::Equal => {
                     // Continued the streak
-                    last_streak.start_date = start_datetime.date();
+                    last_streak.start_date = start_datetime.date_naive();
                     last_streak.days += 1;
                 }
                 Ordering::Less => {
                     // Lost the streak, start a new one
                     streaks.push(StreakDTO {
-                        start_date: start_datetime.date(),
-                        end_date: end_datetime.date(),
+                        start_date: start_datetime.date_naive(),
+                        end_date: end_datetime.date_naive(),
                         days: 1,
                     });
                 }
@@ -139,8 +139,8 @@ pub(super) fn fill_game_streaks(
         None => {
             // Start first streak
             streaks.push(StreakDTO {
-                start_date: start_datetime.date(),
-                end_date: end_datetime.date(),
+                start_date: start_datetime.date_naive(),
+                end_date: end_datetime.date_naive(),
                 days: 1,
             })
         }
@@ -149,8 +149,8 @@ pub(super) fn fill_game_streaks(
 
 pub(super) fn fill_game_sessions(
     sessions: &mut Vec<LogDTO>,
-    start_datetime: NaiveDateTime,
-    end_datetime: NaiveDateTime,
+    start_datetime: DateTime<Utc>,
+    end_datetime: DateTime<Utc>,
     device_id: Option<Uuid>,
     time: DurationDef,
 ) {
@@ -161,7 +161,7 @@ pub(super) fn fill_game_sessions(
             // Check if this is part of a continuous log (ended on midnight and kept playing)
             if
             // If the date of the current log is on the previous day of the last log
-            start_datetime.date() == (last_session_start_datetime.date() - Duration::days(1))
+            start_datetime.date_naive() == (last_session_start_datetime.date_naive() - Duration::days(1))
                 // and the end time of the current log is midnight
                 && end_datetime.time() == NaiveTime::MIN
                 // and the start time of the last log is midnight
@@ -194,20 +194,20 @@ pub(super) fn fill_game_sessions(
 pub(super) fn fill_streaks(
     streaks: &mut Vec<GamesStreakDTO>,
     game_id: &Uuid,
-    start_datetime: NaiveDateTime,
-    end_datetime: NaiveDateTime,
+    start_datetime: DateTime<Utc>,
+    end_datetime: DateTime<Utc>,
 ) {
     let game_id_clone = game_id.clone();
     match streaks.last_mut() {
         Some(last_streak) => {
             let previous_date = last_streak.streak.start_date - Duration::days(1);
-            match start_datetime.date().cmp(&previous_date) {
+            match start_datetime.date_naive().cmp(&previous_date) {
                 Ordering::Equal => {
                     // Continued the streak
                     if !last_streak.games_ids.contains(&game_id_clone) {
                         last_streak.games_ids.push(game_id_clone);
                     }
-                    last_streak.streak.start_date = start_datetime.date();
+                    last_streak.streak.start_date = start_datetime.date_naive();
                     last_streak.streak.days += 1;
                 }
                 Ordering::Less => {
@@ -215,8 +215,8 @@ pub(super) fn fill_streaks(
                     streaks.push(GamesStreakDTO {
                         games_ids: vec![game_id_clone],
                         streak: StreakDTO {
-                            start_date: start_datetime.date(),
-                            end_date: end_datetime.date(),
+                            start_date: start_datetime.date_naive(),
+                            end_date: end_datetime.date_naive(),
                             days: 1,
                         },
                     });
@@ -234,8 +234,8 @@ pub(super) fn fill_streaks(
             streaks.push(GamesStreakDTO {
                 games_ids: vec![game_id_clone],
                 streak: StreakDTO {
-                    start_date: start_datetime.date(),
-                    end_date: end_datetime.date(),
+                    start_date: start_datetime.date_naive(),
+                    end_date: end_datetime.date_naive(),
                     days: 1,
                 },
             });

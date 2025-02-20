@@ -1,6 +1,6 @@
 use std::str::FromStr;
 
-use chrono::NaiveDateTime;
+use chrono::{DateTime, Utc};
 use sea_query::enum_def;
 use sqlx::FromRow;
 use uuid::Uuid;
@@ -16,8 +16,8 @@ pub struct Device {
     pub user_id: Uuid,
     pub name: String,
     pub icon_url: Option<String>,
-    pub added_datetime: NaiveDateTime,
-    pub updated_datetime: NaiveDateTime,
+    pub added_datetime: DateTime<Utc>,
+    pub updated_datetime: DateTime<Utc>,
 }
 
 impl TableIden for DeviceIden {

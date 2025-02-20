@@ -237,7 +237,7 @@ pub async fn post_game_finish(
 pub async fn delete_game_finish(
     game_finish_service: web::Data<GameFinishService>,
     path: web::Path<ItemId>,
-    body: web::Json<DateDTO>, // TODO Add status and device
+    body: web::Json<DateDTO>,
     logged_user: LoggedUser,
 ) -> impl Responder {
     let ItemId(id) = path.into_inner();

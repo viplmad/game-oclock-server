@@ -1,4 +1,4 @@
-use chrono::NaiveDateTime;
+use chrono::{DateTime, Utc};
 use sea_query::{
     Alias, Expr, Func, FunctionCall, Order, Query, QueryStatementWriter, SelectStatement,
     SimpleExpr,
@@ -77,8 +77,8 @@ pub fn select_all_first_by_user_id_and_game_id_in(
 
 fn select_all_game_with_log_by_start_datetime_gte_and_start_datetime_lte(
     user_id: &Uuid,
-    start_datetime: Option<NaiveDateTime>,
-    end_datetime: Option<NaiveDateTime>,
+    start_datetime: Option<DateTime<Utc>>,
+    end_datetime: Option<DateTime<Utc>>,
 ) -> SelectStatement {
     let mut select = game_query::select_all_group_by_id(user_id);
 
@@ -94,8 +94,8 @@ fn select_all_game_with_log_by_start_datetime_gte_and_start_datetime_lte(
 
 pub fn select_all_first_game_with_log_with_search_by_start_datetime_gte_and_start_datetime_lte_order_by_start_datetime_desc(
     user_id: &Uuid,
-    start_datetime: Option<NaiveDateTime>,
-    end_datetime: Option<NaiveDateTime>,
+    start_datetime: Option<DateTime<Utc>>,
+    end_datetime: Option<DateTime<Utc>>,
     mut search: GameSearch,
 ) -> Result<SearchQuery, SearchErrors> {
     let mut select = select_all_game_with_log_by_start_datetime_gte_and_start_datetime_lte(
@@ -130,8 +130,8 @@ pub fn select_all_first_game_with_log_with_search_by_start_datetime_gte_and_star
 
 pub fn select_all_last_game_with_log_with_search_by_start_datetime_gte_and_start_datetime_lte_order_by_start_datetime_desc(
     user_id: &Uuid,
-    start_datetime: Option<NaiveDateTime>,
-    end_datetime: Option<NaiveDateTime>,
+    start_datetime: Option<DateTime<Utc>>,
+    end_datetime: Option<DateTime<Utc>>,
     mut search: GameSearch,
 ) -> Result<SearchQuery, SearchErrors> {
     let mut select = select_all_game_with_log_by_start_datetime_gte_and_start_datetime_lte(
@@ -175,8 +175,8 @@ pub fn select_all_games_order_by_start_datetime_desc(user_id: &Uuid) -> SelectSt
 
 pub fn select_all_games_by_start_datetime_gte_and_start_datetime_lte_order_by_start_datetime_desc(
     user_id: &Uuid,
-    start_datetime: NaiveDateTime,
-    end_datetime: NaiveDateTime,
+    start_datetime: DateTime<Utc>,
+    end_datetime: DateTime<Utc>,
 ) -> SelectStatement {
     let mut select = select_all_games_order_by_start_datetime_desc(user_id);
 
@@ -187,8 +187,8 @@ pub fn select_all_games_by_start_datetime_gte_and_start_datetime_lte_order_by_st
 
 pub fn select_all_games_log_by_start_datetime_gte_and_start_datetime_lte_order_by_start_datetime_desc(
     user_id: &Uuid,
-    start_datetime: NaiveDateTime,
-    end_datetime: NaiveDateTime,
+    start_datetime: DateTime<Utc>,
+    end_datetime: DateTime<Utc>,
 ) -> impl QueryStatementWriter {
     let mut select =
         select_all_games_by_start_datetime_gte_and_start_datetime_lte_order_by_start_datetime_desc(
@@ -244,7 +244,7 @@ pub fn insert(game_log: &GameLog) -> impl QueryStatementWriter {
 pub fn delete_by_id(
     user_id: &Uuid,
     game_id: &Uuid,
-    start_datetime: NaiveDateTime,
+    start_datetime: DateTime<Utc>,
 ) -> impl QueryStatementWriter {
     let mut delete = Query::delete();
 
@@ -260,7 +260,7 @@ pub fn delete_by_id(
 pub fn exists_by_id(
     user_id: &Uuid,
     game_id: &Uuid,
-    start_datetime: NaiveDateTime,
+    start_datetime: DateTime<Utc>,
 ) -> impl QueryStatementWriter {
     let mut select = Query::select();
 
@@ -274,8 +274,8 @@ pub fn exists_by_id(
 
 pub fn exists_by_start_datetime_lt_or_end_datetime_gt(
     user_id: &Uuid,
-    end_datetime: NaiveDateTime,
-    start_datetime: NaiveDateTime,
+    end_datetime: DateTime<Utc>,
+    start_datetime: DateTime<Utc>,
 ) -> impl QueryStatementWriter {
     let mut select = Query::select();
 
@@ -321,8 +321,8 @@ fn from_and_where_user_id(select: &mut SelectStatement, user_id: &Uuid) {
 
 fn where_optional_start_datetime_gte_and_start_datetime_lte(
     select: &mut SelectStatement,
-    start_datetime: Option<NaiveDateTime>,
-    end_datetime: Option<NaiveDateTime>,
+    start_datetime: Option<DateTime<Utc>>,
+    end_datetime: Option<DateTime<Utc>>,
 ) {
     if let Some(start) = start_datetime {
         select.and_where(Expr::col((GameLogIden::Table, GameLogIden::StartDatetime)).gte(start));
@@ -335,8 +335,8 @@ fn where_optional_start_datetime_gte_and_start_datetime_lte(
 
 fn where_start_datetime_gte_and_start_datetime_lte(
     select: &mut SelectStatement,
-    start_datetime: NaiveDateTime,
-    end_datetime: NaiveDateTime,
+    start_datetime: DateTime<Utc>,
+    end_datetime: DateTime<Utc>,
 ) {
     select
         .and_where(Expr::col((GameLogIden::Table, GameLogIden::StartDatetime)).gte(start_datetime))

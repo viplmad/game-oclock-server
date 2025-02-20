@@ -1,6 +1,6 @@
 use std::future::Future;
 
-use chrono::{NaiveDate, NaiveDateTime};
+use chrono::{DateTime, NaiveDate, Utc};
 
 use crate::entities::PageResult;
 use crate::errors::{
@@ -204,7 +204,7 @@ pub(super) fn check_start_end(start_date: NaiveDate, end_date: NaiveDate) -> Res
 pub(super) fn optional_start_end_to_datetime(
     start_date: Option<NaiveDate>,
     end_date: Option<NaiveDate>,
-) -> (Option<NaiveDateTime>, Option<NaiveDateTime>) {
+) -> (Option<DateTime<Utc>>, Option<DateTime<Utc>>) {
     let start_datetime = start_date.map(crate::date_utils::date_at_start_of_day);
     let end_datetime = end_date.map(crate::date_utils::date_at_midnight);
     (start_datetime, end_datetime)
@@ -213,7 +213,7 @@ pub(super) fn optional_start_end_to_datetime(
 pub(super) fn start_end_to_datetime(
     start_date: NaiveDate,
     end_date: NaiveDate,
-) -> (NaiveDateTime, NaiveDateTime) {
+) -> (DateTime<Utc>, DateTime<Utc>) {
     let start_datetime = crate::date_utils::date_at_start_of_day(start_date);
     let end_datetime = crate::date_utils::date_at_midnight(end_date);
     (start_datetime, end_datetime)

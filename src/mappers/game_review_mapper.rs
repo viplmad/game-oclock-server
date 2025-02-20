@@ -1,6 +1,6 @@
 use std::collections::HashMap;
 
-use chrono::{NaiveDate, NaiveDateTime};
+use chrono::{DateTime, NaiveDate, Utc};
 
 use crate::entities::{GameWithFinish, GameWithLog};
 use crate::models::{
@@ -34,14 +34,14 @@ impl From<GameWithLog> for GamePlayedReviewDTO {
             },
             longest_session: LogDTO::default(),
             first_session: LogDTO {
-                start_datetime: NaiveDateTime::MAX,
-                end_datetime: NaiveDateTime::default(),
+                start_datetime: DateTime::<Utc>::MAX_UTC,
+                end_datetime: DateTime::default(),
                 device_id: None,
                 time: DurationDef::default(),
             },
             last_session: LogDTO {
-                start_datetime: NaiveDateTime::MIN,
-                end_datetime: NaiveDateTime::default(),
+                start_datetime: DateTime::<Utc>::MIN_UTC,
+                end_datetime: DateTime::default(),
                 device_id: None,
                 time: DurationDef::default(),
             },

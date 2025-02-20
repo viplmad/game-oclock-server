@@ -1,4 +1,4 @@
-use chrono::{Duration, NaiveDateTime};
+use chrono::{DateTime, Duration, Utc};
 use uuid::Uuid;
 
 use crate::entities::{GameLog, GameLogWithTime};
@@ -121,7 +121,7 @@ impl GameLogService {
         &self,
         user_id: &Uuid,
         game_id: &Uuid,
-        start_datetime: NaiveDateTime,
+        start_datetime: DateTime<Utc>,
     ) -> Result<(), ApiErrors> {
         self.game_service.exists_game(user_id, game_id).await?;
         self.exists_game_log(user_id, game_id, start_datetime)
@@ -138,7 +138,7 @@ impl GameLogService {
         &self,
         user_id: &Uuid,
         game_id: &Uuid,
-        start_datetime: NaiveDateTime,
+        start_datetime: DateTime<Utc>,
     ) -> Result<(), ApiErrors> {
         let exists_result = self
             .repository
@@ -149,12 +149,12 @@ impl GameLogService {
 }
 
 fn split_session_into_logs(
-    start_datetime: NaiveDateTime,
-    end_datetime: NaiveDateTime,
+    start_datetime: DateTime<Utc>,
+    end_datetime: DateTime<Utc>,
     device_id: Option<Uuid>,
 ) -> Vec<NewLogDTO> {
     let mut sessions: Vec<NewLogDTO> = vec![];
-    if start_datetime.date() == end_datetime.date() {
+    if start_datetime.date_naive() == end_datetime.date_naive() {
         // If session happens on the same day
         if start_datetime.time() != end_datetime.time() {
             // Avoid empty log -> return single session if span of time is valid
@@ -167,9 +167,9 @@ fn split_session_into_logs(
     } else {
         // If session spans differents day
         let mut temp_date = start_datetime;
-        while temp_date.date() < end_datetime.date() {
+        while temp_date.date_naive() < end_datetime.date_naive() {
             let next_day_at_start_of_day =
-                crate::date_utils::date_at_start_of_day(temp_date.date() + Duration::days(1));
+                crate::date_utils::date_at_start_of_day(temp_date.date_naive() + Duration::days(1));
             sessions.push(NewLogDTO {
                 start_datetime: temp_date,
                 end_datetime: next_day_at_start_of_day,
