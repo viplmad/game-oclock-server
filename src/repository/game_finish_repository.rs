@@ -6,7 +6,7 @@ use super::query::game_finish_query;
 use crate::entities::GameFinish;
 use crate::errors::RepositoryError;
 
-use super::helpers::{execute, execute_return_single, exists_id, fetch_all};
+use super::helpers::{execute, execute_return_single, exists_some, fetch_all};
 
 #[derive(Clone)]
 pub struct GameFinishRepository {
@@ -75,6 +75,6 @@ impl GameFinishRepository {
         date: NaiveDate,
     ) -> Result<bool, RepositoryError> {
         let query = game_finish_query::exists_by_id(user_id, game_id, date);
-        exists_id(&self.pool, query).await
+        exists_some(&self.pool, query).await
     }
 }

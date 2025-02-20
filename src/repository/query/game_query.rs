@@ -24,9 +24,8 @@ pub fn select_all_by_base_game_id(
     let mut select = Query::select();
 
     from_and_where_user_id(&mut select, user_id);
+    where_base_game_id(&mut select, base_game_id);
     add_fields(&mut select);
-    select
-        .and_where(Expr::col(GameIden::BaseGameId).eq(crate::uuid_utils::to_string(base_game_id)));
 
     select
 }
@@ -231,6 +230,19 @@ pub fn exists_by_id(user_id: &Uuid, id: &Uuid) -> impl QueryStatementWriter {
     select
 }
 
+pub fn exists_any_by_base_game_id(
+    user_id: &Uuid,
+    base_game_id: &Uuid,
+) -> impl QueryStatementWriter {
+    let mut select = Query::select();
+
+    from_and_where_user_id(&mut select, user_id);
+    where_base_game_id(&mut select, base_game_id);
+    add_id_field(&mut select);
+
+    select
+}
+
 pub fn exists_by_title_and_edition(user_id: &Uuid, title: &str, edition: &str) -> SelectStatement {
     let mut select = Query::select();
 
@@ -265,6 +277,13 @@ fn from_and_where_user_id(select: &mut SelectStatement, user_id: &Uuid) {
 fn where_id(select: &mut SelectStatement, id: &Uuid) {
     select
         .and_where(Expr::col((GameIden::Table, GameIden::Id)).eq(crate::uuid_utils::to_string(id)));
+}
+
+fn where_base_game_id(select: &mut SelectStatement, base_game_id: &Uuid) {
+    select.and_where(
+        Expr::col((GameIden::Table, GameIden::BaseGameId))
+            .eq(crate::uuid_utils::to_string(base_game_id)),
+    );
 }
 
 fn join_user_info(select: &mut SelectStatement) {

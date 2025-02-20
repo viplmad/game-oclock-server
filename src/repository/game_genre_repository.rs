@@ -5,7 +5,7 @@ use super::query::game_genre_query;
 use crate::entities::{GameGenre, GameWithUserInfo, Genre};
 use crate::errors::RepositoryError;
 
-use super::helpers::{execute, exists_id, fetch_all};
+use super::helpers::{execute, exists_some, fetch_all};
 
 #[derive(Clone)]
 pub struct GameGenreRepository {
@@ -59,6 +59,6 @@ impl GameGenreRepository {
         genre_id: &Uuid,
     ) -> Result<bool, RepositoryError> {
         let query = game_genre_query::exists_by_id(user_id, game_id, genre_id);
-        exists_id(&self.pool, query).await
+        exists_some(&self.pool, query).await
     }
 }

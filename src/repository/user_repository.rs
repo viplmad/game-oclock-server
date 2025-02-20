@@ -5,7 +5,7 @@ use super::query::user_query;
 use crate::entities::{PageResult, User, UserSearch};
 use crate::errors::{RepositoryError, SearchErrors};
 
-use super::helpers::{execute, exists_id, fetch_all_search, fetch_optional};
+use super::helpers::{execute, exists_some, fetch_all_search, fetch_optional};
 
 #[derive(Clone)]
 pub struct UserRepository {
@@ -68,12 +68,12 @@ impl UserRepository {
 
     pub async fn exists_by_id(&self, id: &Uuid) -> Result<bool, RepositoryError> {
         let query = user_query::exists_by_id(id);
-        exists_id(&self.pool, query).await
+        exists_some(&self.pool, query).await
     }
 
     pub async fn exists_by_username(&self, username: &str) -> Result<bool, RepositoryError> {
         let query = user_query::exists_by_username(username);
-        exists_id(&self.pool, query).await
+        exists_some(&self.pool, query).await
     }
 
     pub async fn exists_by_username_except_id(
@@ -82,7 +82,7 @@ impl UserRepository {
         excluded_id: &Uuid,
     ) -> Result<bool, RepositoryError> {
         let query = user_query::exists_by_username_and_id_not(username, excluded_id);
-        exists_id(&self.pool, query).await
+        exists_some(&self.pool, query).await
     }
 
     pub async fn exists_with_admin_except_id(
@@ -90,16 +90,16 @@ impl UserRepository {
         excluded_id: &Uuid,
     ) -> Result<bool, RepositoryError> {
         let query = user_query::exists_by_admin_and_id_not(excluded_id);
-        exists_id(&self.pool, query).await
+        exists_some(&self.pool, query).await
     }
 
     pub async fn exists_by_id_and_admin(&self, id: &Uuid) -> Result<bool, RepositoryError> {
         let query = user_query::exists_by_admin_and_id(id);
-        exists_id(&self.pool, query).await
+        exists_some(&self.pool, query).await
     }
 
     pub async fn exists_with_admin(&self) -> Result<bool, RepositoryError> {
         let query = user_query::exists_by_admin();
-        exists_id(&self.pool, query).await
+        exists_some(&self.pool, query).await
     }
 }

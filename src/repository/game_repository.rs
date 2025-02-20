@@ -6,7 +6,7 @@ use crate::entities::{Game, GameSearch, GameUserInfo, GameWithUserInfo, PageResu
 use crate::errors::{RepositoryError, SearchErrors};
 
 use super::helpers::{
-    begin_transaction, commit_transaction, execute, exists_id, fetch_all, fetch_all_search,
+    begin_transaction, commit_transaction, execute, exists_some, fetch_all, fetch_all_search,
     fetch_optional,
 };
 
@@ -101,7 +101,16 @@ impl GameRepository {
 
     pub async fn exists_by_id(&self, user_id: &Uuid, id: &Uuid) -> Result<bool, RepositoryError> {
         let query = game_query::exists_by_id(user_id, id);
-        exists_id(&self.pool, query).await
+        exists_some(&self.pool, query).await
+    }
+
+    pub async fn exists_any_by_base_game_id(
+        &self,
+        user_id: &Uuid,
+        base_game_id: &Uuid,
+    ) -> Result<bool, RepositoryError> {
+        let query = game_query::exists_any_by_base_game_id(user_id, base_game_id);
+        exists_some(&self.pool, query).await
     }
 
     pub async fn exists_by_title_and_edition(
@@ -111,7 +120,7 @@ impl GameRepository {
         edition: &str,
     ) -> Result<bool, RepositoryError> {
         let query = game_query::exists_by_title_and_edition(user_id, title, edition);
-        exists_id(&self.pool, query).await
+        exists_some(&self.pool, query).await
     }
 
     pub async fn exists_by_title_and_edition_except_id(
@@ -127,6 +136,6 @@ impl GameRepository {
             edition,
             excluded_id,
         );
-        exists_id(&self.pool, query).await
+        exists_some(&self.pool, query).await
     }
 }

@@ -5,7 +5,7 @@ use super::query::game_available_query;
 use crate::entities::{GameAvailable, GameWithUserInfoWithDate, LocationWithDate};
 use crate::errors::RepositoryError;
 
-use super::helpers::{execute, exists_id, fetch_all};
+use super::helpers::{execute, exists_some, fetch_all};
 
 #[derive(Clone)]
 pub struct GameAvailableRepository {
@@ -63,7 +63,7 @@ impl GameAvailableRepository {
         location_id: &Uuid,
     ) -> Result<bool, RepositoryError> {
         let query = game_available_query::exists_by_id(user_id, game_id, location_id);
-        exists_id(&self.pool, query).await
+        exists_some(&self.pool, query).await
     }
 
     pub async fn exists_locations_with_game(
@@ -72,6 +72,6 @@ impl GameAvailableRepository {
         game_id: &Uuid,
     ) -> Result<bool, RepositoryError> {
         let query = game_available_query::exists_locations_by_game_id(user_id, game_id);
-        exists_id(&self.pool, query).await
+        exists_some(&self.pool, query).await
     }
 }

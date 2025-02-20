@@ -8,7 +8,7 @@ use crate::errors::RepositoryError;
 use crate::models::DurationDef;
 
 use super::helpers::{
-    begin_transaction, commit_transaction, execute, execute_return_single, exists_id, fetch_all,
+    begin_transaction, commit_transaction, execute, execute_return_single, exists_some, fetch_all,
 };
 
 #[derive(Clone)]
@@ -91,7 +91,7 @@ impl GameLogRepository {
             end_datetime,
             start_datetime,
         );
-        exists_id(&self.pool, query).await
+        exists_some(&self.pool, query).await
     }
 
     pub async fn exists_by_id(
@@ -101,6 +101,6 @@ impl GameLogRepository {
         start_datetime: NaiveDateTime,
     ) -> Result<bool, RepositoryError> {
         let query = game_log_query::exists_by_id(user_id, game_id, start_datetime);
-        exists_id(&self.pool, query).await
+        exists_some(&self.pool, query).await
     }
 }

@@ -8,7 +8,8 @@ use crate::repository::GameRepository;
 use super::helpers::{
     create_merged, handle_action_result, handle_already_exists_result,
     handle_get_list_paged_result, handle_get_list_result, handle_get_result,
-    handle_not_found_result, handle_query_mapping, handle_update_result, update_merged,
+    handle_not_found_result, handle_query_mapping, handle_result, handle_update_result,
+    update_merged,
 };
 use super::GameAvailableService;
 
@@ -164,19 +165,43 @@ impl GameService {
     ) -> Result<(), ApiErrors> {
         self.exists_game(user_id, game_id).await?;
 
-        // TODO
-        // check dlc is not already in other base_game
-        // check game to set as base_game is not a dlc
+        if let Some(id) = &base_game_id {
+            // Set base game
+            if game_id == id {
+                return Err(ApiErrors::InvalidParameter(String::from(
+                    "Game and base game cannot be the same",
+                )));
+            }
 
-        if let Some(game_id) = &base_game_id {
-            self.exists_game(user_id, game_id).await?;
+            let base_game = self.get_game(user_id, id).await?;
+            if base_game.base_game_id.is_some() {
+                return Err(ApiErrors::InvalidParameter(String::from(
+                    "Base game cannot be itself a dlc of another game",
+                )));
+            }
+
+            let has_dlcs = self.has_game_dlcs(user_id, game_id).await?;
+            if has_dlcs {
+                return Err(ApiErrors::InvalidParameter(String::from(
+                    "Game cannot have dlcs",
+                )));
+            }
         }
+        // else unset base game
 
         let update_result = self
             .repository
             .update_base_game_id(user_id, game_id, base_game_id)
             .await;
         handle_action_result::<GameDTO>(update_result)
+    }
+
+    async fn has_game_dlcs(&self, user_id: &Uuid, game_id: &Uuid) -> Result<bool, ApiErrors> {
+        let exists_result = self
+            .repository
+            .exists_any_by_base_game_id(user_id, game_id)
+            .await;
+        handle_result::<_, GameDTO>(exists_result)
     }
 }
 

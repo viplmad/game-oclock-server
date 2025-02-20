@@ -156,7 +156,7 @@ where
         .map_err(SearchErrors::Repository)
 }
 
-pub(super) async fn exists_id<'c, X>(
+pub(super) async fn exists_some<'c, X>(
     executor: X,
     query: impl QueryStatementWriter,
 ) -> Result<bool, RepositoryError>

@@ -5,7 +5,7 @@ use super::query::game_tag_query;
 use crate::entities::{GameTag, GameWithUserInfo, Tag};
 use crate::errors::RepositoryError;
 
-use super::helpers::{execute, exists_id, fetch_all};
+use super::helpers::{execute, exists_some, fetch_all};
 
 #[derive(Clone)]
 pub struct GameTagRepository {
@@ -59,6 +59,6 @@ impl GameTagRepository {
         tag_id: &Uuid,
     ) -> Result<bool, RepositoryError> {
         let query = game_tag_query::exists_by_id(user_id, game_id, tag_id);
-        exists_id(&self.pool, query).await
+        exists_some(&self.pool, query).await
     }
 }

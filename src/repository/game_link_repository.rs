@@ -5,7 +5,7 @@ use super::query::game_link_query;
 use crate::entities::GameLink;
 use crate::errors::RepositoryError;
 
-use super::helpers::{execute, exists_id, fetch_all};
+use super::helpers::{execute, exists_some, fetch_all};
 
 #[derive(Clone)]
 pub struct GameLinkRepository {
@@ -50,7 +50,7 @@ impl GameLinkRepository {
         url: &str,
     ) -> Result<bool, RepositoryError> {
         let query = game_link_query::exists_by_id(user_id, game_id, url);
-        exists_id(&self.pool, query).await
+        exists_some(&self.pool, query).await
     }
 }
 

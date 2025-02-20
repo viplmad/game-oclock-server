@@ -5,7 +5,7 @@ use super::query::tag_query;
 use crate::entities::{PageResult, Tag, TagSearch};
 use crate::errors::{RepositoryError, SearchErrors};
 
-use super::helpers::{execute, exists_id, fetch_all_search, fetch_optional};
+use super::helpers::{execute, exists_some, fetch_all_search, fetch_optional};
 
 #[derive(Clone)]
 pub struct TagRepository {
@@ -54,7 +54,7 @@ impl TagRepository {
 
     pub async fn exists_by_id(&self, user_id: &Uuid, id: &Uuid) -> Result<bool, RepositoryError> {
         let query = tag_query::exists_by_id(user_id, id);
-        exists_id(&self.pool, query).await
+        exists_some(&self.pool, query).await
     }
 
     pub async fn exists_by_name(
@@ -63,7 +63,7 @@ impl TagRepository {
         name: &str,
     ) -> Result<bool, RepositoryError> {
         let query = tag_query::exists_by_name(user_id, name);
-        exists_id(&self.pool, query).await
+        exists_some(&self.pool, query).await
     }
 
     pub async fn exists_by_name_except_id(
@@ -73,6 +73,6 @@ impl TagRepository {
         excluded_id: &Uuid,
     ) -> Result<bool, RepositoryError> {
         let query = tag_query::exists_by_name_and_id_not(user_id, name, excluded_id);
-        exists_id(&self.pool, query).await
+        exists_some(&self.pool, query).await
     }
 }

@@ -5,7 +5,7 @@ use super::query::genre_query;
 use crate::entities::{Genre, GenreSearch, PageResult};
 use crate::errors::{RepositoryError, SearchErrors};
 
-use super::helpers::{execute, exists_id, fetch_all_search, fetch_optional};
+use super::helpers::{execute, exists_some, fetch_all_search, fetch_optional};
 
 #[derive(Clone)]
 pub struct GenreRepository {
@@ -54,7 +54,7 @@ impl GenreRepository {
 
     pub async fn exists_by_id(&self, user_id: &Uuid, id: &Uuid) -> Result<bool, RepositoryError> {
         let query = genre_query::exists_by_id(user_id, id);
-        exists_id(&self.pool, query).await
+        exists_some(&self.pool, query).await
     }
 
     pub async fn exists_by_name(
@@ -63,7 +63,7 @@ impl GenreRepository {
         name: &str,
     ) -> Result<bool, RepositoryError> {
         let query = genre_query::exists_by_name(user_id, name);
-        exists_id(&self.pool, query).await
+        exists_some(&self.pool, query).await
     }
 
     pub async fn exists_by_name_except_id(
@@ -73,6 +73,6 @@ impl GenreRepository {
         excluded_id: &Uuid,
     ) -> Result<bool, RepositoryError> {
         let query = genre_query::exists_by_name_and_id_not(user_id, name, excluded_id);
-        exists_id(&self.pool, query).await
+        exists_some(&self.pool, query).await
     }
 }
