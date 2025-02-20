@@ -39,7 +39,9 @@ pub async fn check_admin_user(user_service: &UserService) {
                 .await
                 .expect("Could not promote admin user");
 
-            log::info!("Database admin not present, created 'admin' user with default 'admin' password. PLEASE CHANGE PASSWORD.");
+            log::info!(
+                "Database admin not present, created 'admin' user with default 'admin' password. PLEASE CHANGE PASSWORD."
+            );
         }
     }
 }

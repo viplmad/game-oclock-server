@@ -6,8 +6,8 @@ use sea_query::{
 use uuid::Uuid;
 
 use crate::entities::{
-    GameIden, GameLog, GameLogIden, GameSearch, SearchQuery, LOG_DEVICE_ID_ALIAS,
-    LOG_END_DATETIME_ALIAS, LOG_START_DATETIME_ALIAS, LOG_TIME_ALIAS, QUERY_TIME_ALIAS,
+    GameIden, GameLog, GameLogIden, GameSearch, LOG_DEVICE_ID_ALIAS, LOG_END_DATETIME_ALIAS,
+    LOG_START_DATETIME_ALIAS, LOG_TIME_ALIAS, QUERY_TIME_ALIAS, SearchQuery,
 };
 use crate::errors::SearchErrors;
 

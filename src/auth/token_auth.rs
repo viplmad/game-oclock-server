@@ -1,6 +1,6 @@
-use actix_web::{dev::ServiceRequest, Error};
-use actix_web_httpauth::extractors::bearer::{BearerAuth, Config};
+use actix_web::{Error, dev::ServiceRequest};
 use actix_web_httpauth::extractors::AuthenticationError;
+use actix_web_httpauth::extractors::bearer::{BearerAuth, Config};
 use jsonwebtoken::{Algorithm, DecodingKey, EncodingKey, Header, TokenData, Validation};
 use uuid::Uuid;
 

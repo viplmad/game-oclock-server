@@ -6,7 +6,7 @@ use game_oclock_server::{
     migrations, openapi, providers::SqlxPostgresPoolBuilder, repository::*, routes, services::*,
 };
 
-use actix_web::{web, App, HttpServer};
+use actix_web::{App, HttpServer, web};
 use jsonwebtoken::{DecodingKey, EncodingKey};
 use utoipa_swagger_ui::{Config, SwaggerUi};
 

@@ -1,6 +1,6 @@
 use utoipa::{
-    openapi::security::{Flow, OAuth2, Password, Scopes, SecurityScheme},
     Modify, OpenApi,
+    openapi::security::{Flow, OAuth2, Password, Scopes, SecurityScheme},
 };
 
 use crate::{models, routes};

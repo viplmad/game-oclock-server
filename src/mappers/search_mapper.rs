@@ -7,7 +7,7 @@ use crate::entities::{
     FieldIden, FieldSearchValue, FieldSearchValues, FieldType, FieldValue, Filter, FilterOperator,
     Search, Sort, TableIden,
 };
-use crate::errors::{error_message_builder, MappingError};
+use crate::errors::{MappingError, error_message_builder};
 use crate::models::{
     ChainOperatorType, FilterDTO, GameStatus, OperatorType, OrderType, SearchDTO, SearchValue,
     SortDTO,

@@ -5,11 +5,11 @@ use crate::errors::ApiErrors;
 use crate::models::{LinkDTO, Merge, NewLinkDTO};
 use crate::repository::GameLinkRepository;
 
+use super::GameService;
 use super::helpers::{
     handle_action_result, handle_already_exists_result, handle_get_list_result,
     handle_not_found_result,
 };
-use super::GameService;
 
 #[derive(Clone)]
 pub struct GameLinkService {

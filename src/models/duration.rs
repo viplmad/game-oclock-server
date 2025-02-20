@@ -3,7 +3,7 @@ use std::{
     str::FromStr,
 };
 
-use serde::{de::Visitor, Deserialize, Serialize};
+use serde::{Deserialize, Serialize, de::Visitor};
 
 use crate::errors::error_message_builder;
 

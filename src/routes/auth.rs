@@ -1,4 +1,4 @@
-use actix_web::{post, web, Responder};
+use actix_web::{Responder, post, web};
 use jsonwebtoken::{DecodingKey, EncodingKey};
 
 use crate::models::{ErrorMessage, TokenRequest, TokenResponse};

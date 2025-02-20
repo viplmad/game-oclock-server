@@ -2,7 +2,7 @@ use actix_web::HttpResponse;
 use serde::Serialize;
 use uuid::Uuid;
 
-use crate::errors::{forbidden_error, ToError};
+use crate::errors::{ToError, forbidden_error};
 use crate::services::UserService;
 
 pub(super) fn handle_get_result(

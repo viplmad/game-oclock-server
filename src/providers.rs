@@ -1,6 +1,6 @@
 use sqlx::{
-    postgres::{PgConnectOptions, PgPoolOptions, PgSslMode},
     PgPool,
+    postgres::{PgConnectOptions, PgPoolOptions, PgSslMode},
 };
 
 /// Connection options to Sqlx Postgres.

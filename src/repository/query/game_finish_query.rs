@@ -3,8 +3,8 @@ use sea_query::{Alias, Expr, Order, Query, QueryStatementWriter, SelectStatement
 use uuid::Uuid;
 
 use crate::entities::{
-    GameFinish, GameFinishIden, GameIden, GameSearch, SearchQuery, FINISH_DATE_ALIAS,
-    FINISH_DEVICE_ID_ALIAS, FINISH_STATUS_ALIAS,
+    FINISH_DATE_ALIAS, FINISH_DEVICE_ID_ALIAS, FINISH_STATUS_ALIAS, GameFinish, GameFinishIden,
+    GameIden, GameSearch, SearchQuery,
 };
 use crate::errors::SearchErrors;
 

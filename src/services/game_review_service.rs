@@ -11,7 +11,7 @@ use crate::models::{
 };
 
 use super::{
-    logs_utils, GameFinishService, GameLogService, GameWithFinishService, GameWithLogService,
+    GameFinishService, GameLogService, GameWithFinishService, GameWithLogService, logs_utils,
 };
 
 #[derive(Clone)]

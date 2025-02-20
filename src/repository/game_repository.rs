@@ -49,25 +49,35 @@ impl GameRepository {
         fetch_all_search(&self.pool, search_query).await
     }
 
-    pub async fn create(&self, game: &GameWithUserInfo) -> Result<(), RepositoryError> {
+    pub async fn create(
+        &self,
+        game_with_user_info: &GameWithUserInfo,
+    ) -> Result<(), RepositoryError> {
         let mut transaction = begin_transaction(&self.pool).await?;
 
-        let query = game_query::insert(&Game::from(game));
+        let game = &Game::from(game_with_user_info);
+        let query = game_query::insert(game);
         execute(&mut *transaction, query).await?;
 
-        let user_info_query = game_query::insert_user_info(&GameUserInfo::from(game));
+        let game_user_info = &GameUserInfo::from(game_with_user_info);
+        let user_info_query = game_query::insert_user_info(game_user_info);
         execute(&mut *transaction, user_info_query).await?;
 
         commit_transaction(transaction).await
     }
 
-    pub async fn update(&self, game: &GameWithUserInfo) -> Result<(), RepositoryError> {
+    pub async fn update(
+        &self,
+        game_with_user_info: &GameWithUserInfo,
+    ) -> Result<(), RepositoryError> {
         let mut transaction = begin_transaction(&self.pool).await?;
 
-        let query = game_query::update_by_id(&Game::from(game));
+        let game = &Game::from(game_with_user_info);
+        let query = game_query::update_by_id(game);
         execute(&mut *transaction, query).await?;
 
-        let user_info_query = game_query::update_user_info_by_id(&GameUserInfo::from(game));
+        let game_user_info = &GameUserInfo::from(game_with_user_info);
+        let user_info_query = game_query::update_user_info_by_id(game_user_info);
         execute(&mut *transaction, user_info_query).await?;
 
         commit_transaction(transaction).await?;

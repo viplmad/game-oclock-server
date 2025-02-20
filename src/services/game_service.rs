@@ -1,17 +1,17 @@
 use uuid::Uuid;
 
 use crate::entities::{GameSearch, GameWithUserInfo};
-use crate::errors::{error_message_builder, ApiErrors};
+use crate::errors::{ApiErrors, error_message_builder};
 use crate::models::{GameDTO, GamePageResult, GameStatus, NewGameDTO, SearchDTO};
 use crate::repository::GameRepository;
 
+use super::GameAvailableService;
 use super::helpers::{
     create_merged, handle_action_result, handle_already_exists_result,
     handle_get_list_paged_result, handle_get_list_result, handle_get_result,
     handle_not_found_result, handle_query_mapping, handle_result, handle_update_result,
     update_merged,
 };
-use super::GameAvailableService;
 
 #[derive(Clone)]
 pub struct GameService {

@@ -1,5 +1,5 @@
 use chrono::NaiveDateTime;
-use sqlx::{postgres::types::PgInterval, PgPool};
+use sqlx::{PgPool, postgres::types::PgInterval};
 use uuid::Uuid;
 
 use super::query::game_log_query;

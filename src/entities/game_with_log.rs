@@ -1,5 +1,5 @@
 use chrono::{NaiveDate, NaiveDateTime};
-use sqlx::{postgres::types::PgInterval, FromRow};
+use sqlx::{FromRow, postgres::types::PgInterval};
 use uuid::Uuid;
 
 pub const LOG_START_DATETIME_ALIAS: &str = "log_start_datetime";

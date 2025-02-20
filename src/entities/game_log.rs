@@ -1,6 +1,6 @@
 use chrono::NaiveDateTime;
 use sea_query::enum_def;
-use sqlx::{postgres::types::PgInterval, FromRow};
+use sqlx::{FromRow, postgres::types::PgInterval};
 use uuid::Uuid;
 
 use super::TableIden;

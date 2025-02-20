@@ -4,7 +4,7 @@ use chrono::{NaiveDate, NaiveDateTime};
 
 use crate::entities::PageResult;
 use crate::errors::{
-    error_message_builder, ApiErrors, MappingError, RepositoryError, SearchErrors,
+    ApiErrors, MappingError, RepositoryError, SearchErrors, error_message_builder,
 };
 use crate::models::{FilterDTO, Merge, ModelInfo, PageResultDTO, SearchDTO};
 
