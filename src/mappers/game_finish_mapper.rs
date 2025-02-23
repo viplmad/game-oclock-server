@@ -6,7 +6,7 @@ use crate::models::{FinishDTO, GameStatus};
 impl From<GameFinish> for FinishDTO {
     fn from(finish: GameFinish) -> Self {
         Self {
-            date: finish.date,
+            datetime: finish.datetime,
             status: GameStatus::try_from(finish.status).expect("Status is not within valid range"),
             device_id: finish.device_id,
         }
@@ -18,7 +18,7 @@ impl From<FinishDTO> for GameFinish {
         Self {
             user_id: Uuid::default(),
             game_id: Uuid::default(),
-            date: finish.date,
+            datetime: finish.datetime,
             status: i16::from(finish.status),
             device_id: finish.device_id,
         }
@@ -28,7 +28,7 @@ impl From<FinishDTO> for GameFinish {
 impl From<&GameWithFinish> for FinishDTO {
     fn from(game: &GameWithFinish) -> Self {
         Self {
-            date: game.finish_date,
+            datetime: game.finish_datetime,
             status: GameStatus::try_from(game.finish_status)
                 .expect("Status is not within valid range"),
             device_id: game.finish_device_id,

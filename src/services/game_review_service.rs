@@ -115,8 +115,6 @@ fn build_played_review(
         let log = LogDTO::from(&game_with_log);
         let start_datetime = log.start_datetime;
         let end_datetime = log.end_datetime;
-        let device_id = log.device_id;
-        let time = log.time;
 
         // Fill global streaks
         logs_utils::fill_streaks(&mut total_streaks, &game_id, start_datetime, end_datetime);
@@ -131,7 +129,7 @@ fn build_played_review(
             map.insert(game_id.clone(), new_game);
         }
         let game = map.get_mut(&game_id).unwrap(); // Safe unwrap: already checked the key is contained.
-        fill_played_game_review(game, start_datetime, end_datetime, device_id, time);
+        fill_played_game_review(game, log);
     }
 
     // Fill first played
@@ -281,16 +279,13 @@ fn build_finished_review(
         let game_id = game_with_finish.id;
 
         let finish = FinishDTO::from(&game_with_finish);
-        let date = finish.date;
-        let status = finish.status;
-        let device_id = finish.device_id;
 
         if !map.contains_key(&game_id) {
             let new_game = GameFinishedReviewDTO::from(game_with_finish);
             map.insert(game_id.clone(), new_game);
         }
         let game = map.get_mut(&game_id).unwrap(); // Safe unwrap: already checked the key is contained.
-        fill_finished_game_review(game, date, status, device_id);
+        fill_finished_game_review(game, finish);
     }
 
     // Fill first played
@@ -298,12 +293,12 @@ fn build_finished_review(
         let game_id = first_finish.game_id;
 
         let finish = FinishDTO::from(first_finish);
-        let first_finish_date = finish.date;
+        let first_finish_datetime = finish.datetime;
 
         let game = map.get_mut(&game_id).unwrap(); // Safe unwrap: already checked the key is contained.
 
         if let Some(finish_date) = game.finishes.last() {
-            game.first_finished = first_finish_date == finish_date.date.clone();
+            game.first_finished = first_finish_datetime == finish_date.datetime.clone();
         }
     }
 
@@ -316,7 +311,7 @@ fn build_finished_review(
         user_id: Uuid::default(),
         game_id: Uuid::default(),
         finish: FinishDTO {
-            date: NaiveDate::MAX,
+            datetime: DateTime::<Utc>::MAX_UTC,
             status: GameStatus::LowPriority,
             device_id: None,
         },
@@ -325,7 +320,7 @@ fn build_finished_review(
         user_id: Uuid::default(),
         game_id: Uuid::default(),
         finish: FinishDTO {
-            date: NaiveDate::MIN,
+            datetime: DateTime::<Utc>::MIN_UTC,
             status: GameStatus::LowPriority,
             device_id: None,
         },
@@ -471,13 +466,13 @@ fn get_first_finish(
     user_id: &Uuid,
     game_id: &Uuid,
 ) -> Option<GameFinishDTO> {
-    let first_finish_date = first_finish.date;
-    if first_finish_date < current_first_finish.finish.date {
+    let first_finish_datetime = first_finish.datetime;
+    if first_finish_datetime < current_first_finish.finish.datetime {
         return Some(GameFinishDTO {
             user_id: user_id.clone(),
             game_id: game_id.clone(),
             finish: FinishDTO {
-                date: first_finish_date,
+                datetime: first_finish_datetime,
                 status: first_finish.status.clone(),
                 device_id: first_finish.device_id,
             },
@@ -492,13 +487,13 @@ fn get_last_finish(
     user_id: &Uuid,
     game_id: &Uuid,
 ) -> Option<GameFinishDTO> {
-    let last_finish_date = last_finish.date;
-    if last_finish_date > current_last_finish.finish.date {
+    let last_finish_datetime = last_finish.datetime;
+    if last_finish_datetime > current_last_finish.finish.datetime {
         return Some(GameFinishDTO {
             user_id: user_id.clone(),
             game_id: game_id.clone(),
             finish: FinishDTO {
-                date: last_finish_date,
+                datetime: last_finish_datetime,
                 status: last_finish.status.clone(),
                 device_id: last_finish.device_id,
             },
@@ -507,42 +502,38 @@ fn get_last_finish(
     None
 }
 
-fn fill_played_game_review(
-    game: &mut GamePlayedReviewDTO,
-    start_datetime: DateTime<Utc>,
-    end_datetime: DateTime<Utc>, // TODO Pass object
-    device_id: Option<Uuid>,
-    time: DurationDef,
-) {
+fn fill_played_game_review(game: &mut GamePlayedReviewDTO, log: LogDTO) {
     // Fill total time
-    game.total_time = DurationDef::microseconds(game.total_time.micros + time.micros);
+    game.total_time = DurationDef::microseconds(game.total_time.micros + log.time.micros);
     logs_utils::fill_total_time_by_month(
         &mut game.total_time_by_month,
-        start_datetime,
-        time.clone(),
+        log.start_datetime,
+        log.time.clone(),
     );
-    logs_utils::fill_total_time_by_week(&mut game.total_time_by_week, start_datetime, time.clone());
+    logs_utils::fill_total_time_by_week(
+        &mut game.total_time_by_week,
+        log.start_datetime,
+        log.time.clone(),
+    );
     logs_utils::fill_total_time_by_weekday(
         &mut game.total_time_by_weekday,
-        start_datetime,
-        time.clone(),
+        log.start_datetime,
+        log.time.clone(),
     );
-    logs_utils::fill_total_time_by_hour(&mut game.total_time_by_hour, start_datetime, end_datetime);
+    logs_utils::fill_total_time_by_hour(
+        &mut game.total_time_by_hour,
+        log.start_datetime,
+        log.end_datetime,
+    );
 
     // Fill streaks
-    logs_utils::fill_game_streaks(&mut game.streaks, start_datetime, end_datetime);
+    logs_utils::fill_game_streaks(&mut game.streaks, log.start_datetime, log.end_datetime);
 
     // Found longer streak
     fill_longest_game_streak(game);
 
     // Fill sessions
-    logs_utils::fill_game_sessions(
-        &mut game.sessions,
-        start_datetime,
-        end_datetime,
-        device_id,
-        time.clone(),
-    );
+    logs_utils::fill_game_sessions(&mut game.sessions, log);
     game.total_sessions =
         u32::try_from(game.sessions.len()).expect("Count is not within valid range");
 
@@ -550,34 +541,16 @@ fn fill_played_game_review(
     fill_longest_first_last_game_session(game);
 }
 
-fn fill_finished_game_review(
-    game: &mut GameFinishedReviewDTO,
-    date: NaiveDate, // TODO Pass object
-    status: GameStatus,
-    device_id: Option<Uuid>,
-) {
+fn fill_finished_game_review(game: &mut GameFinishedReviewDTO, finish: FinishDTO) {
     // Fill total finished
-    logs_utils::fill_total_finished_by_month(&mut game.total_finished_grouped, date);
+    logs_utils::fill_total_finished_by_month(&mut game.total_finished_grouped, finish.datetime);
 
     // Fill finishes
-    logs_utils::fill_game_finishes(&mut game.finishes, date, status.clone(), device_id);
+    logs_utils::fill_game_finishes(&mut game.finishes, finish);
     game.total_finished =
         u32::try_from(game.finishes.len()).expect("Count is not within valid range");
 
-    if date < game.first_finish.date {
-        game.first_finish = FinishDTO {
-            date,
-            status: status.clone(),
-            device_id: device_id.clone(),
-        };
-    }
-    if date > game.last_finish.date {
-        game.last_finish = FinishDTO {
-            date,
-            status: status.clone(),
-            device_id: device_id.clone(),
-        };
-    }
+    fill_first_last_game_finish(game);
 }
 
 fn fill_longest_game_streak(game: &mut GamePlayedReviewDTO) {
@@ -622,6 +595,26 @@ fn fill_longest_first_last_game_session(game: &mut GamePlayedReviewDTO) {
                 device_id: last_session.device_id.clone(),
                 time: last_session_time.clone(),
             }
+        }
+    }
+}
+
+fn fill_first_last_game_finish(game: &mut GameFinishedReviewDTO) {
+    if let Some(last_finish) = game.finishes.last() {
+        let last_finish_datetime = last_finish.datetime;
+        if last_finish_datetime <= game.first_finish.datetime {
+            game.first_finish = FinishDTO {
+                datetime: last_finish_datetime,
+                status: last_finish.status.clone(),
+                device_id: last_finish.device_id.clone(),
+            };
+        }
+        if last_finish_datetime >= game.last_finish.datetime {
+            game.last_finish = FinishDTO {
+                datetime: last_finish_datetime,
+                status: last_finish.status.clone(),
+                device_id: last_finish.device_id.clone(),
+            };
         }
     }
 }

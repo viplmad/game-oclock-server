@@ -79,12 +79,12 @@ impl From<GameWithFinish> for GameFinishedReviewDTO {
             total_finished_grouped: HashMap::<u32, u32>::new(),
             first_finished: false,
             first_finish: FinishDTO {
-                date: NaiveDate::MAX,
+                datetime: DateTime::<Utc>::MAX_UTC,
                 status: GameStatus::LowPriority,
                 device_id: None,
             },
             last_finish: FinishDTO {
-                date: NaiveDate::MIN,
+                datetime: DateTime::<Utc>::MIN_UTC,
                 status: GameStatus::LowPriority,
                 device_id: None,
             },

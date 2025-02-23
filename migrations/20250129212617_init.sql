@@ -41,10 +41,10 @@ CREATE TABLE "Game" (
 CREATE TABLE "GameFinish" (
 	user_id uuid NOT NULL,
 	game_id uuid NOT NULL,
-	date date NOT NULL,
+	datetime timestamp NOT NULL,
 	status smallint NOT NULL,
 	device_id uuid NULL,
-	CONSTRAINT "GameFinish_pk" PRIMARY KEY (user_id, game_id, date),
+	CONSTRAINT "GameFinish_pk" PRIMARY KEY (user_id, game_id, datetime),
 	CONSTRAINT "GameFinish_fk_User" FOREIGN KEY (user_id) REFERENCES "User"(id) ON DELETE CASCADE,
 	CONSTRAINT "GameFinish_fk_Game" FOREIGN KEY (game_id) REFERENCES "Game"(id) ON DELETE CASCADE,
 	CONSTRAINT "GameFinish_fk_Device" FOREIGN KEY (device_id) REFERENCES "Device"(id) ON DELETE CASCADE

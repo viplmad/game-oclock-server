@@ -1,4 +1,4 @@
-use chrono::NaiveDate;
+use chrono::{DateTime, Utc};
 use sqlx::PgPool;
 use uuid::Uuid;
 
@@ -24,7 +24,7 @@ impl GameFinishRepository {
         &self,
         user_id: &Uuid,
         game_id: &Uuid,
-    ) -> Result<Option<NaiveDate>, RepositoryError> {
+    ) -> Result<Option<DateTime<Utc>>, RepositoryError> {
         let query = game_finish_query::select_min_date_by_user_id_and_game_id(user_id, game_id);
         execute_return_single(&self.pool, query).await
     }
@@ -62,9 +62,9 @@ impl GameFinishRepository {
         &self,
         user_id: &Uuid,
         game_id: &Uuid,
-        date: NaiveDate,
+        datetime: DateTime<Utc>,
     ) -> Result<(), RepositoryError> {
-        let query = game_finish_query::delete_by_id(user_id, game_id, date);
+        let query = game_finish_query::delete_by_id(user_id, game_id, datetime);
         execute(&self.pool, query).await
     }
 
@@ -72,9 +72,9 @@ impl GameFinishRepository {
         &self,
         user_id: &Uuid,
         game_id: &Uuid,
-        date: NaiveDate,
+        datetime: DateTime<Utc>,
     ) -> Result<bool, RepositoryError> {
-        let query = game_finish_query::exists_by_id(user_id, game_id, date);
+        let query = game_finish_query::exists_by_id(user_id, game_id, datetime);
         exists_some(&self.pool, query).await
     }
 }

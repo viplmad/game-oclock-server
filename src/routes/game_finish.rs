@@ -1,7 +1,7 @@
 use actix_web::{Responder, delete, get, post, web};
 
 use crate::models::{
-    DateDTO, ErrorMessage, FinishDTO, GameWithFinishPageResult, GamesFinishedReviewDTO, ItemId,
+    DateTimeDTO, ErrorMessage, FinishDTO, GameWithFinishPageResult, GamesFinishedReviewDTO, ItemId,
     LoggedUser, NewFinishDTO, OptionalStartEndDateQuery, QuicksearchQuery, SearchDTO,
     StartEndDateQuery,
 };
@@ -221,7 +221,7 @@ pub async fn post_game_finish(
     params(
         ("id" = String, Path, description = "Game id"),
     ),
-    request_body(content = DateDTO, description = "Game finish date to be deleted", content_type = "application/json"),
+    request_body(content = DateTimeDTO, description = "Game finish date to be deleted", content_type = "application/json"),
     responses(
         (status = 204, description = "Game finish deleted"),
         (status = 401, description = "Unauthorized", body = ErrorMessage, content_type = "application/json"),
@@ -237,12 +237,12 @@ pub async fn post_game_finish(
 pub async fn delete_game_finish(
     game_finish_service: web::Data<GameFinishService>,
     path: web::Path<ItemId>,
-    body: web::Json<DateDTO>,
+    body: web::Json<DateTimeDTO>,
     logged_user: LoggedUser,
 ) -> impl Responder {
     let ItemId(id) = path.into_inner();
     let delete_result = game_finish_service
-        .delete_game_finish(&logged_user.id, &id, body.date)
+        .delete_game_finish(&logged_user.id, &id, body.datetime)
         .await;
     handle_delete_result(delete_result)
 }

@@ -8,7 +8,7 @@ use crate::repository::GameWithFinishRepository;
 
 use super::helpers::{
     check_optional_start_end, check_start_end, handle_get_list_paged_result, handle_query_mapping,
-    handle_result,
+    handle_result, optional_start_end_to_datetime, start_end_to_datetime,
 };
 
 #[derive(Clone)]
@@ -33,10 +33,11 @@ impl GameWithFinishService {
     ) -> Result<GameWithFinishPageResult, ApiErrors> {
         check_optional_start_end(start_date, end_date)?;
 
+        let (start_datetime, end_datetime) = optional_start_end_to_datetime(start_date, end_date);
         let search = handle_query_mapping::<GameWithFinishDTO, GameSearch>(search, quicksearch)?;
         let find_result = self
             .repository
-            .search_first_by_date_between(user_id, start_date, end_date, search)
+            .search_first_by_date_between(user_id, start_datetime, end_datetime, search)
             .await;
         handle_get_list_paged_result(find_result)
     }
@@ -51,10 +52,11 @@ impl GameWithFinishService {
     ) -> Result<GameWithFinishPageResult, ApiErrors> {
         check_optional_start_end(start_date, end_date)?;
 
+        let (start_datetime, end_datetime) = optional_start_end_to_datetime(start_date, end_date);
         let search = handle_query_mapping::<GameWithFinishDTO, GameSearch>(search, quicksearch)?;
         let find_result = self
             .repository
-            .search_last_by_date_between(user_id, start_date, end_date, search)
+            .search_last_by_date_between(user_id, start_datetime, end_datetime, search)
             .await;
         handle_get_list_paged_result(find_result)
     }
@@ -68,9 +70,10 @@ impl GameWithFinishService {
     ) -> Result<Vec<GameWithFinish>, ApiErrors> {
         check_start_end(start_date, end_date)?;
 
+        let (start_datetime, end_datetime) = start_end_to_datetime(start_date, end_date);
         let find_result = self
             .repository
-            .find_all_by_date_between(user_id, start_date, end_date)
+            .find_all_by_date_between(user_id, start_datetime, end_datetime)
             .await;
         handle_result::<Vec<GameWithFinish>, GameWithFinishDTO>(find_result)
     }

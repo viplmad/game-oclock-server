@@ -20,7 +20,7 @@ impl From<GameWithFinish> for GameWithFinishDTO {
                 notes: game.notes,
             },
             finish: FinishDTO {
-                date: game.finish_date,
+                datetime: game.finish_datetime,
                 status: GameStatus::try_from(game.finish_status)
                     .expect("Status is not within valid range"),
                 device_id: game.finish_device_id,

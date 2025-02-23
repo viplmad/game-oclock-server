@@ -1,4 +1,4 @@
-use chrono::NaiveDate;
+use chrono::{DateTime, Utc};
 use uuid::Uuid;
 
 use crate::entities::GameFinish;
@@ -38,14 +38,14 @@ impl GameFinishService {
         &self,
         user_id: &Uuid,
         game_id: &Uuid,
-    ) -> Result<NaiveDate, ApiErrors> {
+    ) -> Result<DateTime<Utc>, ApiErrors> {
         self.game_service.exists_game(user_id, game_id).await?;
 
         let find_result = self
             .repository
             .find_first_by_game_id(user_id, game_id)
             .await;
-        handle_get_result_raw::<NaiveDate, FinishDTO>(find_result)
+        handle_get_result_raw::<DateTime<Utc>, FinishDTO>(find_result)
     }
 
     pub async fn get_game_finishes(
@@ -92,7 +92,7 @@ impl GameFinishService {
 
         let exists_result = self
             .repository
-            .exists_by_id(user_id, game_id, finish.date)
+            .exists_by_id(user_id, game_id, finish.datetime)
             .await;
         handle_already_exists_result::<FinishDTO>(exists_result)?;
 
@@ -108,12 +108,15 @@ impl GameFinishService {
         &self,
         user_id: &Uuid,
         game_id: &Uuid,
-        date: NaiveDate,
+        datetime: DateTime<Utc>,
     ) -> Result<(), ApiErrors> {
         self.game_service.exists_game(user_id, game_id).await?;
-        self.exists_game_finish(user_id, game_id, date).await?;
+        self.exists_game_finish(user_id, game_id, datetime).await?;
 
-        let delete_result = self.repository.delete_by_id(user_id, game_id, date).await;
+        let delete_result = self
+            .repository
+            .delete_by_id(user_id, game_id, datetime)
+            .await;
         handle_action_result::<FinishDTO>(delete_result)
     }
 
@@ -121,9 +124,12 @@ impl GameFinishService {
         &self,
         user_id: &Uuid,
         game_id: &Uuid,
-        date: NaiveDate,
+        datetime: DateTime<Utc>,
     ) -> Result<(), ApiErrors> {
-        let exists_result = self.repository.exists_by_id(user_id, game_id, date).await;
+        let exists_result = self
+            .repository
+            .exists_by_id(user_id, game_id, datetime)
+            .await;
         handle_not_found_result::<FinishDTO>(exists_result)
     }
 }

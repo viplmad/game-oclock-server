@@ -1,9 +1,9 @@
 use std::{cmp::Ordering, collections::HashMap};
 
-use chrono::{DateTime, Datelike, Duration, NaiveDate, NaiveTime, Timelike, Utc};
+use chrono::{DateTime, Datelike, Duration, NaiveTime, Timelike, Utc};
 use uuid::Uuid;
 
-use crate::models::{DurationDef, FinishDTO, GameStatus, GamesStreakDTO, LogDTO, StreakDTO};
+use crate::models::{DurationDef, FinishDTO, GamesStreakDTO, LogDTO, StreakDTO};
 
 pub(super) fn fill_total_time_by_month(
     total_time_by_month_map: &mut HashMap<u32, DurationDef>,
@@ -147,13 +147,7 @@ pub(super) fn fill_game_streaks(
     }
 }
 
-pub(super) fn fill_game_sessions(
-    sessions: &mut Vec<LogDTO>,
-    start_datetime: DateTime<Utc>,
-    end_datetime: DateTime<Utc>,
-    device_id: Option<Uuid>,
-    time: DurationDef,
-) {
+pub(super) fn fill_game_sessions(sessions: &mut Vec<LogDTO>, log: LogDTO) {
     match sessions.last_mut() {
         Some(last_session) => {
             let last_session_time = last_session.time.clone();
@@ -161,31 +155,31 @@ pub(super) fn fill_game_sessions(
             // Check if this is part of a continuous log (ended on midnight and kept playing)
             if
             // If the date of the current log is on the previous day of the last log
-            start_datetime.date_naive() == (last_session_start_datetime.date_naive() - Duration::days(1))
+            log.start_datetime.date_naive() == (last_session_start_datetime.date_naive() - Duration::days(1))
                 // and the end time of the current log is midnight
-                && end_datetime.time() == NaiveTime::MIN
+                && log.end_datetime.time() == NaiveTime::MIN
                 // and the start time of the last log is midnight
                 && last_session_start_datetime.time() == NaiveTime::MIN
             {
-                last_session.start_datetime = start_datetime;
+                last_session.start_datetime = log.start_datetime;
                 last_session.time =
-                    DurationDef::microseconds(last_session_time.micros + time.micros);
+                    DurationDef::microseconds(last_session_time.micros + log.time.micros);
             } else {
                 sessions.push(LogDTO {
-                    start_datetime,
-                    end_datetime,
-                    device_id: device_id.clone(),
-                    time,
+                    start_datetime: log.start_datetime,
+                    end_datetime: log.end_datetime,
+                    device_id: log.device_id.clone(),
+                    time: log.time,
                 })
             }
         }
         None => {
             // Start first session
             sessions.push(LogDTO {
-                start_datetime,
-                end_datetime,
-                device_id: device_id.clone(),
-                time,
+                start_datetime: log.start_datetime,
+                end_datetime: log.end_datetime,
+                device_id: log.device_id.clone(),
+                time: log.time,
             })
         }
     }
@@ -245,9 +239,9 @@ pub(super) fn fill_streaks(
 
 pub(super) fn fill_total_finished_by_month(
     total_finished_by_month_map: &mut HashMap<u32, u32>,
-    finish_date: NaiveDate,
+    finish_datetime: DateTime<Utc>,
 ) {
-    let month = finish_date.month();
+    let month = finish_datetime.month();
     fill_single_total_finished_by_month(total_finished_by_month_map, month, 1);
 }
 
@@ -282,15 +276,10 @@ fn fill_single_total_finished_by_month(
     }
 }
 
-pub(super) fn fill_game_finishes(
-    finishes: &mut Vec<FinishDTO>,
-    date: NaiveDate,
-    status: GameStatus,
-    device_id: Option<Uuid>,
-) {
+pub(super) fn fill_game_finishes(finishes: &mut Vec<FinishDTO>, finish: FinishDTO) {
     finishes.push(FinishDTO {
-        date,
-        status,
-        device_id: device_id.clone(),
+        datetime: finish.datetime,
+        status: finish.status,
+        device_id: finish.device_id.clone(),
     });
 }

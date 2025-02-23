@@ -1,4 +1,4 @@
-use chrono::NaiveDate;
+use chrono::{DateTime, Utc};
 use sea_query::enum_def;
 use sqlx::FromRow;
 use uuid::Uuid;
@@ -10,7 +10,7 @@ use super::TableIden;
 pub struct GameFinish {
     pub user_id: Uuid,
     pub game_id: Uuid,
-    pub date: NaiveDate, // TODO store as datetime
+    pub datetime: DateTime<Utc>,
     pub status: i16,
     pub device_id: Option<Uuid>,
 }
