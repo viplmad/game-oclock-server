@@ -285,8 +285,9 @@ async fn run(
             // Health check
             .service(routes::health)
             // OpenAPI
+            .service(web::redirect("/api-docs", "/api-docs/")) // Redirect if no slash
             .service(
-                SwaggerUi::new("/api-docs/{_:.*}") // TODO redirect if no slash
+                SwaggerUi::new("/api-docs/{_:.*}")
                     .url("/api-docs/public-api.json", openapi.clone())
                     .config(
                         Config::new(["/api-docs/public-api.json"])

@@ -5,8 +5,8 @@ CREATE TABLE IF NOT EXISTS "Device" (
 	user_id uuid NOT NULL,
 	name text NOT NULL,
 	icon_url text NULL,
-	added_datetime timestamp NOT NULL,
-	updated_datetime timestamp NOT NULL,
+	added_datetime timestamp with time zone NOT NULL,
+	updated_datetime timestamp with time zone NOT NULL,
 	CONSTRAINT "Device_pk" PRIMARY KEY (id),
 	CONSTRAINT "Device_unique" UNIQUE (user_id, name)
 );
@@ -16,8 +16,8 @@ CREATE TABLE "User" (
 	username text NOT NULL,
 	password text NOT NULL,
 	admin bool NOT NULL,
-	added_datetime timestamp NOT NULL,
-	updated_datetime timestamp NOT NULL,
+	added_datetime timestamp with time zone NOT NULL,
+	updated_datetime timestamp with time zone NOT NULL,
 	CONSTRAINT "User_pk" PRIMARY KEY (id),
 	CONSTRAINT "User_unique" UNIQUE (username)
 );
@@ -30,8 +30,8 @@ CREATE TABLE "Game" (
 	release_date date NULL,
 	base_game_id uuid NULL,
 	cover_url text NULL,
-	added_datetime timestamp NOT NULL,
-	updated_datetime timestamp NOT NULL,
+	added_datetime timestamp with time zone NOT NULL,
+	updated_datetime timestamp with time zone NOT NULL,
 	CONSTRAINT "Game_pk" PRIMARY KEY (id),
 	CONSTRAINT "Game_unique" UNIQUE (user_id, title, edition),
 	CONSTRAINT "Game_fk_User" FOREIGN KEY (user_id) REFERENCES "User"(id) ON DELETE CASCADE,
@@ -41,7 +41,7 @@ CREATE TABLE "Game" (
 CREATE TABLE "GameFinish" (
 	user_id uuid NOT NULL,
 	game_id uuid NOT NULL,
-	datetime timestamp NOT NULL,
+	datetime timestamp with time zone NOT NULL,
 	status smallint NOT NULL,
 	device_id uuid NULL,
 	CONSTRAINT "GameFinish_pk" PRIMARY KEY (user_id, game_id, datetime),
@@ -63,8 +63,8 @@ CREATE TABLE "GameLink" (
 CREATE TABLE "GameLog" (
 	user_id uuid NOT NULL,
 	game_id uuid NOT NULL,
-	start_datetime timestamp NOT NULL,
-	end_datetime timestamp NOT NULL,
+	start_datetime timestamp with time zone NOT NULL,
+	end_datetime timestamp with time zone NOT NULL,
 	device_id uuid NULL,
 	CONSTRAINT "GameLog_pk" PRIMARY KEY (user_id, game_id, start_datetime),
 	CONSTRAINT "GameLog_fk_User" FOREIGN KEY (user_id) REFERENCES "User"(id) ON DELETE CASCADE,
@@ -78,8 +78,8 @@ CREATE TABLE "GameUserInfo" (
 	status smallint NOT NULL,
 	rating smallint NOT NULL,
 	notes text NOT NULL,
-	added_datetime timestamp NOT NULL,
-	updated_datetime timestamp NOT NULL,
+	added_datetime timestamp with time zone NOT NULL,
+	updated_datetime timestamp with time zone NOT NULL,
 	CONSTRAINT "GameUserInfo_pk" PRIMARY KEY (user_id, game_id),
 	CONSTRAINT "GameUserInfo_fk_User" FOREIGN KEY (user_id) REFERENCES "User"(id) ON DELETE CASCADE,
 	CONSTRAINT "GameUserInfo_fk_Game" FOREIGN KEY (game_id) REFERENCES "Game"(id) ON DELETE CASCADE
@@ -89,8 +89,8 @@ CREATE TABLE "Genre" (
 	id uuid NOT NULL,
 	user_id uuid NOT NULL,
 	name text NOT NULL,
-	added_datetime timestamp NOT NULL,
-	updated_datetime timestamp NOT NULL,
+	added_datetime timestamp with time zone NOT NULL,
+	updated_datetime timestamp with time zone NOT NULL,
 	CONSTRAINT "Genre_pk" PRIMARY KEY (id),
 	CONSTRAINT "Genre_unique" UNIQUE (user_id, name),
 	CONSTRAINT "Genre_fk_User" FOREIGN KEY (user_id) REFERENCES "User"(id) ON DELETE CASCADE
@@ -101,8 +101,8 @@ CREATE TABLE "Location" (
 	user_id uuid NOT NULL,
 	name text NOT NULL,
 	icon_url text NULL,
-	added_datetime timestamp NOT NULL,
-	updated_datetime timestamp NOT NULL,
+	added_datetime timestamp with time zone NOT NULL,
+	updated_datetime timestamp with time zone NOT NULL,
 	CONSTRAINT "Platform_pk" PRIMARY KEY (id),
 	CONSTRAINT "Platform_unique" UNIQUE (user_id, name),
 	CONSTRAINT "Platform_fk_User" FOREIGN KEY (user_id) REFERENCES "User"(id) ON DELETE CASCADE
@@ -112,8 +112,8 @@ CREATE TABLE "Tag" (
 	id uuid NOT NULL,
 	user_id uuid NOT NULL,
 	name text NOT NULL,
-	added_datetime timestamp NOT NULL,
-	updated_datetime timestamp NOT NULL,
+	added_datetime timestamp with time zone NOT NULL,
+	updated_datetime timestamp with time zone NOT NULL,
 	CONSTRAINT "Tag_pk" PRIMARY KEY (id),
 	CONSTRAINT "Tag_unique" UNIQUE (user_id, name),
 	CONSTRAINT "Tag_fk_User" FOREIGN KEY (user_id) REFERENCES "User"(id) ON DELETE CASCADE

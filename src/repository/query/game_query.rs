@@ -130,6 +130,20 @@ pub fn update_by_id(game: &Game) -> impl QueryStatementWriter {
     )
 }
 
+pub fn update_status_by_id(user_id: &Uuid, id: &Uuid, status: i16) -> impl QueryStatementWriter {
+    update_user_info_values_by_id(
+        user_id,
+        id,
+        vec![
+            (GameUserInfoIden::Status, status.into()),
+            (
+                GameUserInfoIden::UpdatedDatetime,
+                crate::date_utils::now().into(),
+            ),
+        ],
+    )
+}
+
 pub fn update_base_game_id_by_id(
     user_id: &Uuid,
     id: &Uuid,

@@ -23,7 +23,7 @@ pub async fn check_admin_user(user_service: &UserService) {
         .await
         .expect("Could not check if admin user exists");
     match exists_admin {
-        true => log::info!("Database admin present."),
+        true => log::info!("Admin user present."),
         false => {
             let admin_user = user_service
                 .create_user(
@@ -40,7 +40,7 @@ pub async fn check_admin_user(user_service: &UserService) {
                 .expect("Could not promote admin user");
 
             log::info!(
-                "Database admin not present, created 'admin' user with default 'admin' password. PLEASE CHANGE PASSWORD."
+                "Admin user not present, created 'admin' user with default 'admin' password. PLEASE CHANGE PASSWORD."
             );
         }
     }

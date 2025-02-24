@@ -3,7 +3,7 @@ use uuid::Uuid;
 
 use crate::entities::GameAvailable;
 use crate::errors::ApiErrors;
-use crate::models::{GameAvailableDTO, GameStatus, LocationAvailableDTO, NewGameDTO};
+use crate::models::{GameAvailableDTO, GameStatus, LocationAvailableDTO};
 use crate::repository::GameAvailableRepository;
 
 use super::helpers::{
@@ -85,20 +85,7 @@ impl GameAvailableService {
         if game.status == GameStatus::Wishlist {
             // Change status as it has become available
             self.game_service
-                .update_game(
-                    &self,
-                    user_id,
-                    game_id,
-                    NewGameDTO {
-                        status: Some(GameStatus::NextUp),
-                        title: None,
-                        edition: None,
-                        release_date: None, // TODO Careful, migth remove value
-                        cover_url: None,
-                        rating: None,
-                        notes: None,
-                    },
-                )
+                .update_game_status(user_id, game_id, GameStatus::NextUp)
                 .await?
         }
 

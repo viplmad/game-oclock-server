@@ -25,8 +25,8 @@ impl GameService {
 }
 
 impl GameService {
-    pub async fn get_game(&self, user_id: &Uuid, game_id: &Uuid) -> Result<GameDTO, ApiErrors> {
-        let find_result = self.repository.find_by_id(user_id, game_id).await;
+    pub async fn get_game(&self, user_id: &Uuid, id: &Uuid) -> Result<GameDTO, ApiErrors> {
+        let find_result = self.repository.find_by_id(user_id, id).await;
         handle_get_result(find_result)
     }
 
@@ -120,23 +120,38 @@ impl GameService {
         .await
     }
 
-    pub async fn delete_game(&self, user_id: &Uuid, game_id: &Uuid) -> Result<(), ApiErrors> {
+    pub async fn update_game_status(
+        &self,
+        user_id: &Uuid,
+        id: &Uuid,
+        status: GameStatus,
+    ) -> Result<(), ApiErrors> {
+        self.exists_game(user_id, id).await?;
+
+        let update_result = self
+            .repository
+            .update_status(user_id, id, i16::from(status))
+            .await;
+        handle_action_result::<GameDTO>(update_result)
+    }
+
+    pub async fn delete_game(&self, user_id: &Uuid, id: &Uuid) -> Result<(), ApiErrors> {
         // TODO Error if game is used -> use sql contraints
-        let delete_result = self.repository.delete_by_id(user_id, game_id).await;
+        let delete_result = self.repository.delete_by_id(user_id, id).await;
         handle_action_result::<GameDTO>(delete_result)
     }
 
-    pub async fn exists_game(&self, user_id: &Uuid, game_id: &Uuid) -> Result<(), ApiErrors> {
-        let exists_result = self.repository.exists_by_id(user_id, game_id).await;
+    pub async fn exists_game(&self, user_id: &Uuid, id: &Uuid) -> Result<(), ApiErrors> {
+        let exists_result = self.repository.exists_by_id(user_id, id).await;
         handle_not_found_result::<GameDTO>(exists_result)
     }
 
     pub async fn get_game_base_game(
         &self,
         user_id: &Uuid,
-        game_id: &Uuid,
+        id: &Uuid,
     ) -> Result<GameDTO, ApiErrors> {
-        let game = self.get_game(user_id, game_id).await?;
+        let game = self.get_game(user_id, id).await?;
         let base_game_id = game.base_game_id.ok_or_else(|| {
             ApiErrors::InvalidParameter(error_message_builder::empty_param("Game base game"))
         })?;
@@ -146,28 +161,25 @@ impl GameService {
     pub async fn get_game_dlcs(
         &self,
         user_id: &Uuid,
-        game_id: &Uuid,
+        id: &Uuid,
     ) -> Result<Vec<GameDTO>, ApiErrors> {
-        self.exists_game(user_id, game_id).await?;
+        self.exists_game(user_id, id).await?;
 
-        let find_result = self
-            .repository
-            .find_all_by_base_game_id(user_id, game_id)
-            .await;
+        let find_result = self.repository.find_all_by_base_game_id(user_id, id).await;
         handle_get_list_result(find_result)
     }
 
     pub async fn set_game_base_game(
         &self,
         user_id: &Uuid,
-        game_id: &Uuid,
+        id: &Uuid,
         base_game_id: Option<Uuid>,
     ) -> Result<(), ApiErrors> {
-        self.exists_game(user_id, game_id).await?;
+        self.exists_game(user_id, id).await?;
 
         if let Some(id) = &base_game_id {
             // Set base game
-            if game_id == id {
+            if id == id {
                 return Err(ApiErrors::InvalidParameter(String::from(
                     "Game and base game cannot be the same",
                 )));
@@ -180,7 +192,7 @@ impl GameService {
                 )));
             }
 
-            let has_dlcs = self.has_game_dlcs(user_id, game_id).await?;
+            let has_dlcs = self.has_game_dlcs(user_id, id).await?;
             if has_dlcs {
                 return Err(ApiErrors::InvalidParameter(String::from(
                     "Game cannot have dlcs",
@@ -191,15 +203,15 @@ impl GameService {
 
         let update_result = self
             .repository
-            .update_base_game_id(user_id, game_id, base_game_id)
+            .update_base_game_id(user_id, id, base_game_id)
             .await;
         handle_action_result::<GameDTO>(update_result)
     }
 
-    async fn has_game_dlcs(&self, user_id: &Uuid, game_id: &Uuid) -> Result<bool, ApiErrors> {
+    async fn has_game_dlcs(&self, user_id: &Uuid, id: &Uuid) -> Result<bool, ApiErrors> {
         let exists_result = self
             .repository
-            .exists_any_by_base_game_id(user_id, game_id)
+            .exists_any_by_base_game_id(user_id, id)
             .await;
         handle_result::<_, GameDTO>(exists_result)
     }

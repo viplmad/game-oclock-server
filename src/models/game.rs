@@ -51,7 +51,7 @@ impl Merge<NewGameDTO> for GameDTO {
 impl ModelInfo for GameDTO {
     const MODEL_NAME: &'static str = "Game";
     const ID_FIELDS: &'static [&'static str] = &["id"];
-    const UNIQUE_FIELDS: &'static [&'static str] = &["name", "edition"];
+    const UNIQUE_FIELDS: &'static [&'static str] = &["title", "edition"];
 }
 
 #[derive(Deserialize, ToSchema)]

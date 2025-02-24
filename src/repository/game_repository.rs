@@ -85,6 +85,16 @@ impl GameRepository {
         Ok(())
     }
 
+    pub async fn update_status(
+        &self,
+        user_id: &Uuid,
+        id: &Uuid,
+        status: i16,
+    ) -> Result<(), RepositoryError> {
+        let query = game_query::update_status_by_id(user_id, id, status);
+        execute(&self.pool, query).await
+    }
+
     pub async fn update_base_game_id(
         &self,
         user_id: &Uuid,
