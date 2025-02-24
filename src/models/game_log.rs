@@ -5,7 +5,7 @@ use uuid::Uuid;
 
 use super::{DurationDef, Merge, ModelInfo};
 
-#[derive(Default, Serialize, Deserialize, ToSchema)]
+#[derive(Default, Clone, Serialize, Deserialize, ToSchema)]
 pub struct LogDTO {
     #[schema(value_type = String, format = DateTime)]
     pub start_datetime: DateTime<Utc>,

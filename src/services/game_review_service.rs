@@ -105,6 +105,7 @@ fn build_played_review(
             start_date: NaiveDate::default(),
             end_date: NaiveDate::default(),
             days: 0,
+            devices_ids: vec![],
         },
     };
 
@@ -113,11 +114,9 @@ fn build_played_review(
         let game_id = game_with_log.id;
 
         let log = LogDTO::from(&game_with_log);
-        let start_datetime = log.start_datetime;
-        let end_datetime = log.end_datetime;
 
         // Fill global streaks
-        logs_utils::fill_streaks(&mut total_streaks, &game_id, start_datetime, end_datetime);
+        logs_utils::fill_streaks(&mut total_streaks, &game_id, log.clone());
 
         // Found longer global streak
         if let Some(new_longest_streak) = get_longest_streak(&total_streaks, &longest_streak) {
@@ -387,6 +386,7 @@ fn get_longest_streak(
                     start_date: last_streak.streak.start_date,
                     end_date: last_streak.streak.end_date,
                     days: last_streak_days,
+                    devices_ids: last_streak.streak.devices_ids.clone(),
                 },
             });
         }
@@ -527,7 +527,7 @@ fn fill_played_game_review(game: &mut GamePlayedReviewDTO, log: LogDTO) {
     );
 
     // Fill streaks
-    logs_utils::fill_game_streaks(&mut game.streaks, log.start_datetime, log.end_datetime);
+    logs_utils::fill_game_streaks(&mut game.streaks, log.clone());
 
     // Found longer streak
     fill_longest_game_streak(game);
@@ -561,6 +561,7 @@ fn fill_longest_game_streak(game: &mut GamePlayedReviewDTO) {
                 start_date: last_streak.start_date,
                 end_date: last_streak.end_date,
                 days: last_streak_days,
+                devices_ids: last_streak.devices_ids.clone(),
             }
         }
     }

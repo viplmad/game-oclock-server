@@ -87,7 +87,8 @@ pub struct StreakDTO {
     #[schema(value_type = String, format = Date)]
     pub end_date: NaiveDate,
     pub days: i64,
-    // TODO add device
+    #[schema(value_type = String)]
+    pub devices_ids: Vec<Uuid>,
 }
 
 #[derive(Default, Serialize, ToSchema)]

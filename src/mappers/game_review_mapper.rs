@@ -31,6 +31,7 @@ impl From<GameWithLog> for GamePlayedReviewDTO {
                 start_date: NaiveDate::default(),
                 end_date: NaiveDate::default(),
                 days: 0,
+                devices_ids: vec![],
             },
             longest_session: LogDTO::default(),
             first_session: LogDTO {

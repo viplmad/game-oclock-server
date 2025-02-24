@@ -111,26 +111,29 @@ pub(super) fn fill_total_map(total_map: &mut HashMap<u32, u32>, value: u32) {
     }
 }
 
-pub(super) fn fill_game_streaks(
-    streaks: &mut Vec<StreakDTO>,
-    start_datetime: DateTime<Utc>,
-    end_datetime: DateTime<Utc>,
-) {
+pub(super) fn fill_game_streaks(streaks: &mut Vec<StreakDTO>, log: LogDTO) {
     match streaks.last_mut() {
         Some(last_streak) => {
             let previous_date = last_streak.start_date - Duration::days(1);
-            match start_datetime.date_naive().cmp(&previous_date) {
+            match log.start_datetime.date_naive().cmp(&previous_date) {
                 Ordering::Equal => {
                     // Continued the streak
-                    last_streak.start_date = start_datetime.date_naive();
+                    last_streak.start_date = log.start_datetime.date_naive();
                     last_streak.days += 1;
+                    if let Some(device_id) = log.device_id {
+                        crate::vec_utils::push_if_not_contained(
+                            &mut last_streak.devices_ids,
+                            device_id,
+                        );
+                    }
                 }
                 Ordering::Less => {
                     // Lost the streak, start a new one
                     streaks.push(StreakDTO {
-                        start_date: start_datetime.date_naive(),
-                        end_date: end_datetime.date_naive(),
+                        start_date: log.start_datetime.date_naive(),
+                        end_date: log.end_datetime.date_naive(),
                         days: 1,
+                        devices_ids: log.device_id.map_or(vec![], |id| vec![id]),
                     });
                 }
                 Ordering::Greater => (),
@@ -139,9 +142,10 @@ pub(super) fn fill_game_streaks(
         None => {
             // Start first streak
             streaks.push(StreakDTO {
-                start_date: start_datetime.date_naive(),
-                end_date: end_datetime.date_naive(),
+                start_date: log.start_datetime.date_naive(),
+                end_date: log.end_datetime.date_naive(),
                 days: 1,
+                devices_ids: log.device_id.map_or(vec![], |id| vec![id]),
             })
         }
     }
@@ -185,40 +189,52 @@ pub(super) fn fill_game_sessions(sessions: &mut Vec<LogDTO>, log: LogDTO) {
     }
 }
 
-pub(super) fn fill_streaks(
-    streaks: &mut Vec<GamesStreakDTO>,
-    game_id: &Uuid,
-    start_datetime: DateTime<Utc>,
-    end_datetime: DateTime<Utc>,
-) {
+pub(super) fn fill_streaks(streaks: &mut Vec<GamesStreakDTO>, game_id: &Uuid, log: LogDTO) {
     let game_id_clone = game_id.clone();
     match streaks.last_mut() {
         Some(last_streak) => {
             let previous_date = last_streak.streak.start_date - Duration::days(1);
-            match start_datetime.date_naive().cmp(&previous_date) {
+            match log.start_datetime.date_naive().cmp(&previous_date) {
                 Ordering::Equal => {
                     // Continued the streak
-                    if !last_streak.games_ids.contains(&game_id_clone) {
-                        last_streak.games_ids.push(game_id_clone);
-                    }
-                    last_streak.streak.start_date = start_datetime.date_naive();
+                    crate::vec_utils::push_if_not_contained(
+                        &mut last_streak.games_ids,
+                        game_id_clone,
+                    );
+                    last_streak.streak.start_date = log.start_datetime.date_naive();
                     last_streak.streak.days += 1;
+                    if let Some(device_id) = log.device_id {
+                        crate::vec_utils::push_if_not_contained(
+                            &mut last_streak.streak.devices_ids,
+                            device_id,
+                        );
+                    }
                 }
                 Ordering::Less => {
                     // Lost the streak, start a new one
                     streaks.push(GamesStreakDTO {
                         games_ids: vec![game_id_clone],
                         streak: StreakDTO {
-                            start_date: start_datetime.date_naive(),
-                            end_date: end_datetime.date_naive(),
+                            start_date: log.start_datetime.date_naive(),
+                            end_date: log.end_datetime.date_naive(),
                             days: 1,
+                            devices_ids: log.device_id.map_or(vec![], |id| vec![id]),
                         },
                     });
                 }
                 Ordering::Greater => {
-                    // Already on a streak day, add game if necessary
-                    if !last_streak.games_ids.contains(&game_id_clone) {
-                        last_streak.games_ids.push(game_id_clone);
+                    // Already on a streak day
+                    // Add game if necessary
+                    crate::vec_utils::push_if_not_contained(
+                        &mut last_streak.games_ids,
+                        game_id_clone,
+                    );
+                    // Add device if necessary
+                    if let Some(device_id) = log.device_id {
+                        crate::vec_utils::push_if_not_contained(
+                            &mut last_streak.streak.devices_ids,
+                            device_id,
+                        );
                     }
                 }
             }
@@ -228,9 +244,10 @@ pub(super) fn fill_streaks(
             streaks.push(GamesStreakDTO {
                 games_ids: vec![game_id_clone],
                 streak: StreakDTO {
-                    start_date: start_datetime.date_naive(),
-                    end_date: end_datetime.date_naive(),
+                    start_date: log.start_datetime.date_naive(),
+                    end_date: log.end_datetime.date_naive(),
                     days: 1,
+                    devices_ids: log.device_id.map_or(vec![], |id| vec![id]),
                 },
             });
         }
