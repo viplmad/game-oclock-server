@@ -40,7 +40,9 @@ async fn main() -> std::io::Result<()> {
         .unwrap_or_else(|_| String::from(DEFAULT_HTTPS_PORT))
         .parse()
         .expect("TLS port is not a number");
-    let tls_config = load_tls_config();
+    let tls_cert_path = env::var("TLS_CERT_PATH").unwrap_or_else(|_| String::from(TLS_CERT_PATH));
+    let tls_key_path = env::var("TLS_KEY_PATH").unwrap_or_else(|_| String::from(TLS_KEY_PATH));
+    let tls_config = load_tls_config(&tls_cert_path, &tls_key_path);
 
     run(host, port, encoding_key, decoding_key, tls_port, tls_config)
         .await
@@ -307,11 +309,7 @@ async fn run(
     server.bind((host, port))?.run().await
 }
 
-fn load_tls_config() -> Option<rustls::ServerConfig> {
-    // TODO get paths from env
-    let cert_path = TLS_CERT_PATH;
-    let key_path = TLS_KEY_PATH;
-
+fn load_tls_config(cert_path: &str, key_path: &str) -> Option<rustls::ServerConfig> {
     // Load TLS key/cert files
     let cert_file = match File::open(cert_path) {
         Ok(file) => Some(file),
