@@ -1,9 +1,10 @@
 use actix_web::{HttpResponse, Responder, get};
 
+/// Liveness check
 #[utoipa::path(
     get,
     path = "/health",
-    tag = "Health check",
+    tag = "Health",
     responses(
         (status = 200, description = "Alive"),
     ),

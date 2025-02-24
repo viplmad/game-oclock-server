@@ -10,6 +10,7 @@ use super::helpers::{
     handle_create_result, handle_delete_result, handle_get_result, handle_update_result,
 };
 
+/// Get a device
 #[utoipa::path(
     get,
     path = "/api/v1/devices/{id}",
@@ -39,6 +40,7 @@ pub async fn get_device(
     handle_get_result(get_result)
 }
 
+/// Get all devices where a game has been played
 #[utoipa::path(
     get,
     path = "/api/v1/games/{id}/devices",
@@ -70,6 +72,7 @@ pub async fn get_game_devices(
     handle_get_result(get_result)
 }
 
+/// Search devices
 #[utoipa::path(
     post,
     path = "/api/v1/devices/list",
@@ -101,6 +104,7 @@ pub async fn get_devices(
     handle_get_result(search_result)
 }
 
+/// Create a device
 #[utoipa::path(
     post,
     path = "/api/v1/devices",
@@ -128,6 +132,7 @@ pub async fn post_device(
     handle_create_result(create_result)
 }
 
+/// Update a device
 #[utoipa::path(
     put,
     path = "/api/v1/devices/{id}",
@@ -162,6 +167,7 @@ pub async fn put_device(
     handle_update_result(update_result)
 }
 
+/// Delete a device
 #[utoipa::path(
     delete,
     path = "/api/v1/devices/{id}",

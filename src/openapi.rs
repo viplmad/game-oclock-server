@@ -8,6 +8,24 @@ use crate::{models, routes};
 pub fn get_openapi() -> utoipa::openapi::OpenApi {
     #[derive(OpenApi)]
     #[openapi(
+        info(license(
+            name = "MIT License",
+            identifier = "MIT"
+        )),
+        tags(
+            (name = "Games", description = "Games management"),
+            (name = "DLCs", description = "DLCs management"),
+            (name = "GameFinishes", description = "Game finishes management"),
+            (name = "GameLogs", description = "Game logs / sessions management"),
+            (name = "GameLinks", description = "Game links management"),
+            (name = "Tags", description = "Tags management"),
+            (name = "Locations", description = "Locations management"),
+            (name = "Genres", description = "Genres management"),
+            (name = "Devices", description = "Devices management"),
+            (name = "Users", description = "Users management"),
+            (name = "Auth", description = "Authentication"),
+            (name = "Health", description = "Liveness / Readiness"),
+        ),
         paths(
             // Games
             routes::get_game,

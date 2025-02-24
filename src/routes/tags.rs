@@ -9,6 +9,7 @@ use super::helpers::{
     handle_create_result, handle_delete_result, handle_get_result, handle_update_result,
 };
 
+/// Get a tag
 #[utoipa::path(
     get,
     path = "/api/v1/tags/{id}",
@@ -38,6 +39,7 @@ pub async fn get_tag(
     handle_get_result(get_result)
 }
 
+/// Get all tags from a game
 #[utoipa::path(
     get,
     path = "/api/v1/games/{id}/tags",
@@ -67,6 +69,7 @@ pub async fn get_game_tags(
     handle_get_result(get_result)
 }
 
+/// Search tags
 #[utoipa::path(
     post,
     path = "/api/v1/tags/list",
@@ -98,6 +101,7 @@ pub async fn get_tags(
     handle_get_result(search_result)
 }
 
+/// Create a tag
 #[utoipa::path(
     post,
     path = "/api/v1/tags",
@@ -125,6 +129,7 @@ pub async fn post_tag(
     handle_create_result(create_result)
 }
 
+/// Update a tag
 #[utoipa::path(
     put,
     path = "/api/v1/tags/{id}",
@@ -157,6 +162,7 @@ pub async fn put_tag(
     handle_update_result(update_result)
 }
 
+/// Delete a tag
 #[utoipa::path(
     delete,
     path = "/api/v1/tags/{id}",

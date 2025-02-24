@@ -12,6 +12,7 @@ use super::helpers::{
     handle_update_result, require_admin,
 };
 
+/// Get a user
 #[utoipa::path(
     get,
     path = "/api/v1/users/{id}",
@@ -46,6 +47,7 @@ pub async fn get_user(
     handle_get_result(get_result)
 }
 
+/// Get current user
 #[utoipa::path(
     get,
     path = "/api/v1/myself",
@@ -70,6 +72,7 @@ pub async fn get_current_user(
     handle_get_result(get_result)
 }
 
+/// Search users
 #[utoipa::path(
     post,
     path = "/api/v1/users/list",
@@ -103,6 +106,7 @@ pub async fn get_users(
     handle_get_result(search_result)
 }
 
+/// Create a user
 #[utoipa::path(
     post,
     path = "/api/v1/users",
@@ -138,6 +142,7 @@ pub async fn post_user(
     handle_create_result(create_result)
 }
 
+/// Update a user
 #[utoipa::path(
     put,
     path = "/api/v1/users/{id}",
@@ -175,6 +180,7 @@ pub async fn put_user(
     handle_update_result(update_result)
 }
 
+/// Change current user password
 #[utoipa::path(
     put,
     path = "/api/v1/myself/change-password",
@@ -204,6 +210,7 @@ pub async fn change_password(
     handle_action_result(change_password_result)
 }
 
+/// Promote a user
 #[utoipa::path(
     put,
     path = "/api/v1/users/{id}/promote",
@@ -238,6 +245,7 @@ pub async fn promote_user(
     handle_update_result(update_result)
 }
 
+/// Demote a user
 #[utoipa::path(
     put,
     path = "/api/v1/users/{id}/demote",
@@ -272,6 +280,7 @@ pub async fn demote_user(
     handle_update_result(update_result)
 }
 
+/// Delete a user
 #[utoipa::path(
     delete,
     path = "/api/v1/users/{id}",

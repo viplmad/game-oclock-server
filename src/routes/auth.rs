@@ -6,6 +6,7 @@ use crate::services::AuthService;
 
 use super::helpers::handle_get_result;
 
+/// Authenticate through OAuth flow
 #[utoipa::path(
     post,
     path = "/auth/token",

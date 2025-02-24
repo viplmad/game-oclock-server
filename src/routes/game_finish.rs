@@ -9,10 +9,11 @@ use crate::services::{GameFinishService, GameReviewService, GameWithFinishServic
 
 use super::helpers::{handle_action_result, handle_delete_result, handle_get_result};
 
+/// Get all game finishes
 #[utoipa::path(
     get,
     path = "/api/v1/games/{id}/finishes",
-    tag = "GameFinish",
+    tag = "GameFinishes",
     params(
         ("id" = String, Path, description = "Game id"),
     ),
@@ -40,10 +41,11 @@ pub async fn get_game_finishes(
     handle_get_result(get_result)
 }
 
+/// Get date of first time a game was finished
 #[utoipa::path(
     get,
     path = "/api/v1/games/{id}/finishes/first",
-    tag = "GameFinish",
+    tag = "GameFinishes",
     params(
         ("id" = String, Path, description = "Game id"),
     ),
@@ -71,10 +73,11 @@ pub async fn get_first_game_finish(
     handle_get_result(get_result)
 }
 
+/// Get a finish review in a time frame
 #[utoipa::path(
     post,
     path = "/api/v1/games/finished/review",
-    tag = "GameFinish",
+    tag = "GameFinishes",
     params(
         StartEndDateQuery,
     ),
@@ -100,10 +103,11 @@ pub async fn get_finished_games_review(
     handle_get_result(get_result)
 }
 
+/// Search first finished games
 #[utoipa::path(
     post,
     path = "/api/v1/games/finished/first",
-    tag = "GameFinish",
+    tag = "GameFinishes",
     params(
         OptionalStartEndDateQuery,
         QuicksearchQuery,
@@ -140,10 +144,11 @@ pub async fn get_first_finished_games(
     handle_get_result(get_result)
 }
 
+/// Search last finished games
 #[utoipa::path(
     post,
     path = "/api/v1/games/finished/last",
-    tag = "GameFinish",
+    tag = "GameFinishes",
     params(
         OptionalStartEndDateQuery,
         QuicksearchQuery,
@@ -180,10 +185,11 @@ pub async fn get_last_finished_games(
     handle_get_result(get_result)
 }
 
+/// Create a game finish
 #[utoipa::path(
     post,
     path = "/api/v1/games/{id}/finishes",
-    tag = "GameFinish",
+    tag = "GameFinishes",
     params(
         ("id" = String, Path, description = "Game id"),
     ),
@@ -214,10 +220,11 @@ pub async fn post_game_finish(
     handle_action_result(create_result)
 }
 
+/// Delete a game finish
 #[utoipa::path(
     delete,
     path = "/api/v1/games/{id}/finishes",
-    tag = "GameFinish",
+    tag = "GameFinishes",
     params(
         ("id" = String, Path, description = "Game id"),
     ),

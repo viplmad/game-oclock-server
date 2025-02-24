@@ -9,6 +9,7 @@ use crate::services::{GameLogService, GameReviewService, GameWithLogService};
 
 use super::helpers::{handle_action_result, handle_delete_result, handle_get_result};
 
+/// Get all game logs
 #[utoipa::path(
     get,
     path = "/api/v1/games/{id}/logs",
@@ -38,6 +39,7 @@ pub async fn get_game_logs(
     handle_get_result(get_result)
 }
 
+/// Get total time played for a game
 #[utoipa::path(
     get,
     path = "/api/v1/games/{id}/logs/total",
@@ -69,6 +71,7 @@ pub async fn get_total_game_logs(
     handle_get_result(get_result)
 }
 
+/// Get a played review in a time frame
 #[utoipa::path(
     post,
     path = "/api/v1/games/played/review",
@@ -98,6 +101,7 @@ pub async fn get_played_games_review(
     handle_get_result(get_result)
 }
 
+/// Search first played games
 #[utoipa::path(
     post,
     path = "/api/v1/games/played/first",
@@ -138,6 +142,7 @@ pub async fn get_first_played_games(
     handle_get_result(get_result)
 }
 
+/// Search last played games
 #[utoipa::path(
     post,
     path = "/api/v1/games/played/last",
@@ -178,6 +183,7 @@ pub async fn get_last_played_games(
     handle_get_result(get_result)
 }
 
+/// Create a game log
 #[utoipa::path(
     post,
     path = "/api/v1/games/{id}/logs",
@@ -212,6 +218,7 @@ pub async fn post_game_log(
     handle_action_result(create_result)
 }
 
+/// Delete a game log
 #[utoipa::path(
     delete,
     path = "/api/v1/games/{id}/logs",

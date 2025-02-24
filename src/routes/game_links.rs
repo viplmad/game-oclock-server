@@ -5,10 +5,11 @@ use crate::services::GameLinkService;
 
 use super::helpers::{handle_action_result, handle_delete_result, handle_get_result};
 
+/// Get all game links
 #[utoipa::path(
     get,
     path = "/api/v1/games/{id}/links",
-    tag = "GameLink",
+    tag = "GameLinks",
     params(
         ("id" = String, Path, description = "Game id"),
     ),
@@ -34,10 +35,11 @@ pub async fn get_game_links(
     handle_get_result(get_result)
 }
 
+/// Create a game link
 #[utoipa::path(
     post,
     path = "/api/v1/games/{id}/links",
-    tag = "GameLink",
+    tag = "GameLinks",
     params(
         ("id" = String, Path, description = "Game id"),
     ),
@@ -68,10 +70,11 @@ pub async fn post_game_link(
     handle_action_result(create_result)
 }
 
+/// Delete a game link
 #[utoipa::path(
     delete,
     path = "/api/v1/games/{id}/links",
-    tag = "GameLink",
+    tag = "GameLinks",
     params(
         ("id" = String, Path, description = "Game id"),
     ),

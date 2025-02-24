@@ -10,6 +10,7 @@ use super::helpers::{
     handle_create_result, handle_delete_result, handle_get_result, handle_update_result,
 };
 
+/// Get a genre
 #[utoipa::path(
     get,
     path = "/api/v1/genres/{id}",
@@ -39,6 +40,7 @@ pub async fn get_genre(
     handle_get_result(get_result)
 }
 
+/// Get all genres of a game
 #[utoipa::path(
     get,
     path = "/api/v1/games/{id}/genres",
@@ -70,6 +72,7 @@ pub async fn get_game_genres(
     handle_get_result(get_result)
 }
 
+/// Search genres
 #[utoipa::path(
     post,
     path = "/api/v1/genres/list",
@@ -101,6 +104,7 @@ pub async fn get_genres(
     handle_get_result(search_result)
 }
 
+/// Create a genre
 #[utoipa::path(
     post,
     path = "/api/v1/genres",
@@ -128,6 +132,7 @@ pub async fn post_genre(
     handle_create_result(create_result)
 }
 
+/// Update a genre
 #[utoipa::path(
     put,
     path = "/api/v1/genres/{id}",
@@ -162,6 +167,7 @@ pub async fn put_genre(
     handle_update_result(update_result)
 }
 
+/// Delete a genre
 #[utoipa::path(
     delete,
     path = "/api/v1/genres/{id}",

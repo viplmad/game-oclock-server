@@ -10,6 +10,7 @@ use super::helpers::{
     handle_create_result, handle_delete_result, handle_get_result, handle_update_result,
 };
 
+/// Get a location
 #[utoipa::path(
     get,
     path = "/api/v1/locations/{id}",
@@ -39,6 +40,7 @@ pub async fn get_location(
     handle_get_result(get_result)
 }
 
+/// Get all locations where a game is available
 #[utoipa::path(
     get,
     path = "/api/v1/games/{id}/locations",
@@ -70,6 +72,7 @@ pub async fn get_game_locations(
     handle_get_result(get_result)
 }
 
+/// Search locations
 #[utoipa::path(
     post,
     path = "/api/v1/locations/list",
@@ -101,6 +104,7 @@ pub async fn get_locations(
     handle_get_result(search_result)
 }
 
+/// Create a location
 #[utoipa::path(
     post,
     path = "/api/v1/locations",
@@ -130,6 +134,7 @@ pub async fn post_location(
     handle_create_result(create_result)
 }
 
+/// Update a location
 #[utoipa::path(
     put,
     path = "/api/v1/locations/{id}",
@@ -164,6 +169,7 @@ pub async fn put_location(
     handle_update_result(update_result)
 }
 
+/// Delete a location
 #[utoipa::path(
     delete,
     path = "/api/v1/locations/{id}",

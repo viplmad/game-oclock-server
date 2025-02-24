@@ -13,6 +13,7 @@ use super::helpers::{
     handle_update_result,
 };
 
+/// Get a game
 #[utoipa::path(
     get,
     path = "/api/v1/games/{id}",
@@ -42,6 +43,7 @@ pub async fn get_game(
     handle_get_result(get_result)
 }
 
+/// Get all games with specified tag
 #[utoipa::path(
     get,
     path = "/api/v1/tags/{id}/games",
@@ -71,6 +73,7 @@ pub async fn get_tag_games(
     handle_get_result(get_result)
 }
 
+/// Get all games avaiable in a location
 #[utoipa::path(
     get,
     path = "/api/v1/locations/{id}/games",
@@ -102,6 +105,7 @@ pub async fn get_location_games(
     handle_get_result(get_result)
 }
 
+/// Get all games with specified genre
 #[utoipa::path(
     get,
     path = "/api/v1/genres/{id}/games",
@@ -133,6 +137,7 @@ pub async fn get_genre_games(
     handle_get_result(get_result)
 }
 
+/// Get games that have been played on specified device
 #[utoipa::path(
     get,
     path = "/api/v1/devices/{id}/games",
@@ -164,6 +169,7 @@ pub async fn get_device_games(
     handle_get_result(get_result)
 }
 
+/// Search games
 #[utoipa::path(
     post,
     path = "/api/v1/games/list",
@@ -195,6 +201,7 @@ pub async fn get_games(
     handle_get_result(search_result)
 }
 
+/// Create a game
 #[utoipa::path(
     post,
     path = "/api/v1/games",
@@ -222,6 +229,7 @@ pub async fn post_game(
     handle_create_result(create_result)
 }
 
+/// Update a game
 #[utoipa::path(
     put,
     path = "/api/v1/games/{id}",
@@ -257,6 +265,7 @@ pub async fn put_game(
     handle_update_result(update_result)
 }
 
+/// Add a tag to a game
 #[utoipa::path(
     put,
     path = "/api/v1/games/{id}/tags/{other_id}",
@@ -290,6 +299,7 @@ pub async fn link_game_tag(
     handle_action_result(create_result)
 }
 
+/// Add a location as available to a game
 #[utoipa::path(
     put,
     path = "/api/v1/games/{id}/locations/{other_id}",
@@ -325,6 +335,7 @@ pub async fn link_game_location(
     handle_action_result(create_result)
 }
 
+/// Add genre to a game
 #[utoipa::path(
     put,
     path = "/api/v1/games/{id}/genres/{other_id}",
@@ -358,6 +369,7 @@ pub async fn link_game_genre(
     handle_action_result(create_result)
 }
 
+/// Delete a game
 #[utoipa::path(
     delete,
     path = "/api/v1/games/{id}",
@@ -387,6 +399,7 @@ pub async fn delete_game(
     handle_delete_result(delete_result)
 }
 
+/// Remove tag from a game
 #[utoipa::path(
     delete,
     path = "/api/v1/games/{id}/tags/{other_id}",
@@ -420,6 +433,7 @@ pub async fn unlink_game_tag(
     handle_action_result(delete_result)
 }
 
+/// Remove a location as available from a game
 #[utoipa::path(
     delete,
     path = "/api/v1/games/{id}/locations/{other_id}",
@@ -453,6 +467,7 @@ pub async fn unlink_game_location(
     handle_action_result(delete_result)
 }
 
+/// Remove genre froma a game
 #[utoipa::path(
     delete,
     path = "/api/v1/games/{id}/genres/{other_id}",
@@ -486,6 +501,7 @@ pub async fn unlink_game_genre(
     handle_action_result(delete_result)
 }
 
+/// Get all DLCs of a game
 #[utoipa::path(
     get,
     path = "/api/v1/games/{id}/dlcs",
@@ -515,6 +531,7 @@ pub async fn get_game_dlcs(
     handle_get_result(get_result)
 }
 
+/// Get game base game
 #[utoipa::path(
     get,
     path = "/api/v1/games/{id}/base-game",
@@ -544,6 +561,7 @@ pub async fn get_dlc_base_game(
     handle_get_result(get_result)
 }
 
+/// Add a game as base game of another
 #[utoipa::path(
     put,
     path = "/api/v1/games/{id}/base-game/{other_id}",
@@ -576,6 +594,7 @@ pub async fn link_dlc_game(
     handle_action_result(update_result)
 }
 
+/// Remove a game base game
 #[utoipa::path(
     delete,
     path = "/api/v1/games/{id}/base-game",
