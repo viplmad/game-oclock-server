@@ -7,6 +7,7 @@ use uuid::Uuid;
 
 use super::{DurationDef, FinishDTO, GameDTO, LogDTO};
 
+// TODO generate token for anonymous users to see review of a specific year
 #[derive(Serialize, ToSchema)]
 pub struct GamesPlayedReviewDTO {
     pub total_played: u32,
@@ -89,6 +90,7 @@ pub struct StreakDTO {
     pub days: i64,
     #[schema(value_type = String)]
     pub devices_ids: Vec<Uuid>,
+    // TODO add sessions
 }
 
 #[derive(Default, Serialize, ToSchema)]
@@ -114,4 +116,5 @@ pub struct GamesStreakDTO {
     #[schema(value_type = String)]
     pub games_ids: Vec<Uuid>,
     pub streak: StreakDTO,
+    // TODO add sessions
 }
