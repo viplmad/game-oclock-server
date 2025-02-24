@@ -4,7 +4,8 @@
         "title": "game-oclock-server",
         "description": "",
         "license": {
-            "name": ""
+            "name": "MIT License",
+            "identifier": "MIT"
         },
         "version": "2.0.0"
     },
@@ -14,6 +15,7 @@
                 "tags": [
                     "Devices"
                 ],
+                "summary": "Create a device",
                 "operationId": "post_device",
                 "requestBody": {
                     "description": "Device to be createad",
@@ -100,6 +102,7 @@
                 "tags": [
                     "Devices"
                 ],
+                "summary": "Search devices",
                 "operationId": "get_devices",
                 "parameters": [
                     {
@@ -179,6 +182,7 @@
                 "tags": [
                     "Devices"
                 ],
+                "summary": "Get a device",
                 "operationId": "get_device",
                 "parameters": [
                     {
@@ -253,6 +257,7 @@
                 "tags": [
                     "Devices"
                 ],
+                "summary": "Update a device",
                 "operationId": "put_device",
                 "parameters": [
                     {
@@ -341,6 +346,7 @@
                 "tags": [
                     "Devices"
                 ],
+                "summary": "Delete a device",
                 "operationId": "delete_device",
                 "parameters": [
                     {
@@ -410,6 +416,7 @@
                 "tags": [
                     "Games"
                 ],
+                "summary": "Get games that have been played on specified device",
                 "operationId": "get_device_games",
                 "parameters": [
                     {
@@ -489,6 +496,7 @@
                 "tags": [
                     "Games"
                 ],
+                "summary": "Create a game",
                 "operationId": "post_game",
                 "requestBody": {
                     "description": "Game to be created",
@@ -573,8 +581,9 @@
         "/api/v1/games/finished/first": {
             "post": {
                 "tags": [
-                    "GameFinish"
+                    "GameFinishes"
                 ],
+                "summary": "Search first finished games",
                 "operationId": "get_first_finished_games",
                 "parameters": [
                     {
@@ -686,8 +695,9 @@
         "/api/v1/games/finished/last": {
             "post": {
                 "tags": [
-                    "GameFinish"
+                    "GameFinishes"
                 ],
+                "summary": "Search last finished games",
                 "operationId": "get_last_finished_games",
                 "parameters": [
                     {
@@ -799,8 +809,9 @@
         "/api/v1/games/finished/review": {
             "post": {
                 "tags": [
-                    "GameFinish"
+                    "GameFinishes"
                 ],
+                "summary": "Get a finish review in a time frame",
                 "operationId": "get_finished_games_review",
                 "parameters": [
                     {
@@ -876,6 +887,7 @@
                 "tags": [
                     "Games"
                 ],
+                "summary": "Search games",
                 "operationId": "get_games",
                 "parameters": [
                     {
@@ -955,6 +967,7 @@
                 "tags": [
                     "GameLogs"
                 ],
+                "summary": "Search first played games",
                 "operationId": "get_first_played_games",
                 "parameters": [
                     {
@@ -1068,6 +1081,7 @@
                 "tags": [
                     "GameLogs"
                 ],
+                "summary": "Search last played games",
                 "operationId": "get_last_played_games",
                 "parameters": [
                     {
@@ -1181,6 +1195,7 @@
                 "tags": [
                     "GameLogs"
                 ],
+                "summary": "Get a played review in a time frame",
                 "operationId": "get_played_games_review",
                 "parameters": [
                     {
@@ -1256,6 +1271,7 @@
                 "tags": [
                     "Games"
                 ],
+                "summary": "Get a game",
                 "operationId": "get_game",
                 "parameters": [
                     {
@@ -1330,6 +1346,7 @@
                 "tags": [
                     "Games"
                 ],
+                "summary": "Update a game",
                 "operationId": "put_game",
                 "parameters": [
                     {
@@ -1418,6 +1435,7 @@
                 "tags": [
                     "Games"
                 ],
+                "summary": "Delete a game",
                 "operationId": "delete_game",
                 "parameters": [
                     {
@@ -1487,6 +1505,7 @@
                 "tags": [
                     "DLCs"
                 ],
+                "summary": "Get game base game",
                 "operationId": "get_dlc_base_game",
                 "parameters": [
                     {
@@ -1561,6 +1580,7 @@
                 "tags": [
                     "DLCs"
                 ],
+                "summary": "Remove a game base game",
                 "operationId": "unlink_dlc_game",
                 "parameters": [
                     {
@@ -1640,6 +1660,7 @@
                 "tags": [
                     "DLCs"
                 ],
+                "summary": "Add a game as base game of another",
                 "operationId": "link_dlc_game",
                 "parameters": [
                     {
@@ -1718,6 +1739,7 @@
                 "tags": [
                     "Devices"
                 ],
+                "summary": "Get all devices where a game has been played",
                 "operationId": "get_game_devices",
                 "parameters": [
                     {
@@ -1797,6 +1819,7 @@
                 "tags": [
                     "DLCs"
                 ],
+                "summary": "Get all DLCs of a game",
                 "operationId": "get_game_dlcs",
                 "parameters": [
                     {
@@ -1874,8 +1897,9 @@
         "/api/v1/games/{id}/finishes": {
             "get": {
                 "tags": [
-                    "GameFinish"
+                    "GameFinishes"
                 ],
+                "summary": "Get all game finishes",
                 "operationId": "get_game_finishes",
                 "parameters": [
                     {
@@ -1951,8 +1975,9 @@
             },
             "post": {
                 "tags": [
-                    "GameFinish"
+                    "GameFinishes"
                 ],
+                "summary": "Create a game finish",
                 "operationId": "post_game_finish",
                 "parameters": [
                     {
@@ -2039,8 +2064,9 @@
             },
             "delete": {
                 "tags": [
-                    "GameFinish"
+                    "GameFinishes"
                 ],
+                "summary": "Delete a game finish",
                 "operationId": "delete_game_finish",
                 "parameters": [
                     {
@@ -2058,7 +2084,7 @@
                     "content": {
                         "application/json": {
                             "schema": {
-                                "$ref": "#/components/schemas/DateDTO"
+                                "$ref": "#/components/schemas/DateTimeDTO"
                             }
                         }
                     },
@@ -2119,8 +2145,9 @@
         "/api/v1/games/{id}/finishes/first": {
             "get": {
                 "tags": [
-                    "GameFinish"
+                    "GameFinishes"
                 ],
+                "summary": "Get date of first time a game was finished",
                 "operationId": "get_first_game_finish",
                 "parameters": [
                     {
@@ -2197,6 +2224,7 @@
                 "tags": [
                     "Genres"
                 ],
+                "summary": "Get all genres of a game",
                 "operationId": "get_game_genres",
                 "parameters": [
                     {
@@ -2276,6 +2304,7 @@
                 "tags": [
                     "Games"
                 ],
+                "summary": "Add genre to a game",
                 "operationId": "link_game_genre",
                 "parameters": [
                     {
@@ -2362,6 +2391,7 @@
                 "tags": [
                     "Games"
                 ],
+                "summary": "Remove genre froma a game",
                 "operationId": "unlink_game_genre",
                 "parameters": [
                     {
@@ -2448,8 +2478,9 @@
         "/api/v1/games/{id}/links": {
             "get": {
                 "tags": [
-                    "GameLink"
+                    "GameLinks"
                 ],
+                "summary": "Get all game links",
                 "operationId": "get_game_links",
                 "parameters": [
                     {
@@ -2525,8 +2556,9 @@
             },
             "post": {
                 "tags": [
-                    "GameLink"
+                    "GameLinks"
                 ],
+                "summary": "Create a game link",
                 "operationId": "post_game_link",
                 "parameters": [
                     {
@@ -2613,8 +2645,9 @@
             },
             "delete": {
                 "tags": [
-                    "GameLink"
+                    "GameLinks"
                 ],
+                "summary": "Delete a game link",
                 "operationId": "delete_game_link",
                 "parameters": [
                     {
@@ -2695,6 +2728,7 @@
                 "tags": [
                     "Locations"
                 ],
+                "summary": "Get all locations where a game is available",
                 "operationId": "get_game_locations",
                 "parameters": [
                     {
@@ -2774,6 +2808,7 @@
                 "tags": [
                     "Games"
                 ],
+                "summary": "Add a location as available to a game",
                 "operationId": "link_game_location",
                 "parameters": [
                     {
@@ -2871,6 +2906,7 @@
                 "tags": [
                     "Games"
                 ],
+                "summary": "Remove a location as available from a game",
                 "operationId": "unlink_game_location",
                 "parameters": [
                     {
@@ -2959,6 +2995,7 @@
                 "tags": [
                     "GameLogs"
                 ],
+                "summary": "Get all game logs",
                 "operationId": "get_game_logs",
                 "parameters": [
                     {
@@ -3036,6 +3073,7 @@
                 "tags": [
                     "GameLogs"
                 ],
+                "summary": "Create a game log",
                 "operationId": "post_game_log",
                 "parameters": [
                     {
@@ -3124,6 +3162,7 @@
                 "tags": [
                     "GameLogs"
                 ],
+                "summary": "Delete a game log",
                 "operationId": "delete_game_log",
                 "parameters": [
                     {
@@ -3204,6 +3243,7 @@
                 "tags": [
                     "GameLogs"
                 ],
+                "summary": "Get total time played for a game",
                 "operationId": "get_total_game_logs",
                 "parameters": [
                     {
@@ -3280,6 +3320,7 @@
                 "tags": [
                     "Tags"
                 ],
+                "summary": "Get all tags from a game",
                 "operationId": "get_game_tags",
                 "parameters": [
                     {
@@ -3359,6 +3400,7 @@
                 "tags": [
                     "Games"
                 ],
+                "summary": "Add a tag to a game",
                 "operationId": "link_game_tag",
                 "parameters": [
                     {
@@ -3445,6 +3487,7 @@
                 "tags": [
                     "Games"
                 ],
+                "summary": "Remove tag from a game",
                 "operationId": "unlink_game_tag",
                 "parameters": [
                     {
@@ -3533,6 +3576,7 @@
                 "tags": [
                     "Genres"
                 ],
+                "summary": "Create a genre",
                 "operationId": "post_genre",
                 "requestBody": {
                     "description": "Genre to be createad",
@@ -3619,6 +3663,7 @@
                 "tags": [
                     "Genres"
                 ],
+                "summary": "Search genres",
                 "operationId": "get_genres",
                 "parameters": [
                     {
@@ -3698,6 +3743,7 @@
                 "tags": [
                     "Genres"
                 ],
+                "summary": "Get a genre",
                 "operationId": "get_genre",
                 "parameters": [
                     {
@@ -3772,6 +3818,7 @@
                 "tags": [
                     "Genres"
                 ],
+                "summary": "Update a genre",
                 "operationId": "put_genre",
                 "parameters": [
                     {
@@ -3860,6 +3907,7 @@
                 "tags": [
                     "Genres"
                 ],
+                "summary": "Delete a genre",
                 "operationId": "delete_genre",
                 "parameters": [
                     {
@@ -3929,6 +3977,7 @@
                 "tags": [
                     "Games"
                 ],
+                "summary": "Get all games with specified genre",
                 "operationId": "get_genre_games",
                 "parameters": [
                     {
@@ -4008,6 +4057,7 @@
                 "tags": [
                     "Locations"
                 ],
+                "summary": "Create a location",
                 "operationId": "post_location",
                 "requestBody": {
                     "description": "Location to be createad",
@@ -4094,6 +4144,7 @@
                 "tags": [
                     "Locations"
                 ],
+                "summary": "Search locations",
                 "operationId": "get_locations",
                 "parameters": [
                     {
@@ -4173,6 +4224,7 @@
                 "tags": [
                     "Locations"
                 ],
+                "summary": "Get a location",
                 "operationId": "get_location",
                 "parameters": [
                     {
@@ -4247,6 +4299,7 @@
                 "tags": [
                     "Locations"
                 ],
+                "summary": "Update a location",
                 "operationId": "put_location",
                 "parameters": [
                     {
@@ -4335,6 +4388,7 @@
                 "tags": [
                     "Locations"
                 ],
+                "summary": "Delete a location",
                 "operationId": "delete_location",
                 "parameters": [
                     {
@@ -4404,6 +4458,7 @@
                 "tags": [
                     "Games"
                 ],
+                "summary": "Get all games avaiable in a location",
                 "operationId": "get_location_games",
                 "parameters": [
                     {
@@ -4483,6 +4538,7 @@
                 "tags": [
                     "Users"
                 ],
+                "summary": "Get current user",
                 "operationId": "get_current_user",
                 "responses": {
                     "200": {
@@ -4548,6 +4604,7 @@
                 "tags": [
                     "Users"
                 ],
+                "summary": "Change current user password",
                 "operationId": "change_password",
                 "requestBody": {
                     "description": "Password change request",
@@ -4627,6 +4684,7 @@
                 "tags": [
                     "Tags"
                 ],
+                "summary": "Create a tag",
                 "operationId": "post_tag",
                 "requestBody": {
                     "description": "Tag to be createad",
@@ -4713,6 +4771,7 @@
                 "tags": [
                     "Tags"
                 ],
+                "summary": "Search tags",
                 "operationId": "get_tags",
                 "parameters": [
                     {
@@ -4792,6 +4851,7 @@
                 "tags": [
                     "Tags"
                 ],
+                "summary": "Get a tag",
                 "operationId": "get_tag",
                 "parameters": [
                     {
@@ -4866,6 +4926,7 @@
                 "tags": [
                     "Tags"
                 ],
+                "summary": "Update a tag",
                 "operationId": "put_tag",
                 "parameters": [
                     {
@@ -4954,6 +5015,7 @@
                 "tags": [
                     "Tags"
                 ],
+                "summary": "Delete a tag",
                 "operationId": "delete_tag",
                 "parameters": [
                     {
@@ -5023,6 +5085,7 @@
                 "tags": [
                     "Games"
                 ],
+                "summary": "Get all games with specified tag",
                 "operationId": "get_tag_games",
                 "parameters": [
                     {
@@ -5102,6 +5165,7 @@
                 "tags": [
                     "Users"
                 ],
+                "summary": "Create a user",
                 "operationId": "post_user",
                 "parameters": [
                     {
@@ -5198,6 +5262,7 @@
                 "tags": [
                     "Users"
                 ],
+                "summary": "Search users",
                 "operationId": "get_users",
                 "parameters": [
                     {
@@ -5277,6 +5342,7 @@
                 "tags": [
                     "Users"
                 ],
+                "summary": "Get a user",
                 "operationId": "get_user",
                 "parameters": [
                     {
@@ -5351,6 +5417,7 @@
                 "tags": [
                     "Users"
                 ],
+                "summary": "Update a user",
                 "operationId": "put_user",
                 "parameters": [
                     {
@@ -5439,6 +5506,7 @@
                 "tags": [
                     "Users"
                 ],
+                "summary": "Delete a user",
                 "operationId": "delete_user",
                 "parameters": [
                     {
@@ -5508,6 +5576,7 @@
                 "tags": [
                     "Users"
                 ],
+                "summary": "Demote a user",
                 "operationId": "demote_user",
                 "parameters": [
                     {
@@ -5587,6 +5656,7 @@
                 "tags": [
                     "Users"
                 ],
+                "summary": "Promote a user",
                 "operationId": "promote_user",
                 "parameters": [
                     {
@@ -5666,6 +5736,7 @@
                 "tags": [
                     "Auth"
                 ],
+                "summary": "Authenticate through OAuth flow",
                 "operationId": "token",
                 "requestBody": {
                     "description": "Token request (supported grant_type 'password' or 'refresh_token')",
@@ -5725,8 +5796,9 @@
         "/health": {
             "get": {
                 "tags": [
-                    "Health check"
+                    "Health"
                 ],
+                "summary": "Liveness check",
                 "operationId": "health",
                 "responses": {
                     "200": {
@@ -5851,13 +5923,13 @@
             "FinishDTO": {
                 "type": "object",
                 "required": [
-                    "date",
+                    "datetime",
                     "status"
                 ],
                 "properties": {
-                    "date": {
+                    "datetime": {
                         "type": "string",
-                        "format": "date"
+                        "format": "date-time"
                     },
                     "device_id": {
                         "type": "string"
@@ -6343,6 +6415,7 @@
             },
             "GrantType": {
                 "type": "string",
+                "description": "OAuth grant type",
                 "enum": [
                     "password",
                     "refresh_token"
@@ -6458,14 +6531,14 @@
             "NewFinishDTO": {
                 "type": "object",
                 "required": [
-                    "date",
+                    "datetime",
                     "status",
                     "device_id"
                 ],
                 "properties": {
-                    "date": {
+                    "datetime": {
                         "type": "string",
-                        "format": "date"
+                        "format": "date-time"
                     },
                     "device_id": {
                         "type": "string"
@@ -6756,12 +6829,16 @@
                 "required": [
                     "start_date",
                     "end_date",
-                    "days"
+                    "days",
+                    "devices_ids"
                 ],
                 "properties": {
                     "days": {
                         "type": "integer",
                         "format": "int64"
+                    },
+                    "devices_ids": {
+                        "type": "string"
                     },
                     "end_date": {
                         "type": "string",
@@ -6804,35 +6881,41 @@
             },
             "TokenRequest": {
                 "type": "object",
+                "description": "OAuth token request",
                 "required": [
                     "grant_type"
                 ],
                 "properties": {
                     "grant_type": {
-                        "$ref": "#/components/schemas/GrantType"
+                        "$ref": "#/components/schemas/GrantType",
+                        "description": "Grant type"
                     },
                     "password": {
                         "type": [
                             "string",
                             "null"
-                        ]
+                        ],
+                        "description": "Password (used in password grant type)"
                     },
                     "refresh_token": {
                         "type": [
                             "string",
                             "null"
-                        ]
+                        ],
+                        "description": "Refresh token (used in refresh_token grant type)"
                     },
                     "username": {
                         "type": [
                             "string",
                             "null"
-                        ]
+                        ],
+                        "description": "Username (used in password grant type)"
                     }
                 }
             },
             "TokenResponse": {
                 "type": "object",
+                "description": "OAuth token response",
                 "required": [
                     "access_token",
                     "refresh_token",
@@ -6841,17 +6924,21 @@
                 ],
                 "properties": {
                     "access_token": {
-                        "type": "string"
+                        "type": "string",
+                        "description": "Access token"
                     },
                     "expires_in": {
                         "type": "integer",
-                        "format": "int64"
+                        "format": "int64",
+                        "description": "Expires in"
                     },
                     "refresh_token": {
-                        "type": "string"
+                        "type": "string",
+                        "description": "Refresh token"
                     },
                     "token_type": {
-                        "type": "string"
+                        "type": "string",
+                        "description": "Topke type"
                     }
                 }
             },
@@ -6900,5 +6987,55 @@
                 "description": "OAuth2 flow"
             }
         }
-    }
+    },
+    "tags": [
+        {
+            "name": "Games",
+            "description": "Games management"
+        },
+        {
+            "name": "DLCs",
+            "description": "DLCs management"
+        },
+        {
+            "name": "GameFinishes",
+            "description": "Game finishes management"
+        },
+        {
+            "name": "GameLogs",
+            "description": "Game logs / sessions management"
+        },
+        {
+            "name": "GameLinks",
+            "description": "Game links management"
+        },
+        {
+            "name": "Tags",
+            "description": "Tags management"
+        },
+        {
+            "name": "Locations",
+            "description": "Locations management"
+        },
+        {
+            "name": "Genres",
+            "description": "Genres management"
+        },
+        {
+            "name": "Devices",
+            "description": "Devices management"
+        },
+        {
+            "name": "Users",
+            "description": "Users management"
+        },
+        {
+            "name": "Auth",
+            "description": "Authentication"
+        },
+        {
+            "name": "Health",
+            "description": "Liveness / Readiness"
+        }
+    ]
 }
