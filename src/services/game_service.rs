@@ -47,7 +47,7 @@ impl GameService {
         game: NewGameDTO,
     ) -> Result<GameDTO, ApiErrors> {
         check_game_rating(&game)?;
-        // TODO check image is reachable
+
         let new_id = crate::uuid_utils::new_model_uuid();
         create_merged(
             game,
@@ -136,7 +136,6 @@ impl GameService {
     }
 
     pub async fn delete_game(&self, user_id: &Uuid, id: &Uuid) -> Result<(), ApiErrors> {
-        // TODO Error if game is used -> use sql contraints
         let delete_result = self.repository.delete_by_id(user_id, id).await;
         handle_action_result::<GameDTO>(delete_result)
     }

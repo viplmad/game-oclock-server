@@ -47,7 +47,7 @@ CREATE TABLE "GameFinish" (
 	CONSTRAINT "GameFinish_pk" PRIMARY KEY (user_id, game_id, datetime),
 	CONSTRAINT "GameFinish_fk_User" FOREIGN KEY (user_id) REFERENCES "User"(id) ON DELETE CASCADE,
 	CONSTRAINT "GameFinish_fk_Game" FOREIGN KEY (game_id) REFERENCES "Game"(id) ON DELETE CASCADE,
-	CONSTRAINT "GameFinish_fk_Device" FOREIGN KEY (device_id) REFERENCES "Device"(id) ON DELETE CASCADE
+	CONSTRAINT "GameFinish_fk_Device" FOREIGN KEY (device_id) REFERENCES "Device"(id) ON DELETE SET NULL
 );
 
 CREATE TABLE "GameLink" (
@@ -69,7 +69,7 @@ CREATE TABLE "GameLog" (
 	CONSTRAINT "GameLog_pk" PRIMARY KEY (user_id, game_id, start_datetime),
 	CONSTRAINT "GameLog_fk_User" FOREIGN KEY (user_id) REFERENCES "User"(id) ON DELETE CASCADE,
 	CONSTRAINT "GameLog_fk_Game" FOREIGN KEY (game_id) REFERENCES "Game"(id) ON DELETE CASCADE,
-	CONSTRAINT "GameLog_fk_Device" FOREIGN KEY (device_id) REFERENCES "Device"(id) ON DELETE CASCADE
+	CONSTRAINT "GameLog_fk_Device" FOREIGN KEY (device_id) REFERENCES "Device"(id) ON DELETE SET NULL
 );
 
 CREATE TABLE "GameUserInfo" (

@@ -9,7 +9,7 @@ use super::{GameStatus, Merge, ModelInfo};
 pub struct FinishDTO {
     #[schema(value_type = String, format = DateTime)]
     pub datetime: DateTime<Utc>,
-    pub status: GameStatus, // TODO use Finish Status
+    pub status: GameStatus,
     #[schema(value_type = String)]
     #[serde(skip_serializing_if = "Option::is_none")]
     pub device_id: Option<Uuid>,
