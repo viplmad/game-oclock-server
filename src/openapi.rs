@@ -9,8 +9,8 @@ pub fn get_openapi() -> utoipa::openapi::OpenApi {
     #[derive(OpenApi)]
     #[openapi(
         info(license(
-            name = "MIT License",
-            identifier = "MIT"
+            name = "GNU General Public License v3.0",
+            identifier = "GPL-3.0-only"
         )),
         tags(
             (name = "Games", description = "Games management"),
