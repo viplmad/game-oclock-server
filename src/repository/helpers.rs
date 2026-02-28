@@ -6,8 +6,8 @@ use crate::entities::{PageResult, SearchQuery};
 use crate::errors::{RepositoryError, SearchErrors};
 
 pub(super) async fn begin_transaction(
-    pool: &PgPool,
-) -> Result<Transaction<Postgres>, RepositoryError> {
+    pool: &'_ PgPool,
+) -> Result<Transaction<'_, Postgres>, RepositoryError> {
     pool.begin().await.map_err(|err| {
         log::error!("Error beginning transaction. - {}", err.to_string());
         RepositoryError()
