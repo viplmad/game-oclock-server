@@ -17,11 +17,6 @@ base64 = { version = "^0", default-features = false }
 uuid = { version = "^1", default-features = false, features = [ "v4", "v7", "std", "serde" ] }
 bcrypt = { version = "^0", default-features = false, features = [ "std" ] }
 
-# TLS
-# Fix version because actix (tokio-rustls) uses old version
-rustls = { version = "^0.20.9", default-features = false }
-rustls-pemfile = { version = "^1", default-features = false }
-
 # Serialisation/Deserialisation
 serde = { version = "^1", default-features = false }
 serde_json = { version = "^1", default-features = false }

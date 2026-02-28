@@ -1,4 +1,4 @@
-use std::{env, fs::File, io::BufReader};
+use std::env;
 
 use actix_web_httpauth::middleware::HttpAuthentication;
 use dotenvy::dotenv;
@@ -12,10 +12,6 @@ use utoipa_swagger_ui::{Config, SwaggerUi};
 
 const DEFAULT_HOST: &str = "0.0.0.0";
 const DEFAULT_HTTP_PORT: &str = "80";
-const DEFAULT_HTTPS_PORT: &str = "443";
-
-const TLS_CERT_PATH: &str = "/certs/cert.pem";
-const TLS_KEY_PATH: &str = "/certs/key.pem";
 
 #[actix_web::main]
 async fn main() -> std::io::Result<()> {
@@ -35,16 +31,7 @@ async fn main() -> std::io::Result<()> {
     let encoding_key = generate_encoding_key(&secret_key);
     let decoding_key = generate_decoding_key(&secret_key);
 
-    // TLS
-    let tls_port = env::var("TLS_PORT")
-        .unwrap_or_else(|_| String::from(DEFAULT_HTTPS_PORT))
-        .parse()
-        .expect("TLS port is not a number");
-    let tls_cert_path = env::var("TLS_CERT_PATH").unwrap_or_else(|_| String::from(TLS_CERT_PATH));
-    let tls_key_path = env::var("TLS_KEY_PATH").unwrap_or_else(|_| String::from(TLS_KEY_PATH));
-    let tls_config = load_tls_config(&tls_cert_path, &tls_key_path);
-
-    run(host, port, encoding_key, decoding_key, tls_port, tls_config)
+    run(host, port, encoding_key, decoding_key)
         .await
         .expect("Could not start server.");
 
@@ -68,8 +55,6 @@ async fn run(
     port: u16,
     encoding_key: EncodingKey,
     decoding_key: DecodingKey,
-    tls_port: u16,
-    tls_config: Option<rustls::ServerConfig>,
 ) -> std::io::Result<()> {
     let data_encoding_key = web::Data::new(encoding_key);
     let data_decoding_key = web::Data::new(decoding_key);
@@ -172,7 +157,7 @@ async fn run(
     // OpenAPI
     let openapi = openapi::get_openapi();
 
-    let mut server = HttpServer::new(move || {
+    let server = HttpServer::new(move || {
         let auth = HttpAuthentication::bearer(game_oclock_server::auth::token_validator);
 
         App::new()
@@ -297,95 +282,6 @@ async fn run(
             )
     });
 
-    if let Some(config) = tls_config {
-        log::info!(
-            "TLS enabled -> Server listening on https://{}:{}",
-            host,
-            tls_port
-        );
-        server = server.bind_rustls((host.clone(), tls_port), config)?;
-    }
-
     log::info!("Server listening on http://{}:{}", host, port);
     server.bind((host, port))?.run().await
-}
-
-fn load_tls_config(cert_path: &str, key_path: &str) -> Option<rustls::ServerConfig> {
-    // Load TLS key/cert files
-    let cert_file = match File::open(cert_path) {
-        Ok(file) => Some(file),
-        Err(err) => {
-            log::info!(
-                "cert.pem file NOT found at {} -> TLS disabled. - {}",
-                cert_path,
-                err.to_string()
-            );
-            return None;
-        }
-    }?;
-    log::info!("cert.pem file found at {}.", cert_path);
-
-    let key_file = match File::open(key_path) {
-        Ok(file) => Some(file),
-        Err(err) => {
-            log::info!(
-                "key.pem file NOT found at {} -> TLS disabled. -  {}",
-                key_path,
-                err.to_string()
-            );
-            return None;
-        }
-    }?;
-    log::info!("key.pem file found at {}.", key_path);
-
-    // Init server config builder with safe defaults
-    let config = rustls::ServerConfig::builder()
-        .with_safe_defaults()
-        .with_no_client_auth();
-
-    let cert_file_reader = &mut BufReader::new(cert_file);
-    let key_file_reader = &mut BufReader::new(key_file);
-
-    // Convert files to key/cert objects
-    let cert_chain = match rustls_pemfile::certs(cert_file_reader) {
-        Ok(certs) => Some(certs.into_iter().map(rustls::Certificate).collect()),
-        Err(err) => {
-            log::warn!(
-                "Cert chain could not be obtained from cert.pem. -> TLS disabled - {}",
-                err.to_string()
-            );
-            return None;
-        }
-    }?;
-
-    let mut keys: Vec<rustls::PrivateKey> =
-        match rustls_pemfile::pkcs8_private_keys(key_file_reader) {
-            Ok(keys) => Some(keys.into_iter().map(rustls::PrivateKey).collect()),
-            Err(err) => {
-                log::warn!(
-                    "Private keys could not be obtained from key.pem. -> TLS disabled - {}",
-                    err.to_string()
-                );
-                return None;
-            }
-        }?;
-
-    // exit if no keys could be parsed
-    if keys.is_empty() {
-        log::info!("Could not locate PKCS 8 private keys. -> TLS disabled");
-        return None;
-    }
-
-    config
-        .with_single_cert(cert_chain, keys.remove(0))
-        .map_or_else(
-            |err| {
-                log::info!(
-                    "Error creating tls config. -> TLS disabled - {}",
-                    err.to_string()
-                );
-                None
-            },
-            Some,
-        )
 }
