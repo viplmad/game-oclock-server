@@ -65,94 +65,72 @@ async fn run(
         .expect("Could not open database connection.");
     migrations::apply_migrations(&database_connection_pool).await;
 
+    let igdb_client = IgdbClientPoolBuilder::from_env()
+        .await
+        .expect("Could not create IGDB client.");
+
     let user_repository = UserRepository::with_connection(database_connection_pool.clone());
     let user_service = UserService::with(user_repository);
     migrations::check_admin_user(&user_service).await;
 
     let device_repository = DeviceRepository::with_connection(database_connection_pool.clone());
-    let game_available_repository =
-        GameAvailableRepository::with_connection(database_connection_pool.clone());
-    let game_finish_repository =
-        GameFinishRepository::with_connection(database_connection_pool.clone());
-    let game_genre_repository =
-        GameGenreRepository::with_connection(database_connection_pool.clone());
-    let game_link_repository =
-        GameLinkRepository::with_connection(database_connection_pool.clone());
-    let game_log_repository = GameLogRepository::with_connection(database_connection_pool.clone());
-    let game_played_device_repository =
-        GamePlayedDeviceRepository::with_connection(database_connection_pool.clone());
-    let game_repository = GameRepository::with_connection(database_connection_pool.clone());
-    let game_tag_repository = GameTagRepository::with_connection(database_connection_pool.clone());
-    let game_with_finish_repository =
-        GameWithFinishRepository::with_connection(database_connection_pool.clone());
-    let game_with_log_repository =
-        GameWithLogRepository::with_connection(database_connection_pool.clone());
-    let genre_repository = GenreRepository::with_connection(database_connection_pool.clone());
+    let media_available_repository =
+        MediaAvailableRepository::with_connection(database_connection_pool.clone());
+    let media_session_repository =
+        MediaSessionRepository::with_connection(database_connection_pool.clone());
+    let media_session_device_repository =
+        MediaSessionDeviceRepository::with_connection(database_connection_pool.clone());
+    let media_repository = MediaRepository::with_connection(database_connection_pool.clone());
+    let media_tag_repository =
+        MediaTagRepository::with_connection(database_connection_pool.clone());
+    let media_with_session_repository =
+        MediaWithSessionRepository::with_connection(database_connection_pool.clone());
     let location_repository = LocationRepository::with_connection(database_connection_pool.clone());
     let tag_repository = TagRepository::with_connection(database_connection_pool.clone());
 
     let auth_service = AuthService::with(user_service.clone());
     let device_service = DeviceService::with(device_repository);
-    let game_service = GameService::with(game_repository);
-    let genre_service = GenreService::with(genre_repository);
+    let external_media_service = MediaExternalService::with(igdb_client);
+    let media_service = MediaService::with(external_media_service.clone(), media_repository);
     let location_service = LocationService::with(location_repository);
     let tag_service = TagService::with(tag_repository);
-    let game_available_service = GameAvailableService::with(
-        game_available_repository,
-        game_service.clone(),
+    let media_available_service = MediaAvailableService::with(
+        media_available_repository,
+        media_service.clone(),
         location_service.clone(),
     );
-    let game_finish_service = GameFinishService::with(
-        game_finish_repository,
-        game_service.clone(),
+    let media_session_service = MediaSessionService::with(
+        media_session_repository,
+        media_service.clone(),
         device_service.clone(),
     );
-    let game_genre_service = GameGenreService::with(
-        game_genre_repository,
-        game_service.clone(),
-        genre_service.clone(),
-    );
-    let game_link_service = GameLinkService::with(game_link_repository, game_service.clone());
-    let game_log_service = GameLogService::with(
-        game_log_repository,
-        game_service.clone(),
+    let media_session_device_service = MediaSessionDeviceService::with(
+        media_session_device_repository,
+        media_service.clone(),
         device_service.clone(),
     );
-    let game_played_device_service = GamePlayedDeviceService::with(
-        game_played_device_repository,
-        game_service.clone(),
-        device_service.clone(),
-    );
-    let game_tag_service = GameTagService::with(
-        game_tag_repository,
-        game_service.clone(),
+    let media_tag_service = MediaTagService::with(
+        media_tag_repository,
+        media_service.clone(),
         tag_service.clone(),
     );
-    let game_with_finish_service = GameWithFinishService::with(game_with_finish_repository);
-    let game_with_log_service = GameWithLogService::with(game_with_log_repository);
-    let game_review_service = GameReviewService::with(
-        game_log_service.clone(),
-        game_finish_service.clone(),
-        game_with_log_service.clone(),
-        game_with_finish_service.clone(),
+    let media_with_session_service = MediaWithSessionService::with(media_with_session_repository);
+    let media_review_service = MediaReviewService::with(
+        media_session_service.clone(),
+        media_with_session_service.clone(),
     );
 
     let data_auth_service = web::Data::new(auth_service.clone());
     let data_device_service = web::Data::new(device_service.clone());
-    let data_game_service = web::Data::new(game_service.clone());
-    let data_genre_service = web::Data::new(genre_service.clone());
+    let data_media_service = web::Data::new(media_service.clone());
     let data_location_service = web::Data::new(location_service.clone());
     let data_tag_service = web::Data::new(tag_service.clone());
-    let data_game_available_service = web::Data::new(game_available_service.clone());
-    let data_game_finish_service = web::Data::new(game_finish_service.clone());
-    let data_game_genre_service = web::Data::new(game_genre_service.clone());
-    let data_game_link_service = web::Data::new(game_link_service.clone());
-    let data_game_log_service = web::Data::new(game_log_service.clone());
-    let data_game_played_device_service = web::Data::new(game_played_device_service.clone());
-    let data_game_tag_service = web::Data::new(game_tag_service.clone());
-    let data_game_with_finish_service = web::Data::new(game_with_finish_service.clone());
-    let data_game_with_log_service = web::Data::new(game_with_log_service.clone());
-    let data_game_review_service = web::Data::new(game_review_service.clone());
+    let data_media_available_service = web::Data::new(media_available_service.clone());
+    let data_media_session_service = web::Data::new(media_session_service.clone());
+    let data_media_session_device_service = web::Data::new(media_session_device_service.clone());
+    let data_media_tag_service = web::Data::new(media_tag_service.clone());
+    let data_media_with_session_service = web::Data::new(media_with_session_service.clone());
+    let data_media_review_service = web::Data::new(media_review_service.clone());
 
     // OpenAPI
     let openapi = openapi::get_openapi();
@@ -164,101 +142,85 @@ async fn run(
             // Data injection
             .app_data(data_auth_service.clone())
             .app_data(data_device_service.clone())
-            .app_data(data_game_service.clone())
-            .app_data(data_genre_service.clone())
+            .app_data(data_media_service.clone())
             .app_data(data_location_service.clone())
             .app_data(data_tag_service.clone())
-            .app_data(data_game_available_service.clone())
-            .app_data(data_game_finish_service.clone())
-            .app_data(data_game_genre_service.clone())
-            .app_data(data_game_link_service.clone())
-            .app_data(data_game_log_service.clone())
-            .app_data(data_game_played_device_service.clone())
-            .app_data(data_game_tag_service.clone())
-            .app_data(data_game_with_finish_service.clone())
-            .app_data(data_game_with_log_service.clone())
-            .app_data(data_game_review_service.clone())
+            .app_data(data_media_available_service.clone())
+            .app_data(data_media_session_service.clone())
+            .app_data(data_media_session_device_service.clone())
+            .app_data(data_media_tag_service.clone())
+            .app_data(data_media_with_session_service.clone())
+            .app_data(data_media_review_service.clone())
             .app_data(data_encoding_key.clone())
             .app_data(data_decoding_key.clone())
             .service(
                 web::scope("/api").service(
                     web::scope("/v1")
                         .wrap(auth)
-                        // Games
-                        .service(routes::get_game)
-                        .service(routes::get_tag_games)
-                        .service(routes::get_location_games)
-                        .service(routes::get_genre_games)
-                        .service(routes::get_device_games)
-                        .service(routes::get_games)
-                        .service(routes::post_game)
-                        .service(routes::put_game)
-                        .service(routes::link_game_tag)
-                        .service(routes::link_game_location)
-                        .service(routes::link_game_genre)
-                        .service(routes::delete_game)
-                        .service(routes::unlink_game_tag)
-                        .service(routes::unlink_game_location)
-                        .service(routes::unlink_game_genre)
-                        // DLCs
-                        .service(routes::get_game_dlcs)
-                        .service(routes::get_dlc_base_game)
-                        .service(routes::link_dlc_game)
-                        .service(routes::unlink_dlc_game)
-                        // Game Finish
-                        .service(routes::get_game_finishes)
-                        .service(routes::get_first_game_finish)
-                        .service(routes::get_finished_games_review)
-                        .service(routes::get_first_finished_games)
-                        .service(routes::get_last_finished_games)
-                        .service(routes::post_game_finish)
-                        .service(routes::delete_game_finish)
-                        // Game Logs
-                        .service(routes::get_game_logs)
-                        .service(routes::get_total_game_logs)
-                        .service(routes::get_played_games_review)
-                        .service(routes::get_first_played_games)
-                        .service(routes::get_last_played_games)
-                        .service(routes::post_game_log)
-                        .service(routes::delete_game_log)
-                        // Game Links
-                        .service(routes::get_game_links)
-                        .service(routes::post_game_link)
-                        .service(routes::delete_game_link)
+                        // Medias
+                        .service(routes::get_media)
+                        .service(routes::get_tag_medias)
+                        .service(routes::count_tag_medias)
+                        .service(routes::get_location_medias)
+                        .service(routes::count_location_medias)
+                        .service(routes::get_device_medias)
+                        .service(routes::count_device_medias)
+                        .service(routes::get_medias)
+                        .service(routes::count_medias)
+                        .service(routes::create_media)
+                        .service(routes::update_media)
+                        .service(routes::link_media_tag)
+                        .service(routes::link_media_location)
+                        .service(routes::delete_media)
+                        .service(routes::unlink_media_tag)
+                        .service(routes::unlink_media_location)
+                        .service(routes::link_parent_media)
+                        .service(routes::unlink_parent_media)
+                        .service(routes::sync_media)
+                        // Media Sessions
+                        .service(routes::get_media_sessions)
+                        .service(routes::count_media_sessions)
+                        .service(routes::get_total_media_sessions)
+                        .service(routes::get_session_medias_review)
+                        .service(routes::get_first_session_medias)
+                        .service(routes::get_last_session_medias)
+                        .service(routes::get_media_session)
+                        .service(routes::create_media_session)
+                        .service(routes::delete_media_session)
                         // Tags
                         .service(routes::get_tag)
-                        .service(routes::get_game_tags)
+                        .service(routes::get_media_tags)
+                        .service(routes::count_media_tags)
                         .service(routes::get_tags)
-                        .service(routes::post_tag)
-                        .service(routes::put_tag)
+                        .service(routes::count_tags)
+                        .service(routes::create_tag)
+                        .service(routes::update_tag)
                         .service(routes::delete_tag)
                         // Locations
                         .service(routes::get_location)
-                        .service(routes::get_game_locations)
+                        .service(routes::get_media_locations)
+                        .service(routes::count_media_locations)
                         .service(routes::get_locations)
-                        .service(routes::post_location)
-                        .service(routes::put_location)
+                        .service(routes::count_locations)
+                        .service(routes::create_location)
+                        .service(routes::update_location)
                         .service(routes::delete_location)
-                        // Genres
-                        .service(routes::get_genre)
-                        .service(routes::get_game_genres)
-                        .service(routes::get_genres)
-                        .service(routes::post_genre)
-                        .service(routes::put_genre)
-                        .service(routes::delete_genre)
                         // Devices
                         .service(routes::get_device)
-                        .service(routes::get_game_devices)
+                        .service(routes::get_media_devices)
+                        .service(routes::count_media_devices)
                         .service(routes::get_devices)
-                        .service(routes::post_device)
-                        .service(routes::put_device)
+                        .service(routes::count_devices)
+                        .service(routes::create_device)
+                        .service(routes::update_device)
                         .service(routes::delete_device)
                         // Users
                         .service(routes::get_user)
                         .service(routes::get_current_user)
                         .service(routes::get_users)
-                        .service(routes::post_user)
-                        .service(routes::put_user)
+                        .service(routes::count_users)
+                        .service(routes::create_user)
+                        .service(routes::update_user)
                         .service(routes::change_password)
                         .service(routes::promote_user)
                         .service(routes::demote_user)

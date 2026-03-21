@@ -1,6 +1,6 @@
 use std::str::FromStr;
 
-use chrono::{DateTime, NaiveDate, Utc};
+use chrono::{DateTime, Utc};
 use sea_query::enum_def;
 use sqlx::FromRow;
 use uuid::Uuid;
@@ -15,24 +15,13 @@ pub struct Location {
     pub id: Uuid,
     pub user_id: Uuid,
     pub name: String,
-    pub icon_url: Option<String>,
+    pub image_url: Option<String>,
     pub added_datetime: DateTime<Utc>,
     pub updated_datetime: DateTime<Utc>,
 }
 
 impl TableIden for LocationIden {
     const TABLE: Self = Self::Table;
-}
-
-#[derive(FromRow)]
-pub struct LocationWithDate {
-    pub id: Uuid,
-    pub user_id: Uuid,
-    pub name: String,
-    pub icon_url: Option<String>,
-    pub added_datetime: DateTime<Utc>,
-    pub updated_datetime: DateTime<Utc>,
-    pub query_date: NaiveDate,
 }
 
 impl FromStr for FieldIden<LocationIden> {
@@ -42,7 +31,7 @@ impl FromStr for FieldIden<LocationIden> {
         match field {
             "id" => Ok(FieldIden::new(LocationIden::Id, FieldType::String)),
             "name" => Ok(FieldIden::new(LocationIden::Name, FieldType::String)),
-            "icon_url" => Ok(FieldIden::new(LocationIden::IconUrl, FieldType::String)),
+            "image_url" => Ok(FieldIden::new(LocationIden::ImageUrl, FieldType::String)),
             "added_datetime" => Ok(FieldIden::new(
                 LocationIden::AddedDatetime,
                 FieldType::DateTime,

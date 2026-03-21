@@ -5,7 +5,7 @@ use super::query::location_query;
 use crate::entities::{Location, LocationSearch, PageResult};
 use crate::errors::{RepositoryError, SearchErrors};
 
-use super::helpers::{execute, exists_some, fetch_all_search, fetch_optional};
+use super::helpers::{count_all_search, execute, exists_some, fetch_all_search, fetch_optional};
 
 #[derive(Clone)]
 pub struct LocationRepository {
@@ -35,6 +35,15 @@ impl LocationRepository {
     ) -> Result<PageResult<Location>, SearchErrors> {
         let search_query = location_query::select_all_with_search(user_id, search)?;
         fetch_all_search(&self.pool, search_query).await
+    }
+
+    pub async fn count_all(
+        &self,
+        user_id: &Uuid,
+        search: LocationSearch,
+    ) -> Result<u64, SearchErrors> {
+        let count_query = location_query::count_all_with_search(user_id, search)?;
+        count_all_search(&self.pool, count_query).await
     }
 
     pub async fn create(&self, location: &Location) -> Result<(), RepositoryError> {

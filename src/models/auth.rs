@@ -65,10 +65,6 @@ impl UserClaims {
     pub fn is_refresh(&self) -> bool {
         !self.is_access()
     }
-
-    pub fn sub_as_user_id(&self) -> Uuid {
-        self.sub
-    }
 }
 
 pub struct LoggedUser {

@@ -23,7 +23,7 @@ pub(super) async fn commit_transaction(
     })
 }
 
-pub(super) async fn execute_return<'c, X, T>(
+pub(super) async fn fetch_one<'c, X, T>(
     executor: X,
     query: impl QueryStatementWriter,
 ) -> Result<T, RepositoryError>
@@ -50,9 +50,7 @@ where
     X: sqlx::Executor<'c, Database = Postgres>,
     T: for<'r> sqlx::Decode<'r, Postgres> + sqlx::Type<Postgres> + Send + Unpin,
 {
-    execute_return(executor, query)
-        .await
-        .map(|tuple: (T,)| tuple.0)
+    fetch_one(executor, query).await.map(|tuple: (T,)| tuple.0)
 }
 
 pub(super) async fn execute<'c, X>(
@@ -153,6 +151,19 @@ where
             page: search_query.page,
             size: search_query.size,
         })
+        .map_err(SearchErrors::Repository)
+}
+
+pub(super) async fn count_all_search<'c, X>(
+    executor: X,
+    query: impl QueryStatementWriter,
+) -> Result<u64, SearchErrors>
+where
+    X: sqlx::Executor<'c, Database = Postgres>,
+{
+    fetch_one(executor, query)
+        .await
+        .map(|tuple: (i64,)| u64::try_from(tuple.0).expect("Count is not positive"))
         .map_err(SearchErrors::Repository)
 }
 

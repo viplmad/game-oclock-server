@@ -107,7 +107,7 @@ impl AuthService {
             )));
         }
 
-        let user_id = token_data.claims.sub_as_user_id();
+        let user_id = token_data.claims.sub;
         let user = self
             .user_service
             .get_user(&user_id)

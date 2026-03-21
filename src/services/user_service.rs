@@ -6,11 +6,14 @@ use crate::models::{NewUserDTO, PasswordChangeDTO, SearchDTO, UserDTO, UserPageR
 use crate::repository::UserRepository;
 
 use super::helpers::{
-    create_merged, handle_action_result, handle_already_exists_result,
+    create_merged, handle_action_result, handle_already_exists_result, handle_get_count_result,
     handle_get_list_paged_result, handle_get_result, handle_get_result_raw,
     handle_not_found_result, handle_query_mapping, handle_result, handle_update_result,
     update_merged,
 };
+
+const ROLE_ADMIN: &str = "ROLE_ADMIN";
+const ROLE_USER: &str = "ROLE_USER";
 
 #[derive(Clone)]
 pub struct UserService {
@@ -43,6 +46,16 @@ impl UserService {
         let search = handle_query_mapping::<UserDTO, UserSearch>(search, quicksearch)?;
         let find_result = self.repository.search_all(search).await;
         handle_get_list_paged_result(find_result)
+    }
+
+    pub async fn count_users(
+        &self,
+        search: SearchDTO,
+        quicksearch: Option<String>,
+    ) -> Result<u64, ApiErrors> {
+        let search = handle_query_mapping::<UserDTO, UserSearch>(search, quicksearch)?;
+        let count_result = self.repository.count_all(search).await;
+        handle_get_count_result::<UserDTO>(count_result)
     }
 
     pub async fn create_user(
@@ -124,12 +137,15 @@ impl UserService {
     }
 
     pub async fn promote_user(&self, user_id: &Uuid) -> Result<(), ApiErrors> {
-        self.change_user_admin(user_id, true).await
+        self.change_user_role(user_id, ROLE_ADMIN).await
     }
 
     pub async fn demote_user(&self, user_id: &Uuid) -> Result<(), ApiErrors> {
         // First check if there would be admins left
-        let exists_more_admins_result = self.repository.exists_with_admin_except_id(user_id).await;
+        let exists_more_admins_result = self
+            .repository
+            .exists_with_role_except_id(user_id, ROLE_ADMIN)
+            .await;
         let exists_more_admins = handle_result::<bool, UserDTO>(exists_more_admins_result)?;
         if !exists_more_admins {
             return Err(ApiErrors::InvalidParameter(String::from(
@@ -137,13 +153,13 @@ impl UserService {
             )));
         }
 
-        self.change_user_admin(user_id, false).await
+        self.change_user_role(user_id, ROLE_USER).await
     }
 
-    async fn change_user_admin(&self, user_id: &Uuid, admin: bool) -> Result<(), ApiErrors> {
+    async fn change_user_role(&self, user_id: &Uuid, role: &str) -> Result<(), ApiErrors> {
         self.exists_user(user_id).await?;
 
-        let update_result = self.repository.update_admin_by_id(user_id, admin).await;
+        let update_result = self.repository.update_admin_by_id(user_id, role).await;
         handle_update_result::<UserDTO>(update_result)
     }
 
@@ -155,7 +171,10 @@ impl UserService {
     }
 
     pub async fn is_user_admin(&self, user_id: &Uuid) -> Result<bool, ApiErrors> {
-        let exists_result = self.repository.exists_by_id_and_admin(user_id).await;
+        let exists_result = self
+            .repository
+            .exists_by_id_and_role(user_id, ROLE_ADMIN)
+            .await;
         handle_result::<bool, UserDTO>(exists_result)
     }
 
@@ -165,7 +184,7 @@ impl UserService {
     }
 
     pub async fn exists_admin_user(&self) -> Result<bool, ApiErrors> {
-        let exists_result = self.repository.exists_with_admin().await;
+        let exists_result = self.repository.exists_with_role(ROLE_ADMIN).await;
         handle_result::<bool, UserDTO>(exists_result)
     }
 }

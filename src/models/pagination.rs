@@ -2,25 +2,31 @@ use serde::Serialize;
 use utoipa::ToSchema;
 
 use super::{
-    DeviceDTO, GameDTO, GameWithFinishDTO, GameWithLogDTO, GenreDTO, LocationDTO, ModelInfo,
-    TagDTO, UserDTO,
+    DeviceDTO, LocationAvailableDTO, LocationDTO, MediaAvailableDTO, MediaDTO, MediaSessionDTO,
+    MediaTagDTO, ModelInfo, SessionDTO, TagDTO, TagMediaDTO, UserDTO,
 };
 
-pub type GamePageResult = PageResultDTO<GameDTO>;
-pub type GameWithFinishPageResult = PageResultDTO<GameWithFinishDTO>;
-pub type GameWithLogPageResult = PageResultDTO<GameWithLogDTO>;
-pub type LocationPageResult = PageResultDTO<LocationDTO>;
-pub type GenrePageResult = PageResultDTO<GenreDTO>;
 pub type DevicePageResult = PageResultDTO<DeviceDTO>;
+pub type LocationPageResult = PageResultDTO<LocationDTO>;
+pub type LocationAvailablePageResult = PageResultDTO<LocationAvailableDTO>;
 pub type TagPageResult = PageResultDTO<TagDTO>;
+pub type TagMediaPageResult = PageResultDTO<TagMediaDTO>;
 pub type UserPageResult = PageResultDTO<UserDTO>;
+pub type MediaPageResult = PageResultDTO<MediaDTO>;
+pub type MediaSessionPageResult = PageResultDTO<MediaSessionDTO>;
+pub type MediaAvailablePageResult = PageResultDTO<MediaAvailableDTO>;
+pub type MediaTagPageResult = PageResultDTO<MediaTagDTO>;
+pub type SessionPageResult = PageResultDTO<SessionDTO>;
 
 #[derive(Serialize, ToSchema)]
 pub struct PageResultDTO<T>
 where
     T: ModelInfo,
 {
+    /// List of elements in the current page
     pub data: Vec<T>,
+    /// Current page number (starting from 1)
     pub page: u64,
+    /// Number of items per page
     pub size: u64,
 }

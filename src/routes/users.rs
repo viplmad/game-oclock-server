@@ -106,6 +106,40 @@ pub async fn get_users(
     handle_get_result(search_result)
 }
 
+/// Count users
+#[utoipa::path(
+    post,
+    path = "/api/v1/users/count",
+    tag = "Users",
+    params(
+        QuicksearchQuery,
+    ),
+    request_body(content = SearchDTO, description = "Query", content_type = "application/json"),
+    responses(
+        (status = 200, description = "Users count obtained", body = u64, content_type = "application/json"),
+        (status = 401, description = "Unauthorized", body = ErrorMessage, content_type = "application/json"),
+        (status = 403, description = "Forbidden", body = ErrorMessage, content_type = "application/json"),
+        (status = 500, description = "Internal server error", body = ErrorMessage, content_type = "application/json"),
+    ),
+    security(
+        ("OAuth2" = [])
+    )
+)]
+#[post("/users/count")]
+pub async fn count_users(
+    user_service: web::Data<UserService>,
+    query: web::Query<QuicksearchQuery>,
+    body: web::Json<SearchDTO>,
+    logged_user: LoggedUser,
+) -> impl Responder {
+    if let Err(error) = require_admin(&user_service, &logged_user.id).await {
+        return error;
+    }
+
+    let count_result = user_service.count_users(body.0, query.0.q).await;
+    handle_get_result(count_result)
+}
+
 /// Create a user
 #[utoipa::path(
     post,
@@ -128,7 +162,7 @@ pub async fn get_users(
     )
 )]
 #[post("/users")]
-pub async fn post_user(
+pub async fn create_user(
     user_service: web::Data<UserService>,
     query: web::Query<PasswordQuery>,
     body: web::Json<NewUserDTO>,
@@ -164,7 +198,7 @@ pub async fn post_user(
     )
 )]
 #[put("/users/{id}")]
-pub async fn put_user(
+pub async fn update_user(
     user_service: web::Data<UserService>,
     path: web::Path<ItemId>,
     body: web::Json<NewUserDTO>,
@@ -180,11 +214,14 @@ pub async fn put_user(
     handle_update_result(update_result)
 }
 
-/// Change current user password
+/// Change a user password
 #[utoipa::path(
     put,
-    path = "/api/v1/myself/change-password",
+    path = "/api/v1/users/{id}/change-password",
     tag = "Users",
+    params(
+        ("id" = String, Path, description = "User id"),
+    ),
     request_body(content = PasswordChangeDTO, description = "Password change request", content_type = "application/x-www-form-urlencoded"),
     responses(
         (status = 204, description = "Password changed"),
@@ -198,15 +235,20 @@ pub async fn put_user(
         ("OAuth2" = [])
     )
 )]
-#[put("/myself/change-password")]
+#[put("/users/{id}/change-password")]
 pub async fn change_password(
     user_service: web::Data<UserService>,
+    path: web::Path<ItemId>,
     form: web::Form<PasswordChangeDTO>,
     logged_user: LoggedUser,
 ) -> impl Responder {
-    let change_password_result = user_service
-        .change_user_password(&logged_user.id, form.0)
-        .await;
+    let ItemId(id) = path.into_inner();
+
+    if let Err(error) = require_admin_or_current_user(&user_service, &logged_user.id, &id).await {
+        return error;
+    }
+
+    let change_password_result = user_service.change_user_password(&id, form.0).await;
     handle_action_result(change_password_result)
 }
 

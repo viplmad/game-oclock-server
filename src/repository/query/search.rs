@@ -1,7 +1,7 @@
 use sea_query::{BinOper, Cond, Expr, Func, LikeExpr, SelectStatement, Value};
 
 use crate::entities::{
-    FieldSearchValue, FieldValue, FilterOperator, Search, SearchQuery, TableIden,
+    FieldSearchValue, FieldValue, Filter, FilterOperator, Search, SearchQuery, Sort, TableIden,
 };
 use crate::errors::{MappingError, SearchErrors};
 
@@ -10,26 +10,36 @@ const INITIAL_PAGE: u64 = 0;
 const LIKE_SYMBOL: &str = "%";
 
 pub fn apply_search<I: 'static + TableIden + Clone + Copy>(
-    select: SelectStatement,
-    search: Search<I>,
-) -> Result<SearchQuery, SearchErrors> {
-    apply_search_internal(select, search).map_err(SearchErrors::Mapping)
-}
-
-fn apply_search_internal<I: 'static + TableIden + Clone + Copy>(
     mut select: SelectStatement,
     search: Search<I>,
-) -> Result<SearchQuery, MappingError> {
-    if let Some(sorts) = search.sort {
-        for sort in sorts {
-            let table = sort.table;
-            let field = sort.field;
-            let order = sort.order;
-            select.order_by((table, field), order);
-        }
-    }
+) -> Result<SearchQuery, SearchErrors> {
+    apply_sort(&mut select, search.sort);
 
-    if let Some(filters) = search.filter {
+    apply_filter(&mut select, search.filter).map_err(SearchErrors::Mapping)?;
+
+    let (page, size) = apply_pagination(&mut select, search.page, search.size);
+
+    Ok(SearchQuery {
+        query: select,
+        page,
+        size,
+    })
+}
+
+pub fn apply_search_filter<I: 'static + TableIden + Clone + Copy>(
+    mut select: SelectStatement,
+    search: Search<I>,
+) -> Result<SelectStatement, SearchErrors> {
+    apply_filter(&mut select, search.filter).map_err(SearchErrors::Mapping)?;
+
+    Ok(select)
+}
+
+fn apply_filter<I: 'static + TableIden + Clone + Copy>(
+    select: &mut SelectStatement,
+    filter: Option<Vec<Filter<I>>>,
+) -> Result<(), MappingError> {
+    Ok(if let Some(filters) = filter {
         if !filters.is_empty() {
             let mut ands = Cond::all();
             let mut ors = Cond::any();
@@ -69,13 +79,13 @@ fn apply_search_internal<I: 'static + TableIden + Clone + Copy>(
                         )))?,
                     },
                     FieldValue::Values(value) => {
-                        let _type = value._type;
+                        let kind = value.kind;
                         let in_values = value
                             .values
                             .into_iter()
                             .map(|v| {
                                 let field_search_value = crate::entities::FieldSearchValue {
-                                    _type: _type.clone(),
+                                    kind: kind.clone(),
                                     value: v,
                                 };
                                 Value::try_from(field_search_value)
@@ -106,19 +116,35 @@ fn apply_search_internal<I: 'static + TableIden + Clone + Copy>(
                 select.cond_where(ors);
             }
         }
-    }
+    })
+}
 
-    let size = search.size.unwrap_or(DEFAULT_PAGE_SIZE);
+fn apply_sort<I: 'static + TableIden + Clone + Copy>(
+    select: &mut SelectStatement,
+    sort: Option<Vec<Sort<I>>>,
+) {
+    if let Some(sorts) = sort {
+        for sort in sorts {
+            let table = sort.table;
+            let field = sort.field;
+            let order = sort.order;
+            select.order_by((table, field), order);
+        }
+    }
+}
+
+fn apply_pagination(
+    select: &mut SelectStatement,
+    page: Option<u64>,
+    size: Option<u64>,
+) -> (u64, u64) {
+    let size = size.unwrap_or(DEFAULT_PAGE_SIZE);
     select.limit(size);
 
-    let page = search.page.unwrap_or(INITIAL_PAGE);
+    let page = page.unwrap_or(INITIAL_PAGE);
     select.offset(page * size);
 
-    Ok(SearchQuery {
-        query: select,
-        page,
-        size,
-    })
+    (page, size)
 }
 
 fn to_lower(col: Expr) -> Expr {

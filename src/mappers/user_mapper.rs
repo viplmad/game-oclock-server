@@ -8,7 +8,7 @@ impl From<User> for UserDTO {
         Self {
             id: user.id,
             username: user.username,
-            admin: user.admin,
+            role: user.role,
             added_datetime: user.added_datetime,
             updated_datetime: user.updated_datetime,
         }
@@ -21,7 +21,7 @@ impl From<UserDTO> for User {
             id: Uuid::default(),
             username: user.username,
             password: String::default(),
-            admin: user.admin,
+            role: user.role,
             added_datetime: user.added_datetime,
             updated_datetime: user.updated_datetime,
         }

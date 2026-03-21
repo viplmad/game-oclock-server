@@ -39,7 +39,7 @@ impl FromRequest for LoggedUser {
             let decoded = b64_decode(payload).unwrap();
             let claims: UserClaims = serde_json::from_slice(&decoded).unwrap();
 
-            let user_id = claims.sub_as_user_id();
+            let user_id = claims.sub;
 
             Ok(LoggedUser { id: user_id })
         })

@@ -4,7 +4,7 @@ use uuid::Uuid;
 use crate::entities::{Device, DeviceIden, DeviceSearch, SearchQuery};
 use crate::errors::SearchErrors;
 
-use super::search::apply_search;
+use super::search::{apply_search, apply_search_filter};
 
 pub fn select_by_id(user_id: &Uuid, id: &Uuid) -> impl QueryStatementWriter {
     let mut select = Query::select();
@@ -25,11 +25,29 @@ pub fn select_all_with_search(
     apply_search(select, search)
 }
 
+pub fn count_all_with_search(
+    user_id: &Uuid,
+    search: DeviceSearch,
+) -> Result<SelectStatement, SearchErrors> {
+    let select = count_all(user_id);
+
+    apply_search_filter(select, search)
+}
+
 pub(super) fn select_all(user_id: &Uuid) -> SelectStatement {
     let mut select = Query::select();
 
     from_and_where_user_id(&mut select, user_id);
     add_fields(&mut select);
+
+    select
+}
+
+pub(super) fn count_all(user_id: &Uuid) -> SelectStatement {
+    let mut select = Query::select();
+
+    from_and_where_user_id(&mut select, user_id);
+    select.expr(Expr::col((DeviceIden::Table, DeviceIden::Id)).count());
 
     select
 }
@@ -43,7 +61,7 @@ pub fn insert(device: &Device) -> impl QueryStatementWriter {
             DeviceIden::Id,
             DeviceIden::UserId,
             DeviceIden::Name,
-            DeviceIden::IconUrl,
+            DeviceIden::ImageUrl,
             DeviceIden::AddedDatetime,
             DeviceIden::UpdatedDatetime,
         ])
@@ -51,7 +69,7 @@ pub fn insert(device: &Device) -> impl QueryStatementWriter {
             crate::uuid_utils::to_string(&device.id).into(),
             crate::uuid_utils::to_string(&device.user_id).into(),
             device.name.clone().into(),
-            device.icon_url.clone().into(),
+            device.image_url.clone().into(),
             device.added_datetime.into(),
             device.updated_datetime.into(),
         ]);
@@ -65,7 +83,7 @@ pub fn update_by_id(device: &Device) -> impl QueryStatementWriter {
         &device.id,
         vec![
             (DeviceIden::Name, device.name.clone().into()),
-            (DeviceIden::IconUrl, device.icon_url.clone().into()),
+            (DeviceIden::ImageUrl, device.image_url.clone().into()),
             (DeviceIden::UpdatedDatetime, device.updated_datetime.into()),
         ],
     )
@@ -152,7 +170,7 @@ fn add_fields(select: &mut SelectStatement) {
     select
         .column((DeviceIden::Table, DeviceIden::UserId))
         .column((DeviceIden::Table, DeviceIden::Name))
-        .column((DeviceIden::Table, DeviceIden::IconUrl))
+        .column((DeviceIden::Table, DeviceIden::ImageUrl))
         .column((DeviceIden::Table, DeviceIden::AddedDatetime))
         .column((DeviceIden::Table, DeviceIden::UpdatedDatetime));
 }

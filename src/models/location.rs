@@ -9,11 +9,9 @@ use super::{Merge, ModelInfo};
 pub struct LocationDTO {
     #[schema(value_type = String)]
     pub id: Uuid,
-    #[schema(value_type = String)]
-    pub user_id: Uuid,
     pub name: String,
     #[serde(skip_serializing_if = "Option::is_none")]
-    pub icon_url: Option<String>,
+    pub image_url: Option<String>,
     #[schema(value_type = String, format = DateTime)]
     pub added_datetime: DateTime<Utc>,
     #[schema(value_type = String, format = DateTime)]
@@ -24,9 +22,8 @@ impl Merge<NewLocationDTO> for LocationDTO {
     fn merge(self, other: NewLocationDTO) -> Self {
         Self {
             id: self.id,
-            user_id: self.user_id,
             name: other.name.unwrap_or(self.name),
-            icon_url: other.icon_url,
+            image_url: other.image_url,
             added_datetime: self.added_datetime,
             updated_datetime: self.updated_datetime,
         }
@@ -42,5 +39,5 @@ impl ModelInfo for LocationDTO {
 #[derive(Deserialize, ToSchema)]
 pub struct NewLocationDTO {
     pub name: Option<String>,
-    pub icon_url: Option<String>,
+    pub image_url: Option<String>,
 }

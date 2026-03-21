@@ -9,7 +9,7 @@ use crate::entities::{
 };
 use crate::errors::{MappingError, error_message_builder};
 use crate::models::{
-    ChainOperatorType, FilterDTO, GameStatus, OperatorType, OrderType, SearchDTO, SearchValue,
+    ChainOperatorType, FilterDTO, MediaStatus, OperatorType, OrderType, SearchDTO, SearchValue,
     SortDTO,
 };
 
@@ -105,11 +105,11 @@ where
             field_iden.iden,
             match filter.value {
                 SearchValue::Value(value) => FieldValue::Value(FieldSearchValue {
-                    _type: field_iden._type,
+                    kind: field_iden.kind,
                     value,
                 }),
                 SearchValue::Values(values) => FieldValue::Values(FieldSearchValues {
-                    _type: field_iden._type,
+                    kind: field_iden.kind,
                     values,
                 }),
             },
@@ -145,7 +145,7 @@ impl TryFrom<FieldSearchValue> for Value {
 
     fn try_from(search: FieldSearchValue) -> Result<Self, Self::Error> {
         let value: &str = &search.value;
-        match search._type {
+        match search.kind {
             FieldType::Integer => {
                 let int_value = convert_with_serde::<i32>(value, "integer")?;
                 Ok(int_value.into())
@@ -163,9 +163,9 @@ impl TryFrom<FieldSearchValue> for Value {
                 let date_time_value = convert_with_serde::<DateTime<Utc>>(value, "date time")?;
                 Ok(date_time_value.into())
             }
-            FieldType::GameStatus => {
+            FieldType::MediaStatus => {
                 let status =
-                    convert_with_serde::<GameStatus>(&format!("\"{value}\""), "game status")?;
+                    convert_with_serde::<MediaStatus>(&format!("\"{value}\""), "media status")?;
                 let status_value = i16::from(status);
                 Ok(status_value.into())
             }

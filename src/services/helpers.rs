@@ -40,25 +40,6 @@ where
     Ok(T::from(entity))
 }
 
-pub(super) fn handle_get_list_result_raw<E, T>(
-    repository_result: Result<Vec<E>, RepositoryError>,
-) -> Result<Vec<E>, ApiErrors>
-where
-    T: ModelInfo,
-{
-    handle_result::<Vec<E>, T>(repository_result)
-}
-
-pub(super) fn handle_get_list_result<E, T>(
-    repository_result: Result<Vec<E>, RepositoryError>,
-) -> Result<Vec<T>, ApiErrors>
-where
-    T: From<E> + ModelInfo,
-{
-    let entity_list = handle_get_list_result_raw::<E, T>(repository_result)?;
-    Ok(entity_list.into_iter().map(T::from).collect())
-}
-
 pub(super) fn handle_get_list_paged_result<E, T>(
     repository_result: Result<PageResult<E>, SearchErrors>,
 ) -> Result<PageResultDTO<T>, ApiErrors>
@@ -80,6 +61,25 @@ where
         data: entity_search.data.into_iter().map(T::from).collect(),
         page: entity_search.page,
         size: entity_search.size,
+    })
+}
+
+pub(super) fn handle_get_count_result<T>(
+    repository_result: Result<u64, SearchErrors>,
+) -> Result<u64, ApiErrors>
+where
+    T: ModelInfo,
+{
+    repository_result.map_err(|err| match err {
+        SearchErrors::Mapping(map_err) => {
+            ApiErrors::InvalidParameter(error_message_builder::inner_error(
+                &error_message_builder::database_error(T::MODEL_NAME),
+                &map_err.0,
+            ))
+        }
+        SearchErrors::Repository(_) => {
+            ApiErrors::UnknownError(error_message_builder::database_error(T::MODEL_NAME))
+        }
     })
 }
 
@@ -132,6 +132,22 @@ where
     }
 }
 
+// TODO
+pub(super) async fn create_merged2<E, T, N, CF>(
+    new: N,
+    create_function: impl FnOnce(E) -> CF,
+) -> Result<(), ApiErrors>
+where
+    T: Merge<N> + Default,
+    E: From<T>,
+    CF: Future<Output = Result<(), ApiErrors>>,
+{
+    let merged_new = T::merge_with_default(new);
+    let entity_to_create = E::from(merged_new);
+
+    create_function(entity_to_create).await
+}
+
 pub(super) async fn create_merged<E, T, N, GF, CF>(
     new: N,
     get_function: impl FnOnce() -> GF,
@@ -162,7 +178,7 @@ pub(super) async fn update_merged<E, T, N, GF, UF>(
     update_function: impl FnOnce(E) -> UF,
 ) -> Result<(), ApiErrors>
 where
-    T: From<E> + Merge<N> + ModelInfo,
+    T: Merge<N>,
     E: From<T>,
     GF: Future<Output = Result<T, ApiErrors>>,
     UF: Future<Output = Result<(), ApiErrors>>,

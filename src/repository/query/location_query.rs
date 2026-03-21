@@ -4,7 +4,7 @@ use uuid::Uuid;
 use crate::entities::{Location, LocationIden, LocationSearch, SearchQuery};
 use crate::errors::SearchErrors;
 
-use super::search::apply_search;
+use super::search::{apply_search, apply_search_filter};
 
 pub fn select_by_id(user_id: &Uuid, id: &Uuid) -> impl QueryStatementWriter {
     let mut select = Query::select();
@@ -25,11 +25,29 @@ pub fn select_all_with_search(
     apply_search(select, search)
 }
 
+pub fn count_all_with_search(
+    user_id: &Uuid,
+    search: LocationSearch,
+) -> Result<SelectStatement, SearchErrors> {
+    let select = count_all(user_id);
+
+    apply_search_filter(select, search)
+}
+
 pub(super) fn select_all(user_id: &Uuid) -> SelectStatement {
     let mut select = Query::select();
 
     from_and_where_user_id(&mut select, user_id);
     add_fields(&mut select);
+
+    select
+}
+
+pub(super) fn count_all(user_id: &Uuid) -> SelectStatement {
+    let mut select = Query::select();
+
+    from_and_where_user_id(&mut select, user_id);
+    select.expr(Expr::col((LocationIden::Table, LocationIden::Id)).count());
 
     select
 }
@@ -43,7 +61,7 @@ pub fn insert(location: &Location) -> impl QueryStatementWriter {
             LocationIden::Id,
             LocationIden::UserId,
             LocationIden::Name,
-            LocationIden::IconUrl,
+            LocationIden::ImageUrl,
             LocationIden::AddedDatetime,
             LocationIden::UpdatedDatetime,
         ])
@@ -51,7 +69,7 @@ pub fn insert(location: &Location) -> impl QueryStatementWriter {
             crate::uuid_utils::to_string(&location.id).into(),
             crate::uuid_utils::to_string(&location.user_id).into(),
             location.name.clone().into(),
-            location.icon_url.clone().into(),
+            location.image_url.clone().into(),
             location.added_datetime.into(),
             location.updated_datetime.into(),
         ]);
@@ -65,7 +83,7 @@ pub fn update_by_id(location: &Location) -> impl QueryStatementWriter {
         &location.id,
         vec![
             (LocationIden::Name, location.name.clone().into()),
-            (LocationIden::IconUrl, location.icon_url.clone().into()),
+            (LocationIden::ImageUrl, location.image_url.clone().into()),
             (
                 LocationIden::UpdatedDatetime,
                 location.updated_datetime.into(),
@@ -155,7 +173,7 @@ fn add_fields(select: &mut SelectStatement) {
     select
         .column((LocationIden::Table, LocationIden::UserId))
         .column((LocationIden::Table, LocationIden::Name))
-        .column((LocationIden::Table, LocationIden::IconUrl))
+        .column((LocationIden::Table, LocationIden::ImageUrl))
         .column((LocationIden::Table, LocationIden::AddedDatetime))
         .column((LocationIden::Table, LocationIden::UpdatedDatetime));
 }

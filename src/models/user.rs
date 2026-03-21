@@ -10,7 +10,7 @@ pub struct UserDTO {
     #[schema(value_type = String)]
     pub id: Uuid,
     pub username: String,
-    pub admin: bool,
+    pub role: String,
     #[schema(value_type = String, format = DateTime)]
     pub added_datetime: DateTime<Utc>,
     #[schema(value_type = String, format = DateTime)]
@@ -22,7 +22,7 @@ impl Merge<NewUserDTO> for UserDTO {
         Self {
             id: self.id,
             username: other.username.unwrap_or(self.username),
-            admin: self.admin,
+            role: self.role,
             added_datetime: self.added_datetime,
             updated_datetime: self.updated_datetime,
         }

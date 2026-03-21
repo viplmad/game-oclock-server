@@ -15,7 +15,7 @@ pub struct User {
     pub id: Uuid,
     pub username: String,
     pub password: String,
-    pub admin: bool,
+    pub role: String,
     pub added_datetime: DateTime<Utc>,
     pub updated_datetime: DateTime<Utc>,
 }
@@ -31,7 +31,7 @@ impl FromStr for FieldIden<UserIden> {
         match field {
             "id" => Ok(FieldIden::new(UserIden::Id, FieldType::String)),
             "name" => Ok(FieldIden::new(UserIden::Username, FieldType::String)),
-            "admin" => Ok(FieldIden::new(UserIden::Admin, FieldType::Boolean)),
+            "role" => Ok(FieldIden::new(UserIden::Role, FieldType::String)),
             "added_datetime" => Ok(FieldIden::new(UserIden::AddedDatetime, FieldType::DateTime)),
             "updated_datetime" => Ok(FieldIden::new(
                 UserIden::UpdatedDatetime,

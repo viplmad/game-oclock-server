@@ -5,7 +5,7 @@ use super::query::user_query;
 use crate::entities::{PageResult, User, UserSearch};
 use crate::errors::{RepositoryError, SearchErrors};
 
-use super::helpers::{execute, exists_some, fetch_all_search, fetch_optional};
+use super::helpers::{count_all_search, execute, exists_some, fetch_all_search, fetch_optional};
 
 #[derive(Clone)]
 pub struct UserRepository {
@@ -37,6 +37,11 @@ impl UserRepository {
         fetch_all_search(&self.pool, search_query).await
     }
 
+    pub async fn count_all(&self, search: UserSearch) -> Result<u64, SearchErrors> {
+        let count_query = user_query::count_all_with_search(search)?;
+        count_all_search(&self.pool, count_query).await
+    }
+
     pub async fn create(&self, user: &User) -> Result<(), RepositoryError> {
         let query = user_query::insert(user);
         execute(&self.pool, query).await
@@ -56,8 +61,8 @@ impl UserRepository {
         execute(&self.pool, query).await
     }
 
-    pub async fn update_admin_by_id(&self, id: &Uuid, admin: bool) -> Result<(), RepositoryError> {
-        let query = user_query::update_admin_by_id(id, admin);
+    pub async fn update_admin_by_id(&self, id: &Uuid, role: &str) -> Result<(), RepositoryError> {
+        let query = user_query::update_role_by_id(id, role);
         execute(&self.pool, query).await
     }
 
@@ -85,21 +90,26 @@ impl UserRepository {
         exists_some(&self.pool, query).await
     }
 
-    pub async fn exists_with_admin_except_id(
+    pub async fn exists_with_role_except_id(
         &self,
         excluded_id: &Uuid,
+        role: &str,
     ) -> Result<bool, RepositoryError> {
-        let query = user_query::exists_by_admin_and_id_not(excluded_id);
+        let query = user_query::exists_by_role_and_id_not(excluded_id, role);
         exists_some(&self.pool, query).await
     }
 
-    pub async fn exists_by_id_and_admin(&self, id: &Uuid) -> Result<bool, RepositoryError> {
-        let query = user_query::exists_by_admin_and_id(id);
+    pub async fn exists_by_id_and_role(
+        &self,
+        id: &Uuid,
+        role: &str,
+    ) -> Result<bool, RepositoryError> {
+        let query = user_query::exists_by_role_and_id(id, role);
         exists_some(&self.pool, query).await
     }
 
-    pub async fn exists_with_admin(&self) -> Result<bool, RepositoryError> {
-        let query = user_query::exists_by_admin();
+    pub async fn exists_with_role(&self, role: &str) -> Result<bool, RepositoryError> {
+        let query = user_query::exists_by_role(role);
         exists_some(&self.pool, query).await
     }
 }

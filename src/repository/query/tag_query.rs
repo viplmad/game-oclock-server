@@ -4,7 +4,7 @@ use uuid::Uuid;
 use crate::entities::{SearchQuery, Tag, TagIden, TagSearch};
 use crate::errors::SearchErrors;
 
-use super::search::apply_search;
+use super::search::{apply_search, apply_search_filter};
 
 pub fn select_by_id(user_id: &Uuid, id: &Uuid) -> impl QueryStatementWriter {
     let mut select = Query::select();
@@ -25,11 +25,29 @@ pub fn select_all_with_query(
     apply_search(select, search)
 }
 
+pub fn count_all_with_query(
+    user_id: &Uuid,
+    search: TagSearch,
+) -> Result<SelectStatement, SearchErrors> {
+    let select = count_all(user_id);
+
+    apply_search_filter(select, search)
+}
+
 pub(super) fn select_all(user_id: &Uuid) -> SelectStatement {
     let mut select = Query::select();
 
     from_and_where_user_id(&mut select, user_id);
     add_fields(&mut select);
+
+    select
+}
+
+pub(super) fn count_all(user_id: &Uuid) -> SelectStatement {
+    let mut select = Query::select();
+
+    from_and_where_user_id(&mut select, user_id);
+    select.expr(Expr::col((TagIden::Table, TagIden::Id)).count());
 
     select
 }

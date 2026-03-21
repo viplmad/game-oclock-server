@@ -4,7 +4,7 @@ use uuid::Uuid;
 use crate::entities::{SearchQuery, User, UserIden, UserSearch};
 use crate::errors::SearchErrors;
 
-use super::search::apply_search;
+use super::search::{apply_search, apply_search_filter};
 
 pub fn select_by_id(id: &Uuid) -> impl QueryStatementWriter {
     let mut select = Query::select();
@@ -32,11 +32,26 @@ pub fn select_all_with_search(search: UserSearch) -> Result<SearchQuery, SearchE
     apply_search(select, search)
 }
 
+pub fn count_all_with_search(search: UserSearch) -> Result<SelectStatement, SearchErrors> {
+    let select = count_all();
+
+    apply_search_filter(select, search)
+}
+
 pub(super) fn select_all() -> SelectStatement {
     let mut select = Query::select();
 
     from(&mut select);
     add_fields(&mut select);
+
+    select
+}
+
+pub(super) fn count_all() -> SelectStatement {
+    let mut select = Query::select();
+
+    from(&mut select);
+    select.expr(Expr::col((UserIden::Table, UserIden::Id)).count());
 
     select
 }
@@ -50,7 +65,7 @@ pub fn insert(user: &User) -> impl QueryStatementWriter {
             UserIden::Id,
             UserIden::Username,
             UserIden::Password,
-            UserIden::Admin,
+            UserIden::Role,
             UserIden::AddedDatetime,
             UserIden::UpdatedDatetime,
         ])
@@ -58,7 +73,7 @@ pub fn insert(user: &User) -> impl QueryStatementWriter {
             crate::uuid_utils::to_string(&user.id).into(),
             user.username.clone().into(),
             user.password.clone().into(),
-            user.admin.into(),
+            user.role.clone().into(),
             user.added_datetime.into(),
             user.updated_datetime.into(),
         ]);
@@ -86,11 +101,11 @@ pub fn update_password_by_id(id: &Uuid, password: &str) -> impl QueryStatementWr
     )
 }
 
-pub fn update_admin_by_id(id: &Uuid, admin: bool) -> impl QueryStatementWriter {
+pub fn update_role_by_id(id: &Uuid, role: &str) -> impl QueryStatementWriter {
     update_values_by_id(
         id,
         vec![
-            (UserIden::Admin, admin.into()),
+            (UserIden::Role, role.into()),
             (UserIden::UpdatedDatetime, crate::date_utils::now().into()),
         ],
     )
@@ -148,30 +163,30 @@ pub fn exists_by_username_and_id_not(username: &str, id: &Uuid) -> impl QuerySta
     select
 }
 
-pub fn exists_by_admin_and_id_not(id: &Uuid) -> impl QueryStatementWriter {
+pub fn exists_by_role_and_id_not(id: &Uuid, role: &str) -> impl QueryStatementWriter {
     let mut select = Query::select();
 
     from(&mut select);
     add_id_field(&mut select);
-    where_admin(&mut select, true);
+    where_role(&mut select, role);
     where_id_not(&mut select, id);
 
     select
 }
 
-pub fn exists_by_admin_and_id(id: &Uuid) -> impl QueryStatementWriter {
+pub fn exists_by_role_and_id(id: &Uuid, role: &str) -> impl QueryStatementWriter {
     let mut select = exists_by_id(id);
 
-    where_admin(&mut select, true);
+    where_role(&mut select, role);
 
     select
 }
 
-pub fn exists_by_admin() -> impl QueryStatementWriter {
+pub fn exists_by_role(role: &str) -> impl QueryStatementWriter {
     let mut select = Query::select();
 
     from(&mut select);
-    where_admin(&mut select, true);
+    where_role(&mut select, role);
     add_id_field(&mut select);
 
     select
@@ -186,8 +201,8 @@ fn where_id(select: &mut SelectStatement, id: &Uuid) {
         .and_where(Expr::col((UserIden::Table, UserIden::Id)).eq(crate::uuid_utils::to_string(id)));
 }
 
-fn where_admin(select: &mut SelectStatement, admin: bool) {
-    select.and_where(Expr::col((UserIden::Table, UserIden::Admin)).eq(admin));
+fn where_role(select: &mut SelectStatement, role: &str) {
+    select.and_where(Expr::col((UserIden::Table, UserIden::Role)).eq(role));
 }
 
 fn where_id_not(select: &mut SelectStatement, id: &Uuid) {
@@ -204,7 +219,7 @@ fn add_fields(select: &mut SelectStatement) {
     select
         .column((UserIden::Table, UserIden::Username))
         .column((UserIden::Table, UserIden::Password))
-        .column((UserIden::Table, UserIden::Admin))
+        .column((UserIden::Table, UserIden::Role))
         .column((UserIden::Table, UserIden::AddedDatetime))
         .column((UserIden::Table, UserIden::UpdatedDatetime));
 }

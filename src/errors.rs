@@ -60,12 +60,13 @@ pub struct ValidationError();
 
 pub struct PasswordError();
 
+#[derive(Debug)]
 pub struct RepositoryError();
 
-pub struct ImageClientError();
-
+#[derive(Debug)]
 pub struct MappingError(pub String);
 
+#[derive(Debug)]
 pub enum SearchErrors {
     Repository(RepositoryError),
     Mapping(MappingError),

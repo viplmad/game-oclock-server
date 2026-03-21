@@ -15,7 +15,7 @@ pub struct Device {
     pub id: Uuid,
     pub user_id: Uuid,
     pub name: String,
-    pub icon_url: Option<String>,
+    pub image_url: Option<String>,
     pub added_datetime: DateTime<Utc>,
     pub updated_datetime: DateTime<Utc>,
 }
@@ -31,7 +31,7 @@ impl FromStr for FieldIden<DeviceIden> {
         match field {
             "id" => Ok(FieldIden::new(DeviceIden::Id, FieldType::String)),
             "name" => Ok(FieldIden::new(DeviceIden::Name, FieldType::String)),
-            "icon_url" => Ok(FieldIden::new(DeviceIden::IconUrl, FieldType::String)),
+            "image_url" => Ok(FieldIden::new(DeviceIden::ImageUrl, FieldType::String)),
             "added_datetime" => Ok(FieldIden::new(
                 DeviceIden::AddedDatetime,
                 FieldType::DateTime,

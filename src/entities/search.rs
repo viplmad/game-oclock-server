@@ -49,12 +49,12 @@ pub enum FieldValue {
 }
 
 pub struct FieldSearchValue {
-    pub _type: FieldType,
+    pub kind: FieldType,
     pub value: String,
 }
 
 pub struct FieldSearchValues {
-    pub _type: FieldType,
+    pub kind: FieldType,
     pub values: Vec<String>,
 }
 
@@ -97,16 +97,16 @@ impl<T: TableIden> Sort<T> {
 pub struct FieldIden<I: TableIden> {
     pub table: SeaRc<dyn Iden>,
     pub iden: SeaRc<dyn Iden>,
-    pub _type: FieldType,
+    pub kind: FieldType,
     resource_type: std::marker::PhantomData<I>,
 }
 
 impl<T: TableIden> FieldIden<T> {
-    pub fn new<I: 'static + TableIden>(iden: I, _type: FieldType) -> Self {
+    pub fn new<I: 'static + TableIden>(iden: I, kind: FieldType) -> Self {
         Self {
             table: SeaRc::new(I::TABLE),
             iden: SeaRc::new(iden),
-            _type,
+            kind,
             resource_type: std::marker::PhantomData,
         }
     }
@@ -119,5 +119,5 @@ pub enum FieldType {
     Boolean,
     Date,
     DateTime,
-    GameStatus,
+    MediaStatus,
 }

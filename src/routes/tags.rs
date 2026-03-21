@@ -1,9 +1,10 @@
 use actix_web::{Responder, delete, get, post, put, web};
 
 use crate::models::{
-    ErrorMessage, ItemId, LoggedUser, NewTagDTO, QuicksearchQuery, SearchDTO, TagDTO, TagPageResult,
+    ErrorMessage, ItemId, LoggedUser, NewTagDTO, QuicksearchQuery, SearchDTO, TagDTO,
+    TagMediaPageResult, TagPageResult,
 };
-use crate::services::{GameTagService, TagService};
+use crate::services::{MediaTagService, TagService};
 
 use super::helpers::{
     handle_create_result, handle_delete_result, handle_get_result, handle_update_result,
@@ -39,34 +40,76 @@ pub async fn get_tag(
     handle_get_result(get_result)
 }
 
-/// Get all tags from a game
+/// Get all tags from a media
 #[utoipa::path(
-    get,
-    path = "/api/v1/games/{id}/tags",
+    post,
+    path = "/api/v1/medias/{id}/tags/list",
     tag = "Tags",
     params(
-        ("id" = String, Path, description = "Game id"),
+        ("id" = String, Path, description = "Media id"),
+        QuicksearchQuery,
     ),
+    request_body(content = SearchDTO, description = "Query", content_type = "application/json"),
     responses(
-        (status = 200, description = "Tags obtained", body = [TagDTO], content_type = "application/json"),
+        (status = 200, description = "Tags obtained", body = TagMediaPageResult, content_type = "application/json"),
         (status = 401, description = "Unauthorized", body = ErrorMessage, content_type = "application/json"),
         (status = 403, description = "Forbidden", body = ErrorMessage, content_type = "application/json"),
-        (status = 404, description = "Game not found", body = ErrorMessage, content_type = "application/json"),
+        (status = 404, description = "Media not found", body = ErrorMessage, content_type = "application/json"),
         (status = 500, description = "Internal server error", body = ErrorMessage, content_type = "application/json"),
     ),
     security(
         ("OAuth2" = [])
     )
 )]
-#[get("/games/{id}/tags")]
-pub async fn get_game_tags(
-    game_tag_service: web::Data<GameTagService>,
+#[post("/medias/{id}/tags/list")]
+pub async fn get_media_tags(
+    media_tag_service: web::Data<MediaTagService>,
     path: web::Path<ItemId>,
+    query: web::Query<QuicksearchQuery>,
+    body: web::Json<SearchDTO>,
     logged_user: LoggedUser,
 ) -> impl Responder {
     let ItemId(id) = path.into_inner();
-    let get_result = game_tag_service.get_game_tags(&logged_user.id, &id).await;
-    handle_get_result(get_result)
+    let search_result = media_tag_service
+        .search_media_tags(&logged_user.id, &id, body.0, query.0.q)
+        .await;
+    handle_get_result(search_result)
+}
+
+/// Count all tags from a media
+#[utoipa::path(
+    post,
+    path = "/api/v1/medias/{id}/tags/count",
+    tag = "Tags",
+    params(
+        ("id" = String, Path, description = "Media id"),
+        QuicksearchQuery,
+    ),
+    request_body(content = SearchDTO, description = "Query", content_type = "application/json"),
+    responses(
+        (status = 200, description = "Tags count obtained", body = u64, content_type = "application/json"),
+        (status = 401, description = "Unauthorized", body = ErrorMessage, content_type = "application/json"),
+        (status = 403, description = "Forbidden", body = ErrorMessage, content_type = "application/json"),
+        (status = 404, description = "Media not found", body = ErrorMessage, content_type = "application/json"),
+        (status = 500, description = "Internal server error", body = ErrorMessage, content_type = "application/json"),
+    ),
+    security(
+        ("OAuth2" = [])
+    )
+)]
+#[post("/medias/{id}/tags/count")]
+pub async fn count_media_tags(
+    media_tag_service: web::Data<MediaTagService>,
+    path: web::Path<ItemId>,
+    query: web::Query<QuicksearchQuery>,
+    body: web::Json<SearchDTO>,
+    logged_user: LoggedUser,
+) -> impl Responder {
+    let ItemId(id) = path.into_inner();
+    let count_result = media_tag_service
+        .count_media_tags(&logged_user.id, &id, body.0, query.0.q)
+        .await;
+    handle_get_result(count_result)
 }
 
 /// Search tags
@@ -101,6 +144,38 @@ pub async fn get_tags(
     handle_get_result(search_result)
 }
 
+/// Count tags
+#[utoipa::path(
+    post,
+    path = "/api/v1/tags/count",
+    tag = "Tags",
+    params(
+        QuicksearchQuery,
+    ),
+    request_body(content = SearchDTO, description = "Query", content_type = "application/json"),
+    responses(
+        (status = 200, description = "Tags count obtained", body = u64, content_type = "application/json"),
+        (status = 401, description = "Unauthorized", body = ErrorMessage, content_type = "application/json"),
+        (status = 403, description = "Forbidden", body = ErrorMessage, content_type = "application/json"),
+        (status = 500, description = "Internal server error", body = ErrorMessage, content_type = "application/json"),
+    ),
+    security(
+        ("OAuth2" = [])
+    )
+)]
+#[post("/tags/count")]
+pub async fn count_tags(
+    tag_service: web::Data<TagService>,
+    query: web::Query<QuicksearchQuery>,
+    body: web::Json<SearchDTO>,
+    logged_user: LoggedUser,
+) -> impl Responder {
+    let count_result = tag_service
+        .count_tags(&logged_user.id, body.0, query.0.q)
+        .await;
+    handle_get_result(count_result)
+}
+
 /// Create a tag
 #[utoipa::path(
     post,
@@ -120,7 +195,7 @@ pub async fn get_tags(
     )
 )]
 #[post("/tags")]
-pub async fn post_tag(
+pub async fn create_tag(
     tag_service: web::Data<TagService>,
     body: web::Json<NewTagDTO>,
     logged_user: LoggedUser,
@@ -151,7 +226,7 @@ pub async fn post_tag(
     )
 )]
 #[put("/tags/{id}")]
-pub async fn put_tag(
+pub async fn update_tag(
     tag_service: web::Data<TagService>,
     path: web::Path<ItemId>,
     body: web::Json<NewTagDTO>,

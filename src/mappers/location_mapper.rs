@@ -1,15 +1,14 @@
 use uuid::Uuid;
 
-use crate::entities::{Location, LocationWithDate};
-use crate::models::{LocationAvailableDTO, LocationDTO};
+use crate::entities::Location;
+use crate::models::LocationDTO;
 
 impl From<Location> for LocationDTO {
     fn from(location: Location) -> Self {
         Self {
             id: location.id,
-            user_id: location.user_id,
             name: location.name,
-            icon_url: location.icon_url,
+            image_url: location.image_url,
             added_datetime: location.added_datetime,
             updated_datetime: location.updated_datetime,
         }
@@ -22,25 +21,9 @@ impl From<LocationDTO> for Location {
             id: Uuid::default(),
             user_id: Uuid::default(),
             name: location.name,
-            icon_url: location.icon_url,
+            image_url: location.image_url,
             added_datetime: location.added_datetime,
             updated_datetime: location.updated_datetime,
-        }
-    }
-}
-
-impl From<LocationWithDate> for LocationAvailableDTO {
-    fn from(location: LocationWithDate) -> Self {
-        Self {
-            location: LocationDTO {
-                id: location.id,
-                user_id: location.user_id,
-                name: location.name,
-                icon_url: location.icon_url,
-                added_datetime: location.added_datetime,
-                updated_datetime: location.updated_datetime,
-            },
-            date: location.query_date,
         }
     }
 }

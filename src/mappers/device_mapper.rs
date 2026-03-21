@@ -7,9 +7,8 @@ impl From<Device> for DeviceDTO {
     fn from(device: Device) -> Self {
         Self {
             id: device.id,
-            user_id: device.user_id,
             name: device.name,
-            icon_url: device.icon_url,
+            image_url: device.image_url,
             added_datetime: device.added_datetime,
             updated_datetime: device.updated_datetime,
         }
@@ -22,7 +21,7 @@ impl From<DeviceDTO> for Device {
             id: Uuid::default(),
             user_id: Uuid::default(),
             name: device.name,
-            icon_url: device.icon_url,
+            image_url: device.image_url,
             added_datetime: device.added_datetime,
             updated_datetime: device.updated_datetime,
         }
