@@ -1,27 +1,9 @@
 use sea_query::{PostgresQueryBuilder, QueryStatementWriter};
-use sqlx::{PgPool, Postgres, Transaction};
+use sqlx::Postgres;
 use uuid::Uuid;
 
 use crate::entities::{PageResult, SearchQuery};
 use crate::errors::{RepositoryError, SearchErrors};
-
-pub(super) async fn begin_transaction(
-    pool: &'_ PgPool,
-) -> Result<Transaction<'_, Postgres>, RepositoryError> {
-    pool.begin().await.map_err(|err| {
-        log::error!("Error beginning transaction. - {}", err.to_string());
-        RepositoryError()
-    })
-}
-
-pub(super) async fn commit_transaction(
-    transaction: Transaction<'_, Postgres>,
-) -> Result<(), RepositoryError> {
-    transaction.commit().await.map_err(|err| {
-        log::error!("Error committing transaction. - {}", err.to_string());
-        RepositoryError()
-    })
-}
 
 pub(super) async fn fetch_one<'c, X, T>(
     executor: X,

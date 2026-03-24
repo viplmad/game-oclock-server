@@ -35,9 +35,11 @@ mod tests {
             query.unwrap().query.to_string(PostgresQueryBuilder),
             "SELECT \"Media\".\"id\", \"Media\".\"kind\", \"Media\".\"title\", \"Media\".\"edition\", \"Media\".\"release_date\", \"Media\".\"genres\", \"Media\".\"series\", \"Media\".\"image_url\", \"Media\".\"parent_id\", \"Media\".\"parent_order\", \"Media\".\"added_datetime\", \"Media\".\"updated_datetime\", \
             \"MediaState\".\"user_id\", \"MediaState\".\"status\" AS \"state_status\", \"MediaState\".\"rating\" AS \"state_rating\", \"MediaState\".\"notes\" AS \"state_notes\", \"MediaState\".\"added_datetime\" AS \"state_added_datetime\", \"MediaState\".\"updated_datetime\" AS \"state_updated_datetime\", \
+            \"ExternalMedia\".\"external_source\", \"ExternalMedia\".\"external_id\", \
             \"MediaTag\".\"order\" AS \"tag_order\", \"MediaTag\".\"added_datetime\" AS \"tag_added_datetime\", \"MediaTag\".\"updated_datetime\" AS \"tag_updated_datetime\" \
             FROM \"Media\" \
             LEFT JOIN \"MediaState\" ON \"Media\".\"id\" = \"MediaState\".\"media_id\" \
+            LEFT JOIN \"ExternalMedia\" ON \"Media\".\"id\" = \"ExternalMedia\".\"media_id\" AND \"ExternalMedia\".\"primary\" = TRUE \
             LEFT JOIN \"MediaTag\" ON \"Media\".\"id\" = \"MediaTag\".\"media_id\" \
             WHERE \"MediaState\".\"user_id\" = '00000000-0000-0000-0000-000000000000' \
             AND \"MediaTag\".\"tag_id\" = '00000000-0000-0000-0000-000000000001' \

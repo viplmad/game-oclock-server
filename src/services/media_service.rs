@@ -139,16 +139,7 @@ impl MediaService {
                     let new_id = crate::uuid_utils::new_model_uuid();
 
                     self.create_media_basic(&new_id, media).await?;
-                    let create_external_result = self
-                        .repository
-                        .create_external(&ExternalMedia {
-                            primary: true, // TODO
-                            media_id: new_id.clone(),
-                            external_source: external.source.clone(),
-                            external_id: external.id.clone(),
-                        })
-                        .await;
-                    handle_action_result::<MediaDTO>(create_external_result)?;
+                    self.create_media_external(&new_id, external).await?;
                     self.create_media_state(user_id, &new_id, state).await?;
 
                     Ok(new_id)
@@ -189,7 +180,7 @@ impl MediaService {
                 media_to_create.id = id.clone();
                 media_to_create.added_datetime = crate::date_utils::now();
                 media_to_create.updated_datetime = crate::date_utils::now();
-                let create_result = self.repository.create(&media_to_create).await;
+                let create_result = self.repository.create_basic(&media_to_create).await;
                 handle_action_result::<MediaDTO>(create_result)
             },
         )
@@ -217,6 +208,23 @@ impl MediaService {
         .await
     }
 
+    async fn create_media_external(
+        &self,
+        id: &Uuid,
+        external: ExternalMediaIdDTO,
+    ) -> Result<(), ApiErrors> {
+        let create_result = self
+            .repository
+            .create_external(&ExternalMedia {
+                primary: true, // TODO
+                media_id: id.clone(),
+                external_source: external.source.clone(),
+                external_id: external.id.clone(),
+            })
+            .await;
+        handle_action_result::<MediaDTO>(create_result)
+    }
+
     pub async fn update_media(
         &self,
         user_id: &Uuid,
@@ -226,16 +234,53 @@ impl MediaService {
         check_media_state_rating(&media.state)?;
 
         match media.media {
-            crate::models::NewMediaValue::External(_) => {
-                return Err(ApiErrors::NotSupported(String::from(
-                    "Updating media from external source is not supported, use sync instead",
-                )));
+            crate::models::NewMediaValue::External(external) => {
+                self.update_media_from_external(user_id, id, external, media.state)
+                    .await
             }
             crate::models::NewMediaValue::Manual(manual) => {
-                self.update_media_basic(id, manual).await?;
-                self.update_media_state(user_id, id, media.state).await
+                self.update_media_from_manual(user_id, id, manual, media.state)
+                    .await
             }
         }
+    }
+
+    async fn update_media_from_external(
+        &self,
+        user_id: &Uuid,
+        id: &Uuid,
+        external: ExternalMediaIdDTO,
+        state: NewMediaStateDTO,
+    ) -> Result<(), ApiErrors> {
+        let current = self.get_media_external_primary(id).await?;
+        if current.source == external.source && current.id == external.id {
+            return Err(ApiErrors::AlreadyExists(String::from(
+                "Media is already linked to this external source, use sync to update data",
+            )));
+        }
+
+        let exists_result = self
+            .repository
+            .exists_by_external_source_and_id_except_id(&external.source, &external.id, id)
+            .await;
+        handle_already_exists_result::<MediaDTO>(exists_result)?;
+
+        let media = self.external_service.get(&external).await?;
+
+        self.update_media_basic(id, media).await?;
+        self.update_media_external(id, external).await?;
+        self.update_media_state(user_id, id, state).await
+    }
+
+    async fn update_media_from_manual(
+        &self,
+        user_id: &Uuid,
+        id: &Uuid,
+        media: NewManualMediaDTO,
+        state: NewMediaStateDTO,
+    ) -> Result<(), ApiErrors> {
+        self.update_media_basic(id, media).await?;
+        self.update_media_state(user_id, id, state).await
     }
 
     async fn update_media_basic(
@@ -287,6 +332,23 @@ impl MediaService {
         .await
     }
 
+    async fn update_media_external(
+        &self,
+        id: &Uuid,
+        external: ExternalMediaIdDTO,
+    ) -> Result<(), ApiErrors> {
+        let update_result = self
+            .repository
+            .update_external(&ExternalMedia {
+                primary: true, // TODO
+                media_id: id.clone(),
+                external_source: external.source.clone(),
+                external_id: external.id.clone(),
+            })
+            .await;
+        handle_update_result::<MediaDTO>(update_result)
+    }
+
     pub async fn update_media_status(
         &self,
         user_id: &Uuid,
@@ -303,8 +365,31 @@ impl MediaService {
     }
 
     pub async fn delete_media(&self, user_id: &Uuid, id: &Uuid) -> Result<(), ApiErrors> {
-        // TODO only delete state
-        let delete_result = self.repository.delete_by_id(user_id, id).await;
+        self.delete_media_state(user_id, id).await?;
+
+        // Delete media if no other states are found
+        let existing_states_result = self.repository.exists_any_state_by_id(id).await;
+        let existing_states = handle_result::<bool, MediaDTO>(existing_states_result)?;
+        if !existing_states {
+            self.delete_media_basic(id).await?;
+            self.delete_media_external(id).await?;
+        }
+
+        Ok(())
+    }
+
+    async fn delete_media_basic(&self, id: &Uuid) -> Result<(), ApiErrors> {
+        let delete_result = self.repository.delete_basic_by_id(id).await;
+        handle_action_result::<MediaDTO>(delete_result)
+    }
+
+    async fn delete_media_state(&self, user_id: &Uuid, id: &Uuid) -> Result<(), ApiErrors> {
+        let delete_result = self.repository.delete_state_by_id(user_id, id).await;
+        handle_action_result::<MediaDTO>(delete_result)
+    }
+
+    async fn delete_media_external(&self, id: &Uuid) -> Result<(), ApiErrors> {
+        let delete_result = self.repository.delete_external_by_id(id).await;
         handle_action_result::<MediaDTO>(delete_result)
     }
 

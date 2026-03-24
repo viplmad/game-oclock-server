@@ -6,8 +6,7 @@ use crate::entities::{ExternalMedia, Media, MediaSearch, MediaState, MediaWithSt
 use crate::errors::{RepositoryError, SearchErrors};
 
 use super::helpers::{
-    begin_transaction, commit_transaction, count_all_search, execute, exists_some, fetch_all,
-    fetch_all_search, fetch_optional,
+    count_all_search, execute, exists_some, fetch_all, fetch_all_search, fetch_optional,
 };
 
 #[derive(Clone)]
@@ -99,8 +98,8 @@ impl MediaRepository {
         count_all_search(&self.pool, count_query).await
     }
 
-    pub async fn create(&self, media: &Media) -> Result<(), RepositoryError> {
-        let query = media_query::insert(media);
+    pub async fn create_basic(&self, media: &Media) -> Result<(), RepositoryError> {
+        let query = media_query::insert_basic(media);
         execute(&self.pool, query).await
     }
 
@@ -124,6 +123,11 @@ impl MediaRepository {
         execute(&self.pool, query).await
     }
 
+    pub async fn update_external(&self, media: &ExternalMedia) -> Result<(), RepositoryError> {
+        let query = media_query::update_external_by_id(media);
+        execute(&self.pool, query).await
+    }
+
     pub async fn update_status(
         &self,
         user_id: &Uuid,
@@ -143,22 +147,27 @@ impl MediaRepository {
         execute(&self.pool, query).await
     }
 
-    pub async fn delete_by_id(&self, user_id: &Uuid, id: &Uuid) -> Result<(), RepositoryError> {
-        let mut transaction = begin_transaction(&self.pool).await?;
+    pub async fn delete_basic_by_id(&self, id: &Uuid) -> Result<(), RepositoryError> {
+        let query = media_query::delete_basic_by_id(id);
+        execute(&self.pool, query).await
+    }
 
-        let query = media_query::delete_by_id(id);
-        execute(&mut *transaction, query).await?;
+    pub async fn delete_state_by_id(
+        &self,
+        user_id: &Uuid,
+        id: &Uuid,
+    ) -> Result<(), RepositoryError> {
+        let query = media_query::delete_state_by_id(user_id, id);
+        execute(&self.pool, query).await
+    }
 
-        let state_query = media_query::delete_state_by_id(user_id, id);
-        execute(&mut *transaction, state_query).await?;
-
-        commit_transaction(transaction).await?;
-
-        Ok(())
+    pub async fn delete_external_by_id(&self, id: &Uuid) -> Result<(), RepositoryError> {
+        let query = media_query::delete_external_by_id(id);
+        execute(&self.pool, query).await
     }
 
     pub async fn exists_basic_by_id(&self, id: &Uuid) -> Result<bool, RepositoryError> {
-        let query = media_query::exists_by_id(id);
+        let query = media_query::exists_basic_by_id(id);
         exists_some(&self.pool, query).await
     }
 
@@ -168,6 +177,11 @@ impl MediaRepository {
         id: &Uuid,
     ) -> Result<bool, RepositoryError> {
         let query = media_query::exists_state_by_id(user_id, id);
+        exists_some(&self.pool, query).await
+    }
+
+    pub async fn exists_any_state_by_id(&self, id: &Uuid) -> Result<bool, RepositoryError> {
+        let query = media_query::exists_any_state_by_id(id);
         exists_some(&self.pool, query).await
     }
 
@@ -193,6 +207,20 @@ impl MediaRepository {
     ) -> Result<bool, RepositoryError> {
         let query =
             media_query::exists_by_title_and_edition_and_id_not(title, edition, excluded_id);
+        exists_some(&self.pool, query).await
+    }
+
+    pub async fn exists_by_external_source_and_id_except_id(
+        &self,
+        source: &str,
+        id: &str,
+        excluded_id: &Uuid,
+    ) -> Result<bool, RepositoryError> {
+        let query = media_query::exists_by_external_source_and_external_id_and_id_not(
+            source,
+            id,
+            excluded_id,
+        );
         exists_some(&self.pool, query).await
     }
 }

@@ -10,6 +10,60 @@ use crate::errors::SearchErrors;
 
 use super::search::{apply_search, apply_search_filter};
 
+#[cfg(test)]
+mod tests {
+    use sea_query::PostgresQueryBuilder;
+    use uuid::Uuid;
+
+    use super::*;
+
+    #[test]
+    fn select_all_medias() {
+        let user_id = Uuid::try_parse("00000000-0000-0000-0000-000000000000").unwrap();
+        let query = select_all_with_search(
+            &user_id,
+            MediaSearch {
+                filter: None,
+                sort: None,
+                page: None,
+                size: None,
+            },
+        );
+        assert_eq!(
+            query.unwrap().query.to_string(PostgresQueryBuilder),
+            "SELECT \"Media\".\"id\", \"Media\".\"kind\", \"Media\".\"title\", \"Media\".\"edition\", \"Media\".\"release_date\", \"Media\".\"genres\", \"Media\".\"series\", \"Media\".\"image_url\", \"Media\".\"parent_id\", \"Media\".\"parent_order\", \"Media\".\"added_datetime\", \"Media\".\"updated_datetime\", \
+            \"MediaState\".\"user_id\", \"MediaState\".\"status\" AS \"state_status\", \"MediaState\".\"rating\" AS \"state_rating\", \"MediaState\".\"notes\" AS \"state_notes\", \"MediaState\".\"added_datetime\" AS \"state_added_datetime\", \"MediaState\".\"updated_datetime\" AS \"state_updated_datetime\", \
+            \"ExternalMedia\".\"external_source\", \"ExternalMedia\".\"external_id\" \
+            FROM \"Media\" \
+            LEFT JOIN \"MediaState\" ON \"Media\".\"id\" = \"MediaState\".\"media_id\" \
+            LEFT JOIN \"ExternalMedia\" ON \"Media\".\"id\" = \"ExternalMedia\".\"media_id\" AND \"ExternalMedia\".\"primary\" = TRUE \
+            WHERE \"MediaState\".\"user_id\" = '00000000-0000-0000-0000-000000000000' \
+            LIMIT 500 OFFSET 0"
+        );
+    }
+
+    #[test]
+    fn count_all_medias() {
+        let user_id = Uuid::try_parse("00000000-0000-0000-0000-000000000000").unwrap();
+        let query = count_all_with_search(
+            &user_id,
+            MediaSearch {
+                filter: None,
+                sort: None,
+                page: None,
+                size: None,
+            },
+        );
+        assert_eq!(
+            query.unwrap().to_string(PostgresQueryBuilder),
+            "SELECT COUNT(\"Media\".\"id\") \
+            FROM \"Media\" \
+            LEFT JOIN \"MediaState\" ON \"Media\".\"id\" = \"MediaState\".\"media_id\" \
+            WHERE \"MediaState\".\"user_id\" = '00000000-0000-0000-0000-000000000000'"
+        );
+    }
+}
+
 pub fn select_by_id(user_id: &Uuid, id: &Uuid) -> impl QueryStatementWriter {
     let mut select = Query::select();
 
@@ -71,7 +125,7 @@ pub fn select_basic_by_external_id(source: &str, id: &str) -> impl QueryStatemen
 pub fn select_primary_external_by_id(id: &Uuid) -> impl QueryStatementWriter {
     let mut select = Query::select();
 
-    select.from(ExternalMediaIden::Table);
+    from_external(&mut select);
     select
         .and_where(
             Expr::col((ExternalMediaIden::Table, ExternalMediaIden::MediaId))
@@ -126,6 +180,8 @@ pub(super) fn select_all(user_id: &Uuid) -> SelectStatement {
 
     join_state(&mut select, user_id);
     add_state_join_fields(&mut select);
+    join_external(&mut select);
+    add_external_join_fields(&mut select);
 
     select
 }
@@ -140,7 +196,7 @@ pub(super) fn count_all(user_id: &Uuid) -> SelectStatement {
     select
 }
 
-pub fn insert(media: &Media) -> impl QueryStatementWriter {
+pub fn insert_basic(media: &Media) -> impl QueryStatementWriter {
     let mut insert = Query::insert();
 
     insert
@@ -258,20 +314,6 @@ pub fn update_basic_by_id(media: &Media) -> impl QueryStatementWriter {
     )
 }
 
-pub fn update_status_by_id(user_id: &Uuid, id: &Uuid, status: i16) -> impl QueryStatementWriter {
-    update_state_values_by_id(
-        user_id,
-        id,
-        vec![
-            (MediaStateIden::Status, status.into()),
-            (
-                MediaStateIden::UpdatedDatetime,
-                crate::date_utils::now().into(),
-            ),
-        ],
-    )
-}
-
 pub fn update_parent_id_by_id(id: &Uuid, parent_id: Option<Uuid>) -> impl QueryStatementWriter {
     update_basic_values_by_id(
         id,
@@ -315,6 +357,20 @@ pub fn update_state_by_id(media: &MediaState) -> impl QueryStatementWriter {
     )
 }
 
+pub fn update_status_by_id(user_id: &Uuid, id: &Uuid, status: i16) -> impl QueryStatementWriter {
+    update_state_values_by_id(
+        user_id,
+        id,
+        vec![
+            (MediaStateIden::Status, status.into()),
+            (
+                MediaStateIden::UpdatedDatetime,
+                crate::date_utils::now().into(),
+            ),
+        ],
+    )
+}
+
 fn update_state_values_by_id(
     user_id: &Uuid,
     media_id: &Uuid,
@@ -331,7 +387,40 @@ fn update_state_values_by_id(
     update
 }
 
-pub fn delete_by_id(id: &Uuid) -> impl QueryStatementWriter {
+pub fn update_external_by_id(media: &ExternalMedia) -> impl QueryStatementWriter {
+    update_external_values_by_id(
+        &media.media_id,
+        vec![
+            (
+                ExternalMediaIden::ExternalSource,
+                media.external_source.clone().into(),
+            ),
+            (
+                ExternalMediaIden::ExternalId,
+                media.external_id.clone().into(),
+            ),
+            (ExternalMediaIden::Primary, media.primary.into()),
+        ],
+    )
+}
+
+fn update_external_values_by_id(
+    media_id: &Uuid,
+    values: Vec<(ExternalMediaIden, SimpleExpr)>,
+) -> impl QueryStatementWriter {
+    let mut update = Query::update();
+
+    update
+        .table(ExternalMediaIden::Table)
+        .values(values)
+        .and_where(
+            Expr::col(ExternalMediaIden::MediaId).eq(crate::uuid_utils::to_string(media_id)),
+        );
+
+    update
+}
+
+pub fn delete_basic_by_id(id: &Uuid) -> impl QueryStatementWriter {
     let mut delete = Query::delete();
 
     delete
@@ -352,7 +441,17 @@ pub fn delete_state_by_id(user_id: &Uuid, media_id: &Uuid) -> impl QueryStatemen
     delete
 }
 
-pub fn exists_by_id(id: &Uuid) -> impl QueryStatementWriter {
+pub fn delete_external_by_id(id: &Uuid) -> impl QueryStatementWriter {
+    let mut delete = Query::delete();
+
+    delete
+        .from_table(ExternalMediaIden::Table)
+        .and_where(Expr::col(ExternalMediaIden::MediaId).eq(crate::uuid_utils::to_string(id)));
+
+    delete
+}
+
+pub fn exists_basic_by_id(id: &Uuid) -> impl QueryStatementWriter {
     let mut select = Query::select();
 
     from(&mut select);
@@ -367,6 +466,19 @@ pub fn exists_state_by_id(user_id: &Uuid, id: &Uuid) -> impl QueryStatementWrite
 
     from_state(&mut select);
     where_id_state(&mut select, user_id, id);
+    add_state_id_field(&mut select);
+
+    select
+}
+
+pub fn exists_any_state_by_id(id: &Uuid) -> impl QueryStatementWriter {
+    let mut select = Query::select();
+
+    from_state(&mut select);
+    select.and_where(
+        Expr::col((MediaStateIden::Table, MediaStateIden::MediaId))
+            .eq(crate::uuid_utils::to_string(id)),
+    );
     add_state_id_field(&mut select);
 
     select
@@ -406,12 +518,35 @@ pub fn exists_by_title_and_edition_and_id_not(
     select
 }
 
+pub fn exists_by_external_source_and_external_id_and_id_not(
+    external_source: &str,
+    external_id: &str,
+    id: &Uuid,
+) -> impl QueryStatementWriter {
+    let mut select = Query::select();
+
+    from_external(&mut select);
+    add_external_id_field(&mut select);
+    select
+        .and_where(Expr::col(ExternalMediaIden::ExternalSource).eq(external_source))
+        .and_where(Expr::col(ExternalMediaIden::ExternalId).eq(external_id))
+        .and_where(Expr::col((ExternalMediaIden::Table, ExternalMediaIden::Primary)).eq(true));
+
+    select.and_where(Expr::col(ExternalMediaIden::MediaId).ne(crate::uuid_utils::to_string(id)));
+
+    select
+}
+
 fn from(select: &mut SelectStatement) {
     select.from(MediaIden::Table);
 }
 
 fn from_state(select: &mut SelectStatement) {
     select.from(MediaStateIden::Table);
+}
+
+fn from_external(select: &mut SelectStatement) {
+    select.from(ExternalMediaIden::Table);
 }
 
 fn where_id(select: &mut SelectStatement, id: &Uuid) {
@@ -465,13 +600,12 @@ fn join_state(select: &mut SelectStatement, user_id: &Uuid) {
 }
 
 fn join_external(select: &mut SelectStatement) {
-    select
-        .left_join(
-            ExternalMediaIden::Table,
-            Expr::col((MediaIden::Table, MediaIden::Id))
-                .equals((ExternalMediaIden::Table, ExternalMediaIden::MediaId)),
-        )
-        .and_where(Expr::col((ExternalMediaIden::Table, ExternalMediaIden::Primary)).eq(true));
+    select.left_join(
+        ExternalMediaIden::Table,
+        Expr::col((MediaIden::Table, MediaIden::Id))
+            .equals((ExternalMediaIden::Table, ExternalMediaIden::MediaId))
+            .and(Expr::col((ExternalMediaIden::Table, ExternalMediaIden::Primary)).eq(true)),
+    );
 }
 
 fn add_id_field(select: &mut SelectStatement) {
@@ -480,6 +614,10 @@ fn add_id_field(select: &mut SelectStatement) {
 
 fn add_state_id_field(select: &mut SelectStatement) {
     select.column((MediaStateIden::Table, MediaStateIden::MediaId));
+}
+
+fn add_external_id_field(select: &mut SelectStatement) {
+    select.column((ExternalMediaIden::Table, ExternalMediaIden::MediaId));
 }
 
 fn add_fields(select: &mut SelectStatement) {
