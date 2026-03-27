@@ -14,6 +14,15 @@ pub struct MediaDTO {
 
 #[derive(Default, Serialize, ToSchema)]
 // TODO
+pub struct Media2DTO {
+    pub media: MediaRawDTO,
+    pub external: ExternalMediaIdDTO,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub state: Option<MediaStateDTO>,
+}
+
+#[derive(Default, Serialize, ToSchema)]
+// TODO
 pub struct MediaRawDTO {
     #[schema(value_type = String)]
     pub id: Uuid,

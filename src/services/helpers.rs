@@ -40,6 +40,15 @@ where
     Ok(T::from(entity))
 }
 
+pub(super) fn handle_get_list_result_raw<E, T>(
+    repository_result: Result<Vec<E>, RepositoryError>,
+) -> Result<Vec<E>, ApiErrors>
+where
+    T: ModelInfo,
+{
+    handle_result::<Vec<E>, T>(repository_result)
+}
+
 pub(super) fn handle_get_list_paged_result<E, T>(
     repository_result: Result<PageResult<E>, SearchErrors>,
 ) -> Result<PageResultDTO<T>, ApiErrors>

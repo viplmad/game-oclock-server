@@ -3,16 +3,17 @@ use uuid::Uuid;
 use crate::entities::{ExternalMedia, Media, MediaSearch, MediaState};
 use crate::errors::ApiErrors;
 use crate::models::{
-    ExternalMediaIdDTO, MediaDTO, MediaPageResult, MediaRawDTO, MediaStateDTO, MediaStatus,
-    NewManualMediaDTO, NewMediaDTO, NewMediaStateDTO, SearchDTO,
+    ExternalMediaIdDTO, Media2DTO, MediaDTO, MediaPageResult, MediaRawDTO, MediaStateDTO,
+    MediaStatus, NewManualMediaDTO, NewMediaDTO, NewMediaStateDTO, SearchDTO,
 };
 use crate::repository::MediaRepository;
 
 use super::MediaExternalService;
 use super::helpers::{
     create_merged2, handle_action_result, handle_already_exists_result, handle_get_count_result,
-    handle_get_list_paged_result, handle_get_result, handle_not_found_result, handle_query_mapping,
-    handle_result, handle_update_result, update_merged,
+    handle_get_list_paged_result, handle_get_list_result_raw, handle_get_result,
+    handle_not_found_result, handle_query_mapping, handle_result, handle_update_result,
+    update_merged,
 };
 
 #[derive(Clone)]
@@ -94,6 +95,47 @@ impl MediaService {
         let search = handle_query_mapping::<MediaDTO, MediaSearch>(search, quicksearch)?;
         let count_result = self.repository.count_all(user_id, search).await;
         handle_get_count_result::<MediaDTO>(count_result)
+    }
+
+    pub async fn search_external_medias(
+        &self,
+        user_id: &Uuid,
+        source: &str,
+        quicksearch: &str,
+    ) -> Result<Vec<Media2DTO>, ApiErrors> {
+        let externals = self
+            .external_service
+            .search(source, quicksearch, 20)
+            .await?;
+
+        let external_ids = externals
+            .iter()
+            .map(|(external_id, _)| (external_id.source.clone(), external_id.id.clone()))
+            .collect();
+
+        let find_states_result = self
+            .repository
+            .find_all_states_by_external_ids(user_id, &external_ids)
+            .await;
+        let states = handle_get_list_result_raw::<_, MediaDTO>(find_states_result)?;
+
+        Ok(externals
+            .into_iter()
+            .map(|(external, media)| {
+                let state = states
+                    .iter()
+                    .find(|state| {
+                        state.external_source == external.source && state.external_id == external.id
+                    })
+                    .map(MediaStateDTO::from);
+
+                Media2DTO {
+                    external,
+                    media,
+                    state,
+                }
+            })
+            .collect())
     }
 
     pub async fn create_media(

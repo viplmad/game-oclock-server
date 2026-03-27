@@ -43,6 +43,7 @@ pub fn get_openapi() -> utoipa::openapi::OpenApi {
             routes::link_parent_media,
             routes::unlink_parent_media,
             routes::sync_media,
+            routes::search_external_medias,
             // Media Sessions
             routes::get_media_sessions,
             routes::count_media_sessions,
@@ -98,6 +99,7 @@ pub fn get_openapi() -> utoipa::openapi::OpenApi {
         ),
         components(schemas(
             models::MediaDTO,
+            models::Media2DTO,
             models::MediaPageResult,
             models::NewMediaDTO,
             models::MediaAvailableDTO,

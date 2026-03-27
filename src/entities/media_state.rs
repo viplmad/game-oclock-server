@@ -23,6 +23,19 @@ pub struct MediaState {
     pub updated_datetime: DateTime<Utc>,
 }
 
+#[derive(FromRow)]
+pub struct MediaStateWithExternal {
+    pub user_id: Uuid,
+    pub media_id: Uuid,
+    pub status: i16,
+    pub rating: i16,
+    pub notes: String,
+    pub added_datetime: DateTime<Utc>,
+    pub updated_datetime: DateTime<Utc>,
+    pub external_source: String,
+    pub external_id: String,
+}
+
 impl TableIden for MediaStateIden {
     const TABLE: Self = Self::Table;
 }

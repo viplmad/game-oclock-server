@@ -64,7 +64,7 @@ impl IgdbClient {
         let access_token = self.auth().await?;
 
         let fields = Self::get_fields();
-        let body = format!("where id = {};fields {};", id, fields.join(", "));
+        let body = format!("where id = {};fields {};", id, fields.join(","));
 
         let resp = self
             .client
@@ -87,9 +87,19 @@ impl IgdbClient {
             release_date: resp
                 .first_release_date
                 .map(|v| DateTime::from_timestamp_secs(v).unwrap()),
-            genres: resp.genres.into_iter().map(|e| e.name).collect(),
-            series: resp.collections.into_iter().map(|e| e.name).collect(),
-            image_url: Some(resp.cover.url),
+            genres: resp
+                .genres
+                .unwrap_or_else(|| Vec::<IgdbElementResponse>::new())
+                .into_iter()
+                .map(|e| e.name)
+                .collect(),
+            series: resp
+                .collections
+                .unwrap_or_else(|| Vec::<IgdbElementResponse>::new())
+                .into_iter()
+                .map(|e| e.name)
+                .collect(),
+            image_url: resp.cover.map(|v| v.url),
             parent_id: None,
             parent_order: None,
         })
@@ -106,7 +116,7 @@ impl IgdbClient {
         let body = format!(
             "search \"{}\";fields {};limit {};",
             query,
-            fields.join(", "),
+            fields.join(","),
             size
         );
 
@@ -139,9 +149,19 @@ impl IgdbClient {
                         release_date: item
                             .first_release_date
                             .map(|v| DateTime::from_timestamp_secs(v).unwrap()),
-                        genres: item.genres.into_iter().map(|e| e.name).collect(),
-                        series: item.collections.into_iter().map(|e| e.name).collect(),
-                        image_url: Some(item.cover.url),
+                        genres: item
+                            .genres
+                            .unwrap_or_else(|| Vec::<IgdbElementResponse>::new())
+                            .into_iter()
+                            .map(|e| e.name)
+                            .collect(),
+                        series: item
+                            .collections
+                            .unwrap_or_else(|| Vec::<IgdbElementResponse>::new())
+                            .into_iter()
+                            .map(|e| e.name)
+                            .collect(),
+                        image_url: item.cover.map(|v| v.url),
                         parent_id: None,
                         parent_order: None,
                         added_datetime: crate::date_utils::now(), // TODO
@@ -160,7 +180,7 @@ impl IgdbClient {
             "first_release_date",
             "genres.name",
             "collections.name",
-            "game_type.type",
+            "game_type",
             "parent_game",
         ]
     }
@@ -205,10 +225,10 @@ struct IgdbGamesResponse {
     id: i64,
     name: String,
     version_title: Option<String>,
-    cover: IgdbCoverResponse,
+    cover: Option<IgdbCoverResponse>,
     first_release_date: Option<i64>,
-    genres: Vec<IgdbElementResponse>,
-    collections: Vec<IgdbElementResponse>,
+    genres: Option<Vec<IgdbElementResponse>>,
+    collections: Option<Vec<IgdbElementResponse>>,
     game_type: Option<i16>,
     // parent_game: Option<i64>,
 }

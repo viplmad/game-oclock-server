@@ -64,6 +64,7 @@ impl FromStr for FieldIden<MediaIden> {
     fn from_str(field: &str) -> Result<Self, Self::Err> {
         match field {
             "id" => Ok(FieldIden::new(MediaIden::Id, FieldType::String)),
+            "kind" => Ok(FieldIden::new(MediaIden::Kind, FieldType::String)),
             "title" => Ok(FieldIden::new(MediaIden::Title, FieldType::String)),
             "edition" => Ok(FieldIden::new(MediaIden::Edition, FieldType::String)),
             "release_date" => Ok(FieldIden::new(MediaIden::ReleaseDate, FieldType::Integer)),

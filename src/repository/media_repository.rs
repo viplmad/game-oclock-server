@@ -2,7 +2,10 @@ use sqlx::PgPool;
 use uuid::Uuid;
 
 use super::query::media_query;
-use crate::entities::{ExternalMedia, Media, MediaSearch, MediaState, MediaWithState, PageResult};
+use crate::entities::{
+    ExternalMedia, Media, MediaSearch, MediaState, MediaStateWithExternal, MediaWithState,
+    PageResult,
+};
 use crate::errors::{RepositoryError, SearchErrors};
 
 use super::helpers::{
@@ -77,6 +80,15 @@ impl MediaRepository {
         parent_id: &Uuid,
     ) -> Result<Vec<MediaWithState>, RepositoryError> {
         let query = media_query::select_all_by_parent_id(user_id, parent_id);
+        fetch_all(&self.pool, query).await
+    }
+
+    pub async fn find_all_states_by_external_ids(
+        &self,
+        user_id: &Uuid,
+        external_ids: &Vec<(String, String)>,
+    ) -> Result<Vec<MediaStateWithExternal>, RepositoryError> {
+        let query = media_query::select_all_state_by_externals(user_id, external_ids);
         fetch_all(&self.pool, query).await
     }
 

@@ -1,6 +1,6 @@
 use uuid::Uuid;
 
-use crate::entities::{ExternalMedia, Media, MediaState, MediaWithState};
+use crate::entities::{ExternalMedia, Media, MediaState, MediaStateWithExternal, MediaWithState};
 use crate::models::{
     ExternalMediaIdDTO, MediaDTO, MediaRawDTO, MediaStateDTO, MediaStatus, MediaType,
 };
@@ -67,6 +67,18 @@ impl From<MediaState> for MediaStateDTO {
             status: MediaStatus::try_from(state.status).expect("Status is not within valid range"),
             rating: u32::try_from(state.rating).expect("Rating is not positive"),
             notes: state.notes,
+            added_datetime: state.added_datetime,
+            updated_datetime: state.updated_datetime,
+        }
+    }
+}
+
+impl From<&MediaStateWithExternal> for MediaStateDTO {
+    fn from(state: &MediaStateWithExternal) -> Self {
+        Self {
+            status: MediaStatus::try_from(state.status).expect("Status is not within valid range"),
+            rating: u32::try_from(state.rating).expect("Rating is not positive"),
+            notes: state.notes.clone(),
             added_datetime: state.added_datetime,
             updated_datetime: state.updated_datetime,
         }

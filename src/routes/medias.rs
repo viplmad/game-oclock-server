@@ -1,9 +1,9 @@
 use actix_web::{Responder, delete, get, post, put, web};
 
 use crate::models::{
-    DateTimeDTO, ErrorMessage, ItemId, ItemIdAndRelatedId, LoggedUser, MediaAvailablePageResult,
-    MediaDTO, MediaPageResult, MediaTagPageResult, NewMediaDTO, OrderDTO, QuicksearchQuery,
-    SearchDTO,
+    DateTimeDTO, ErrorMessage, ExternalQuicksearchQuery, ItemId, ItemIdAndRelatedId, LoggedUser,
+    Media2DTO, MediaAvailablePageResult, MediaDTO, MediaPageResult, MediaTagPageResult,
+    NewMediaDTO, OrderDTO, QuicksearchQuery, SearchDTO,
 };
 use crate::services::{
     MediaAvailableService, MediaService, MediaSessionDeviceService, MediaTagService,
@@ -644,4 +644,34 @@ pub async fn sync_media(
     let ItemId(id) = path.into_inner();
     let update_result = media_service.sync_media(&id).await;
     handle_update_result(update_result)
+}
+
+// Search external medias
+#[utoipa::path(
+    post,
+    path = "/api/v1/medias/search",
+    tag = "Medias",
+    params(
+        ExternalQuicksearchQuery,
+    ),
+    responses(
+        (status = 200, description = "Medias count obtained", body = [Media2DTO], content_type = "application/json"),
+        (status = 401, description = "Unauthorized", body = ErrorMessage, content_type = "application/json"),
+        (status = 403, description = "Forbidden", body = ErrorMessage, content_type = "application/json"),
+        (status = 500, description = "Internal server error", body = ErrorMessage, content_type = "application/json"),
+    ),
+    security(
+        ("OAuth2" = [])
+    )
+)]
+#[post("/medias/search")]
+pub async fn search_external_medias(
+    media_service: web::Data<MediaService>,
+    query: web::Query<ExternalQuicksearchQuery>,
+    logged_user: LoggedUser,
+) -> impl Responder {
+    let search_result = media_service
+        .search_external_medias(&logged_user.id, &query.0.source, &query.0.q)
+        .await;
+    handle_get_result(search_result)
 }

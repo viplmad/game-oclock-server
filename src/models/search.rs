@@ -6,6 +6,12 @@ pub struct QuicksearchQuery {
     pub q: Option<String>,
 }
 
+#[derive(Deserialize, IntoParams)]
+pub struct ExternalQuicksearchQuery {
+    pub source: String,
+    pub q: String,
+}
+
 #[derive(Deserialize, ToSchema)]
 pub struct SearchDTO {
     pub filter: Option<Vec<FilterDTO>>,

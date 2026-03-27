@@ -62,6 +62,25 @@ mod tests {
             WHERE \"MediaState\".\"user_id\" = '00000000-0000-0000-0000-000000000000'"
         );
     }
+
+    #[test]
+    fn select() {
+        let user_id = Uuid::try_parse("00000000-0000-0000-0000-000000000000").unwrap();
+        let external_ids = vec![
+            (String::from("source1"), String::from("id1")),
+            (String::from("source1"), String::from("id2")),
+        ];
+        let query = select_all_state_by_externals(&user_id, &external_ids);
+        assert_eq!(
+            query.to_string(PostgresQueryBuilder),
+            "SELECT \"MediaState\".\"user_id\", \"MediaState\".\"media_id\", \"MediaState\".\"status\", \"MediaState\".\"rating\", \"MediaState\".\"notes\", \"MediaState\".\"added_datetime\", \"MediaState\".\"updated_datetime\", \
+            \"ExternalMedia\".\"external_source\", \"ExternalMedia\".\"external_id\" \
+            FROM \"MediaState\" \
+            LEFT JOIN \"ExternalMedia\" ON \"MediaState\".\"media_id\" = \"ExternalMedia\".\"media_id\" AND \"ExternalMedia\".\"primary\" = TRUE \
+            WHERE \"MediaState\".\"user_id\" = '00000000-0000-0000-0000-000000000000' \
+            AND ((\"ExternalMedia\".\"external_source\" = 'source1' AND \"ExternalMedia\".\"external_id\" = 'id1') OR (\"ExternalMedia\".\"external_source\" = 'source1' AND \"ExternalMedia\".\"external_id\" = 'id2'))"
+        );
+    }
 }
 
 pub fn select_by_id(user_id: &Uuid, id: &Uuid) -> impl QueryStatementWriter {
@@ -95,6 +114,45 @@ pub fn select_state_by_id(user_id: &Uuid, id: &Uuid) -> impl QueryStatementWrite
     from_state(&mut select);
     where_id_state(&mut select, user_id, id);
     add_state_fields(&mut select);
+
+    select
+}
+
+pub fn select_all_state_by_externals(
+    user_id: &Uuid,
+    external_ids: &Vec<(String, String)>,
+) -> impl QueryStatementWriter {
+    let mut select = Query::select();
+
+    from_state(&mut select);
+    add_state_fields(&mut select);
+    select.and_where(
+        Expr::col((MediaStateIden::Table, MediaStateIden::UserId))
+            .eq(crate::uuid_utils::to_string(user_id)),
+    );
+
+    let mut ors = sea_query::Cond::any();
+    for (source, id) in external_ids {
+        ors = ors.add(
+            Expr::col((ExternalMediaIden::Table, ExternalMediaIden::ExternalSource))
+                .eq(String::from(source))
+                .and(
+                    Expr::col((ExternalMediaIden::Table, ExternalMediaIden::ExternalId))
+                        .eq(String::from(id)),
+                ),
+        );
+    }
+    if !ors.is_empty() {
+        select.cond_where(ors);
+    }
+
+    select.left_join(
+        ExternalMediaIden::Table,
+        Expr::col((MediaStateIden::Table, MediaStateIden::MediaId))
+            .equals((ExternalMediaIden::Table, ExternalMediaIden::MediaId))
+            .and(Expr::col((ExternalMediaIden::Table, ExternalMediaIden::Primary)).eq(true)),
+    );
+    add_external_join_fields(&mut select);
 
     select
 }
