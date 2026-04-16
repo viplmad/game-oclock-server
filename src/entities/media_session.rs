@@ -60,6 +60,7 @@ impl FromStr for FieldIden<MediaSessionIden> {
 
     fn from_str(field: &str) -> Result<Self, Self::Err> {
         match field {
+            "media_id" => Ok(FieldIden::new(MediaSessionIden::MediaId, FieldType::String)),
             "start_date" => Ok(FieldIden::new(
                 MediaSessionIden::StartDate,
                 FieldType::DateTime,

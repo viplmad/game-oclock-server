@@ -81,16 +81,17 @@ pub async fn aggregate_media_sessions(
     handle_get_result(aggregate_result)
 }
 
-/// Get a review in a time frame
+/// Aggregate all sessions
 #[utoipa::path(
     post,
-    path = "/api/v1/medias/sessions/review",
+    path = "/api/v1/medias/sessions/aggregate",
     tag = "MediaSessions",
     params(
-        StartEndDateQuery,
+        QuicksearchQuery,
     ),
+    request_body(content = AggregateSearchDTO, description = "Query", content_type = "application/json"),
     responses(
-        (status = 200, description = "Session medias review obtained", body = MediasReviewDTO, content_type = "application/json"),
+        (status = 200, description = "Sessions aggregate obtained", body = u64, content_type = "application/json"),
         (status = 401, description = "Unauthorized", body = ErrorMessage, content_type = "application/json"),
         (status = 403, description = "Forbidden", body = ErrorMessage, content_type = "application/json"),
         (status = 500, description = "Internal server error", body = ErrorMessage, content_type = "application/json"),
@@ -99,16 +100,17 @@ pub async fn aggregate_media_sessions(
         ("OAuth2" = [])
     )
 )]
-#[post("/medias/sessions/review")]
-pub async fn get_session_medias_review(
-    media_review_service: web::Data<MediaReviewService>,
-    query: web::Query<StartEndDateQuery>,
+#[post("/medias/sessions/aggregate")]
+pub async fn aggregate_sessions(
+    media_session_service: web::Data<MediaSessionService>,
+    query: web::Query<QuicksearchQuery>,
+    body: web::Json<AggregateSearchDTO>,
     logged_user: LoggedUser,
 ) -> impl Responder {
-    let get_result = media_review_service
-        .get_session_medias_review(&logged_user.id, query.start_date, query.end_date)
+    let aggregate_result = media_session_service
+        .aggregate_sessions(&logged_user.id, body.0, query.0.q)
         .await;
-    handle_get_result(get_result)
+    handle_get_result(aggregate_result)
 }
 
 /// Search first medias by session

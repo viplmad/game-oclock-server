@@ -33,48 +33,35 @@ pub enum AggregateMetric<I: TableIden> {
 }
 
 pub struct AggregateSumMetric<I: TableIden> {
-    pub table: SeaRc<dyn Iden>,
-    pub field: SeaRc<dyn Iden>,
+    pub field: FieldIden<I>,
     pub default_value: Option<FieldSearchValue>,
-    resource_type: std::marker::PhantomData<I>,
 }
 
 pub struct AggregateCountMetric<I: TableIden> {
-    pub table: SeaRc<dyn Iden>,
-    pub field: SeaRc<dyn Iden>,
+    pub field: FieldIden<I>,
     pub default_value: Option<FieldSearchValue>,
     pub distinct: bool,
-    resource_type: std::marker::PhantomData<I>,
 }
 
-impl<T: TableIden> AggregateCountMetric<T> {
-    pub fn new<I: TableIden>(
-        table: SeaRc<dyn Iden>,
-        field: SeaRc<dyn Iden>,
+impl<I: TableIden> AggregateCountMetric<I> {
+    pub fn new(
+        field: FieldIden<I>,
         default_value: Option<FieldSearchValue>,
         distinct: bool,
     ) -> Self {
         Self {
-            table,
             field,
             default_value,
             distinct,
-            resource_type: std::marker::PhantomData,
         }
     }
 }
 
-impl<T: TableIden> AggregateSumMetric<T> {
-    pub fn new<I: TableIden>(
-        table: SeaRc<dyn Iden>,
-        field: SeaRc<dyn Iden>,
-        default_value: Option<FieldSearchValue>,
-    ) -> Self {
+impl<I: TableIden> AggregateSumMetric<I> {
+    pub fn new(field: FieldIden<I>, default_value: Option<FieldSearchValue>) -> Self {
         Self {
-            table,
             field,
             default_value,
-            resource_type: std::marker::PhantomData,
         }
     }
 }
@@ -86,18 +73,14 @@ pub enum AggregateGroup<I: TableIden> {
 }
 
 pub struct AggregateFieldGroup<I: TableIden> {
-    pub table: SeaRc<dyn Iden>,
-    pub field: SeaRc<dyn Iden>,
+    pub field: FieldIden<I>,
     pub default_value: Option<FieldSearchValue>,
-    resource_type: std::marker::PhantomData<I>,
 }
 
 pub struct AggregateDateHistogramGroup<I: TableIden> {
-    pub table: SeaRc<dyn Iden>,
-    pub field: SeaRc<dyn Iden>,
+    pub field: FieldIden<I>,
     pub default_value: Option<FieldSearchValue>,
     pub interval: DateHistogramInterval,
-    resource_type: std::marker::PhantomData<I>,
 }
 
 pub enum DateHistogramInterval {
@@ -109,63 +92,49 @@ pub enum DateHistogramInterval {
     Minute,
 }
 
-impl<T: TableIden> AggregateFieldGroup<T> {
-    pub fn new<I: TableIden>(
-        table: SeaRc<dyn Iden>,
-        field: SeaRc<dyn Iden>,
-        default_value: Option<FieldSearchValue>,
-    ) -> Self {
+impl<I: TableIden> AggregateFieldGroup<I> {
+    pub fn new(field: FieldIden<I>, default_value: Option<FieldSearchValue>) -> Self {
         Self {
-            table,
             field,
             default_value,
-            resource_type: std::marker::PhantomData,
         }
     }
 }
 
-impl<T: TableIden> AggregateDateHistogramGroup<T> {
-    pub fn new<I: TableIden>(
-        table: SeaRc<dyn Iden>,
-        field: SeaRc<dyn Iden>,
+impl<I: TableIden> AggregateDateHistogramGroup<I> {
+    pub fn new(
+        field: FieldIden<I>,
         default_value: Option<FieldSearchValue>,
         interval: DateHistogramInterval,
     ) -> Self {
         Self {
-            table,
             field,
             default_value,
             interval,
-            resource_type: std::marker::PhantomData,
         }
     }
 }
 
 /// Filter
 pub struct Filter<I: TableIden> {
-    pub table: SeaRc<dyn Iden>,
-    pub field: SeaRc<dyn Iden>,
+    pub field: FieldIden<I>,
     pub value: FieldValue,
     pub operator: FilterOperator,
     pub chain_operator: BinOper,
-    resource_type: std::marker::PhantomData<I>,
 }
 
-impl<T: TableIden> Filter<T> {
-    pub fn new<I: TableIden>(
-        table: SeaRc<dyn Iden>,
-        field: SeaRc<dyn Iden>,
+impl<I: TableIden> Filter<I> {
+    pub fn new(
+        field: FieldIden<I>,
         value: FieldValue,
         operator: FilterOperator,
         chain_operator: BinOper,
     ) -> Self {
         Self {
-            table,
             field,
             value,
             operator,
             chain_operator,
-            resource_type: std::marker::PhantomData,
         }
     }
 }
@@ -205,20 +174,13 @@ pub enum FilterOperator {
 
 /// Sort
 pub struct Sort<I: TableIden> {
-    pub table: SeaRc<dyn Iden>,
-    pub field: SeaRc<dyn Iden>,
+    pub field: FieldIden<I>,
     pub order: Order,
-    resource_type: std::marker::PhantomData<I>,
 }
 
-impl<T: TableIden> Sort<T> {
-    pub fn new<I: TableIden>(table: SeaRc<dyn Iden>, field: SeaRc<dyn Iden>, order: Order) -> Self {
-        Self {
-            table,
-            field,
-            order,
-            resource_type: std::marker::PhantomData,
-        }
+impl<I: TableIden> Sort<I> {
+    pub fn new(field: FieldIden<I>, order: Order) -> Self {
+        Self { field, order }
     }
 }
 

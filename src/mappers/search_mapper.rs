@@ -129,14 +129,14 @@ where
     type Error = MappingError;
 
     fn try_from(filter: AggregateCountMetricDTO) -> Result<Self, Self::Error> {
-        let field_iden =
+        let field =
             FieldIden::<I>::from_str(&filter.field).map_err(|_| MappingError(filter.field))?;
+        let field_kind = field.kind.clone();
 
-        Ok(Self::new::<I>(
-            field_iden.table,
-            field_iden.iden,
+        Ok(Self::new(
+            field,
             filter.default_value.map(|value| FieldSearchValue {
-                kind: field_iden.kind,
+                kind: field_kind,
                 value,
             }),
             filter.distinct,
@@ -151,14 +151,14 @@ where
     type Error = MappingError;
 
     fn try_from(filter: AggregateSumMetricDTO) -> Result<Self, Self::Error> {
-        let field_iden =
+        let field =
             FieldIden::<I>::from_str(&filter.field).map_err(|_| MappingError(filter.field))?;
+        let field_kind = field.kind.clone();
 
-        Ok(Self::new::<I>(
-            field_iden.table,
-            field_iden.iden,
+        Ok(Self::new(
+            field,
             filter.default_value.map(|value| FieldSearchValue {
-                kind: field_iden.kind,
+                kind: field_kind,
                 value,
             }),
         ))
@@ -172,19 +172,19 @@ where
     type Error = MappingError;
 
     fn try_from(filter: FilterDTO) -> Result<Self, Self::Error> {
-        let field_iden =
+        let field =
             FieldIden::<I>::from_str(&filter.field).map_err(|_| MappingError(filter.field))?;
+        let field_kind = field.kind.clone();
 
-        Ok(Self::new::<I>(
-            field_iden.table,
-            field_iden.iden,
+        Ok(Self::new(
+            field,
             match filter.value {
                 SearchValue::Value(value) => FieldValue::Value(FieldSearchValue {
-                    kind: field_iden.kind,
+                    kind: field_kind,
                     value,
                 }),
                 SearchValue::Values(values) => FieldValue::Values(FieldSearchValues {
-                    kind: field_iden.kind,
+                    kind: field_kind,
                     values,
                 }),
             },
@@ -204,14 +204,9 @@ where
     type Error = MappingError;
 
     fn try_from(sort: SortDTO) -> Result<Self, Self::Error> {
-        let field_iden =
-            FieldIden::<I>::from_str(&sort.field).map_err(|_| MappingError(sort.field))?;
+        let field = FieldIden::<I>::from_str(&sort.field).map_err(|_| MappingError(sort.field))?;
 
-        Ok(Self::new::<I>(
-            field_iden.table,
-            field_iden.iden,
-            Order::from(sort.order),
-        ))
+        Ok(Self::new(field, Order::from(sort.order)))
     }
 }
 

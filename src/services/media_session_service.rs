@@ -92,6 +92,20 @@ impl MediaSessionService {
         handle_get_aggregate_result::<SessionDTO>(aggregate_result)
     }
 
+    pub async fn aggregate_sessions(
+        &self,
+        user_id: &Uuid,
+        search: AggregateSearchDTO,
+        quicksearch: Option<String>,
+    ) -> Result<u64, ApiErrors> {
+        let search = handle_aggregate_search_mapping::<SessionDTO, SessionAggregateSearch>(
+            search,
+            quicksearch,
+        )?;
+        let aggregate_result = self.repository.aggregate_all(user_id, search).await;
+        handle_get_aggregate_result::<SessionDTO>(aggregate_result)
+    }
+
     // For review
     pub(super) async fn find_first_media_sessions_by_medias(
         &self,

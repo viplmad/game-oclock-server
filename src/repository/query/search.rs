@@ -3,8 +3,8 @@ use sea_query::{BinOper, Cond, Expr, Func, LikeExpr, SelectStatement, Value};
 use crate::entities::{
     AggregateCountMetric, AggregateDateHistogramGroup, AggregateFieldGroup, AggregateGroup,
     AggregateGroupSearch, AggregateMetric, AggregateSearch, AggregateSumMetric,
-    DateHistogramInterval, FieldSearchValue, FieldValue, Filter, FilterOperator, ListSearch,
-    SearchQuery, Sort, TableIden,
+    DateHistogramInterval, FieldIden, FieldSearchValue, FieldValue, Filter, FilterOperator,
+    ListSearch, SearchQuery, Sort, TableIden,
 };
 use crate::errors::{MappingError, SearchErrors};
 
@@ -73,9 +73,7 @@ fn apply_filter<I: 'static + TableIden + Clone + Copy>(
             let mut ors = Cond::any();
 
             for filter in filters {
-                let table = filter.table;
-                let field = filter.field;
-                let col = Expr::col((table, field));
+                let col = build_col_expr(filter.field);
                 let expr = match filter.value {
                     FieldValue::Value(value) => match filter.operator {
                         FilterOperator::Equal => col.eq(Value::try_from(value)?),
@@ -153,11 +151,10 @@ fn apply_sort<I: 'static + TableIden + Clone + Copy>(
 ) {
     if let Some(sorts) = sort {
         for sort in sorts {
-            let table = sort.table;
-            let field = sort.field;
+            let col = build_col_expr(sort.field);
             let order = sort.order;
 
-            select.order_by((table, field), order);
+            select.order_by_expr(col.into(), order);
         }
     }
 }
@@ -190,9 +187,7 @@ fn apply_aggregate_count_metric<I: 'static + TableIden + Clone + Copy>(
     select: &mut SelectStatement,
     aggr: AggregateCountMetric<I>,
 ) {
-    let table = aggr.table;
-    let field = aggr.field;
-    let col = Expr::col((table, field));
+    let col = build_col_expr(aggr.field);
 
     let expr = coalesce_default(col, aggr.default_value);
 
@@ -208,9 +203,7 @@ fn apply_aggregate_sum_metric<I: 'static + TableIden + Clone + Copy>(
     select: &mut SelectStatement,
     aggr: AggregateSumMetric<I>,
 ) {
-    let table = aggr.table;
-    let field = aggr.field;
-    let col = Expr::col((table, field));
+    let col = build_col_expr(aggr.field);
 
     let expr = coalesce_default(col, aggr.default_value);
 
@@ -233,9 +226,7 @@ fn apply_aggregate_field_group<I: 'static + TableIden + Clone + Copy>(
     select: &mut SelectStatement,
     aggr: AggregateFieldGroup<I>,
 ) {
-    let table = aggr.table;
-    let field = aggr.field;
-    let col = Expr::col((table, field));
+    let col = build_col_expr(aggr.field);
 
     let expr = coalesce_default(col, aggr.default_value);
 
@@ -247,9 +238,7 @@ fn apply_aggregate_date_histogram_group<I: 'static + TableIden + Clone + Copy>(
     select: &mut SelectStatement,
     aggr: AggregateDateHistogramGroup<I>,
 ) {
-    let table = aggr.table;
-    let field = aggr.field;
-    let col = Expr::col((table, field));
+    let col = build_col_expr(aggr.field);
 
     let expr = coalesce_default(col, aggr.default_value);
 
@@ -280,6 +269,12 @@ fn format_like_ends_with(search: FieldSearchValue) -> String {
 fn format_like_contains(search: FieldSearchValue) -> String {
     let value: &str = &search.value.to_lowercase();
     format!("{LIKE_SYMBOL}{value}{LIKE_SYMBOL}")
+}
+
+fn build_col_expr<I: 'static + TableIden + Clone + Copy>(field: FieldIden<I>) -> Expr {
+    let table = field.table;
+    let field = field.iden;
+    Expr::col((table, field))
 }
 
 fn coalesce_default(column: Expr, default_value: Option<FieldSearchValue>) -> Expr {

@@ -47,7 +47,7 @@ pub fn get_openapi() -> utoipa::openapi::OpenApi {
             // Media Sessions
             routes::get_media_sessions,
             routes::aggregate_media_sessions,
-            routes::get_session_medias_review,
+            routes::aggregate_sessions,
             routes::get_first_session_medias,
             routes::get_last_session_medias,
             routes::get_media_session,

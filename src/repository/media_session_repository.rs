@@ -69,6 +69,15 @@ impl MediaSessionRepository {
         aggregate_all_search(&self.pool, search_query).await
     }
 
+    pub async fn aggregate_all(
+        &self,
+        user_id: &Uuid,
+        search: SessionAggregateSearch,
+    ) -> Result<u64, SearchErrors> {
+        let search_query = media_session_query::aggregate_all_by_user_id(user_id, search)?;
+        aggregate_all_search(&self.pool, search_query).await
+    }
+
     // For review
     pub async fn find_all_first_by_user_id_and_media_id_in(
         &self,

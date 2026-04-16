@@ -15,31 +15,31 @@ use crate::entities::{
 use crate::errors::SearchErrors;
 
 use super::media_query;
-use super::search::{
-    apply_aggregate_group_search, apply_aggregate_search, apply_search, apply_search_filter,
-};
+use super::search::{apply_aggregate_group_search, apply_aggregate_search, apply_search};
 
 #[cfg(test)]
 mod tests {
-    use sea_query::{PostgresQueryBuilder, SeaRc};
+    use sea_query::PostgresQueryBuilder;
     use uuid::Uuid;
 
     use super::*;
     use crate::entities::{
         AggregateCountMetric, AggregateDateHistogramGroup, AggregateGroup, AggregateMetric,
-        DateHistogramInterval, TableIden,
+        DateHistogramInterval, FieldIden, FieldType,
     };
 
     #[test]
     fn count_all_sessions() {
         let user_id = Uuid::try_parse("00000000-0000-0000-0000-000000000000").unwrap();
-        let query = aggregate_by_user_id(
+        let query = aggregate_all_by_user_id(
             &user_id,
             SessionAggregateSearch {
                 filter: None,
-                aggr: AggregateMetric::Count(AggregateCountMetric::new::<MediaSessionIden>(
-                    SeaRc::new(MediaSessionIden::TABLE),
-                    SeaRc::new(MediaSessionIden::MediaId),
+                aggr: AggregateMetric::Count(AggregateCountMetric::new(
+                    FieldIden::new::<MediaSessionIden>(
+                        MediaSessionIden::MediaId,
+                        FieldType::String,
+                    ),
                     None,
                     false,
                 )),
@@ -58,17 +58,19 @@ mod tests {
             &user_id,
             SessionAggregateGroupSearch {
                 filter: None,
-                aggr: AggregateMetric::Count(AggregateCountMetric::new::<MediaSessionIden>(
-                    SeaRc::new(MediaSessionIden::TABLE),
-                    SeaRc::new(MediaSessionIden::MediaId),
+                aggr: AggregateMetric::Count(AggregateCountMetric::new(
+                    FieldIden::new::<MediaSessionIden>(
+                        MediaSessionIden::MediaId,
+                        FieldType::String,
+                    ),
                     None,
                     true,
                 )),
-                group: AggregateGroup::DateHistogram(AggregateDateHistogramGroup::new::<
-                    MediaSessionIden,
-                >(
-                    SeaRc::new(MediaSessionIden::TABLE),
-                    SeaRc::new(MediaSessionIden::StartDate),
+                group: AggregateGroup::DateHistogram(AggregateDateHistogramGroup::new(
+                    FieldIden::new::<MediaSessionIden>(
+                        MediaSessionIden::StartDate,
+                        FieldType::DateTime,
+                    ),
                     None,
                     DateHistogramInterval::Month,
                 )),
@@ -134,7 +136,7 @@ pub fn aggregate_all_by_user_id_and_media_id(
     apply_aggregate_search(select, search)
 }
 
-pub fn aggregate_by_user_id(
+pub fn aggregate_all_by_user_id(
     user_id: &Uuid,
     search: SessionAggregateSearch,
 ) -> Result<SelectStatement, SearchErrors> {
