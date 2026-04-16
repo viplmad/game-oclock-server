@@ -1,9 +1,9 @@
 use actix_web::{Responder, delete, get, post, web};
 
 use crate::models::{
-    DateTimeDTO, ErrorMessage, ItemId, LoggedUser, MediaSessionPageResult, MediasReviewDTO,
-    NewSessionDTO, OptionalStartEndDateQuery, QuicksearchQuery, SearchDTO, SessionDTO,
-    SessionPageResult, StartEndDateQuery,
+    AggregateSearchDTO, DateTimeDTO, ErrorMessage, ItemId, ListSearchDTO, LoggedUser,
+    MediaSessionPageResult, MediasReviewDTO, NewSessionDTO, OptionalStartEndDateQuery,
+    QuicksearchQuery, SessionDTO, SessionPageResult, StartEndDateQuery,
 };
 use crate::services::{MediaReviewService, MediaSessionService, MediaWithSessionService};
 
@@ -18,7 +18,7 @@ use super::helpers::{handle_action_result, handle_delete_result, handle_get_resu
         ("id" = String, Path, description = "Media id"),
         QuicksearchQuery,
     ),
-    request_body(content = SearchDTO, description = "Query", content_type = "application/json"),
+    request_body(content = ListSearchDTO, description = "Query", content_type = "application/json"),
     responses(
         (status = 200, description = "Sessions obtained", body = SessionPageResult, content_type = "application/json"),
         (status = 401, description = "Unauthorized", body = ErrorMessage, content_type = "application/json"),
@@ -35,7 +35,7 @@ pub async fn get_media_sessions(
     media_session_service: web::Data<MediaSessionService>,
     path: web::Path<ItemId>,
     query: web::Query<QuicksearchQuery>,
-    body: web::Json<SearchDTO>,
+    body: web::Json<ListSearchDTO>,
     logged_user: LoggedUser,
 ) -> impl Responder {
     let ItemId(id) = path.into_inner();
@@ -45,18 +45,18 @@ pub async fn get_media_sessions(
     handle_get_result(search_result)
 }
 
-/// Count all media sessions
+/// Aggregate all media sessions
 #[utoipa::path(
     post,
-    path = "/api/v1/medias/{id}/sessions/count",
+    path = "/api/v1/medias/{id}/sessions/aggregate",
     tag = "MediaSessions",
     params(
         ("id" = String, Path, description = "Media id"),
         QuicksearchQuery,
     ),
-    request_body(content = SearchDTO, description = "Query", content_type = "application/json"),
+    request_body(content = AggregateSearchDTO, description = "Query", content_type = "application/json"),
     responses(
-        (status = 200, description = "Sessions count obtained", body = u64, content_type = "application/json"),
+        (status = 200, description = "Sessions aggregate obtained", body = u64, content_type = "application/json"),
         (status = 401, description = "Unauthorized", body = ErrorMessage, content_type = "application/json"),
         (status = 403, description = "Forbidden", body = ErrorMessage, content_type = "application/json"),
         (status = 404, description = "Media not found", body = ErrorMessage, content_type = "application/json"),
@@ -66,51 +66,19 @@ pub async fn get_media_sessions(
         ("OAuth2" = [])
     )
 )]
-#[post("/medias/{id}/sessions/count")]
-pub async fn count_media_sessions(
+#[post("/medias/{id}/sessions/aggregate")]
+pub async fn aggregate_media_sessions(
     media_session_service: web::Data<MediaSessionService>,
     path: web::Path<ItemId>,
     query: web::Query<QuicksearchQuery>,
-    body: web::Json<SearchDTO>,
+    body: web::Json<AggregateSearchDTO>,
     logged_user: LoggedUser,
 ) -> impl Responder {
     let ItemId(id) = path.into_inner();
-    let count_result = media_session_service
-        .count_media_sessions(&logged_user.id, &id, body.0, query.0.q)
+    let aggregate_result = media_session_service
+        .aggregate_media_sessions(&logged_user.id, &id, body.0, query.0.q)
         .await;
-    handle_get_result(count_result)
-}
-
-/// Get total time spent for a media
-#[utoipa::path(
-    get,
-    path = "/api/v1/medias/{id}/sessions/total",
-    tag = "MediaSessions",
-    params(
-        ("id" = String, Path, description = "Media id"),
-    ),
-    responses(
-        (status = 200, description = "Total sessions time obtained", body = String, content_type = "application/json"),
-        (status = 401, description = "Unauthorized", body = ErrorMessage, content_type = "application/json"),
-        (status = 403, description = "Forbidden", body = ErrorMessage, content_type = "application/json"),
-        (status = 404, description = "Media not found", body = ErrorMessage, content_type = "application/json"),
-        (status = 500, description = "Internal server error", body = ErrorMessage, content_type = "application/json"),
-    ),
-    security(
-        ("OAuth2" = [])
-    )
-)]
-#[get("/medias/{id}/sessions/total")]
-pub async fn get_total_media_sessions(
-    media_session_service: web::Data<MediaSessionService>,
-    path: web::Path<ItemId>,
-    logged_user: LoggedUser,
-) -> impl Responder {
-    let ItemId(id) = path.into_inner();
-    let get_result = media_session_service
-        .get_sum_media_sessions(&logged_user.id, &id)
-        .await;
-    handle_get_result(get_result)
+    handle_get_result(aggregate_result)
 }
 
 /// Get a review in a time frame
@@ -152,7 +120,7 @@ pub async fn get_session_medias_review(
         OptionalStartEndDateQuery,
         QuicksearchQuery,
     ),
-    request_body(content = SearchDTO, description = "Query", content_type = "application/json"),
+    request_body(content = ListSearchDTO, description = "Query", content_type = "application/json"),
     responses(
         (status = 200, description = "Medias obtained", body = MediaSessionPageResult, content_type = "application/json"),
         (status = 400, description = "Bad request", body = ErrorMessage, content_type = "application/json"),
@@ -169,7 +137,7 @@ pub async fn get_first_session_medias(
     media_with_session_service: web::Data<MediaWithSessionService>,
     query: web::Query<OptionalStartEndDateQuery>,
     quick_query: web::Query<QuicksearchQuery>,
-    body: web::Json<SearchDTO>,
+    body: web::Json<ListSearchDTO>,
     logged_user: LoggedUser,
 ) -> impl Responder {
     let get_result = media_with_session_service
@@ -193,7 +161,7 @@ pub async fn get_first_session_medias(
         OptionalStartEndDateQuery,
         QuicksearchQuery,
     ),
-    request_body(content = SearchDTO, description = "Query", content_type = "application/json"),
+    request_body(content = ListSearchDTO, description = "Query", content_type = "application/json"),
     responses(
         (status = 200, description = "Medias obtained", body = MediaSessionPageResult, content_type = "application/json"),
         (status = 400, description = "Bad request", body = ErrorMessage, content_type = "application/json"),
@@ -210,7 +178,7 @@ pub async fn get_last_session_medias(
     media_with_session_service: web::Data<MediaWithSessionService>,
     query: web::Query<OptionalStartEndDateQuery>,
     quick_query: web::Query<QuicksearchQuery>,
-    body: web::Json<SearchDTO>,
+    body: web::Json<ListSearchDTO>,
     logged_user: LoggedUser,
 ) -> impl Responder {
     let get_result = media_with_session_service

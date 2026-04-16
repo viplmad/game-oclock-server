@@ -3,8 +3,8 @@ use uuid::Uuid;
 
 use crate::entities::{
     AVAILABLE_ADDED_DATETIME_ALIAS, AVAILABLE_DATE_ALIAS, AVAILABLE_UPDATED_DATETIME_ALIAS,
-    LocationIden, LocationSearch, MediaAvailable, MediaAvailableIden, MediaIden, MediaSearch,
-    SearchQuery,
+    LocationIden, LocationListSearch, MediaAvailable, MediaAvailableIden, MediaIden,
+    MediaListSearch, SearchQuery,
 };
 use crate::errors::SearchErrors;
 
@@ -14,7 +14,7 @@ use super::{location_query, media_query};
 pub fn select_all_medias_by_location_id_order_by_date(
     user_id: &Uuid,
     location_id: &Uuid,
-    search: MediaSearch,
+    search: MediaListSearch,
 ) -> Result<SearchQuery, SearchErrors> {
     let mut select = media_query::select_all(user_id);
 
@@ -28,7 +28,7 @@ pub fn select_all_medias_by_location_id_order_by_date(
 pub fn count_all_medias_by_location_id_order_by_date(
     user_id: &Uuid,
     location_id: &Uuid,
-    search: MediaSearch,
+    search: MediaListSearch,
 ) -> Result<SelectStatement, SearchErrors> {
     let mut select = media_query::count_all(user_id);
 
@@ -40,7 +40,7 @@ pub fn count_all_medias_by_location_id_order_by_date(
 pub fn select_all_locations_by_media_id_order_by_date(
     user_id: &Uuid,
     media_id: &Uuid,
-    search: LocationSearch,
+    search: LocationListSearch,
 ) -> Result<SearchQuery, SearchErrors> {
     let mut select = location_query::select_all(user_id);
 
@@ -54,7 +54,7 @@ pub fn select_all_locations_by_media_id_order_by_date(
 pub fn count_all_locations_by_media_id_order_by_date(
     user_id: &Uuid,
     media_id: &Uuid,
-    search: LocationSearch,
+    search: LocationListSearch,
 ) -> Result<SelectStatement, SearchErrors> {
     let mut select = location_query::count_all(user_id);
 

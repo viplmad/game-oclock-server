@@ -2,8 +2,8 @@ use sea_query::{Alias, Expr, Query, QueryStatementWriter, SelectStatement};
 use uuid::Uuid;
 
 use crate::entities::{
-    MediaIden, MediaSearch, MediaTag, MediaTagIden, SearchQuery, TAG_ADDED_DATETIME_ALIAS,
-    TAG_ORDER_ALIAS, TAG_UPDATED_DATETIME_ALIAS, TagIden, TagSearch,
+    MediaIden, MediaListSearch, MediaTag, MediaTagIden, SearchQuery, TAG_ADDED_DATETIME_ALIAS,
+    TAG_ORDER_ALIAS, TAG_UPDATED_DATETIME_ALIAS, TagIden, TagListSearch,
 };
 use crate::errors::SearchErrors;
 
@@ -24,7 +24,7 @@ mod tests {
         let query = select_all_medias_by_tag_id(
             &user_id,
             &tag_id,
-            MediaSearch {
+            MediaListSearch {
                 filter: None,
                 sort: None,
                 page: None,
@@ -54,7 +54,7 @@ mod tests {
         let query = count_all_medias_by_tag_id(
             &user_id,
             &tag_id,
-            MediaSearch {
+            MediaListSearch {
                 filter: None,
                 sort: None,
                 page: None,
@@ -79,7 +79,7 @@ mod tests {
         let query = select_all_tags_by_media_id(
             &user_id,
             &media_id,
-            TagSearch {
+            TagListSearch {
                 filter: None,
                 sort: None,
                 page: None,
@@ -105,7 +105,7 @@ mod tests {
         let query = count_all_tags_by_media_id(
             &user_id,
             &media_id,
-            TagSearch {
+            TagListSearch {
                 filter: None,
                 sort: None,
                 page: None,
@@ -125,7 +125,7 @@ mod tests {
 pub fn select_all_medias_by_tag_id(
     user_id: &Uuid,
     tag_id: &Uuid,
-    search: MediaSearch,
+    search: MediaListSearch,
 ) -> Result<SearchQuery, SearchErrors> {
     let mut select = media_query::select_all(user_id);
 
@@ -138,7 +138,7 @@ pub fn select_all_medias_by_tag_id(
 pub fn count_all_medias_by_tag_id(
     user_id: &Uuid,
     tag_id: &Uuid,
-    search: MediaSearch,
+    search: MediaListSearch,
 ) -> Result<SelectStatement, SearchErrors> {
     let mut select = media_query::count_all(user_id);
 
@@ -150,7 +150,7 @@ pub fn count_all_medias_by_tag_id(
 pub fn select_all_tags_by_media_id(
     user_id: &Uuid,
     media_id: &Uuid,
-    search: TagSearch,
+    search: TagListSearch,
 ) -> Result<SearchQuery, SearchErrors> {
     let mut select = tag_query::select_all(user_id);
 
@@ -163,7 +163,7 @@ pub fn select_all_tags_by_media_id(
 pub fn count_all_tags_by_media_id(
     user_id: &Uuid,
     media_id: &Uuid,
-    search: TagSearch,
+    search: TagListSearch,
 ) -> Result<SelectStatement, SearchErrors> {
     let mut select = tag_query::count_all(user_id);
 

@@ -13,13 +13,79 @@ pub struct ExternalQuicksearchQuery {
 }
 
 #[derive(Deserialize, ToSchema)]
-pub struct SearchDTO {
+pub struct ListSearchDTO {
     pub filter: Option<Vec<FilterDTO>>,
     pub sort: Option<Vec<SortDTO>>,
     pub page: Option<u64>,
     pub size: Option<u64>,
 }
 
+#[derive(Deserialize, ToSchema)]
+pub struct AggregateSearchDTO {
+    pub filter: Option<Vec<FilterDTO>>,
+    pub aggr: AggregateMetric,
+}
+
+#[derive(Deserialize, ToSchema)]
+pub struct AggregateGroupSearchDTO {
+    pub filter: Option<Vec<FilterDTO>>,
+    pub aggr: AggregateMetric,
+    pub group: AggregateGroup,
+}
+
+/// Aggregate metric
+#[derive(Deserialize, ToSchema)]
+#[serde(tag = "kind")]
+pub enum AggregateMetric {
+    Count(AggregateCountMetricDTO),
+    Sum(AggregateSumMetricDTO),
+}
+
+#[derive(Deserialize, ToSchema)]
+pub struct AggregateSumMetricDTO {
+    pub field: String,
+    pub default_value: Option<String>,
+}
+
+#[derive(Deserialize, ToSchema)]
+pub struct AggregateCountMetricDTO {
+    pub field: String,
+    pub default_value: Option<String>,
+    pub distinct: bool,
+}
+
+/// Aggregate group
+#[derive(Deserialize, ToSchema)]
+#[serde(tag = "kind")]
+pub enum AggregateGroup {
+    Field(AggregateFieldGroupDTO),
+    DateHistogram(AggregateDateHistogramGroupDTO),
+}
+
+#[derive(Deserialize, ToSchema)]
+pub struct AggregateFieldGroupDTO {
+    pub field: String,
+    pub default_value: Option<String>,
+}
+
+#[derive(Deserialize, ToSchema)]
+pub struct AggregateDateHistogramGroupDTO {
+    pub field: String,
+    pub default_value: Option<String>,
+    pub interval: DateHistogramInterval,
+}
+
+#[derive(Clone, Deserialize, ToSchema)]
+pub enum DateHistogramInterval {
+    Year,
+    Month,
+    Week,
+    Day,
+    Hour,
+    Minute,
+}
+
+/// Filter
 #[derive(Deserialize, ToSchema)]
 pub struct FilterDTO {
     pub field: String,
@@ -59,6 +125,7 @@ pub enum ChainOperatorType {
     Or,
 }
 
+/// Sort
 #[derive(Deserialize, ToSchema)]
 pub struct SortDTO {
     pub field: String,

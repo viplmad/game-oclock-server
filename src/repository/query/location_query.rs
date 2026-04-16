@@ -1,7 +1,7 @@
 use sea_query::{Expr, Query, QueryStatementWriter, SelectStatement, SimpleExpr};
 use uuid::Uuid;
 
-use crate::entities::{Location, LocationIden, LocationSearch, SearchQuery};
+use crate::entities::{Location, LocationIden, LocationListSearch, SearchQuery};
 use crate::errors::SearchErrors;
 
 use super::search::{apply_search, apply_search_filter};
@@ -18,7 +18,7 @@ pub fn select_by_id(user_id: &Uuid, id: &Uuid) -> impl QueryStatementWriter {
 
 pub fn select_all_with_search(
     user_id: &Uuid,
-    search: LocationSearch,
+    search: LocationListSearch,
 ) -> Result<SearchQuery, SearchErrors> {
     let select = select_all(user_id);
 
@@ -27,7 +27,7 @@ pub fn select_all_with_search(
 
 pub fn count_all_with_search(
     user_id: &Uuid,
-    search: LocationSearch,
+    search: LocationListSearch,
 ) -> Result<SelectStatement, SearchErrors> {
     let select = count_all(user_id);
 

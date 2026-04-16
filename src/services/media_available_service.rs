@@ -1,17 +1,17 @@
 use chrono::{DateTime, Utc};
 use uuid::Uuid;
 
-use crate::entities::{LocationSearch, MediaAvailable, MediaSearch};
+use crate::entities::{LocationListSearch, MediaAvailable, MediaListSearch};
 use crate::errors::ApiErrors;
 use crate::models::{
-    LocationAvailablePageResult, LocationDTO, MediaAvailableDTO, MediaAvailablePageResult,
-    MediaDTO, SearchDTO,
+    ListSearchDTO, LocationAvailablePageResult, LocationDTO, MediaAvailableDTO,
+    MediaAvailablePageResult, MediaDTO,
 };
 use crate::repository::MediaAvailableRepository;
 
 use super::helpers::{
-    handle_action_result, handle_already_exists_result, handle_get_count_result,
-    handle_get_list_paged_result, handle_not_found_result, handle_query_mapping,
+    handle_action_result, handle_already_exists_result, handle_get_aggregate_result,
+    handle_get_list_paged_result, handle_list_search_mapping, handle_not_found_result,
 };
 use super::{LocationService, MediaService};
 
@@ -41,14 +41,14 @@ impl MediaAvailableService {
         &self,
         user_id: &Uuid,
         location_id: &Uuid,
-        search: SearchDTO,
+        search: ListSearchDTO,
         quicksearch: Option<String>,
     ) -> Result<MediaAvailablePageResult, ApiErrors> {
         self.location_service
             .exists_location(user_id, location_id)
             .await?;
 
-        let search = handle_query_mapping::<MediaDTO, MediaSearch>(search, quicksearch)?;
+        let search = handle_list_search_mapping::<MediaDTO, MediaListSearch>(search, quicksearch)?;
         let find_result = self
             .repository
             .search_all_medias_with_location(user_id, location_id, search)
@@ -60,31 +60,32 @@ impl MediaAvailableService {
         &self,
         user_id: &Uuid,
         location_id: &Uuid,
-        search: SearchDTO,
+        search: ListSearchDTO,
         quicksearch: Option<String>,
     ) -> Result<u64, ApiErrors> {
         self.location_service
             .exists_location(user_id, location_id)
             .await?;
 
-        let search = handle_query_mapping::<MediaDTO, MediaSearch>(search, quicksearch)?;
+        let search = handle_list_search_mapping::<MediaDTO, MediaListSearch>(search, quicksearch)?;
         let count_result = self
             .repository
             .count_all_medias_with_location(user_id, location_id, search)
             .await;
-        handle_get_count_result::<MediaDTO>(count_result)
+        handle_get_aggregate_result::<MediaDTO>(count_result)
     }
 
     pub async fn search_media_locations(
         &self,
         user_id: &Uuid,
         media_id: &Uuid,
-        search: SearchDTO,
+        search: ListSearchDTO,
         quicksearch: Option<String>,
     ) -> Result<LocationAvailablePageResult, ApiErrors> {
         self.media_service.exists_media(media_id).await?;
 
-        let search = handle_query_mapping::<LocationDTO, LocationSearch>(search, quicksearch)?;
+        let search =
+            handle_list_search_mapping::<LocationDTO, LocationListSearch>(search, quicksearch)?;
         let find_result = self
             .repository
             .search_all_locations_with_media(user_id, media_id, search)
@@ -96,17 +97,18 @@ impl MediaAvailableService {
         &self,
         user_id: &Uuid,
         media_id: &Uuid,
-        search: SearchDTO,
+        search: ListSearchDTO,
         quicksearch: Option<String>,
     ) -> Result<u64, ApiErrors> {
         self.media_service.exists_media(media_id).await?;
 
-        let search = handle_query_mapping::<LocationDTO, LocationSearch>(search, quicksearch)?;
+        let search =
+            handle_list_search_mapping::<LocationDTO, LocationListSearch>(search, quicksearch)?;
         let count_result = self
             .repository
             .count_all_locations_with_media(user_id, media_id, search)
             .await;
-        handle_get_count_result::<LocationDTO>(count_result)
+        handle_get_aggregate_result::<LocationDTO>(count_result)
     }
 
     pub async fn create_media_available(

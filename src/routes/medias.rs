@@ -1,9 +1,9 @@
 use actix_web::{Responder, delete, get, post, put, web};
 
 use crate::models::{
-    DateTimeDTO, ErrorMessage, ExternalQuicksearchQuery, ItemId, ItemIdAndRelatedId, LoggedUser,
-    Media2DTO, MediaAvailablePageResult, MediaDTO, MediaPageResult, MediaTagPageResult,
-    NewMediaDTO, OrderDTO, QuicksearchQuery, SearchDTO,
+    DateTimeDTO, ErrorMessage, ExternalQuicksearchQuery, ItemId, ItemIdAndRelatedId, ListSearchDTO,
+    LoggedUser, Media2DTO, MediaAvailablePageResult, MediaDTO, MediaPageResult, MediaTagPageResult,
+    NewMediaDTO, OrderDTO, QuicksearchQuery,
 };
 use crate::services::{
     MediaAvailableService, MediaService, MediaSessionDeviceService, MediaTagService,
@@ -53,7 +53,7 @@ pub async fn get_media(
         ("id" = String, Path, description = "Tag id"),
         QuicksearchQuery,
     ),
-    request_body(content = SearchDTO, description = "Query", content_type = "application/json"),
+    request_body(content = ListSearchDTO, description = "Query", content_type = "application/json"),
     responses(
         (status = 200, description = "Medias obtained", body = MediaTagPageResult, content_type = "application/json"),
         (status = 401, description = "Unauthorized", body = ErrorMessage, content_type = "application/json"),
@@ -70,7 +70,7 @@ pub async fn get_tag_medias(
     media_tag_service: web::Data<MediaTagService>,
     path: web::Path<ItemId>,
     query: web::Query<QuicksearchQuery>,
-    body: web::Json<SearchDTO>,
+    body: web::Json<ListSearchDTO>,
     logged_user: LoggedUser,
 ) -> impl Responder {
     let ItemId(id) = path.into_inner();
@@ -89,7 +89,7 @@ pub async fn get_tag_medias(
         ("id" = String, Path, description = "Tag id"),
         QuicksearchQuery,
     ),
-    request_body(content = SearchDTO, description = "Query", content_type = "application/json"),
+    request_body(content = ListSearchDTO, description = "Query", content_type = "application/json"),
     responses(
         (status = 200, description = "Medias count obtained", body = u64, content_type = "application/json"),
         (status = 401, description = "Unauthorized", body = ErrorMessage, content_type = "application/json"),
@@ -106,7 +106,7 @@ pub async fn count_tag_medias(
     media_tag_service: web::Data<MediaTagService>,
     path: web::Path<ItemId>,
     query: web::Query<QuicksearchQuery>,
-    body: web::Json<SearchDTO>,
+    body: web::Json<ListSearchDTO>,
     logged_user: LoggedUser,
 ) -> impl Responder {
     let ItemId(id) = path.into_inner();
@@ -125,7 +125,7 @@ pub async fn count_tag_medias(
         ("id" = String, Path, description = "Location id"),
         QuicksearchQuery,
     ),
-    request_body(content = SearchDTO, description = "Query", content_type = "application/json"),
+    request_body(content = ListSearchDTO, description = "Query", content_type = "application/json"),
     responses(
         (status = 200, description = "Medias obtained", body = MediaAvailablePageResult, content_type = "application/json"),
         (status = 401, description = "Unauthorized", body = ErrorMessage, content_type = "application/json"),
@@ -142,7 +142,7 @@ pub async fn get_location_medias(
     media_available_service: web::Data<MediaAvailableService>,
     path: web::Path<ItemId>,
     query: web::Query<QuicksearchQuery>,
-    body: web::Json<SearchDTO>,
+    body: web::Json<ListSearchDTO>,
     logged_user: LoggedUser,
 ) -> impl Responder {
     let ItemId(id) = path.into_inner();
@@ -161,7 +161,7 @@ pub async fn get_location_medias(
         ("id" = String, Path, description = "Location id"),
         QuicksearchQuery,
     ),
-    request_body(content = SearchDTO, description = "Query", content_type = "application/json"),
+    request_body(content = ListSearchDTO, description = "Query", content_type = "application/json"),
     responses(
         (status = 200, description = "Medias count obtained", body = u64, content_type = "application/json"),
         (status = 401, description = "Unauthorized", body = ErrorMessage, content_type = "application/json"),
@@ -178,7 +178,7 @@ pub async fn count_location_medias(
     media_available_service: web::Data<MediaAvailableService>,
     path: web::Path<ItemId>,
     query: web::Query<QuicksearchQuery>,
-    body: web::Json<SearchDTO>,
+    body: web::Json<ListSearchDTO>,
     logged_user: LoggedUser,
 ) -> impl Responder {
     let ItemId(id) = path.into_inner();
@@ -197,7 +197,7 @@ pub async fn count_location_medias(
         ("id" = String, Path, description = "Device id"),
         QuicksearchQuery,
     ),
-    request_body(content = SearchDTO, description = "Query", content_type = "application/json"),
+    request_body(content = ListSearchDTO, description = "Query", content_type = "application/json"),
     responses(
         (status = 200, description = "Medias obtained", body = MediaPageResult, content_type = "application/json"),
         (status = 401, description = "Unauthorized", body = ErrorMessage, content_type = "application/json"),
@@ -214,7 +214,7 @@ pub async fn get_device_medias(
     media_session_device_service: web::Data<MediaSessionDeviceService>,
     path: web::Path<ItemId>,
     query: web::Query<QuicksearchQuery>,
-    body: web::Json<SearchDTO>,
+    body: web::Json<ListSearchDTO>,
     logged_user: LoggedUser,
 ) -> impl Responder {
     let ItemId(id) = path.into_inner();
@@ -233,7 +233,7 @@ pub async fn get_device_medias(
         ("id" = String, Path, description = "Device id"),
         QuicksearchQuery,
     ),
-    request_body(content = SearchDTO, description = "Query", content_type = "application/json"),
+    request_body(content = ListSearchDTO, description = "Query", content_type = "application/json"),
     responses(
         (status = 200, description = "Medias count obtained", body = u64, content_type = "application/json"),
         (status = 401, description = "Unauthorized", body = ErrorMessage, content_type = "application/json"),
@@ -250,7 +250,7 @@ pub async fn count_device_medias(
     media_session_device_service: web::Data<MediaSessionDeviceService>,
     path: web::Path<ItemId>,
     query: web::Query<QuicksearchQuery>,
-    body: web::Json<SearchDTO>,
+    body: web::Json<ListSearchDTO>,
     logged_user: LoggedUser,
 ) -> impl Responder {
     let ItemId(id) = path.into_inner();
@@ -268,7 +268,7 @@ pub async fn count_device_medias(
     params(
         QuicksearchQuery,
     ),
-    request_body(content = SearchDTO, description = "Query", content_type = "application/json"),
+    request_body(content = ListSearchDTO, description = "Query", content_type = "application/json"),
     responses(
         (status = 200, description = "Medias obtained", body = MediaPageResult, content_type = "application/json"),
         (status = 401, description = "Unauthorized", body = ErrorMessage, content_type = "application/json"),
@@ -283,7 +283,7 @@ pub async fn count_device_medias(
 pub async fn get_medias(
     media_service: web::Data<MediaService>,
     query: web::Query<QuicksearchQuery>,
-    body: web::Json<SearchDTO>,
+    body: web::Json<ListSearchDTO>,
     logged_user: LoggedUser,
 ) -> impl Responder {
     let search_result = media_service
@@ -300,7 +300,7 @@ pub async fn get_medias(
     params(
         QuicksearchQuery,
     ),
-    request_body(content = SearchDTO, description = "Query", content_type = "application/json"),
+    request_body(content = ListSearchDTO, description = "Query", content_type = "application/json"),
     responses(
         (status = 200, description = "Medias count obtained", body = u64, content_type = "application/json"),
         (status = 401, description = "Unauthorized", body = ErrorMessage, content_type = "application/json"),
@@ -315,7 +315,7 @@ pub async fn get_medias(
 pub async fn count_medias(
     media_service: web::Data<MediaService>,
     query: web::Query<QuicksearchQuery>,
-    body: web::Json<SearchDTO>,
+    body: web::Json<ListSearchDTO>,
     logged_user: LoggedUser,
 ) -> impl Responder {
     let count_result = media_service

@@ -2,10 +2,12 @@ use sqlx::PgPool;
 use uuid::Uuid;
 
 use super::query::user_query;
-use crate::entities::{PageResult, User, UserSearch};
+use crate::entities::{PageResult, User, UserListSearch};
 use crate::errors::{RepositoryError, SearchErrors};
 
-use super::helpers::{count_all_search, execute, exists_some, fetch_all_search, fetch_optional};
+use super::helpers::{
+    aggregate_all_search, execute, exists_some, fetch_all_search, fetch_optional,
+};
 
 #[derive(Clone)]
 pub struct UserRepository {
@@ -32,14 +34,17 @@ impl UserRepository {
         fetch_optional(&self.pool, query).await
     }
 
-    pub async fn search_all(&self, search: UserSearch) -> Result<PageResult<User>, SearchErrors> {
+    pub async fn search_all(
+        &self,
+        search: UserListSearch,
+    ) -> Result<PageResult<User>, SearchErrors> {
         let search_query = user_query::select_all_with_search(search)?;
         fetch_all_search(&self.pool, search_query).await
     }
 
-    pub async fn count_all(&self, search: UserSearch) -> Result<u64, SearchErrors> {
+    pub async fn count_all(&self, search: UserListSearch) -> Result<u64, SearchErrors> {
         let count_query = user_query::count_all_with_search(search)?;
-        count_all_search(&self.pool, count_query).await
+        aggregate_all_search(&self.pool, count_query).await
     }
 
     pub async fn create(&self, user: &User) -> Result<(), RepositoryError> {

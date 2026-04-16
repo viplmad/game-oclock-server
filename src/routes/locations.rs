@@ -1,8 +1,8 @@
 use actix_web::{Responder, delete, get, post, put, web};
 
 use crate::models::{
-    ErrorMessage, ItemId, LocationAvailablePageResult, LocationDTO, LocationPageResult, LoggedUser,
-    NewLocationDTO, QuicksearchQuery, SearchDTO,
+    ErrorMessage, ItemId, ListSearchDTO, LocationAvailablePageResult, LocationDTO,
+    LocationPageResult, LoggedUser, NewLocationDTO, QuicksearchQuery,
 };
 use crate::services::{LocationService, MediaAvailableService};
 
@@ -49,7 +49,7 @@ pub async fn get_location(
         ("id" = String, Path, description = "Media id"),
         QuicksearchQuery,
     ),
-    request_body(content = SearchDTO, description = "Query", content_type = "application/json"),
+    request_body(content = ListSearchDTO, description = "Query", content_type = "application/json"),
     responses(
         (status = 200, description = "Locations obtained", body = LocationAvailablePageResult, content_type = "application/json"),
         (status = 401, description = "Unauthorized", body = ErrorMessage, content_type = "application/json"),
@@ -66,7 +66,7 @@ pub async fn get_media_locations(
     media_available_service: web::Data<MediaAvailableService>,
     path: web::Path<ItemId>,
     query: web::Query<QuicksearchQuery>,
-    body: web::Json<SearchDTO>,
+    body: web::Json<ListSearchDTO>,
     logged_user: LoggedUser,
 ) -> impl Responder {
     let ItemId(id) = path.into_inner();
@@ -85,7 +85,7 @@ pub async fn get_media_locations(
         ("id" = String, Path, description = "Media id"),
         QuicksearchQuery,
     ),
-    request_body(content = SearchDTO, description = "Query", content_type = "application/json"),
+    request_body(content = ListSearchDTO, description = "Query", content_type = "application/json"),
     responses(
         (status = 200, description = "Locations count obtained", body = u64, content_type = "application/json"),
         (status = 401, description = "Unauthorized", body = ErrorMessage, content_type = "application/json"),
@@ -102,7 +102,7 @@ pub async fn count_media_locations(
     media_available_service: web::Data<MediaAvailableService>,
     path: web::Path<ItemId>,
     query: web::Query<QuicksearchQuery>,
-    body: web::Json<SearchDTO>,
+    body: web::Json<ListSearchDTO>,
     logged_user: LoggedUser,
 ) -> impl Responder {
     let ItemId(id) = path.into_inner();
@@ -120,7 +120,7 @@ pub async fn count_media_locations(
     params(
         QuicksearchQuery,
     ),
-    request_body(content = SearchDTO, description = "Query", content_type = "application/json"),
+    request_body(content = ListSearchDTO, description = "Query", content_type = "application/json"),
     responses(
         (status = 200, description = "Locations obtained", body = LocationPageResult, content_type = "application/json"),
         (status = 401, description = "Unauthorized", body = ErrorMessage, content_type = "application/json"),
@@ -135,7 +135,7 @@ pub async fn count_media_locations(
 pub async fn get_locations(
     location_service: web::Data<LocationService>,
     query: web::Query<QuicksearchQuery>,
-    body: web::Json<SearchDTO>,
+    body: web::Json<ListSearchDTO>,
     logged_user: LoggedUser,
 ) -> impl Responder {
     let search_result = location_service
@@ -152,7 +152,7 @@ pub async fn get_locations(
     params(
         QuicksearchQuery,
     ),
-    request_body(content = SearchDTO, description = "Query", content_type = "application/json"),
+    request_body(content = ListSearchDTO, description = "Query", content_type = "application/json"),
     responses(
         (status = 200, description = "Locations count obtained", body = u64, content_type = "application/json"),
         (status = 401, description = "Unauthorized", body = ErrorMessage, content_type = "application/json"),
@@ -167,7 +167,7 @@ pub async fn get_locations(
 pub async fn count_locations(
     location_service: web::Data<LocationService>,
     query: web::Query<QuicksearchQuery>,
-    body: web::Json<SearchDTO>,
+    body: web::Json<ListSearchDTO>,
     logged_user: LoggedUser,
 ) -> impl Responder {
     let count_result = location_service

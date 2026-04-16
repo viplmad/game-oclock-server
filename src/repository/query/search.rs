@@ -1,7 +1,10 @@
 use sea_query::{BinOper, Cond, Expr, Func, LikeExpr, SelectStatement, Value};
 
 use crate::entities::{
-    FieldSearchValue, FieldValue, Filter, FilterOperator, Search, SearchQuery, Sort, TableIden,
+    AggregateCountMetric, AggregateDateHistogramGroup, AggregateFieldGroup, AggregateGroup,
+    AggregateGroupSearch, AggregateMetric, AggregateSearch, AggregateSumMetric,
+    DateHistogramInterval, FieldSearchValue, FieldValue, Filter, FilterOperator, ListSearch,
+    SearchQuery, Sort, TableIden,
 };
 use crate::errors::{MappingError, SearchErrors};
 
@@ -11,11 +14,11 @@ const LIKE_SYMBOL: &str = "%";
 
 pub fn apply_search<I: 'static + TableIden + Clone + Copy>(
     mut select: SelectStatement,
-    search: Search<I>,
+    search: ListSearch<I>,
 ) -> Result<SearchQuery, SearchErrors> {
-    apply_sort(&mut select, search.sort);
-
     apply_filter(&mut select, search.filter).map_err(SearchErrors::Mapping)?;
+
+    apply_sort(&mut select, search.sort);
 
     let (page, size) = apply_pagination(&mut select, search.page, search.size);
 
@@ -26,11 +29,36 @@ pub fn apply_search<I: 'static + TableIden + Clone + Copy>(
     })
 }
 
+// TODO remove
 pub fn apply_search_filter<I: 'static + TableIden + Clone + Copy>(
     mut select: SelectStatement,
-    search: Search<I>,
+    search: ListSearch<I>,
 ) -> Result<SelectStatement, SearchErrors> {
     apply_filter(&mut select, search.filter).map_err(SearchErrors::Mapping)?;
+
+    Ok(select)
+}
+
+pub fn apply_aggregate_search<I: 'static + TableIden + Clone + Copy>(
+    mut select: SelectStatement,
+    search: AggregateSearch<I>,
+) -> Result<SelectStatement, SearchErrors> {
+    apply_filter(&mut select, search.filter).map_err(SearchErrors::Mapping)?;
+
+    apply_aggregate_metric(&mut select, search.aggr);
+
+    Ok(select)
+}
+
+pub fn apply_aggregate_group_search<I: 'static + TableIden + Clone + Copy>(
+    mut select: SelectStatement,
+    search: AggregateGroupSearch<I>,
+) -> Result<SelectStatement, SearchErrors> {
+    apply_filter(&mut select, search.filter).map_err(SearchErrors::Mapping)?;
+
+    apply_aggregate_group(&mut select, search.group);
+
+    apply_aggregate_metric(&mut select, search.aggr);
 
     Ok(select)
 }
@@ -128,6 +156,7 @@ fn apply_sort<I: 'static + TableIden + Clone + Copy>(
             let table = sort.table;
             let field = sort.field;
             let order = sort.order;
+
             select.order_by((table, field), order);
         }
     }
@@ -147,6 +176,93 @@ fn apply_pagination(
     (page, size)
 }
 
+fn apply_aggregate_metric<I: 'static + TableIden + Clone + Copy>(
+    select: &mut SelectStatement,
+    aggr: AggregateMetric<I>,
+) {
+    match aggr {
+        AggregateMetric::Count(c) => apply_aggregate_count_metric(select, c),
+        AggregateMetric::Sum(s) => apply_aggregate_sum_metric(select, s),
+    }
+}
+
+fn apply_aggregate_count_metric<I: 'static + TableIden + Clone + Copy>(
+    select: &mut SelectStatement,
+    aggr: AggregateCountMetric<I>,
+) {
+    let table = aggr.table;
+    let field = aggr.field;
+    let col = Expr::col((table, field));
+
+    let expr = coalesce_default(col, aggr.default_value);
+
+    let expr = match aggr.distinct {
+        true => expr.count_distinct(),
+        false => expr.count(),
+    };
+
+    select.expr(expr);
+}
+
+fn apply_aggregate_sum_metric<I: 'static + TableIden + Clone + Copy>(
+    select: &mut SelectStatement,
+    aggr: AggregateSumMetric<I>,
+) {
+    let table = aggr.table;
+    let field = aggr.field;
+    let col = Expr::col((table, field));
+
+    let expr = coalesce_default(col, aggr.default_value);
+
+    let expr = expr.sum();
+
+    select.expr(expr);
+}
+
+fn apply_aggregate_group<I: 'static + TableIden + Clone + Copy>(
+    select: &mut SelectStatement,
+    aggr: AggregateGroup<I>,
+) {
+    match aggr {
+        AggregateGroup::Field(f) => apply_aggregate_field_group(select, f),
+        AggregateGroup::DateHistogram(d) => apply_aggregate_date_histogram_group(select, d),
+    }
+}
+
+fn apply_aggregate_field_group<I: 'static + TableIden + Clone + Copy>(
+    select: &mut SelectStatement,
+    aggr: AggregateFieldGroup<I>,
+) {
+    let table = aggr.table;
+    let field = aggr.field;
+    let col = Expr::col((table, field));
+
+    let expr = coalesce_default(col, aggr.default_value);
+
+    select.expr(expr.clone());
+    select.add_group_by([expr.into()]);
+}
+
+fn apply_aggregate_date_histogram_group<I: 'static + TableIden + Clone + Copy>(
+    select: &mut SelectStatement,
+    aggr: AggregateDateHistogramGroup<I>,
+) {
+    let table = aggr.table;
+    let field = aggr.field;
+    let col = Expr::col((table, field));
+
+    let expr = coalesce_default(col, aggr.default_value);
+
+    let expr = match aggr.interval {
+        DateHistogramInterval::Year => Func::cust(DatePart).arg("year").arg(expr),
+        DateHistogramInterval::Month => Func::cust(DatePart).arg("month").arg(expr),
+        _ => todo!(),
+    };
+
+    select.expr(expr.clone());
+    select.add_group_by([expr.into()]);
+}
+
 fn to_lower(col: Expr) -> Expr {
     Expr::expr(Func::lower(col))
 }
@@ -164,4 +280,29 @@ fn format_like_ends_with(search: FieldSearchValue) -> String {
 fn format_like_contains(search: FieldSearchValue) -> String {
     let value: &str = &search.value.to_lowercase();
     format!("{LIKE_SYMBOL}{value}{LIKE_SYMBOL}")
+}
+
+fn coalesce_default(column: Expr, default_value: Option<FieldSearchValue>) -> Expr {
+    match default_value {
+        Some(def) => {
+            let field_search_value = crate::entities::FieldSearchValue {
+                kind: def.kind,
+                value: def.value,
+            };
+            Expr::expr(Func::coalesce([
+                column.into(),
+                Value::try_from(field_search_value).unwrap().into(),
+            ]))
+        }
+        None => column,
+    }
+}
+
+///
+struct DatePart;
+
+impl sea_query::Iden for DatePart {
+    fn unquoted(&self, s: &mut dyn std::fmt::Write) {
+        write!(s, "DATE_PART").unwrap();
+    }
 }

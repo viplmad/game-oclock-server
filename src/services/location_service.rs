@@ -1,14 +1,14 @@
 use uuid::Uuid;
 
-use crate::entities::{Location, LocationSearch};
+use crate::entities::{Location, LocationListSearch};
 use crate::errors::ApiErrors;
-use crate::models::{LocationDTO, LocationPageResult, NewLocationDTO, SearchDTO};
+use crate::models::{ListSearchDTO, LocationDTO, LocationPageResult, NewLocationDTO};
 use crate::repository::LocationRepository;
 
 use super::helpers::{
-    create_merged, handle_action_result, handle_already_exists_result, handle_get_count_result,
-    handle_get_list_paged_result, handle_get_result, handle_not_found_result, handle_query_mapping,
-    handle_update_result, update_merged,
+    create_merged, handle_action_result, handle_already_exists_result, handle_get_aggregate_result,
+    handle_get_list_paged_result, handle_get_result, handle_list_search_mapping,
+    handle_not_found_result, handle_update_result, update_merged,
 };
 
 #[derive(Clone)]
@@ -31,10 +31,11 @@ impl LocationService {
     pub async fn search_locations(
         &self,
         user_id: &Uuid,
-        search: SearchDTO,
+        search: ListSearchDTO,
         quicksearch: Option<String>,
     ) -> Result<LocationPageResult, ApiErrors> {
-        let search = handle_query_mapping::<LocationDTO, LocationSearch>(search, quicksearch)?;
+        let search =
+            handle_list_search_mapping::<LocationDTO, LocationListSearch>(search, quicksearch)?;
         let find_result = self.repository.search_all(user_id, search).await;
         handle_get_list_paged_result(find_result)
     }
@@ -42,12 +43,13 @@ impl LocationService {
     pub async fn count_locations(
         &self,
         user_id: &Uuid,
-        search: SearchDTO,
+        search: ListSearchDTO,
         quicksearch: Option<String>,
     ) -> Result<u64, ApiErrors> {
-        let search = handle_query_mapping::<LocationDTO, LocationSearch>(search, quicksearch)?;
+        let search =
+            handle_list_search_mapping::<LocationDTO, LocationListSearch>(search, quicksearch)?;
         let count_result = self.repository.count_all(user_id, search).await;
-        handle_get_count_result::<LocationDTO>(count_result)
+        handle_get_aggregate_result::<LocationDTO>(count_result)
     }
 
     pub async fn create_location(

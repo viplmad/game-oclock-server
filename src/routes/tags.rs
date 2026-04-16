@@ -1,7 +1,7 @@
 use actix_web::{Responder, delete, get, post, put, web};
 
 use crate::models::{
-    ErrorMessage, ItemId, LoggedUser, NewTagDTO, QuicksearchQuery, SearchDTO, TagDTO,
+    ErrorMessage, ItemId, ListSearchDTO, LoggedUser, NewTagDTO, QuicksearchQuery, TagDTO,
     TagMediaPageResult, TagPageResult,
 };
 use crate::services::{MediaTagService, TagService};
@@ -49,7 +49,7 @@ pub async fn get_tag(
         ("id" = String, Path, description = "Media id"),
         QuicksearchQuery,
     ),
-    request_body(content = SearchDTO, description = "Query", content_type = "application/json"),
+    request_body(content = ListSearchDTO, description = "Query", content_type = "application/json"),
     responses(
         (status = 200, description = "Tags obtained", body = TagMediaPageResult, content_type = "application/json"),
         (status = 401, description = "Unauthorized", body = ErrorMessage, content_type = "application/json"),
@@ -66,7 +66,7 @@ pub async fn get_media_tags(
     media_tag_service: web::Data<MediaTagService>,
     path: web::Path<ItemId>,
     query: web::Query<QuicksearchQuery>,
-    body: web::Json<SearchDTO>,
+    body: web::Json<ListSearchDTO>,
     logged_user: LoggedUser,
 ) -> impl Responder {
     let ItemId(id) = path.into_inner();
@@ -85,7 +85,7 @@ pub async fn get_media_tags(
         ("id" = String, Path, description = "Media id"),
         QuicksearchQuery,
     ),
-    request_body(content = SearchDTO, description = "Query", content_type = "application/json"),
+    request_body(content = ListSearchDTO, description = "Query", content_type = "application/json"),
     responses(
         (status = 200, description = "Tags count obtained", body = u64, content_type = "application/json"),
         (status = 401, description = "Unauthorized", body = ErrorMessage, content_type = "application/json"),
@@ -102,7 +102,7 @@ pub async fn count_media_tags(
     media_tag_service: web::Data<MediaTagService>,
     path: web::Path<ItemId>,
     query: web::Query<QuicksearchQuery>,
-    body: web::Json<SearchDTO>,
+    body: web::Json<ListSearchDTO>,
     logged_user: LoggedUser,
 ) -> impl Responder {
     let ItemId(id) = path.into_inner();
@@ -120,7 +120,7 @@ pub async fn count_media_tags(
     params(
         QuicksearchQuery,
     ),
-    request_body(content = SearchDTO, description = "Query", content_type = "application/json"),
+    request_body(content = ListSearchDTO, description = "Query", content_type = "application/json"),
     responses(
         (status = 200, description = "Tags obtained", body = TagPageResult, content_type = "application/json"),
         (status = 401, description = "Unauthorized", body = ErrorMessage, content_type = "application/json"),
@@ -135,7 +135,7 @@ pub async fn count_media_tags(
 pub async fn get_tags(
     tag_service: web::Data<TagService>,
     query: web::Query<QuicksearchQuery>,
-    body: web::Json<SearchDTO>,
+    body: web::Json<ListSearchDTO>,
     logged_user: LoggedUser,
 ) -> impl Responder {
     let search_result = tag_service
@@ -152,7 +152,7 @@ pub async fn get_tags(
     params(
         QuicksearchQuery,
     ),
-    request_body(content = SearchDTO, description = "Query", content_type = "application/json"),
+    request_body(content = ListSearchDTO, description = "Query", content_type = "application/json"),
     responses(
         (status = 200, description = "Tags count obtained", body = u64, content_type = "application/json"),
         (status = 401, description = "Unauthorized", body = ErrorMessage, content_type = "application/json"),
@@ -167,7 +167,7 @@ pub async fn get_tags(
 pub async fn count_tags(
     tag_service: web::Data<TagService>,
     query: web::Query<QuicksearchQuery>,
-    body: web::Json<SearchDTO>,
+    body: web::Json<ListSearchDTO>,
     logged_user: LoggedUser,
 ) -> impl Responder {
     let count_result = tag_service

@@ -5,9 +5,9 @@ use sea_query::enum_def;
 use sqlx::FromRow;
 use uuid::Uuid;
 
-use super::{FieldIden, FieldType, Search, TableIden};
+use super::{FieldIden, FieldType, ListSearch, TableIden};
 
-pub type DeviceSearch = Search<DeviceIden>;
+pub type DeviceListSearch = ListSearch<DeviceIden>;
 
 #[derive(FromRow)]
 #[enum_def(table_name = "Device")]

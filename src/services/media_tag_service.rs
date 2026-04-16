@@ -1,15 +1,15 @@
 use uuid::Uuid;
 
-use crate::entities::{MediaSearch, MediaTag, TagSearch};
+use crate::entities::{MediaListSearch, MediaTag, TagListSearch};
 use crate::errors::ApiErrors;
 use crate::models::{
-    MediaDTO, MediaTagDTO, MediaTagPageResult, SearchDTO, TagDTO, TagMediaPageResult,
+    ListSearchDTO, MediaDTO, MediaTagDTO, MediaTagPageResult, TagDTO, TagMediaPageResult,
 };
 use crate::repository::MediaTagRepository;
 
 use super::helpers::{
-    handle_action_result, handle_already_exists_result, handle_get_count_result,
-    handle_get_list_paged_result, handle_not_found_result, handle_query_mapping,
+    handle_action_result, handle_already_exists_result, handle_get_aggregate_result,
+    handle_get_list_paged_result, handle_list_search_mapping, handle_not_found_result,
 };
 use super::{MediaService, TagService};
 
@@ -39,12 +39,12 @@ impl MediaTagService {
         &self,
         user_id: &Uuid,
         tag_id: &Uuid,
-        search: SearchDTO,
+        search: ListSearchDTO,
         quicksearch: Option<String>,
     ) -> Result<MediaTagPageResult, ApiErrors> {
         self.tag_service.exists_tag(user_id, tag_id).await?;
 
-        let search = handle_query_mapping::<MediaDTO, MediaSearch>(search, quicksearch)?;
+        let search = handle_list_search_mapping::<MediaDTO, MediaListSearch>(search, quicksearch)?;
         let find_result = self
             .repository
             .search_all_medias_with_tag(user_id, tag_id, search)
@@ -56,29 +56,29 @@ impl MediaTagService {
         &self,
         user_id: &Uuid,
         tag_id: &Uuid,
-        search: SearchDTO,
+        search: ListSearchDTO,
         quicksearch: Option<String>,
     ) -> Result<u64, ApiErrors> {
         self.tag_service.exists_tag(user_id, tag_id).await?;
 
-        let search = handle_query_mapping::<MediaDTO, MediaSearch>(search, quicksearch)?;
+        let search = handle_list_search_mapping::<MediaDTO, MediaListSearch>(search, quicksearch)?;
         let count_result = self
             .repository
             .count_all_medias_with_tag(user_id, tag_id, search)
             .await;
-        handle_get_count_result::<MediaDTO>(count_result)
+        handle_get_aggregate_result::<MediaDTO>(count_result)
     }
 
     pub async fn search_media_tags(
         &self,
         user_id: &Uuid,
         media_id: &Uuid,
-        search: SearchDTO,
+        search: ListSearchDTO,
         quicksearch: Option<String>,
     ) -> Result<TagMediaPageResult, ApiErrors> {
         self.media_service.exists_media(media_id).await?;
 
-        let search = handle_query_mapping::<TagDTO, TagSearch>(search, quicksearch)?;
+        let search = handle_list_search_mapping::<TagDTO, TagListSearch>(search, quicksearch)?;
         let find_result = self
             .repository
             .search_all_tags_with_media(user_id, media_id, search)
@@ -90,17 +90,17 @@ impl MediaTagService {
         &self,
         user_id: &Uuid,
         media_id: &Uuid,
-        search: SearchDTO,
+        search: ListSearchDTO,
         quicksearch: Option<String>,
     ) -> Result<u64, ApiErrors> {
         self.media_service.exists_media(media_id).await?;
 
-        let search = handle_query_mapping::<TagDTO, TagSearch>(search, quicksearch)?;
+        let search = handle_list_search_mapping::<TagDTO, TagListSearch>(search, quicksearch)?;
         let find_result = self
             .repository
             .count_all_tags_with_media(user_id, media_id, search)
             .await;
-        handle_get_count_result::<TagDTO>(find_result)
+        handle_get_aggregate_result::<TagDTO>(find_result)
     }
 
     pub async fn create_media_tag(

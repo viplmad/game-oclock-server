@@ -6,7 +6,9 @@ use crate::entities::PageResult;
 use crate::errors::{
     ApiErrors, MappingError, RepositoryError, SearchErrors, error_message_builder,
 };
-use crate::models::{FilterDTO, Merge, ModelInfo, PageResultDTO, SearchDTO};
+use crate::models::{
+    AggregateSearchDTO, FilterDTO, ListSearchDTO, Merge, ModelInfo, PageResultDTO,
+};
 
 pub fn handle_result<E, T>(repository_result: Result<E, RepositoryError>) -> Result<E, ApiErrors>
 where
@@ -73,7 +75,7 @@ where
     })
 }
 
-pub(super) fn handle_get_count_result<T>(
+pub(super) fn handle_get_aggregate_result<T>(
     repository_result: Result<u64, SearchErrors>,
 ) -> Result<u64, ApiErrors>
 where
@@ -244,16 +246,35 @@ pub(super) fn start_end_to_datetime(
     (start_datetime, end_datetime)
 }
 
-pub(super) fn handle_query_mapping<T, S>(
-    mut search: SearchDTO,
+pub(super) fn handle_list_search_mapping<T, S>(
+    mut search: ListSearchDTO,
     quicksearch: Option<String>,
 ) -> Result<S, ApiErrors>
 where
     T: ModelInfo,
-    S: TryFrom<SearchDTO, Error = MappingError>,
+    S: TryFrom<ListSearchDTO, Error = MappingError>,
 {
-    add_quicksearch::<T>(&mut search, quicksearch);
+    add_quicksearch::<T>(&mut search.filter, quicksearch);
+    handle_search_mapping::<T, _, _>(search)
+}
 
+pub(super) fn handle_aggregate_search_mapping<T, S>(
+    mut search: AggregateSearchDTO,
+    quicksearch: Option<String>,
+) -> Result<S, ApiErrors>
+where
+    T: ModelInfo,
+    S: TryFrom<AggregateSearchDTO, Error = MappingError>,
+{
+    add_quicksearch::<T>(&mut search.filter, quicksearch);
+    handle_search_mapping::<T, _, _>(search)
+}
+
+fn handle_search_mapping<T, SS, S>(search: SS) -> Result<S, ApiErrors>
+where
+    T: ModelInfo,
+    S: TryFrom<SS, Error = MappingError>,
+{
     S::try_from(search).map_err(|err| {
         ApiErrors::InvalidParameter(error_message_builder::field_not_found(
             T::MODEL_NAME,
@@ -262,7 +283,7 @@ where
     })
 }
 
-fn add_quicksearch<T>(search: &mut SearchDTO, quicksearch: Option<String>)
+fn add_quicksearch<T>(filter: &mut Option<Vec<FilterDTO>>, quicksearch: Option<String>)
 where
     T: ModelInfo,
 {
@@ -277,9 +298,9 @@ where
             })
             .collect();
 
-        if let Some(filters) = &mut search.filter {
+        if let Some(filters) = filter {
             quicksearch_filters.append(filters)
         }
-        search.filter = Some(quicksearch_filters);
+        *filter = Some(quicksearch_filters);
     }
 }

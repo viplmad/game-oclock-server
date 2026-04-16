@@ -1,8 +1,8 @@
 use actix_web::{Responder, delete, get, post, put, web};
 
 use crate::models::{
-    DeviceDTO, DevicePageResult, ErrorMessage, ItemId, LoggedUser, NewDeviceDTO, QuicksearchQuery,
-    SearchDTO,
+    DeviceDTO, DevicePageResult, ErrorMessage, ItemId, ListSearchDTO, LoggedUser, NewDeviceDTO,
+    QuicksearchQuery,
 };
 use crate::services::{DeviceService, MediaSessionDeviceService};
 
@@ -49,7 +49,7 @@ pub async fn get_device(
         ("id" = String, Path, description = "Media id"),
         QuicksearchQuery,
     ),
-    request_body(content = SearchDTO, description = "Query", content_type = "application/json"),
+    request_body(content = ListSearchDTO, description = "Query", content_type = "application/json"),
     responses(
         (status = 200, description = "Devices obtained", body = DevicePageResult, content_type = "application/json"),
         (status = 401, description = "Unauthorized", body = ErrorMessage, content_type = "application/json"),
@@ -66,7 +66,7 @@ pub async fn get_media_devices(
     media_session_device_service: web::Data<MediaSessionDeviceService>,
     path: web::Path<ItemId>,
     query: web::Query<QuicksearchQuery>,
-    body: web::Json<SearchDTO>,
+    body: web::Json<ListSearchDTO>,
     logged_user: LoggedUser,
 ) -> impl Responder {
     let ItemId(id) = path.into_inner();
@@ -85,7 +85,7 @@ pub async fn get_media_devices(
         ("id" = String, Path, description = "Media id"),
         QuicksearchQuery,
     ),
-    request_body(content = SearchDTO, description = "Query", content_type = "application/json"),
+    request_body(content = ListSearchDTO, description = "Query", content_type = "application/json"),
     responses(
         (status = 200, description = "Devices count obtained", body = u64, content_type = "application/json"),
         (status = 401, description = "Unauthorized", body = ErrorMessage, content_type = "application/json"),
@@ -102,7 +102,7 @@ pub async fn count_media_devices(
     media_session_device_service: web::Data<MediaSessionDeviceService>,
     path: web::Path<ItemId>,
     query: web::Query<QuicksearchQuery>,
-    body: web::Json<SearchDTO>,
+    body: web::Json<ListSearchDTO>,
     logged_user: LoggedUser,
 ) -> impl Responder {
     let ItemId(id) = path.into_inner();
@@ -120,7 +120,7 @@ pub async fn count_media_devices(
     params(
         QuicksearchQuery,
     ),
-    request_body(content = SearchDTO, description = "Query", content_type = "application/json"),
+    request_body(content = ListSearchDTO, description = "Query", content_type = "application/json"),
     responses(
         (status = 200, description = "Devices obtained", body = DevicePageResult, content_type = "application/json"),
         (status = 401, description = "Unauthorized", body = ErrorMessage, content_type = "application/json"),
@@ -135,7 +135,7 @@ pub async fn count_media_devices(
 pub async fn get_devices(
     device_service: web::Data<DeviceService>,
     query: web::Query<QuicksearchQuery>,
-    body: web::Json<SearchDTO>,
+    body: web::Json<ListSearchDTO>,
     logged_user: LoggedUser,
 ) -> impl Responder {
     let search_result = device_service
@@ -152,7 +152,7 @@ pub async fn get_devices(
     params(
         QuicksearchQuery,
     ),
-    request_body(content = SearchDTO, description = "Query", content_type = "application/json"),
+    request_body(content = ListSearchDTO, description = "Query", content_type = "application/json"),
     responses(
         (status = 200, description = "Devices count obtained", body = u64, content_type = "application/json"),
         (status = 401, description = "Unauthorized", body = ErrorMessage, content_type = "application/json"),
@@ -167,7 +167,7 @@ pub async fn get_devices(
 pub async fn count_devices(
     device_service: web::Data<DeviceService>,
     query: web::Query<QuicksearchQuery>,
-    body: web::Json<SearchDTO>,
+    body: web::Json<ListSearchDTO>,
     logged_user: LoggedUser,
 ) -> impl Responder {
     let count_result = device_service

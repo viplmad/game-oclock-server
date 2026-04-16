@@ -1,8 +1,8 @@
 use actix_web::{Responder, delete, get, post, put, web};
 
 use crate::models::{
-    ErrorMessage, ItemId, LoggedUser, NewUserDTO, PasswordChangeDTO, PasswordQuery,
-    QuicksearchQuery, SearchDTO, UserDTO, UserPageResult,
+    ErrorMessage, ItemId, ListSearchDTO, LoggedUser, NewUserDTO, PasswordChangeDTO, PasswordQuery,
+    QuicksearchQuery, UserDTO, UserPageResult,
 };
 use crate::routes::helpers::require_admin_or_current_user;
 use crate::services::UserService;
@@ -80,7 +80,7 @@ pub async fn get_current_user(
     params(
         QuicksearchQuery,
     ),
-    request_body(content = SearchDTO, description = "Query", content_type = "application/json"),
+    request_body(content = ListSearchDTO, description = "Query", content_type = "application/json"),
     responses(
         (status = 200, description = "Users obtained", body = UserPageResult, content_type = "application/json"),
         (status = 401, description = "Unauthorized", body = ErrorMessage, content_type = "application/json"),
@@ -95,7 +95,7 @@ pub async fn get_current_user(
 pub async fn get_users(
     user_service: web::Data<UserService>,
     query: web::Query<QuicksearchQuery>,
-    body: web::Json<SearchDTO>,
+    body: web::Json<ListSearchDTO>,
     logged_user: LoggedUser,
 ) -> impl Responder {
     if let Err(error) = require_admin(&user_service, &logged_user.id).await {
@@ -114,7 +114,7 @@ pub async fn get_users(
     params(
         QuicksearchQuery,
     ),
-    request_body(content = SearchDTO, description = "Query", content_type = "application/json"),
+    request_body(content = ListSearchDTO, description = "Query", content_type = "application/json"),
     responses(
         (status = 200, description = "Users count obtained", body = u64, content_type = "application/json"),
         (status = 401, description = "Unauthorized", body = ErrorMessage, content_type = "application/json"),
@@ -129,7 +129,7 @@ pub async fn get_users(
 pub async fn count_users(
     user_service: web::Data<UserService>,
     query: web::Query<QuicksearchQuery>,
-    body: web::Json<SearchDTO>,
+    body: web::Json<ListSearchDTO>,
     logged_user: LoggedUser,
 ) -> impl Responder {
     if let Err(error) = require_admin(&user_service, &logged_user.id).await {

@@ -2,9 +2,9 @@ use sea_query::{Alias, Expr, Query, QueryStatementWriter, SelectStatement, Simpl
 use uuid::Uuid;
 
 use crate::entities::{
-    ExternalMedia, ExternalMediaIden, Media, MediaIden, MediaSearch, MediaState, MediaStateIden,
-    STATE_ADDED_DATETIME_ALIAS, STATE_NOTES_ALIAS, STATE_RATING_ALIAS, STATE_STATUS_ALIAS,
-    STATE_UPDATED_DATETIME_ALIAS, SearchQuery,
+    ExternalMedia, ExternalMediaIden, Media, MediaIden, MediaListSearch, MediaState,
+    MediaStateIden, STATE_ADDED_DATETIME_ALIAS, STATE_NOTES_ALIAS, STATE_RATING_ALIAS,
+    STATE_STATUS_ALIAS, STATE_UPDATED_DATETIME_ALIAS, SearchQuery,
 };
 use crate::errors::SearchErrors;
 
@@ -22,7 +22,7 @@ mod tests {
         let user_id = Uuid::try_parse("00000000-0000-0000-0000-000000000000").unwrap();
         let query = select_all_with_search(
             &user_id,
-            MediaSearch {
+            MediaListSearch {
                 filter: None,
                 sort: None,
                 page: None,
@@ -47,7 +47,7 @@ mod tests {
         let user_id = Uuid::try_parse("00000000-0000-0000-0000-000000000000").unwrap();
         let query = count_all_with_search(
             &user_id,
-            MediaSearch {
+            MediaListSearch {
                 filter: None,
                 sort: None,
                 page: None,
@@ -214,7 +214,7 @@ pub fn select_all_by_parent_id(user_id: &Uuid, parent_id: &Uuid) -> impl QuerySt
 
 pub fn select_all_with_search(
     user_id: &Uuid,
-    search: MediaSearch,
+    search: MediaListSearch,
 ) -> Result<SearchQuery, SearchErrors> {
     let select = select_all(user_id);
 
@@ -223,7 +223,7 @@ pub fn select_all_with_search(
 
 pub fn count_all_with_search(
     user_id: &Uuid,
-    search: MediaSearch,
+    search: MediaListSearch,
 ) -> Result<SelectStatement, SearchErrors> {
     let select = count_all(user_id);
 

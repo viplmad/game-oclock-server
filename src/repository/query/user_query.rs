@@ -1,7 +1,7 @@
 use sea_query::{Expr, Query, QueryStatementWriter, SelectStatement, SimpleExpr};
 use uuid::Uuid;
 
-use crate::entities::{SearchQuery, User, UserIden, UserSearch};
+use crate::entities::{SearchQuery, User, UserIden, UserListSearch};
 use crate::errors::SearchErrors;
 
 use super::search::{apply_search, apply_search_filter};
@@ -26,13 +26,13 @@ pub fn select_by_username(username: &str) -> impl QueryStatementWriter {
     select
 }
 
-pub fn select_all_with_search(search: UserSearch) -> Result<SearchQuery, SearchErrors> {
+pub fn select_all_with_search(search: UserListSearch) -> Result<SearchQuery, SearchErrors> {
     let select = select_all();
 
     apply_search(select, search)
 }
 
-pub fn count_all_with_search(search: UserSearch) -> Result<SelectStatement, SearchErrors> {
+pub fn count_all_with_search(search: UserListSearch) -> Result<SelectStatement, SearchErrors> {
     let select = count_all();
 
     apply_search_filter(select, search)

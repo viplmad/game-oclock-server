@@ -1,15 +1,19 @@
 use chrono::{DateTime, Utc};
 use uuid::Uuid;
 
-use crate::entities::{MediaSession, MediaSessionWithTime, SessionSearch};
+use crate::entities::{
+    MediaSession, MediaSessionWithTime, SessionAggregateSearch, SessionListSearch,
+};
 use crate::errors::ApiErrors;
-use crate::models::{DurationDef, Merge, NewSessionDTO, SearchDTO, SessionDTO, SessionPageResult};
+use crate::models::{
+    AggregateSearchDTO, ListSearchDTO, Merge, NewSessionDTO, SessionDTO, SessionPageResult,
+};
 use crate::repository::MediaSessionRepository;
 
 use super::helpers::{
-    handle_action_result, handle_already_exists_result, handle_get_count_result,
-    handle_get_list_paged_result, handle_get_result, handle_not_found_result, handle_query_mapping,
-    handle_result,
+    handle_action_result, handle_aggregate_search_mapping, handle_already_exists_result,
+    handle_get_aggregate_result, handle_get_list_paged_result, handle_get_result,
+    handle_list_search_mapping, handle_not_found_result, handle_result,
 };
 use super::{DeviceService, MediaService};
 
@@ -35,20 +39,6 @@ impl MediaSessionService {
 }
 
 impl MediaSessionService {
-    pub async fn get_sum_media_sessions(
-        &self,
-        user_id: &Uuid,
-        media_id: &Uuid,
-    ) -> Result<DurationDef, ApiErrors> {
-        self.media_service.exists_media(media_id).await?;
-
-        let find_result = self
-            .repository
-            .find_sum_time_by_media_id(user_id, media_id)
-            .await;
-        handle_result::<DurationDef, SessionDTO>(find_result)
-    }
-
     pub async fn get_media_session(
         &self,
         user_id: &Uuid,
@@ -68,12 +58,13 @@ impl MediaSessionService {
         &self,
         user_id: &Uuid,
         media_id: &Uuid,
-        search: SearchDTO,
+        search: ListSearchDTO,
         quicksearch: Option<String>,
     ) -> Result<SessionPageResult, ApiErrors> {
         self.media_service.exists_media(media_id).await?;
 
-        let search = handle_query_mapping::<SessionDTO, SessionSearch>(search, quicksearch)?;
+        let search =
+            handle_list_search_mapping::<SessionDTO, SessionListSearch>(search, quicksearch)?;
         let find_result = self
             .repository
             .search_all_by_media_id(user_id, media_id, search)
@@ -81,21 +72,24 @@ impl MediaSessionService {
         handle_get_list_paged_result(find_result)
     }
 
-    pub async fn count_media_sessions(
+    pub async fn aggregate_media_sessions(
         &self,
         user_id: &Uuid,
         media_id: &Uuid,
-        search: SearchDTO,
+        search: AggregateSearchDTO,
         quicksearch: Option<String>,
     ) -> Result<u64, ApiErrors> {
         self.media_service.exists_media(media_id).await?;
 
-        let search = handle_query_mapping::<SessionDTO, SessionSearch>(search, quicksearch)?;
-        let count_result = self
+        let search = handle_aggregate_search_mapping::<SessionDTO, SessionAggregateSearch>(
+            search,
+            quicksearch,
+        )?;
+        let aggregate_result = self
             .repository
-            .count_all_by_media_id(user_id, media_id, search)
+            .aggregate_all_by_media_id(user_id, media_id, search)
             .await;
-        handle_get_count_result::<SessionDTO>(count_result)
+        handle_get_aggregate_result::<SessionDTO>(aggregate_result)
     }
 
     // For review

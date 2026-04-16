@@ -5,9 +5,9 @@ use sea_query::enum_def;
 use sqlx::FromRow;
 use uuid::Uuid;
 
-use super::{FieldIden, FieldType, MediaStateIden, Search, TableIden};
+use super::{FieldIden, FieldType, ListSearch, MediaStateIden, TableIden};
 
-pub type MediaSearch = Search<MediaIden>;
+pub type MediaListSearch = ListSearch<MediaIden>;
 
 pub const MEDIA_TYPE_GAME: &'static str = "GAME";
 pub const MEDIA_TYPE_GAME_DLC: &'static str = "GAME_DLC";

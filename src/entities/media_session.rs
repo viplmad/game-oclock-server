@@ -5,7 +5,7 @@ use sea_query::enum_def;
 use sqlx::{FromRow, postgres::types::PgInterval};
 use uuid::Uuid;
 
-use super::{FieldIden, FieldType, Search, TableIden};
+use super::{AggregateGroupSearch, AggregateSearch, FieldIden, FieldType, ListSearch, TableIden};
 
 pub const QUERY_TIME_ALIAS: &str = "query_time";
 pub const SESSION_START_DATE_ALIAS: &str = "session_start_date";
@@ -17,7 +17,9 @@ pub const SESSION_FINISHED_STATUS_ALIAS: &str = "session_finished_status";
 pub const SESSION_ADDED_DATETIME_ALIAS: &str = "session_added_datetime";
 pub const SESSION_UPDATED_DATETIME_ALIAS: &str = "session_updated_datetime";
 
-pub type SessionSearch = Search<MediaSessionIden>;
+pub type SessionListSearch = ListSearch<MediaSessionIden>;
+pub type SessionAggregateSearch = AggregateSearch<MediaSessionIden>;
+pub type SessionAggregateGroupSearch = AggregateGroupSearch<MediaSessionIden>;
 
 #[derive(FromRow)]
 #[enum_def(table_name = "MediaSession")]

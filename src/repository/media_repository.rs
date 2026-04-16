@@ -3,13 +3,13 @@ use uuid::Uuid;
 
 use super::query::media_query;
 use crate::entities::{
-    ExternalMedia, Media, MediaSearch, MediaState, MediaStateWithExternal, MediaWithState,
+    ExternalMedia, Media, MediaListSearch, MediaState, MediaStateWithExternal, MediaWithState,
     PageResult,
 };
 use crate::errors::{RepositoryError, SearchErrors};
 
 use super::helpers::{
-    count_all_search, execute, exists_some, fetch_all, fetch_all_search, fetch_optional,
+    aggregate_all_search, execute, exists_some, fetch_all, fetch_all_search, fetch_optional,
 };
 
 #[derive(Clone)]
@@ -95,7 +95,7 @@ impl MediaRepository {
     pub async fn search_all(
         &self,
         user_id: &Uuid,
-        search: MediaSearch,
+        search: MediaListSearch,
     ) -> Result<PageResult<MediaWithState>, SearchErrors> {
         let search_query = media_query::select_all_with_search(user_id, search)?;
         fetch_all_search(&self.pool, search_query).await
@@ -104,10 +104,10 @@ impl MediaRepository {
     pub async fn count_all(
         &self,
         user_id: &Uuid,
-        search: MediaSearch,
+        search: MediaListSearch,
     ) -> Result<u64, SearchErrors> {
         let count_query = media_query::count_all_with_search(user_id, search)?;
-        count_all_search(&self.pool, count_query).await
+        aggregate_all_search(&self.pool, count_query).await
     }
 
     pub async fn create_basic(&self, media: &Media) -> Result<(), RepositoryError> {

@@ -3,11 +3,11 @@ use uuid::Uuid;
 
 use super::query::media_tag_query;
 use crate::entities::{
-    MediaSearch, MediaTag, MediaWithStateWithTag, PageResult, TagSearch, TagWithTag,
+    MediaListSearch, MediaTag, MediaWithStateWithTag, PageResult, TagListSearch, TagWithTag,
 };
 use crate::errors::{RepositoryError, SearchErrors};
 
-use super::helpers::{count_all_search, execute, exists_some, fetch_all_search};
+use super::helpers::{aggregate_all_search, execute, exists_some, fetch_all_search};
 
 #[derive(Clone)]
 pub struct MediaTagRepository {
@@ -25,7 +25,7 @@ impl MediaTagRepository {
         &self,
         user_id: &Uuid,
         tag_id: &Uuid,
-        search: MediaSearch,
+        search: MediaListSearch,
     ) -> Result<PageResult<MediaWithStateWithTag>, SearchErrors> {
         let search_query = media_tag_query::select_all_medias_by_tag_id(user_id, tag_id, search)?;
         fetch_all_search(&self.pool, search_query).await
@@ -35,17 +35,17 @@ impl MediaTagRepository {
         &self,
         user_id: &Uuid,
         tag_id: &Uuid,
-        search: MediaSearch,
+        search: MediaListSearch,
     ) -> Result<u64, SearchErrors> {
         let count_query = media_tag_query::count_all_medias_by_tag_id(user_id, tag_id, search)?;
-        count_all_search(&self.pool, count_query).await
+        aggregate_all_search(&self.pool, count_query).await
     }
 
     pub async fn search_all_tags_with_media(
         &self,
         user_id: &Uuid,
         media_id: &Uuid,
-        search: TagSearch,
+        search: TagListSearch,
     ) -> Result<PageResult<TagWithTag>, SearchErrors> {
         let search_query = media_tag_query::select_all_tags_by_media_id(user_id, media_id, search)?;
         fetch_all_search(&self.pool, search_query).await
@@ -55,10 +55,10 @@ impl MediaTagRepository {
         &self,
         user_id: &Uuid,
         media_id: &Uuid,
-        search: TagSearch,
+        search: TagListSearch,
     ) -> Result<u64, SearchErrors> {
         let search_query = media_tag_query::count_all_tags_by_media_id(user_id, media_id, search)?;
-        count_all_search(&self.pool, search_query).await
+        aggregate_all_search(&self.pool, search_query).await
     }
 
     pub async fn create(&self, media_tag: &MediaTag) -> Result<(), RepositoryError> {

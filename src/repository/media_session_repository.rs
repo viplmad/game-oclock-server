@@ -3,12 +3,14 @@ use sqlx::{PgPool, postgres::types::PgInterval};
 use uuid::Uuid;
 
 use super::query::media_session_query;
-use crate::entities::{MediaSession, MediaSessionWithTime, PageResult, SessionSearch};
+use crate::entities::{
+    MediaSession, MediaSessionWithTime, PageResult, SessionAggregateSearch, SessionListSearch,
+};
 use crate::errors::{RepositoryError, SearchErrors};
 use crate::models::DurationDef;
 
 use super::helpers::{
-    count_all_search, execute, execute_return_single, exists_some, fetch_all, fetch_all_search,
+    aggregate_all_search, execute, execute_return_single, exists_some, fetch_all, fetch_all_search,
     fetch_optional,
 };
 
@@ -49,22 +51,22 @@ impl MediaSessionRepository {
         &self,
         user_id: &Uuid,
         media_id: &Uuid,
-        search: SessionSearch,
+        search: SessionListSearch,
     ) -> Result<PageResult<MediaSessionWithTime>, SearchErrors> {
         let search_query =
             media_session_query::select_all_by_user_id_and_media_id(user_id, media_id, search)?;
         fetch_all_search(&self.pool, search_query).await
     }
 
-    pub async fn count_all_by_media_id(
+    pub async fn aggregate_all_by_media_id(
         &self,
         user_id: &Uuid,
         media_id: &Uuid,
-        search: SessionSearch,
+        search: SessionAggregateSearch,
     ) -> Result<u64, SearchErrors> {
         let search_query =
-            media_session_query::count_all_by_user_id_and_media_id(user_id, media_id, search)?;
-        count_all_search(&self.pool, search_query).await
+            media_session_query::aggregate_all_by_user_id_and_media_id(user_id, media_id, search)?;
+        aggregate_all_search(&self.pool, search_query).await
     }
 
     // For review

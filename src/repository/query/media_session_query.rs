@@ -6,15 +6,80 @@ use sea_query::{
 use uuid::Uuid;
 
 use crate::entities::{
-    MediaIden, MediaSearch, MediaSession, MediaSessionIden, QUERY_TIME_ALIAS,
+    MediaIden, MediaListSearch, MediaSession, MediaSessionIden, QUERY_TIME_ALIAS,
     SESSION_ADDED_DATETIME_ALIAS, SESSION_DEVICE_ID_ALIAS, SESSION_END_DATE_ALIAS,
     SESSION_FINISHED_STATUS_ALIAS, SESSION_GROUP_ID_ALIAS, SESSION_START_DATE_ALIAS,
-    SESSION_STARTED_ALIAS, SESSION_UPDATED_DATETIME_ALIAS, SearchQuery, SessionSearch,
+    SESSION_STARTED_ALIAS, SESSION_UPDATED_DATETIME_ALIAS, SearchQuery,
+    SessionAggregateGroupSearch, SessionAggregateSearch, SessionListSearch,
 };
 use crate::errors::SearchErrors;
 
 use super::media_query;
-use super::search::{apply_search, apply_search_filter};
+use super::search::{
+    apply_aggregate_group_search, apply_aggregate_search, apply_search, apply_search_filter,
+};
+
+#[cfg(test)]
+mod tests {
+    use sea_query::{PostgresQueryBuilder, SeaRc};
+    use uuid::Uuid;
+
+    use super::*;
+    use crate::entities::{
+        AggregateCountMetric, AggregateDateHistogramGroup, AggregateGroup, AggregateMetric,
+        DateHistogramInterval, TableIden,
+    };
+
+    #[test]
+    fn count_all_sessions() {
+        let user_id = Uuid::try_parse("00000000-0000-0000-0000-000000000000").unwrap();
+        let query = aggregate_by_user_id(
+            &user_id,
+            SessionAggregateSearch {
+                filter: None,
+                aggr: AggregateMetric::Count(AggregateCountMetric::new::<MediaSessionIden>(
+                    SeaRc::new(MediaSessionIden::TABLE),
+                    SeaRc::new(MediaSessionIden::MediaId),
+                    None,
+                    false,
+                )),
+            },
+        );
+        assert_eq!(
+            query.unwrap().to_string(PostgresQueryBuilder),
+            r#"SELECT COUNT("MediaSession"."media_id") FROM "MediaSession" WHERE "MediaSession"."user_id" = '00000000-0000-0000-0000-000000000000'"#
+        );
+    }
+
+    #[test]
+    fn group_medias_by_month_played() {
+        let user_id = Uuid::try_parse("00000000-0000-0000-0000-000000000000").unwrap();
+        let query = aggregate_group_by_user_id(
+            &user_id,
+            SessionAggregateGroupSearch {
+                filter: None,
+                aggr: AggregateMetric::Count(AggregateCountMetric::new::<MediaSessionIden>(
+                    SeaRc::new(MediaSessionIden::TABLE),
+                    SeaRc::new(MediaSessionIden::MediaId),
+                    None,
+                    true,
+                )),
+                group: AggregateGroup::DateHistogram(AggregateDateHistogramGroup::new::<
+                    MediaSessionIden,
+                >(
+                    SeaRc::new(MediaSessionIden::TABLE),
+                    SeaRc::new(MediaSessionIden::StartDate),
+                    None,
+                    DateHistogramInterval::Month,
+                )),
+            },
+        );
+        assert_eq!(
+            query.unwrap().to_string(PostgresQueryBuilder),
+            r#"SELECT DATE_PART('month', "MediaSession"."start_date"), COUNT(DISTINCT "MediaSession"."media_id") FROM "MediaSession" WHERE "MediaSession"."user_id" = '00000000-0000-0000-0000-000000000000' GROUP BY DATE_PART('month', "MediaSession"."start_date")"#
+        );
+    }
+}
 
 pub fn select_sum_time_by_user_id_and_media_id(
     user_id: &Uuid,
@@ -47,7 +112,7 @@ pub fn select_by_id(
 pub fn select_all_by_user_id_and_media_id(
     user_id: &Uuid,
     media_id: &Uuid,
-    search: SessionSearch,
+    search: SessionListSearch,
 ) -> Result<SearchQuery, SearchErrors> {
     let mut select = Query::select();
 
@@ -57,17 +122,38 @@ pub fn select_all_by_user_id_and_media_id(
     apply_search(select, search)
 }
 
-pub fn count_all_by_user_id_and_media_id(
+pub fn aggregate_all_by_user_id_and_media_id(
     user_id: &Uuid,
     media_id: &Uuid,
-    search: SessionSearch,
+    search: SessionAggregateSearch,
 ) -> Result<SelectStatement, SearchErrors> {
     let mut select = Query::select();
 
     from_and_where_user_id_and_media_id(&mut select, user_id, media_id);
-    select.expr(Expr::col((MediaSessionIden::Table, MediaSessionIden::MediaId)).count());
 
-    apply_search_filter(select, search)
+    apply_aggregate_search(select, search)
+}
+
+pub fn aggregate_by_user_id(
+    user_id: &Uuid,
+    search: SessionAggregateSearch,
+) -> Result<SelectStatement, SearchErrors> {
+    let mut select = Query::select();
+
+    from_and_where_user_id(&mut select, user_id);
+
+    apply_aggregate_search(select, search)
+}
+
+pub fn aggregate_group_by_user_id(
+    user_id: &Uuid,
+    search: SessionAggregateGroupSearch,
+) -> Result<SelectStatement, SearchErrors> {
+    let mut select = Query::select();
+
+    from_and_where_user_id(&mut select, user_id);
+
+    apply_aggregate_group_search(select, search)
 }
 
 pub fn select_all_first_by_user_id_and_media_id_in(
@@ -128,7 +214,7 @@ pub fn select_all_first_media_with_session_with_search_by_start_datetime_gte_and
     user_id: &Uuid,
     start_datetime: Option<DateTime<Utc>>,
     end_datetime: Option<DateTime<Utc>>,
-    mut search: MediaSearch,
+    mut search: MediaListSearch,
 ) -> Result<SearchQuery, SearchErrors> {
     let mut select = select_all_media_with_session_by_start_datetime_gte_and_start_datetime_lte(
         user_id,
@@ -151,7 +237,7 @@ pub fn select_all_last_media_with_session_with_search_by_start_datetime_gte_and_
     user_id: &Uuid,
     start_datetime: Option<DateTime<Utc>>,
     end_datetime: Option<DateTime<Utc>>,
-    mut search: MediaSearch,
+    mut search: MediaListSearch,
 ) -> Result<SearchQuery, SearchErrors> {
     let mut select = select_all_media_with_session_by_start_datetime_gte_and_start_datetime_lte(
         user_id,

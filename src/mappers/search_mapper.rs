@@ -4,12 +4,13 @@ use chrono::{DateTime, NaiveDate, Utc};
 use sea_query::{BinOper, Order, Value};
 
 use crate::entities::{
-    FieldIden, FieldSearchValue, FieldSearchValues, FieldType, FieldValue, Filter, FilterOperator,
-    Search, Sort, TableIden,
+    AggregateCountMetric, AggregateSearch, AggregateSumMetric, FieldIden, FieldSearchValue,
+    FieldSearchValues, FieldType, FieldValue, Filter, FilterOperator, ListSearch, Sort, TableIden,
 };
 use crate::errors::{MappingError, error_message_builder};
 use crate::models::{
-    ChainOperatorType, FilterDTO, MediaStatus, OperatorType, OrderType, SearchDTO, SearchValue,
+    AggregateCountMetricDTO, AggregateMetric, AggregateSearchDTO, AggregateSumMetricDTO,
+    ChainOperatorType, FilterDTO, ListSearchDTO, MediaStatus, OperatorType, OrderType, SearchValue,
     SortDTO,
 };
 
@@ -52,13 +53,13 @@ impl From<ChainOperatorType> for BinOper {
     }
 }
 
-impl<I: TableIden> TryFrom<SearchDTO> for Search<I>
+impl<I: TableIden> TryFrom<ListSearchDTO> for ListSearch<I>
 where
     FieldIden<I>: FromStr,
 {
     type Error = MappingError;
 
-    fn try_from(search: SearchDTO) -> Result<Self, Self::Error> {
+    fn try_from(search: ListSearchDTO) -> Result<Self, Self::Error> {
         let filter_result = search.filter.map(|filters| {
             filters
                 .into_iter()
@@ -87,6 +88,80 @@ where
             page: search.page,
             size: search.size,
         })
+    }
+}
+
+impl<I: TableIden> TryFrom<AggregateSearchDTO> for AggregateSearch<I>
+where
+    FieldIden<I>: FromStr,
+{
+    type Error = MappingError;
+
+    fn try_from(search: AggregateSearchDTO) -> Result<Self, Self::Error> {
+        let filter_result = search.filter.map(|filters| {
+            filters
+                .into_iter()
+                .map(Filter::try_from)
+                .collect::<Result<Vec<Filter<I>>, MappingError>>()
+        });
+        let filter = match filter_result {
+            Some(res) => Some(res?),
+            None => None,
+        };
+
+        let aggr = match search.aggr {
+            AggregateMetric::Count(c) => {
+                crate::entities::AggregateMetric::Count(AggregateCountMetric::try_from(c)?)
+            }
+            AggregateMetric::Sum(s) => {
+                crate::entities::AggregateMetric::Sum(AggregateSumMetric::try_from(s)?)
+            }
+        };
+
+        Ok(Self { filter, aggr })
+    }
+}
+
+impl<I: TableIden> TryFrom<AggregateCountMetricDTO> for AggregateCountMetric<I>
+where
+    FieldIden<I>: FromStr,
+{
+    type Error = MappingError;
+
+    fn try_from(filter: AggregateCountMetricDTO) -> Result<Self, Self::Error> {
+        let field_iden =
+            FieldIden::<I>::from_str(&filter.field).map_err(|_| MappingError(filter.field))?;
+
+        Ok(Self::new::<I>(
+            field_iden.table,
+            field_iden.iden,
+            filter.default_value.map(|value| FieldSearchValue {
+                kind: field_iden.kind,
+                value,
+            }),
+            filter.distinct,
+        ))
+    }
+}
+
+impl<I: TableIden> TryFrom<AggregateSumMetricDTO> for AggregateSumMetric<I>
+where
+    FieldIden<I>: FromStr,
+{
+    type Error = MappingError;
+
+    fn try_from(filter: AggregateSumMetricDTO) -> Result<Self, Self::Error> {
+        let field_iden =
+            FieldIden::<I>::from_str(&filter.field).map_err(|_| MappingError(filter.field))?;
+
+        Ok(Self::new::<I>(
+            field_iden.table,
+            field_iden.iden,
+            filter.default_value.map(|value| FieldSearchValue {
+                kind: field_iden.kind,
+                value,
+            }),
+        ))
     }
 }
 

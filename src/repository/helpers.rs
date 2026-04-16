@@ -136,7 +136,7 @@ where
         .map_err(SearchErrors::Repository)
 }
 
-pub(super) async fn count_all_search<'c, X>(
+pub(super) async fn aggregate_all_search<'c, X>(
     executor: X,
     query: impl QueryStatementWriter,
 ) -> Result<u64, SearchErrors>
@@ -145,7 +145,7 @@ where
 {
     fetch_one(executor, query)
         .await
-        .map(|tuple: (i64,)| u64::try_from(tuple.0).expect("Count is not positive"))
+        .map(|tuple: (i64,)| u64::try_from(tuple.0).expect("Aggregate is not positive"))
         .map_err(SearchErrors::Repository)
 }
 

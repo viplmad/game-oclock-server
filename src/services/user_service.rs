@@ -1,14 +1,14 @@
 use uuid::Uuid;
 
-use crate::entities::{User, UserSearch};
+use crate::entities::{User, UserListSearch};
 use crate::errors::ApiErrors;
-use crate::models::{NewUserDTO, PasswordChangeDTO, SearchDTO, UserDTO, UserPageResult};
+use crate::models::{ListSearchDTO, NewUserDTO, PasswordChangeDTO, UserDTO, UserPageResult};
 use crate::repository::UserRepository;
 
 use super::helpers::{
-    create_merged, handle_action_result, handle_already_exists_result, handle_get_count_result,
+    create_merged, handle_action_result, handle_already_exists_result, handle_get_aggregate_result,
     handle_get_list_paged_result, handle_get_result, handle_get_result_raw,
-    handle_not_found_result, handle_query_mapping, handle_result, handle_update_result,
+    handle_list_search_mapping, handle_not_found_result, handle_result, handle_update_result,
     update_merged,
 };
 
@@ -40,22 +40,22 @@ impl UserService {
 
     pub async fn search_users(
         &self,
-        search: SearchDTO,
+        search: ListSearchDTO,
         quicksearch: Option<String>,
     ) -> Result<UserPageResult, ApiErrors> {
-        let search = handle_query_mapping::<UserDTO, UserSearch>(search, quicksearch)?;
+        let search = handle_list_search_mapping::<UserDTO, UserListSearch>(search, quicksearch)?;
         let find_result = self.repository.search_all(search).await;
         handle_get_list_paged_result(find_result)
     }
 
     pub async fn count_users(
         &self,
-        search: SearchDTO,
+        search: ListSearchDTO,
         quicksearch: Option<String>,
     ) -> Result<u64, ApiErrors> {
-        let search = handle_query_mapping::<UserDTO, UserSearch>(search, quicksearch)?;
+        let search = handle_list_search_mapping::<UserDTO, UserListSearch>(search, quicksearch)?;
         let count_result = self.repository.count_all(search).await;
-        handle_get_count_result::<UserDTO>(count_result)
+        handle_get_aggregate_result::<UserDTO>(count_result)
     }
 
     pub async fn create_user(

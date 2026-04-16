@@ -1,19 +1,19 @@
 use uuid::Uuid;
 
-use crate::entities::{ExternalMedia, Media, MediaSearch, MediaState};
+use crate::entities::{ExternalMedia, Media, MediaListSearch, MediaState};
 use crate::errors::ApiErrors;
 use crate::models::{
-    ExternalMediaIdDTO, Media2DTO, MediaDTO, MediaPageResult, MediaRawDTO, MediaStateDTO,
-    MediaStatus, NewManualMediaDTO, NewMediaDTO, NewMediaStateDTO, SearchDTO,
+    ExternalMediaIdDTO, ListSearchDTO, Media2DTO, MediaDTO, MediaPageResult, MediaRawDTO,
+    MediaStateDTO, MediaStatus, NewManualMediaDTO, NewMediaDTO, NewMediaStateDTO,
 };
 use crate::repository::MediaRepository;
 
 use super::MediaExternalService;
 use super::helpers::{
-    create_merged2, handle_action_result, handle_already_exists_result, handle_get_count_result,
-    handle_get_list_paged_result, handle_get_list_result_raw, handle_get_result,
-    handle_not_found_result, handle_query_mapping, handle_result, handle_update_result,
-    update_merged,
+    create_merged2, handle_action_result, handle_already_exists_result,
+    handle_get_aggregate_result, handle_get_list_paged_result, handle_get_list_result_raw,
+    handle_get_result, handle_list_search_mapping, handle_not_found_result, handle_result,
+    handle_update_result, update_merged,
 };
 
 #[derive(Clone)]
@@ -78,10 +78,10 @@ impl MediaService {
     pub async fn search_medias(
         &self,
         user_id: &Uuid,
-        search: SearchDTO,
+        search: ListSearchDTO,
         quicksearch: Option<String>,
     ) -> Result<MediaPageResult, ApiErrors> {
-        let search = handle_query_mapping::<MediaDTO, MediaSearch>(search, quicksearch)?;
+        let search = handle_list_search_mapping::<MediaDTO, MediaListSearch>(search, quicksearch)?;
         let find_result = self.repository.search_all(user_id, search).await;
         handle_get_list_paged_result(find_result)
     }
@@ -89,12 +89,12 @@ impl MediaService {
     pub async fn count_medias(
         &self,
         user_id: &Uuid,
-        search: SearchDTO,
+        search: ListSearchDTO,
         quicksearch: Option<String>,
     ) -> Result<u64, ApiErrors> {
-        let search = handle_query_mapping::<MediaDTO, MediaSearch>(search, quicksearch)?;
+        let search = handle_list_search_mapping::<MediaDTO, MediaListSearch>(search, quicksearch)?;
         let count_result = self.repository.count_all(user_id, search).await;
-        handle_get_count_result::<MediaDTO>(count_result)
+        handle_get_aggregate_result::<MediaDTO>(count_result)
     }
 
     pub async fn search_external_medias(
