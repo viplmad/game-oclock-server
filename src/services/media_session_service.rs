@@ -76,6 +76,18 @@ impl MediaSessionService {
         handle_get_list_paged_result(find_result)
     }
 
+    pub async fn search_sessions(
+        &self,
+        user_id: &Uuid,
+        search: ListSearchDTO,
+        quicksearch: Option<String>,
+    ) -> Result<SessionPageResult, ApiErrors> {
+        let search =
+            handle_list_search_mapping::<SessionDTO, SessionListSearch>(search, quicksearch)?;
+        let find_result = self.repository.search_all(user_id, search).await;
+        handle_get_list_paged_result(find_result)
+    }
+
     pub async fn aggregate_media_sessions(
         &self,
         user_id: &Uuid,

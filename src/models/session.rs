@@ -7,6 +7,8 @@ use super::{DurationDef, MediaStatus, Merge, ModelInfo};
 
 #[derive(Default, Clone, Serialize, Deserialize, ToSchema)]
 pub struct SessionDTO {
+    #[schema(value_type = String)]
+    pub media_id: Uuid,
     #[schema(value_type = String, format = DateTime)]
     pub start_datetime: DateTime<Utc>,
     #[schema(value_type = String, format = DateTime)]
@@ -30,6 +32,7 @@ pub struct SessionDTO {
 impl Merge<NewSessionDTO> for SessionDTO {
     fn merge(self, other: NewSessionDTO) -> Self {
         Self {
+            media_id: self.media_id,
             start_datetime: other.start_datetime,
             end_datetime: other.end_datetime,
             device_id: other.device_id,

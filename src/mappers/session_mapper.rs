@@ -6,6 +6,7 @@ use crate::models::{DurationDef, MediaStatus, SessionDTO};
 impl From<MediaSessionWithTime> for SessionDTO {
     fn from(session: MediaSessionWithTime) -> Self {
         Self {
+            media_id: session.media_id,
             start_datetime: session.start_date,
             end_datetime: session.end_date,
             device_id: session.device_id,

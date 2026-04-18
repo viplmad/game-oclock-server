@@ -175,6 +175,7 @@ async fn run(
                         // Media Sessions
                         .service(routes::get_media_sessions)
                         .service(routes::aggregate_media_sessions)
+                        .service(routes::get_sessions)
                         .service(routes::aggregate_sessions)
                         .service(routes::aggregate_group_sessions)
                         .service(routes::get_first_session_medias)

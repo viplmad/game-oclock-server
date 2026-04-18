@@ -6,8 +6,9 @@ use crate::entities::{
     AggregateGroupQuery, AggregateQuery, MediaIden, MediaListSearch, MediaSession,
     MediaSessionIden, QUERY_TIME_ALIAS, SESSION_ADDED_DATETIME_ALIAS, SESSION_DEVICE_ID_ALIAS,
     SESSION_END_DATE_ALIAS, SESSION_FINISHED_STATUS_ALIAS, SESSION_GROUP_ID_ALIAS,
-    SESSION_START_DATE_ALIAS, SESSION_STARTED_ALIAS, SESSION_UPDATED_DATETIME_ALIAS, SearchQuery,
-    SessionAggregateGroupSearch, SessionAggregateSearch, SessionListSearch,
+    SESSION_MEDIA_ID, SESSION_START_DATE_ALIAS, SESSION_STARTED_ALIAS,
+    SESSION_UPDATED_DATETIME_ALIAS, SearchQuery, SessionAggregateGroupSearch,
+    SessionAggregateSearch, SessionListSearch,
 };
 use crate::errors::SearchErrors;
 
@@ -127,6 +128,18 @@ pub fn select_all_by_user_id_and_media_id(
     apply_search(select, search)
 }
 
+pub fn select_all_by_user_id(
+    user_id: &Uuid,
+    search: SessionListSearch,
+) -> Result<SearchQuery, SearchErrors> {
+    let mut select = Query::select();
+
+    from_and_where_user_id(&mut select, user_id);
+    add_fields(&mut select);
+
+    apply_search(select, search)
+}
+
 pub fn aggregate_all_by_user_id_and_media_id(
     user_id: &Uuid,
     media_id: &Uuid,
@@ -227,6 +240,10 @@ pub fn select_all_last_media_with_session_with_search_by_start_datetime_gte_and_
 fn add_join_fields(select: &mut SelectStatement) {
     select
         .expr_as(
+            Expr::col((MediaSessionIden::Table, MediaSessionIden::MediaId)),
+            Alias::new(SESSION_MEDIA_ID),
+        )
+        .expr_as(
             Expr::col((MediaSessionIden::Table, MediaSessionIden::StartDate)),
             Alias::new(SESSION_START_DATE_ALIAS),
         )
@@ -259,44 +276,6 @@ fn add_join_fields(select: &mut SelectStatement) {
             Alias::new(SESSION_UPDATED_DATETIME_ALIAS),
         )
         .expr_as(derived_time_expr(), Alias::new(QUERY_TIME_ALIAS));
-}
-
-pub fn select_all_medias_order_by_start_datetime_desc(user_id: &Uuid) -> SelectStatement {
-    let mut select = media_query::select_all(user_id);
-
-    join_media_session(&mut select);
-    order_by_start_datetime_desc(&mut select);
-
-    select
-}
-
-pub fn select_all_medias_by_start_datetime_gte_and_start_datetime_lte_order_by_start_datetime_desc(
-    user_id: &Uuid,
-    start_datetime: DateTime<Utc>,
-    end_datetime: DateTime<Utc>,
-) -> SelectStatement {
-    let mut select = select_all_medias_order_by_start_datetime_desc(user_id);
-
-    where_start_datetime_gte_and_start_datetime_lte(&mut select, start_datetime, end_datetime);
-
-    select
-}
-
-pub fn select_all_medias_session_by_start_datetime_gte_and_start_datetime_lte_order_by_start_datetime_desc(
-    user_id: &Uuid,
-    start_datetime: DateTime<Utc>,
-    end_datetime: DateTime<Utc>,
-) -> impl QueryStatementWriter {
-    let mut select =
-        select_all_medias_by_start_datetime_gte_and_start_datetime_lte_order_by_start_datetime_desc(
-            user_id,
-            start_datetime,
-            end_datetime,
-        );
-
-    add_join_fields(&mut select);
-
-    select
 }
 
 pub fn insert(media_session: &MediaSession) -> impl QueryStatementWriter {
@@ -424,27 +403,6 @@ fn where_optional_start_datetime_gte_and_start_datetime_lte(
         select
             .and_where(Expr::col((MediaSessionIden::Table, MediaSessionIden::StartDate)).lte(end));
     }
-}
-
-fn where_start_datetime_gte_and_start_datetime_lte(
-    select: &mut SelectStatement,
-    start_datetime: DateTime<Utc>,
-    end_datetime: DateTime<Utc>,
-) {
-    select
-        .and_where(
-            Expr::col((MediaSessionIden::Table, MediaSessionIden::StartDate)).gte(start_datetime),
-        )
-        .and_where(
-            Expr::col((MediaSessionIden::Table, MediaSessionIden::StartDate)).lte(end_datetime),
-        );
-}
-
-fn order_by_start_datetime_desc(select: &mut SelectStatement) {
-    select.order_by(
-        (MediaSessionIden::Table, MediaSessionIden::StartDate),
-        Order::Desc,
-    );
 }
 
 fn add_fields(select: &mut SelectStatement) {

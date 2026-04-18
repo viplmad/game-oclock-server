@@ -49,6 +49,15 @@ impl MediaSessionRepository {
         fetch_all_search(&self.pool, query).await
     }
 
+    pub async fn search_all(
+        &self,
+        user_id: &Uuid,
+        search: SessionListSearch,
+    ) -> Result<PageResult<MediaSessionWithTime>, SearchErrors> {
+        let query = media_session_query::select_all_by_user_id(user_id, search)?;
+        fetch_all_search(&self.pool, query).await
+    }
+
     pub async fn aggregate_all_by_media_id(
         &self,
         user_id: &Uuid,

@@ -26,6 +26,7 @@ pub struct MediaWithStateWithSession {
     pub state_updated_datetime: DateTime<Utc>,
     // Session
     pub query_time: PgInterval,
+    pub session_media_id: Uuid,
     pub session_start_date: DateTime<Utc>,
     pub session_end_date: DateTime<Utc>,
     pub session_device_id: Option<Uuid>,
