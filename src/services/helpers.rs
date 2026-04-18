@@ -7,8 +7,8 @@ use crate::errors::{
     ApiErrors, MappingError, RepositoryError, SearchErrors, error_message_builder,
 };
 use crate::models::{
-    AggregateResultDTO, AggregateSearchDTO, FilterDTO, ListSearchDTO, Merge, ModelInfo,
-    PageResultDTO,
+    AggregateResultDTO, AggregateSearchDTO, DurationDef, FilterDTO, ListSearchDTO, Merge,
+    ModelInfo, PageResultDTO,
 };
 
 pub fn handle_result<E, T>(repository_result: Result<E, RepositoryError>) -> Result<E, ApiErrors>
@@ -114,7 +114,7 @@ where
     })?;
     Ok(match entity_search {
         AggregateResult::Integer(i) => AggregateResultDTO::Integer(i),
-        AggregateResult::Duration(d) => AggregateResultDTO::Duration(d),
+        AggregateResult::Duration(d) => AggregateResultDTO::Duration(DurationDef::from(d)),
     })
 }
 

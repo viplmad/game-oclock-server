@@ -31,8 +31,10 @@ where
     pub size: u64,
 }
 
+#[derive(ToSchema)]
 pub enum AggregateResultDTO {
     Integer(i64),
+    #[schema(value_type = String)]
     Duration(DurationDef),
 }
 

@@ -1,4 +1,4 @@
-use crate::models::DurationDef;
+use sqlx::postgres::types::PgInterval;
 
 pub struct PageResult<E> {
     pub data: Vec<E>,
@@ -8,5 +8,5 @@ pub struct PageResult<E> {
 
 pub enum AggregateResult {
     Integer(i64),
-    Duration(DurationDef),
+    Duration(PgInterval),
 }

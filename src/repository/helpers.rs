@@ -6,7 +6,6 @@ use crate::entities::{
     AggregateQuery, AggregateResult, AggregateType, FieldType, PageResult, SearchQuery,
 };
 use crate::errors::{RepositoryError, SearchErrors};
-use crate::models::DurationDef;
 
 pub(super) async fn fetch_one<'c, X, T>(
     executor: X,
@@ -154,7 +153,7 @@ where
     {
         return fetch_one(executor, aggregate_query.query)
             .await
-            .map(|tuple: (PgInterval,)| AggregateResult::Duration(DurationDef::from(tuple.0)))
+            .map(|tuple: (PgInterval,)| AggregateResult::Duration(tuple.0))
             .map_err(SearchErrors::Repository);
     }
 

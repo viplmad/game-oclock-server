@@ -1,9 +1,9 @@
 use actix_web::{Responder, delete, get, post, web};
 
 use crate::models::{
-    AggregateSearchDTO, DateTimeDTO, ErrorMessage, ItemId, ListSearchDTO, LoggedUser,
-    MediaSessionPageResult, NewSessionDTO, OptionalStartEndDateQuery, QuicksearchQuery, SessionDTO,
-    SessionPageResult,
+    AggregateResultDTO, AggregateSearchDTO, DateTimeDTO, ErrorMessage, ItemId, ListSearchDTO,
+    LoggedUser, MediaSessionPageResult, NewSessionDTO, OptionalStartEndDateQuery, QuicksearchQuery,
+    SessionDTO, SessionPageResult,
 };
 use crate::services::{MediaSessionService, MediaWithSessionService};
 
@@ -56,7 +56,7 @@ pub async fn get_media_sessions(
     ),
     request_body(content = AggregateSearchDTO, description = "Query", content_type = "application/json"),
     responses(
-        (status = 200, description = "Sessions aggregate obtained", body = u64, content_type = "application/json"),
+        (status = 200, description = "Sessions aggregate obtained", body = AggregateResultDTO, content_type = "application/json"),
         (status = 401, description = "Unauthorized", body = ErrorMessage, content_type = "application/json"),
         (status = 403, description = "Forbidden", body = ErrorMessage, content_type = "application/json"),
         (status = 404, description = "Media not found", body = ErrorMessage, content_type = "application/json"),
