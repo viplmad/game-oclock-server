@@ -12,3 +12,5 @@ mod search_mapper;
 mod session_mapper;
 mod tag_mapper;
 mod user_mapper;
+
+pub use search_mapper::convert_value;

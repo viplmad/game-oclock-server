@@ -87,36 +87,44 @@ pub enum DateHistogramInterval {
 
 /// Filter
 #[derive(Deserialize, ToSchema)]
-pub struct FilterDTO {
+#[serde(tag = "operator")]
+pub enum FilterDTO {
+    Eq(SingleValueFilterDTO),
+    NotEq(SingleValueFilterDTO),
+    Gt(SingleValueFilterDTO),
+    Gte(SingleValueFilterDTO),
+    Lt(SingleValueFilterDTO),
+    Lte(SingleValueFilterDTO),
+    In(MultipleValuesFilterDTO),
+    NotIn(MultipleValuesFilterDTO),
+    StartsWith(SingleValueFilterDTO),
+    NotStartsWith(SingleValueFilterDTO),
+    EndsWith(SingleValueFilterDTO),
+    NotEndsWith(SingleValueFilterDTO),
+    Contains(SingleValueFilterDTO),
+    NotContains(SingleValueFilterDTO),
+    Null(NoValueFilterDTO),
+    NotNull(NoValueFilterDTO),
+}
+
+#[derive(Deserialize, ToSchema)]
+pub struct SingleValueFilterDTO {
     pub field: String,
-    pub value: SearchValue,
-    pub operator: OperatorType,
+    pub value: String,
     pub chain_operator: Option<ChainOperatorType>,
 }
 
-#[derive(Clone, Deserialize, ToSchema)]
-#[serde(untagged)]
-pub enum SearchValue {
-    Value(String),
-    Values(Vec<String>),
+#[derive(Deserialize, ToSchema)]
+pub struct MultipleValuesFilterDTO {
+    pub field: String,
+    pub value: Vec<String>,
+    pub chain_operator: Option<ChainOperatorType>,
 }
 
-#[derive(Clone, Deserialize, ToSchema)]
-pub enum OperatorType {
-    Eq,
-    NotEq,
-    Gt,
-    Gte,
-    Lt,
-    Lte,
-    In,
-    NotIn,
-    StartsWith,
-    NotStartsWith,
-    EndsWith,
-    NotEndsWith,
-    Contains,
-    NotContains,
+#[derive(Deserialize, ToSchema)]
+pub struct NoValueFilterDTO {
+    pub field: String,
+    pub chain_operator: Option<ChainOperatorType>,
 }
 
 #[derive(Clone, Deserialize, ToSchema)]

@@ -47,13 +47,13 @@ pub enum AggregateMetric<T: TableIden> {
 pub struct AggregateSumMetric<T: TableIden> {
     pub kind: AggregateType,
     pub field: FieldIden<T>,
-    pub default_value: Option<FieldSearchValue>,
+    pub default_value: Option<String>,
 }
 
 pub struct AggregateCountMetric<T: TableIden> {
     pub kind: AggregateType,
     pub field: FieldIden<T>,
-    pub default_value: Option<FieldSearchValue>,
+    pub default_value: Option<String>,
     pub distinct: bool,
 }
 
@@ -74,11 +74,7 @@ impl<T: TableIden> AggregateMetric<T> {
 }
 
 impl<T: TableIden> AggregateCountMetric<T> {
-    pub fn new(
-        field: FieldIden<T>,
-        default_value: Option<FieldSearchValue>,
-        distinct: bool,
-    ) -> Self {
+    pub fn new(field: FieldIden<T>, default_value: Option<String>, distinct: bool) -> Self {
         Self {
             kind: AggregateType::Count,
             field,
@@ -89,7 +85,7 @@ impl<T: TableIden> AggregateCountMetric<T> {
 }
 
 impl<T: TableIden> AggregateSumMetric<T> {
-    pub fn new(field: FieldIden<T>, default_value: Option<FieldSearchValue>) -> Self {
+    pub fn new(field: FieldIden<T>, default_value: Option<String>) -> Self {
         Self {
             kind: AggregateType::Sum,
             field,
@@ -106,12 +102,12 @@ pub enum AggregateGroup<T: TableIden> {
 
 pub struct AggregateFieldGroup<T: TableIden> {
     pub field: FieldIden<T>,
-    pub default_value: Option<FieldSearchValue>,
+    pub default_value: Option<String>,
 }
 
 pub struct AggregateDateHistogramGroup<T: TableIden> {
     pub field: FieldIden<T>,
-    pub default_value: Option<FieldSearchValue>,
+    pub default_value: Option<String>,
     pub interval: GroupDateHistogramInterval,
 }
 
@@ -125,7 +121,7 @@ pub enum GroupDateHistogramInterval {
 }
 
 impl<T: TableIden> AggregateFieldGroup<T> {
-    pub fn new(field: FieldIden<T>, default_value: Option<FieldSearchValue>) -> Self {
+    pub fn new(field: FieldIden<T>, default_value: Option<String>) -> Self {
         Self {
             field,
             default_value,
@@ -136,7 +132,7 @@ impl<T: TableIden> AggregateFieldGroup<T> {
 impl<T: TableIden> AggregateDateHistogramGroup<T> {
     pub fn new(
         field: FieldIden<T>,
-        default_value: Option<FieldSearchValue>,
+        default_value: Option<String>,
         interval: GroupDateHistogramInterval,
     ) -> Self {
         Self {
@@ -148,60 +144,92 @@ impl<T: TableIden> AggregateDateHistogramGroup<T> {
 }
 
 /// Filter
-pub struct Filter<T: TableIden> {
+pub enum Filter<T: TableIden> {
+    Equal(SingleValueFilter<T>),
+    NotEqual(SingleValueFilter<T>),
+    GreaterThan(SingleValueFilter<T>),
+    GreaterThanOrEqual(SingleValueFilter<T>),
+    SmallerThan(SingleValueFilter<T>),
+    SmallerThanOrEqual(SingleValueFilter<T>),
+    In(MultipleValuesFilter<T>),
+    NotIn(MultipleValuesFilter<T>),
+    StartsWith(SingleValueFilter<T>),
+    NotStartsWith(SingleValueFilter<T>),
+    EndsWith(SingleValueFilter<T>),
+    NotEndsWith(SingleValueFilter<T>),
+    Contains(SingleValueFilter<T>),
+    NotContains(SingleValueFilter<T>),
+    Null(NoValueFilter<T>),
+    NotNull(NoValueFilter<T>),
+}
+
+pub struct SingleValueFilter<T: TableIden> {
     pub field: FieldIden<T>,
-    pub value: FieldValue,
-    pub operator: FilterOperator,
+    pub value: String,
+    pub chain_operator: BinOper,
+}
+
+pub struct MultipleValuesFilter<T: TableIden> {
+    pub field: FieldIden<T>,
+    pub value: Vec<String>,
+    pub chain_operator: BinOper,
+}
+
+pub struct NoValueFilter<T: TableIden> {
+    pub field: FieldIden<T>,
     pub chain_operator: BinOper,
 }
 
 impl<T: TableIden> Filter<T> {
-    pub fn new(
-        field: FieldIden<T>,
-        value: FieldValue,
-        operator: FilterOperator,
-        chain_operator: BinOper,
-    ) -> Self {
+    pub fn chain_operator(&self) -> BinOper {
+        match self {
+            Filter::Equal(f) => f.chain_operator.clone(),
+            Filter::NotEqual(f) => f.chain_operator.clone(),
+            Filter::GreaterThan(f) => f.chain_operator.clone(),
+            Filter::GreaterThanOrEqual(f) => f.chain_operator.clone(),
+            Filter::SmallerThan(f) => f.chain_operator.clone(),
+            Filter::SmallerThanOrEqual(f) => f.chain_operator.clone(),
+            Filter::In(f) => f.chain_operator.clone(),
+            Filter::NotIn(f) => f.chain_operator.clone(),
+            Filter::StartsWith(f) => f.chain_operator.clone(),
+            Filter::NotStartsWith(f) => f.chain_operator.clone(),
+            Filter::EndsWith(f) => f.chain_operator.clone(),
+            Filter::NotEndsWith(f) => f.chain_operator.clone(),
+            Filter::Contains(f) => f.chain_operator.clone(),
+            Filter::NotContains(f) => f.chain_operator.clone(),
+            Filter::Null(f) => f.chain_operator.clone(),
+            Filter::NotNull(f) => f.chain_operator.clone(),
+        }
+    }
+}
+
+impl<T: TableIden> SingleValueFilter<T> {
+    pub fn new(field: FieldIden<T>, value: String, chain_operator: BinOper) -> Self {
         Self {
             field,
             value,
-            operator,
             chain_operator,
         }
     }
 }
 
-pub enum FieldValue {
-    Value(FieldSearchValue),
-    Values(FieldSearchValues),
+impl<T: TableIden> MultipleValuesFilter<T> {
+    pub fn new(field: FieldIden<T>, value: Vec<String>, chain_operator: BinOper) -> Self {
+        Self {
+            field,
+            value,
+            chain_operator,
+        }
+    }
 }
 
-pub struct FieldSearchValue {
-    pub kind: FieldType,
-    pub value: String,
-}
-
-pub struct FieldSearchValues {
-    pub kind: FieldType,
-    pub values: Vec<String>,
-}
-
-#[derive(Clone)]
-pub enum FilterOperator {
-    Equal,
-    NotEqual,
-    GreaterThan,
-    GreaterThanOrEqual,
-    SmallerThan,
-    SmallerThanOrEqual,
-    In,
-    NotIn,
-    StartsWith,
-    NotStartsWith,
-    EndsWith,
-    NotEndsWith,
-    Contains,
-    NotContains,
+impl<T: TableIden> NoValueFilter<T> {
+    pub fn new(field: FieldIden<T>, chain_operator: BinOper) -> Self {
+        Self {
+            field,
+            chain_operator,
+        }
+    }
 }
 
 /// Sort

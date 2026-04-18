@@ -9,7 +9,7 @@ use crate::errors::{
 };
 use crate::models::{
     AggregateGroupResultKeyDTO, AggregateGroupSearchDTO, AggregateResultDTO, AggregateSearchDTO,
-    FilterDTO, ListSearchDTO, Merge, ModelInfo, PageResultDTO,
+    FilterDTO, ListSearchDTO, Merge, ModelInfo, PageResultDTO, SingleValueFilterDTO,
 };
 
 pub fn handle_result<E, T>(repository_result: Result<E, RepositoryError>) -> Result<E, ApiErrors>
@@ -352,11 +352,12 @@ where
     if let Some(quicksearch_value) = quicksearch {
         let mut quicksearch_filters: Vec<FilterDTO> = T::UNIQUE_FIELDS
             .iter()
-            .map(move |field| crate::models::FilterDTO {
-                field: field.to_string(),
-                operator: crate::models::OperatorType::Contains,
-                value: crate::models::SearchValue::Value(quicksearch_value.clone()),
-                chain_operator: Some(crate::models::ChainOperatorType::Or),
+            .map(move |field| {
+                crate::models::FilterDTO::Contains(SingleValueFilterDTO {
+                    field: field.to_string(),
+                    value: quicksearch_value.clone(),
+                    chain_operator: Some(crate::models::ChainOperatorType::Or),
+                })
             })
             .collect();
 

@@ -3,10 +3,12 @@ use sea_query::{BinOper, Cond, Expr, ExprTrait, Func, LikeExpr, SelectStatement,
 use crate::entities::{
     AggregateCountMetric, AggregateDateHistogramGroup, AggregateFieldGroup, AggregateGroup,
     AggregateGroupQuery, AggregateGroupSearch, AggregateMetric, AggregateQuery, AggregateSearch,
-    AggregateSumMetric, AggregateType, ColIden, FieldIden, FieldSearchValue, FieldType, FieldValue,
-    Filter, FilterOperator, GroupDateHistogramInterval, ListSearch, SearchQuery, Sort, TableIden,
+    AggregateSumMetric, AggregateType, ColIden, FieldIden, FieldType, Filter,
+    GroupDateHistogramInterval, ListSearch, MultipleValuesFilter, SearchQuery, SingleValueFilter,
+    Sort, TableIden,
 };
 use crate::errors::{MappingError, SearchErrors};
+use crate::mappers::convert_value;
 
 const DEFAULT_PAGE_SIZE: u64 = 500;
 const INITIAL_PAGE: u64 = 0;
@@ -81,62 +83,97 @@ fn apply_filter<I: 'static + TableIden + Clone + Copy>(
             let mut ors = Cond::any();
 
             for filter in filters {
-                let col = build_field_expr(filter.field);
-                let expr = match filter.value {
-                    FieldValue::Value(value) => match filter.operator {
-                        FilterOperator::Equal => col.eq(Value::try_from(value)?),
-                        FilterOperator::NotEqual => col.ne(Value::try_from(value)?),
-                        FilterOperator::GreaterThan => col.gt(Value::try_from(value)?),
-                        FilterOperator::GreaterThanOrEqual => col.gte(Value::try_from(value)?),
-                        FilterOperator::SmallerThan => col.lt(Value::try_from(value)?),
-                        FilterOperator::SmallerThanOrEqual => col.lte(Value::try_from(value)?),
-                        FilterOperator::StartsWith => {
-                            to_lower(col).like(LikeExpr::new(format_like_starts_with(value)))
-                        }
-                        FilterOperator::NotStartsWith => {
-                            to_lower(col).not_like(LikeExpr::new(format_like_starts_with(value)))
-                        }
-                        FilterOperator::EndsWith => {
-                            to_lower(col).like(LikeExpr::new(format_like_ends_with(value)))
-                        }
-                        FilterOperator::NotEndsWith => {
-                            to_lower(col).not_like(LikeExpr::new(format_like_ends_with(value)))
-                        }
-                        FilterOperator::Contains => {
-                            to_lower(col).like(LikeExpr::new(format_like_contains(value)))
-                        }
-                        FilterOperator::NotContains => {
-                            to_lower(col).not_like(LikeExpr::new(format_like_contains(value)))
-                        }
-                        _ => Err(MappingError(String::from(
-                            "Operator not supported with single value.",
-                        )))?,
-                    },
-                    FieldValue::Values(value) => {
-                        let kind = value.kind;
-                        let in_values = value
-                            .values
-                            .into_iter()
-                            .map(|v| {
-                                let field_search_value = crate::entities::FieldSearchValue {
-                                    kind: kind.clone(),
-                                    value: v,
-                                };
-                                Value::try_from(field_search_value)
-                            })
-                            .collect::<Result<Vec<Value>, MappingError>>()?;
+                let chain_operator = filter.chain_operator();
+                let expr = match filter {
+                    Filter::Equal(f) => {
+                        let (col, value) = build_single_value(f)?;
 
-                        match filter.operator {
-                            FilterOperator::In => col.is_in(in_values),
-                            FilterOperator::NotIn => col.is_not_in(in_values),
-                            _ => Err(MappingError(String::from(
-                                "Operator not supported with multiple values.",
-                            )))?,
-                        }
+                        col.eq(value)
+                    }
+                    Filter::NotEqual(f) => {
+                        let (col, value) = build_single_value(f)?;
+
+                        col.ne(value)
+                    }
+                    Filter::GreaterThan(f) => {
+                        let (col, value) = build_single_value(f)?;
+
+                        col.gt(value)
+                    }
+                    Filter::GreaterThanOrEqual(f) => {
+                        let (col, value) = build_single_value(f)?;
+
+                        col.gte(value)
+                    }
+                    Filter::SmallerThan(f) => {
+                        let (col, value) = build_single_value(f)?;
+
+                        col.lt(value)
+                    }
+                    Filter::SmallerThanOrEqual(f) => {
+                        let (col, value) = build_single_value(f)?;
+
+                        col.lte(value)
+                    }
+                    Filter::In(f) => {
+                        let (col, values) = build_multiple_values(f)?;
+
+                        col.is_in(values)
+                    }
+                    Filter::NotIn(f) => {
+                        let (col, values) = build_multiple_values(f)?;
+
+                        col.is_not_in(values)
+                    }
+                    Filter::StartsWith(f) => {
+                        let value = &f.value;
+                        let col = build_field_expr(f.field);
+
+                        to_lower(col).like(LikeExpr::new(format_like_starts_with(value)))
+                    }
+                    Filter::NotStartsWith(f) => {
+                        let value = &f.value;
+                        let col = build_field_expr(f.field);
+
+                        to_lower(col).not_like(LikeExpr::new(format_like_starts_with(value)))
+                    }
+                    Filter::EndsWith(f) => {
+                        let value = &f.value;
+                        let col = build_field_expr(f.field);
+
+                        to_lower(col).like(LikeExpr::new(format_like_ends_with(value)))
+                    }
+                    Filter::NotEndsWith(f) => {
+                        let value = &f.value;
+                        let col = build_field_expr(f.field);
+
+                        to_lower(col).not_like(LikeExpr::new(format_like_ends_with(value)))
+                    }
+                    Filter::Contains(f) => {
+                        let value = &f.value;
+                        let col = build_field_expr(f.field);
+
+                        to_lower(col).like(LikeExpr::new(format_like_contains(value)))
+                    }
+                    Filter::NotContains(f) => {
+                        let value = &f.value;
+                        let col = build_field_expr(f.field);
+
+                        to_lower(col).not_like(LikeExpr::new(format_like_contains(value)))
+                    }
+                    Filter::Null(f) => {
+                        let col = build_field_expr(f.field);
+
+                        col.is_null()
+                    }
+                    Filter::NotNull(f) => {
+                        let col = build_field_expr(f.field);
+
+                        col.is_not_null()
                     }
                 };
 
-                match filter.chain_operator {
+                match chain_operator {
                     BinOper::And => ands = ands.add(expr),
                     BinOper::Or => ors = ors.add(expr),
                     _ => unreachable!(),
@@ -151,6 +188,32 @@ fn apply_filter<I: 'static + TableIden + Clone + Copy>(
             }
         }
     })
+}
+
+fn build_single_value<I: 'static + TableIden + Clone + Copy>(
+    filter: SingleValueFilter<I>,
+) -> Result<(Expr, Value), MappingError> {
+    let field_kind = filter.field.kind();
+    let col = build_field_expr(filter.field);
+
+    let value = convert_value(&filter.value, field_kind)?;
+
+    Ok((col, value))
+}
+
+fn build_multiple_values<I: 'static + TableIden + Clone + Copy>(
+    filter: MultipleValuesFilter<I>,
+) -> Result<(Expr, Vec<Value>), MappingError> {
+    let field_kind = filter.field.kind();
+    let col = build_field_expr(filter.field);
+
+    let values = filter
+        .value
+        .iter()
+        .map(|v| convert_value(&v, field_kind.clone()))
+        .collect::<Result<Vec<Value>, MappingError>>()?;
+
+    Ok((col, values))
 }
 
 fn apply_sort<I: 'static + TableIden + Clone + Copy>(
@@ -199,9 +262,10 @@ fn apply_aggregate_count_metric<I: 'static + TableIden + Clone + Copy>(
     select: &mut SelectStatement,
     aggr: AggregateCountMetric<I>,
 ) {
+    let field_kind = aggr.field.kind();
     let col = build_field_expr(aggr.field);
 
-    let expr = coalesce_default(col, aggr.default_value);
+    let expr = coalesce_default(col, aggr.default_value, field_kind);
 
     let expr = match aggr.distinct {
         true => expr.count_distinct(),
@@ -215,9 +279,10 @@ fn apply_aggregate_sum_metric<I: 'static + TableIden + Clone + Copy>(
     select: &mut SelectStatement,
     aggr: AggregateSumMetric<I>,
 ) {
+    let field_kind = aggr.field.kind();
     let col = build_field_expr(aggr.field);
 
-    let expr = coalesce_default(col, aggr.default_value);
+    let expr = coalesce_default(col, aggr.default_value, field_kind);
 
     let expr = expr.sum();
 
@@ -238,9 +303,10 @@ fn apply_aggregate_field_group<I: 'static + TableIden + Clone + Copy>(
     select: &mut SelectStatement,
     aggr: AggregateFieldGroup<I>,
 ) {
+    let field_kind = aggr.field.kind();
     let col = build_field_expr(aggr.field);
 
-    let expr = coalesce_default(col, aggr.default_value);
+    let expr = coalesce_default(col, aggr.default_value, field_kind);
 
     select.expr(expr.clone());
     select.add_group_by([expr.into()]);
@@ -250,9 +316,10 @@ fn apply_aggregate_date_histogram_group<I: 'static + TableIden + Clone + Copy>(
     select: &mut SelectStatement,
     aggr: AggregateDateHistogramGroup<I>,
 ) {
+    let field_kind = aggr.field.kind();
     let col = build_field_expr(aggr.field);
 
-    let expr = coalesce_default(col, aggr.default_value);
+    let expr = coalesce_default(col, aggr.default_value, field_kind);
 
     let expr = match aggr.interval {
         GroupDateHistogramInterval::Year => Func::cust(DatePart).arg("year").arg(expr),
@@ -272,18 +339,18 @@ fn to_lower(col: Expr) -> Expr {
     Expr::expr(Func::lower(col))
 }
 
-fn format_like_starts_with(search: FieldSearchValue) -> String {
-    let value: &str = &search.value.to_lowercase();
+fn format_like_starts_with(search: &str) -> String {
+    let value: &str = &search.to_lowercase();
     format!("{value}{LIKE_SYMBOL}")
 }
 
-fn format_like_ends_with(search: FieldSearchValue) -> String {
-    let value: &str = &search.value.to_lowercase();
+fn format_like_ends_with(search: &str) -> String {
+    let value: &str = &search.to_lowercase();
     format!("{LIKE_SYMBOL}{value}")
 }
 
-fn format_like_contains(search: FieldSearchValue) -> String {
-    let value: &str = &search.value.to_lowercase();
+fn format_like_contains(search: &str) -> String {
+    let value: &str = &search.to_lowercase();
     format!("{LIKE_SYMBOL}{value}{LIKE_SYMBOL}")
 }
 
@@ -300,18 +367,12 @@ fn build_col_expr<I: 'static + TableIden + Clone + Copy>(field: ColIden<I>) -> E
     Expr::col((table, field))
 }
 
-fn coalesce_default(column: Expr, default_value: Option<FieldSearchValue>) -> Expr {
+fn coalesce_default(column: Expr, default_value: Option<String>, field_kind: FieldType) -> Expr {
     match default_value {
-        Some(def) => {
-            let field_search_value = crate::entities::FieldSearchValue {
-                kind: def.kind,
-                value: def.value,
-            };
-            Expr::expr(Func::coalesce([
-                column.into(),
-                Value::try_from(field_search_value).unwrap().into(),
-            ]))
-        }
+        Some(def) => Expr::expr(Func::coalesce([
+            column.into(),
+            convert_value(&def, field_kind).unwrap().into(),
+        ])),
         None => column,
     }
 }
