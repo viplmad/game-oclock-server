@@ -2,9 +2,9 @@ use sea_query::{BinOper, Cond, Expr, Func, LikeExpr, SelectStatement, Value};
 
 use crate::entities::{
     AggregateCountMetric, AggregateDateHistogramGroup, AggregateFieldGroup, AggregateGroup,
-    AggregateGroupSearch, AggregateMetric, AggregateSearch, AggregateSumMetric,
-    DateHistogramInterval, FieldIden, FieldSearchValue, FieldValue, Filter, FilterOperator,
-    ListSearch, SearchQuery, Sort, TableIden,
+    AggregateGroupSearch, AggregateMetric, AggregateQuery, AggregateSearch, AggregateSumMetric,
+    AggregateType, ColIden, DateHistogramInterval, FieldIden, FieldSearchValue, FieldType,
+    FieldValue, Filter, FilterOperator, ListSearch, SearchQuery, Sort, TableIden,
 };
 use crate::errors::{MappingError, SearchErrors};
 
@@ -42,12 +42,16 @@ pub fn apply_search_filter<I: 'static + TableIden + Clone + Copy>(
 pub fn apply_aggregate_search<I: 'static + TableIden + Clone + Copy>(
     mut select: SelectStatement,
     search: AggregateSearch<I>,
-) -> Result<SelectStatement, SearchErrors> {
+) -> Result<AggregateQuery, SearchErrors> {
     apply_filter(&mut select, search.filter).map_err(SearchErrors::Mapping)?;
 
-    apply_aggregate_metric(&mut select, search.aggr);
+    let (kind, field_kind) = apply_aggregate_metric(&mut select, search.aggr);
 
-    Ok(select)
+    Ok(AggregateQuery {
+        query: select,
+        kind,
+        field_kind,
+    })
 }
 
 pub fn apply_aggregate_group_search<I: 'static + TableIden + Clone + Copy>(
@@ -73,7 +77,7 @@ fn apply_filter<I: 'static + TableIden + Clone + Copy>(
             let mut ors = Cond::any();
 
             for filter in filters {
-                let col = build_col_expr(filter.field);
+                let col = build_field_expr(filter.field);
                 let expr = match filter.value {
                     FieldValue::Value(value) => match filter.operator {
                         FilterOperator::Equal => col.eq(Value::try_from(value)?),
@@ -151,7 +155,7 @@ fn apply_sort<I: 'static + TableIden + Clone + Copy>(
 ) {
     if let Some(sorts) = sort {
         for sort in sorts {
-            let col = build_col_expr(sort.field);
+            let col = build_field_expr(sort.field);
             let order = sort.order;
 
             select.order_by_expr(col.into(), order);
@@ -176,18 +180,22 @@ fn apply_pagination(
 fn apply_aggregate_metric<I: 'static + TableIden + Clone + Copy>(
     select: &mut SelectStatement,
     aggr: AggregateMetric<I>,
-) {
+) -> (AggregateType, FieldType) {
+    let kind = aggr.kind();
+    let field_kind = aggr.field_kind();
     match aggr {
         AggregateMetric::Count(c) => apply_aggregate_count_metric(select, c),
         AggregateMetric::Sum(s) => apply_aggregate_sum_metric(select, s),
     }
+
+    (kind, field_kind)
 }
 
 fn apply_aggregate_count_metric<I: 'static + TableIden + Clone + Copy>(
     select: &mut SelectStatement,
     aggr: AggregateCountMetric<I>,
 ) {
-    let col = build_col_expr(aggr.field);
+    let col = build_field_expr(aggr.field);
 
     let expr = coalesce_default(col, aggr.default_value);
 
@@ -203,7 +211,7 @@ fn apply_aggregate_sum_metric<I: 'static + TableIden + Clone + Copy>(
     select: &mut SelectStatement,
     aggr: AggregateSumMetric<I>,
 ) {
-    let col = build_col_expr(aggr.field);
+    let col = build_field_expr(aggr.field);
 
     let expr = coalesce_default(col, aggr.default_value);
 
@@ -226,7 +234,7 @@ fn apply_aggregate_field_group<I: 'static + TableIden + Clone + Copy>(
     select: &mut SelectStatement,
     aggr: AggregateFieldGroup<I>,
 ) {
-    let col = build_col_expr(aggr.field);
+    let col = build_field_expr(aggr.field);
 
     let expr = coalesce_default(col, aggr.default_value);
 
@@ -238,7 +246,7 @@ fn apply_aggregate_date_histogram_group<I: 'static + TableIden + Clone + Copy>(
     select: &mut SelectStatement,
     aggr: AggregateDateHistogramGroup<I>,
 ) {
-    let col = build_col_expr(aggr.field);
+    let col = build_field_expr(aggr.field);
 
     let expr = coalesce_default(col, aggr.default_value);
 
@@ -271,7 +279,14 @@ fn format_like_contains(search: FieldSearchValue) -> String {
     format!("{LIKE_SYMBOL}{value}{LIKE_SYMBOL}")
 }
 
-fn build_col_expr<I: 'static + TableIden + Clone + Copy>(field: FieldIden<I>) -> Expr {
+fn build_field_expr<I: 'static + TableIden + Clone + Copy>(field: FieldIden<I>) -> Expr {
+    match field {
+        FieldIden::Col(c) => build_col_expr(c),
+        FieldIden::Expr(e) => Expr::expr(e.expr),
+    }
+}
+
+fn build_col_expr<I: 'static + TableIden + Clone + Copy>(field: ColIden<I>) -> Expr {
     let table = field.table;
     let field = field.iden;
     Expr::col((table, field))

@@ -2,12 +2,13 @@ use std::future::Future;
 
 use chrono::{DateTime, NaiveDate, Utc};
 
-use crate::entities::PageResult;
+use crate::entities::{AggregateResult, PageResult};
 use crate::errors::{
     ApiErrors, MappingError, RepositoryError, SearchErrors, error_message_builder,
 };
 use crate::models::{
-    AggregateSearchDTO, FilterDTO, ListSearchDTO, Merge, ModelInfo, PageResultDTO,
+    AggregateResultDTO, AggregateSearchDTO, FilterDTO, ListSearchDTO, Merge, ModelInfo,
+    PageResultDTO,
 };
 
 pub fn handle_result<E, T>(repository_result: Result<E, RepositoryError>) -> Result<E, ApiErrors>
@@ -75,7 +76,7 @@ where
     })
 }
 
-pub(super) fn handle_get_aggregate_result<T>(
+pub(super) fn handle_get_count_result<T>(
     repository_result: Result<u64, SearchErrors>,
 ) -> Result<u64, ApiErrors>
 where
@@ -91,6 +92,29 @@ where
         SearchErrors::Repository(_) => {
             ApiErrors::UnknownError(error_message_builder::database_error(T::MODEL_NAME))
         }
+    })
+}
+
+pub(super) fn handle_get_aggregate_result<T>(
+    repository_result: Result<AggregateResult, SearchErrors>,
+) -> Result<AggregateResultDTO, ApiErrors>
+where
+    T: ModelInfo,
+{
+    let entity_search = repository_result.map_err(|err| match err {
+        SearchErrors::Mapping(map_err) => {
+            ApiErrors::InvalidParameter(error_message_builder::inner_error(
+                &error_message_builder::database_error(T::MODEL_NAME),
+                &map_err.0,
+            ))
+        }
+        SearchErrors::Repository(_) => {
+            ApiErrors::UnknownError(error_message_builder::database_error(T::MODEL_NAME))
+        }
+    })?;
+    Ok(match entity_search {
+        AggregateResult::Integer(i) => AggregateResultDTO::Integer(i),
+        AggregateResult::Duration(d) => AggregateResultDTO::Duration(d),
     })
 }
 

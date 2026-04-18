@@ -6,7 +6,7 @@ use crate::models::{ListSearchDTO, LocationDTO, LocationPageResult, NewLocationD
 use crate::repository::LocationRepository;
 
 use super::helpers::{
-    create_merged, handle_action_result, handle_already_exists_result, handle_get_aggregate_result,
+    create_merged, handle_action_result, handle_already_exists_result, handle_get_count_result,
     handle_get_list_paged_result, handle_get_result, handle_list_search_mapping,
     handle_not_found_result, handle_update_result, update_merged,
 };
@@ -49,7 +49,7 @@ impl LocationService {
         let search =
             handle_list_search_mapping::<LocationDTO, LocationListSearch>(search, quicksearch)?;
         let count_result = self.repository.count_all(user_id, search).await;
-        handle_get_aggregate_result::<LocationDTO>(count_result)
+        handle_get_count_result::<LocationDTO>(count_result)
     }
 
     pub async fn create_location(

@@ -51,7 +51,7 @@ pub struct AggregateSumMetricDTO {
 pub struct AggregateCountMetricDTO {
     pub field: String,
     pub default_value: Option<String>,
-    pub distinct: bool,
+    pub distinct: Option<bool>,
 }
 
 /// Aggregate group

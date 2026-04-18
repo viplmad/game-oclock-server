@@ -2,8 +2,8 @@ use serde::Serialize;
 use utoipa::ToSchema;
 
 use super::{
-    DeviceDTO, LocationAvailableDTO, LocationDTO, MediaAvailableDTO, MediaDTO, MediaSessionDTO,
-    MediaTagDTO, ModelInfo, SessionDTO, TagDTO, TagMediaDTO, UserDTO,
+    DeviceDTO, DurationDef, LocationAvailableDTO, LocationDTO, MediaAvailableDTO, MediaDTO,
+    MediaSessionDTO, MediaTagDTO, ModelInfo, SessionDTO, TagDTO, TagMediaDTO, UserDTO,
 };
 
 pub type DevicePageResult = PageResultDTO<DeviceDTO>;
@@ -29,4 +29,21 @@ where
     pub page: u64,
     /// Number of items per page
     pub size: u64,
+}
+
+pub enum AggregateResultDTO {
+    Integer(i64),
+    Duration(DurationDef),
+}
+
+impl Serialize for AggregateResultDTO {
+    fn serialize<S>(&self, serializer: S) -> Result<S::Ok, S::Error>
+    where
+        S: serde::Serializer,
+    {
+        match &self {
+            AggregateResultDTO::Integer(i) => i.serialize(serializer),
+            AggregateResultDTO::Duration(d) => d.serialize(serializer),
+        }
+    }
 }

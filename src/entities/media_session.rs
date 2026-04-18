@@ -1,11 +1,14 @@
 use std::str::FromStr;
 
 use chrono::{DateTime, Utc};
-use sea_query::enum_def;
+use sea_query::{Expr, enum_def};
 use sqlx::{FromRow, postgres::types::PgInterval};
 use uuid::Uuid;
 
-use super::{AggregateGroupSearch, AggregateSearch, FieldIden, FieldType, ListSearch, TableIden};
+use super::{
+    AggregateGroupSearch, AggregateSearch, ColIden, ExprIden, FieldIden, FieldType, ListSearch,
+    TableIden,
+};
 
 pub const QUERY_TIME_ALIAS: &str = "query_time";
 pub const SESSION_START_DATE_ALIAS: &str = "session_start_date";
@@ -60,36 +63,49 @@ impl FromStr for FieldIden<MediaSessionIden> {
 
     fn from_str(field: &str) -> Result<Self, Self::Err> {
         match field {
-            "media_id" => Ok(FieldIden::new(MediaSessionIden::MediaId, FieldType::String)),
-            "start_date" => Ok(FieldIden::new(
+            "time" => Ok(FieldIden::Expr(ExprIden::new::<MediaSessionIden>(
+                Expr::col((MediaSessionIden::Table, MediaSessionIden::EndDate)).sub(Expr::col((
+                    MediaSessionIden::Table,
+                    MediaSessionIden::StartDate,
+                ))),
+                FieldType::Interval,
+            ))),
+            "media_id" => Ok(FieldIden::Col(ColIden::new(
+                MediaSessionIden::MediaId,
+                FieldType::String,
+            ))),
+            "start_date" => Ok(FieldIden::Col(ColIden::new(
                 MediaSessionIden::StartDate,
                 FieldType::DateTime,
-            )),
-            "end_date" => Ok(FieldIden::new(
+            ))),
+            "end_date" => Ok(FieldIden::Col(ColIden::new(
                 MediaSessionIden::EndDate,
                 FieldType::DateTime,
-            )),
-            "device_id" => Ok(FieldIden::new(
+            ))),
+            "device_id" => Ok(FieldIden::Col(ColIden::new(
                 MediaSessionIden::DeviceId,
                 FieldType::String,
-            )),
-            "group_id" => Ok(FieldIden::new(MediaSessionIden::GroupId, FieldType::String)),
-            "started" => Ok(FieldIden::new(
+            ))),
+            "group_id" => Ok(FieldIden::Col(ColIden::new(
+                MediaSessionIden::GroupId,
+                FieldType::String,
+            ))),
+            "started" => Ok(FieldIden::Col(ColIden::new(
                 MediaSessionIden::Started,
                 FieldType::Boolean,
-            )),
-            "finished_status" => Ok(FieldIden::new(
+            ))),
+            "finished_status" => Ok(FieldIden::Col(ColIden::new(
                 MediaSessionIden::FinishedStatus,
                 FieldType::MediaStatus,
-            )),
-            "added_datetime" => Ok(FieldIden::new(
+            ))),
+            "added_datetime" => Ok(FieldIden::Col(ColIden::new(
                 MediaSessionIden::AddedDatetime,
                 FieldType::DateTime,
-            )),
-            "updated_datetime" => Ok(FieldIden::new(
+            ))),
+            "updated_datetime" => Ok(FieldIden::Col(ColIden::new(
                 MediaSessionIden::UpdatedDatetime,
                 FieldType::DateTime,
-            )),
+            ))),
             _ => Err(()),
         }
     }

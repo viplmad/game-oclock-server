@@ -5,7 +5,7 @@ use crate::errors::ApiErrors;
 use crate::models::{DeviceDTO, DevicePageResult, ListSearchDTO, MediaDTO, MediaPageResult};
 use crate::repository::MediaSessionDeviceRepository;
 use crate::services::helpers::{
-    handle_get_aggregate_result, handle_get_list_paged_result, handle_list_search_mapping,
+    handle_get_count_result, handle_get_list_paged_result, handle_list_search_mapping,
 };
 
 use super::{DeviceService, MediaService};
@@ -67,7 +67,7 @@ impl MediaSessionDeviceService {
             .repository
             .count_all_medias_with_session_device(user_id, device_id, search)
             .await;
-        handle_get_aggregate_result::<MediaDTO>(count_result)
+        handle_get_count_result::<MediaDTO>(count_result)
     }
 
     pub async fn search_media_session_devices(
@@ -103,6 +103,6 @@ impl MediaSessionDeviceService {
             .repository
             .count_all_devices_with_session_media(user_id, media_id, search)
             .await;
-        handle_get_aggregate_result::<DeviceDTO>(count_result)
+        handle_get_count_result::<DeviceDTO>(count_result)
     }
 }

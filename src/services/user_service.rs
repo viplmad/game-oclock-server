@@ -6,7 +6,7 @@ use crate::models::{ListSearchDTO, NewUserDTO, PasswordChangeDTO, UserDTO, UserP
 use crate::repository::UserRepository;
 
 use super::helpers::{
-    create_merged, handle_action_result, handle_already_exists_result, handle_get_aggregate_result,
+    create_merged, handle_action_result, handle_already_exists_result, handle_get_count_result,
     handle_get_list_paged_result, handle_get_result, handle_get_result_raw,
     handle_list_search_mapping, handle_not_found_result, handle_result, handle_update_result,
     update_merged,
@@ -55,7 +55,7 @@ impl UserService {
     ) -> Result<u64, ApiErrors> {
         let search = handle_list_search_mapping::<UserDTO, UserListSearch>(search, quicksearch)?;
         let count_result = self.repository.count_all(search).await;
-        handle_get_aggregate_result::<UserDTO>(count_result)
+        handle_get_count_result::<UserDTO>(count_result)
     }
 
     pub async fn create_user(

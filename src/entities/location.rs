@@ -5,7 +5,7 @@ use sea_query::enum_def;
 use sqlx::FromRow;
 use uuid::Uuid;
 
-use super::{FieldIden, FieldType, ListSearch, TableIden};
+use super::{ColIden, FieldIden, FieldType, ListSearch, TableIden};
 
 pub type LocationListSearch = ListSearch<LocationIden>;
 
@@ -29,17 +29,26 @@ impl FromStr for FieldIden<LocationIden> {
 
     fn from_str(field: &str) -> Result<Self, Self::Err> {
         match field {
-            "id" => Ok(FieldIden::new(LocationIden::Id, FieldType::String)),
-            "name" => Ok(FieldIden::new(LocationIden::Name, FieldType::String)),
-            "image_url" => Ok(FieldIden::new(LocationIden::ImageUrl, FieldType::String)),
-            "added_datetime" => Ok(FieldIden::new(
+            "id" => Ok(FieldIden::Col(ColIden::new(
+                LocationIden::Id,
+                FieldType::String,
+            ))),
+            "name" => Ok(FieldIden::Col(ColIden::new(
+                LocationIden::Name,
+                FieldType::String,
+            ))),
+            "image_url" => Ok(FieldIden::Col(ColIden::new(
+                LocationIden::ImageUrl,
+                FieldType::String,
+            ))),
+            "added_datetime" => Ok(FieldIden::Col(ColIden::new(
                 LocationIden::AddedDatetime,
                 FieldType::DateTime,
-            )),
-            "updated_datetime" => Ok(FieldIden::new(
+            ))),
+            "updated_datetime" => Ok(FieldIden::Col(ColIden::new(
                 LocationIden::UpdatedDatetime,
                 FieldType::DateTime,
-            )),
+            ))),
             _ => Err(()),
         }
     }

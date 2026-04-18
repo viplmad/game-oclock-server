@@ -1,17 +1,16 @@
 use chrono::{DateTime, Utc};
-use sqlx::{PgPool, postgres::types::PgInterval};
+use sqlx::PgPool;
 use uuid::Uuid;
 
 use super::query::media_session_query;
 use crate::entities::{
-    MediaSession, MediaSessionWithTime, PageResult, SessionAggregateSearch, SessionListSearch,
+    AggregateResult, MediaSession, MediaSessionWithTime, PageResult, SessionAggregateSearch,
+    SessionListSearch,
 };
 use crate::errors::{RepositoryError, SearchErrors};
-use crate::models::DurationDef;
 
 use super::helpers::{
-    aggregate_all_search, execute, execute_return_single, exists_some, fetch_all, fetch_all_search,
-    fetch_optional,
+    aggregate_all_search, execute, exists_some, fetch_all, fetch_all_search, fetch_optional,
 };
 
 #[derive(Clone)]
@@ -26,17 +25,6 @@ impl MediaSessionRepository {
 }
 
 impl MediaSessionRepository {
-    pub async fn find_sum_time_by_media_id(
-        &self,
-        user_id: &Uuid,
-        media_id: &Uuid,
-    ) -> Result<DurationDef, RepositoryError> {
-        let query = media_session_query::select_sum_time_by_user_id_and_media_id(user_id, media_id);
-        execute_return_single::<_, PgInterval>(&self.pool, query)
-            .await
-            .map(|interval| DurationDef::from(interval))
-    }
-
     pub async fn find_by_id(
         &self,
         user_id: &Uuid,
@@ -63,19 +51,19 @@ impl MediaSessionRepository {
         user_id: &Uuid,
         media_id: &Uuid,
         search: SessionAggregateSearch,
-    ) -> Result<u64, SearchErrors> {
-        let search_query =
+    ) -> Result<AggregateResult, SearchErrors> {
+        let aggregate_query =
             media_session_query::aggregate_all_by_user_id_and_media_id(user_id, media_id, search)?;
-        aggregate_all_search(&self.pool, search_query).await
+        aggregate_all_search(&self.pool, aggregate_query).await
     }
 
     pub async fn aggregate_all(
         &self,
         user_id: &Uuid,
         search: SessionAggregateSearch,
-    ) -> Result<u64, SearchErrors> {
-        let search_query = media_session_query::aggregate_all_by_user_id(user_id, search)?;
-        aggregate_all_search(&self.pool, search_query).await
+    ) -> Result<AggregateResult, SearchErrors> {
+        let aggregate_query = media_session_query::aggregate_all_by_user_id(user_id, search)?;
+        aggregate_all_search(&self.pool, aggregate_query).await
     }
 
     // For review

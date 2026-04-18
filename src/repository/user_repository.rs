@@ -5,9 +5,7 @@ use super::query::user_query;
 use crate::entities::{PageResult, User, UserListSearch};
 use crate::errors::{RepositoryError, SearchErrors};
 
-use super::helpers::{
-    aggregate_all_search, execute, exists_some, fetch_all_search, fetch_optional,
-};
+use super::helpers::{count_all_search, execute, exists_some, fetch_all_search, fetch_optional};
 
 #[derive(Clone)]
 pub struct UserRepository {
@@ -44,7 +42,7 @@ impl UserRepository {
 
     pub async fn count_all(&self, search: UserListSearch) -> Result<u64, SearchErrors> {
         let count_query = user_query::count_all_with_search(search)?;
-        aggregate_all_search(&self.pool, count_query).await
+        count_all_search(&self.pool, count_query).await
     }
 
     pub async fn create(&self, user: &User) -> Result<(), RepositoryError> {

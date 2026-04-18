@@ -10,10 +10,10 @@ use crate::repository::MediaRepository;
 
 use super::MediaExternalService;
 use super::helpers::{
-    create_merged2, handle_action_result, handle_already_exists_result,
-    handle_get_aggregate_result, handle_get_list_paged_result, handle_get_list_result_raw,
-    handle_get_result, handle_list_search_mapping, handle_not_found_result, handle_result,
-    handle_update_result, update_merged,
+    create_merged2, handle_action_result, handle_already_exists_result, handle_get_count_result,
+    handle_get_list_paged_result, handle_get_list_result_raw, handle_get_result,
+    handle_list_search_mapping, handle_not_found_result, handle_result, handle_update_result,
+    update_merged,
 };
 
 #[derive(Clone)]
@@ -94,7 +94,7 @@ impl MediaService {
     ) -> Result<u64, ApiErrors> {
         let search = handle_list_search_mapping::<MediaDTO, MediaListSearch>(search, quicksearch)?;
         let count_result = self.repository.count_all(user_id, search).await;
-        handle_get_aggregate_result::<MediaDTO>(count_result)
+        handle_get_count_result::<MediaDTO>(count_result)
     }
 
     pub async fn search_external_medias(

@@ -63,7 +63,7 @@ async fn run(
     let database_connection_pool = SqlxPostgresPoolBuilder::from_env()
         .await
         .expect("Could not open database connection.");
-    // migrations::apply_migrations(&database_connection_pool).await;
+    migrations::apply_migrations(&database_connection_pool).await;
 
     let igdb_client = IgdbClientPoolBuilder::from_env()
         .await

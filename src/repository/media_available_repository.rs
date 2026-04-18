@@ -8,7 +8,7 @@ use crate::entities::{
 };
 use crate::errors::{RepositoryError, SearchErrors};
 
-use super::helpers::{aggregate_all_search, execute, exists_some, fetch_all_search};
+use super::helpers::{count_all_search, execute, exists_some, fetch_all_search};
 
 #[derive(Clone)]
 pub struct MediaAvailableRepository {
@@ -47,7 +47,7 @@ impl MediaAvailableRepository {
             location_id,
             search,
         )?;
-        aggregate_all_search(&self.pool, count_query).await
+        count_all_search(&self.pool, count_query).await
     }
 
     pub async fn search_all_locations_with_media(
@@ -71,7 +71,7 @@ impl MediaAvailableRepository {
         let count_query = media_available_query::count_all_locations_by_media_id_order_by_date(
             user_id, media_id, search,
         )?;
-        aggregate_all_search(&self.pool, count_query).await
+        count_all_search(&self.pool, count_query).await
     }
 
     pub async fn create(&self, media_available: &MediaAvailable) -> Result<(), RepositoryError> {

@@ -131,7 +131,7 @@ where
     fn try_from(filter: AggregateCountMetricDTO) -> Result<Self, Self::Error> {
         let field =
             FieldIden::<I>::from_str(&filter.field).map_err(|_| MappingError(filter.field))?;
-        let field_kind = field.kind.clone();
+        let field_kind = field.kind();
 
         Ok(Self::new(
             field,
@@ -139,7 +139,7 @@ where
                 kind: field_kind,
                 value,
             }),
-            filter.distinct,
+            filter.distinct.unwrap_or(false),
         ))
     }
 }
@@ -153,7 +153,7 @@ where
     fn try_from(filter: AggregateSumMetricDTO) -> Result<Self, Self::Error> {
         let field =
             FieldIden::<I>::from_str(&filter.field).map_err(|_| MappingError(filter.field))?;
-        let field_kind = field.kind.clone();
+        let field_kind = field.kind();
 
         Ok(Self::new(
             field,
@@ -174,7 +174,7 @@ where
     fn try_from(filter: FilterDTO) -> Result<Self, Self::Error> {
         let field =
             FieldIden::<I>::from_str(&filter.field).map_err(|_| MappingError(filter.field))?;
-        let field_kind = field.kind.clone();
+        let field_kind = field.kind();
 
         Ok(Self::new(
             field,
@@ -232,6 +232,10 @@ impl TryFrom<FieldSearchValue> for Value {
             FieldType::DateTime => {
                 let date_time_value = convert_with_serde::<DateTime<Utc>>(value, "date time")?;
                 Ok(date_time_value.into())
+            }
+            FieldType::Interval => {
+                let int_value = convert_with_serde::<i32>(value, "integer")?;
+                Ok(int_value.into())
             }
             FieldType::MediaStatus => {
                 let status =

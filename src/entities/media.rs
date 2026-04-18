@@ -5,7 +5,7 @@ use sea_query::enum_def;
 use sqlx::FromRow;
 use uuid::Uuid;
 
-use super::{FieldIden, FieldType, ListSearch, MediaStateIden, TableIden};
+use super::{ColIden, FieldIden, FieldType, ListSearch, MediaStateIden, TableIden};
 
 pub type MediaListSearch = ListSearch<MediaIden>;
 
@@ -63,28 +63,58 @@ impl FromStr for FieldIden<MediaIden> {
 
     fn from_str(field: &str) -> Result<Self, Self::Err> {
         match field {
-            "id" => Ok(FieldIden::new(MediaIden::Id, FieldType::String)),
-            "kind" => Ok(FieldIden::new(MediaIden::Kind, FieldType::String)),
-            "title" => Ok(FieldIden::new(MediaIden::Title, FieldType::String)),
-            "edition" => Ok(FieldIden::new(MediaIden::Edition, FieldType::String)),
-            "release_date" => Ok(FieldIden::new(MediaIden::ReleaseDate, FieldType::Integer)),
-            "image_url" => Ok(FieldIden::new(MediaIden::ImageUrl, FieldType::String)),
-            "parent_id" => Ok(FieldIden::new(MediaIden::ParentId, FieldType::String)),
-            "parent_order" => Ok(FieldIden::new(MediaIden::ParentOrder, FieldType::Integer)),
-            "status" => Ok(FieldIden::new(
+            "id" => Ok(FieldIden::Col(ColIden::new(
+                MediaIden::Id,
+                FieldType::String,
+            ))),
+            "kind" => Ok(FieldIden::Col(ColIden::new(
+                MediaIden::Kind,
+                FieldType::String,
+            ))),
+            "title" => Ok(FieldIden::Col(ColIden::new(
+                MediaIden::Title,
+                FieldType::String,
+            ))),
+            "edition" => Ok(FieldIden::Col(ColIden::new(
+                MediaIden::Edition,
+                FieldType::String,
+            ))),
+            "release_date" => Ok(FieldIden::Col(ColIden::new(
+                MediaIden::ReleaseDate,
+                FieldType::Integer,
+            ))),
+            "image_url" => Ok(FieldIden::Col(ColIden::new(
+                MediaIden::ImageUrl,
+                FieldType::String,
+            ))),
+            "parent_id" => Ok(FieldIden::Col(ColIden::new(
+                MediaIden::ParentId,
+                FieldType::String,
+            ))),
+            "parent_order" => Ok(FieldIden::Col(ColIden::new(
+                MediaIden::ParentOrder,
+                FieldType::Integer,
+            ))),
+            "status" => Ok(FieldIden::Col(ColIden::new(
                 MediaStateIden::Status,
                 FieldType::MediaStatus,
-            )),
-            "rating" => Ok(FieldIden::new(MediaStateIden::Rating, FieldType::Integer)),
-            "notes" => Ok(FieldIden::new(MediaStateIden::Notes, FieldType::String)),
-            "added_datetime" => Ok(FieldIden::new(
+            ))),
+            "rating" => Ok(FieldIden::Col(ColIden::new(
+                MediaStateIden::Rating,
+                FieldType::Integer,
+            ))),
+            "notes" => Ok(FieldIden::Col(ColIden::new(
+                MediaStateIden::Notes,
+                FieldType::String,
+            ))),
+            "added_datetime" => Ok(FieldIden::Col(ColIden::new(
                 MediaIden::AddedDatetime,
                 FieldType::DateTime,
-            )),
-            "updated_datetime" => Ok(FieldIden::new(
+            ))),
+            "updated_datetime" => Ok(FieldIden::Col(ColIden::new(
                 MediaIden::UpdatedDatetime,
                 FieldType::DateTime,
-            )),
+            ))),
             _ => Err(()),
         }
     }

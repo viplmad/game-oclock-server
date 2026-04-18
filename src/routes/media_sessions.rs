@@ -2,10 +2,10 @@ use actix_web::{Responder, delete, get, post, web};
 
 use crate::models::{
     AggregateSearchDTO, DateTimeDTO, ErrorMessage, ItemId, ListSearchDTO, LoggedUser,
-    MediaSessionPageResult, MediasReviewDTO, NewSessionDTO, OptionalStartEndDateQuery,
-    QuicksearchQuery, SessionDTO, SessionPageResult, StartEndDateQuery,
+    MediaSessionPageResult, NewSessionDTO, OptionalStartEndDateQuery, QuicksearchQuery, SessionDTO,
+    SessionPageResult,
 };
-use crate::services::{MediaReviewService, MediaSessionService, MediaWithSessionService};
+use crate::services::{MediaSessionService, MediaWithSessionService};
 
 use super::helpers::{handle_action_result, handle_delete_result, handle_get_result};
 

@@ -1,4 +1,4 @@
-use sea_query::{BinOper, Iden, Order, SeaRc, SelectStatement};
+use sea_query::{BinOper, Iden, Order, SeaRc, SelectStatement, SimpleExpr};
 
 use super::TableIden;
 
@@ -8,48 +8,73 @@ pub struct SearchQuery {
     pub size: u64,
 }
 
-pub struct ListSearch<I: TableIden> {
-    pub filter: Option<Vec<Filter<I>>>,
-    pub sort: Option<Vec<Sort<I>>>,
+pub struct AggregateQuery {
+    pub query: SelectStatement,
+    pub kind: AggregateType,
+    pub field_kind: FieldType,
+}
+
+pub struct ListSearch<T: TableIden> {
+    pub filter: Option<Vec<Filter<T>>>,
+    pub sort: Option<Vec<Sort<T>>>,
     pub page: Option<u64>,
     pub size: Option<u64>,
 }
 
-pub struct AggregateSearch<I: TableIden> {
-    pub filter: Option<Vec<Filter<I>>>,
-    pub aggr: AggregateMetric<I>,
+pub struct AggregateSearch<T: TableIden> {
+    pub filter: Option<Vec<Filter<T>>>,
+    pub aggr: AggregateMetric<T>,
 }
 
-pub struct AggregateGroupSearch<I: TableIden> {
-    pub filter: Option<Vec<Filter<I>>>,
-    pub aggr: AggregateMetric<I>,
-    pub group: AggregateGroup<I>,
+pub struct AggregateGroupSearch<T: TableIden> {
+    pub filter: Option<Vec<Filter<T>>>,
+    pub aggr: AggregateMetric<T>,
+    pub group: AggregateGroup<T>,
 }
 
 /// Aggregate metric
-pub enum AggregateMetric<I: TableIden> {
-    Count(AggregateCountMetric<I>),
-    Sum(AggregateSumMetric<I>),
+pub enum AggregateMetric<T: TableIden> {
+    Count(AggregateCountMetric<T>),
+    Sum(AggregateSumMetric<T>),
 }
 
-pub struct AggregateSumMetric<I: TableIden> {
-    pub field: FieldIden<I>,
+pub struct AggregateSumMetric<T: TableIden> {
+    pub kind: AggregateType,
+    pub field: FieldIden<T>,
     pub default_value: Option<FieldSearchValue>,
 }
 
-pub struct AggregateCountMetric<I: TableIden> {
-    pub field: FieldIden<I>,
+pub struct AggregateCountMetric<T: TableIden> {
+    pub kind: AggregateType,
+    pub field: FieldIden<T>,
     pub default_value: Option<FieldSearchValue>,
     pub distinct: bool,
 }
 
-impl<I: TableIden> AggregateCountMetric<I> {
+impl<T: TableIden> AggregateMetric<T> {
+    pub fn kind(&self) -> AggregateType {
+        match self {
+            AggregateMetric::Count(c) => c.kind.clone(),
+            AggregateMetric::Sum(s) => s.kind.clone(),
+        }
+    }
+
+    pub fn field_kind(&self) -> FieldType {
+        match self {
+            AggregateMetric::Count(c) => c.field.kind(),
+            AggregateMetric::Sum(s) => s.field.kind(),
+        }
+    }
+}
+
+impl<T: TableIden> AggregateCountMetric<T> {
     pub fn new(
-        field: FieldIden<I>,
+        field: FieldIden<T>,
         default_value: Option<FieldSearchValue>,
         distinct: bool,
     ) -> Self {
         Self {
+            kind: AggregateType::Count,
             field,
             default_value,
             distinct,
@@ -57,9 +82,10 @@ impl<I: TableIden> AggregateCountMetric<I> {
     }
 }
 
-impl<I: TableIden> AggregateSumMetric<I> {
-    pub fn new(field: FieldIden<I>, default_value: Option<FieldSearchValue>) -> Self {
+impl<T: TableIden> AggregateSumMetric<T> {
+    pub fn new(field: FieldIden<T>, default_value: Option<FieldSearchValue>) -> Self {
         Self {
+            kind: AggregateType::Sum,
             field,
             default_value,
         }
@@ -67,18 +93,18 @@ impl<I: TableIden> AggregateSumMetric<I> {
 }
 
 /// Aggregate group
-pub enum AggregateGroup<I: TableIden> {
-    Field(AggregateFieldGroup<I>),
-    DateHistogram(AggregateDateHistogramGroup<I>),
+pub enum AggregateGroup<T: TableIden> {
+    Field(AggregateFieldGroup<T>),
+    DateHistogram(AggregateDateHistogramGroup<T>),
 }
 
-pub struct AggregateFieldGroup<I: TableIden> {
-    pub field: FieldIden<I>,
+pub struct AggregateFieldGroup<T: TableIden> {
+    pub field: FieldIden<T>,
     pub default_value: Option<FieldSearchValue>,
 }
 
-pub struct AggregateDateHistogramGroup<I: TableIden> {
-    pub field: FieldIden<I>,
+pub struct AggregateDateHistogramGroup<T: TableIden> {
+    pub field: FieldIden<T>,
     pub default_value: Option<FieldSearchValue>,
     pub interval: DateHistogramInterval,
 }
@@ -92,8 +118,8 @@ pub enum DateHistogramInterval {
     Minute,
 }
 
-impl<I: TableIden> AggregateFieldGroup<I> {
-    pub fn new(field: FieldIden<I>, default_value: Option<FieldSearchValue>) -> Self {
+impl<T: TableIden> AggregateFieldGroup<T> {
+    pub fn new(field: FieldIden<T>, default_value: Option<FieldSearchValue>) -> Self {
         Self {
             field,
             default_value,
@@ -101,9 +127,9 @@ impl<I: TableIden> AggregateFieldGroup<I> {
     }
 }
 
-impl<I: TableIden> AggregateDateHistogramGroup<I> {
+impl<T: TableIden> AggregateDateHistogramGroup<T> {
     pub fn new(
-        field: FieldIden<I>,
+        field: FieldIden<T>,
         default_value: Option<FieldSearchValue>,
         interval: DateHistogramInterval,
     ) -> Self {
@@ -116,16 +142,16 @@ impl<I: TableIden> AggregateDateHistogramGroup<I> {
 }
 
 /// Filter
-pub struct Filter<I: TableIden> {
-    pub field: FieldIden<I>,
+pub struct Filter<T: TableIden> {
+    pub field: FieldIden<T>,
     pub value: FieldValue,
     pub operator: FilterOperator,
     pub chain_operator: BinOper,
 }
 
-impl<I: TableIden> Filter<I> {
+impl<T: TableIden> Filter<T> {
     pub fn new(
-        field: FieldIden<I>,
+        field: FieldIden<T>,
         value: FieldValue,
         operator: FilterOperator,
         chain_operator: BinOper,
@@ -173,26 +199,46 @@ pub enum FilterOperator {
 }
 
 /// Sort
-pub struct Sort<I: TableIden> {
-    pub field: FieldIden<I>,
+pub struct Sort<T: TableIden> {
+    pub field: FieldIden<T>,
     pub order: Order,
 }
 
-impl<I: TableIden> Sort<I> {
-    pub fn new(field: FieldIden<I>, order: Order) -> Self {
+impl<T: TableIden> Sort<T> {
+    pub fn new(field: FieldIden<T>, order: Order) -> Self {
         Self { field, order }
     }
 }
 
 /// Field
-pub struct FieldIden<I: TableIden> {
+pub enum FieldIden<T: TableIden> {
+    Col(ColIden<T>),
+    Expr(ExprIden<T>),
+}
+
+pub struct ColIden<T: TableIden> {
     pub table: SeaRc<dyn Iden>,
     pub iden: SeaRc<dyn Iden>,
     pub kind: FieldType,
-    resource_type: std::marker::PhantomData<I>,
+    resource_type: std::marker::PhantomData<T>,
+}
+
+pub struct ExprIden<T: TableIden> {
+    pub expr: SimpleExpr,
+    pub kind: FieldType,
+    resource_type: std::marker::PhantomData<T>,
 }
 
 impl<T: TableIden> FieldIden<T> {
+    pub fn kind(&self) -> FieldType {
+        match self {
+            FieldIden::Col(c) => c.kind.clone(),
+            FieldIden::Expr(e) => e.kind.clone(),
+        }
+    }
+}
+
+impl<T: TableIden> ColIden<T> {
     pub fn new<I: 'static + TableIden>(iden: I, kind: FieldType) -> Self {
         Self {
             table: SeaRc::new(I::TABLE),
@@ -203,12 +249,29 @@ impl<T: TableIden> FieldIden<T> {
     }
 }
 
-#[derive(Clone)]
+impl<T: TableIden> ExprIden<T> {
+    pub fn new<I: 'static + TableIden>(expr: SimpleExpr, kind: FieldType) -> Self {
+        Self {
+            expr,
+            kind,
+            resource_type: std::marker::PhantomData,
+        }
+    }
+}
+
+#[derive(Clone, PartialEq)]
 pub enum FieldType {
     Integer,
     String,
     Boolean,
     Date,
     DateTime,
+    Interval,
     MediaStatus,
+}
+
+#[derive(Clone, PartialEq)]
+pub enum AggregateType {
+    Count,
+    Sum,
 }

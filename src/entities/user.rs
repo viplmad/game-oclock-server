@@ -5,7 +5,7 @@ use sea_query::enum_def;
 use sqlx::FromRow;
 use uuid::Uuid;
 
-use super::{FieldIden, FieldType, ListSearch, TableIden};
+use super::{ColIden, FieldIden, FieldType, ListSearch, TableIden};
 
 pub type UserListSearch = ListSearch<UserIden>;
 
@@ -29,14 +29,26 @@ impl FromStr for FieldIden<UserIden> {
 
     fn from_str(field: &str) -> Result<Self, Self::Err> {
         match field {
-            "id" => Ok(FieldIden::new(UserIden::Id, FieldType::String)),
-            "name" => Ok(FieldIden::new(UserIden::Username, FieldType::String)),
-            "role" => Ok(FieldIden::new(UserIden::Role, FieldType::String)),
-            "added_datetime" => Ok(FieldIden::new(UserIden::AddedDatetime, FieldType::DateTime)),
-            "updated_datetime" => Ok(FieldIden::new(
+            "id" => Ok(FieldIden::Col(ColIden::new(
+                UserIden::Id,
+                FieldType::String,
+            ))),
+            "name" => Ok(FieldIden::Col(ColIden::new(
+                UserIden::Username,
+                FieldType::String,
+            ))),
+            "role" => Ok(FieldIden::Col(ColIden::new(
+                UserIden::Role,
+                FieldType::String,
+            ))),
+            "added_datetime" => Ok(FieldIden::Col(ColIden::new(
+                UserIden::AddedDatetime,
+                FieldType::DateTime,
+            ))),
+            "updated_datetime" => Ok(FieldIden::Col(ColIden::new(
                 UserIden::UpdatedDatetime,
                 FieldType::DateTime,
-            )),
+            ))),
             _ => Err(()),
         }
     }

@@ -1,9 +1,12 @@
 use sea_query::{PostgresQueryBuilder, QueryStatementWriter};
-use sqlx::Postgres;
+use sqlx::{Postgres, postgres::types::PgInterval};
 use uuid::Uuid;
 
-use crate::entities::{PageResult, SearchQuery};
+use crate::entities::{
+    AggregateQuery, AggregateResult, AggregateType, FieldType, PageResult, SearchQuery,
+};
 use crate::errors::{RepositoryError, SearchErrors};
+use crate::models::DurationDef;
 
 pub(super) async fn fetch_one<'c, X, T>(
     executor: X,
@@ -22,17 +25,6 @@ where
             log::error!("Error executing query. - {}", err.to_string());
             RepositoryError()
         })
-}
-
-pub(super) async fn execute_return_single<'c, X, T>(
-    executor: X,
-    query: impl QueryStatementWriter,
-) -> Result<T, RepositoryError>
-where
-    X: sqlx::Executor<'c, Database = Postgres>,
-    T: for<'r> sqlx::Decode<'r, Postgres> + sqlx::Type<Postgres> + Send + Unpin,
-{
-    fetch_one(executor, query).await.map(|tuple: (T,)| tuple.0)
 }
 
 pub(super) async fn execute<'c, X>(
@@ -136,7 +128,8 @@ where
         .map_err(SearchErrors::Repository)
 }
 
-pub(super) async fn aggregate_all_search<'c, X>(
+// TODO remove
+pub(super) async fn count_all_search<'c, X>(
     executor: X,
     query: impl QueryStatementWriter,
 ) -> Result<u64, SearchErrors>
@@ -145,8 +138,30 @@ where
 {
     fetch_one(executor, query)
         .await
-        .map(|tuple: (i64,)| u64::try_from(tuple.0).expect("Aggregate is not positive"))
+        .map(|tuple: (i64,)| u64::try_from(tuple.0).expect("Count is not positive"))
         .map_err(SearchErrors::Repository)
+}
+
+pub(super) async fn aggregate_all_search<'c, X>(
+    executor: X,
+    aggregate_query: AggregateQuery,
+) -> Result<AggregateResult, SearchErrors>
+where
+    X: sqlx::Executor<'c, Database = Postgres>,
+{
+    if aggregate_query.kind == AggregateType::Sum
+        && aggregate_query.field_kind == FieldType::Interval
+    {
+        return fetch_one(executor, aggregate_query.query)
+            .await
+            .map(|tuple: (PgInterval,)| AggregateResult::Duration(DurationDef::from(tuple.0)))
+            .map_err(SearchErrors::Repository);
+    }
+
+    return fetch_one(executor, aggregate_query.query)
+        .await
+        .map(|tuple: (i64,)| AggregateResult::Integer(tuple.0))
+        .map_err(SearchErrors::Repository);
 }
 
 pub(super) async fn exists_some<'c, X>(

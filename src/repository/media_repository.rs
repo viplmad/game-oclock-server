@@ -9,7 +9,7 @@ use crate::entities::{
 use crate::errors::{RepositoryError, SearchErrors};
 
 use super::helpers::{
-    aggregate_all_search, execute, exists_some, fetch_all, fetch_all_search, fetch_optional,
+    count_all_search, execute, exists_some, fetch_all, fetch_all_search, fetch_optional,
 };
 
 #[derive(Clone)]
@@ -107,7 +107,7 @@ impl MediaRepository {
         search: MediaListSearch,
     ) -> Result<u64, SearchErrors> {
         let count_query = media_query::count_all_with_search(user_id, search)?;
-        aggregate_all_search(&self.pool, count_query).await
+        count_all_search(&self.pool, count_query).await
     }
 
     pub async fn create_basic(&self, media: &Media) -> Result<(), RepositoryError> {

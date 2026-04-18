@@ -5,9 +5,7 @@ use super::query::tag_query;
 use crate::entities::{PageResult, Tag, TagListSearch};
 use crate::errors::{RepositoryError, SearchErrors};
 
-use super::helpers::{
-    aggregate_all_search, execute, exists_some, fetch_all_search, fetch_optional,
-};
+use super::helpers::{count_all_search, execute, exists_some, fetch_all_search, fetch_optional};
 
 #[derive(Clone)]
 pub struct TagRepository {
@@ -45,7 +43,7 @@ impl TagRepository {
         search: TagListSearch,
     ) -> Result<u64, SearchErrors> {
         let count_query = tag_query::count_all_with_query(user_id, search)?;
-        aggregate_all_search(&self.pool, count_query).await
+        count_all_search(&self.pool, count_query).await
     }
 
     pub async fn create(&self, tag: &Tag) -> Result<(), RepositoryError> {

@@ -6,7 +6,7 @@ use crate::models::{ListSearchDTO, NewTagDTO, TagDTO, TagPageResult};
 use crate::repository::TagRepository;
 
 use super::helpers::{
-    create_merged, handle_action_result, handle_already_exists_result, handle_get_aggregate_result,
+    create_merged, handle_action_result, handle_already_exists_result, handle_get_count_result,
     handle_get_list_paged_result, handle_get_result, handle_list_search_mapping,
     handle_not_found_result, handle_update_result, update_merged,
 };
@@ -47,7 +47,7 @@ impl TagService {
     ) -> Result<u64, ApiErrors> {
         let search = handle_list_search_mapping::<TagDTO, TagListSearch>(search, quicksearch)?;
         let find_result = self.repository.count_all(user_id, search).await;
-        handle_get_aggregate_result::<TagDTO>(find_result)
+        handle_get_count_result::<TagDTO>(find_result)
     }
 
     pub async fn create_tag(&self, user_id: &Uuid, tag: NewTagDTO) -> Result<TagDTO, ApiErrors> {

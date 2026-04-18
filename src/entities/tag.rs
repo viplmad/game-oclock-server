@@ -5,7 +5,7 @@ use sea_query::enum_def;
 use sqlx::FromRow;
 use uuid::Uuid;
 
-use super::{FieldIden, FieldType, ListSearch, TableIden};
+use super::{ColIden, FieldIden, FieldType, ListSearch, TableIden};
 
 pub type TagListSearch = ListSearch<TagIden>;
 
@@ -28,13 +28,19 @@ impl FromStr for FieldIden<TagIden> {
 
     fn from_str(field: &str) -> Result<Self, Self::Err> {
         match field {
-            "id" => Ok(FieldIden::new(TagIden::Id, FieldType::String)),
-            "name" => Ok(FieldIden::new(TagIden::Name, FieldType::String)),
-            "added_datetime" => Ok(FieldIden::new(TagIden::AddedDatetime, FieldType::DateTime)),
-            "updated_datetime" => Ok(FieldIden::new(
+            "id" => Ok(FieldIden::Col(ColIden::new(TagIden::Id, FieldType::String))),
+            "name" => Ok(FieldIden::Col(ColIden::new(
+                TagIden::Name,
+                FieldType::String,
+            ))),
+            "added_datetime" => Ok(FieldIden::Col(ColIden::new(
+                TagIden::AddedDatetime,
+                FieldType::DateTime,
+            ))),
+            "updated_datetime" => Ok(FieldIden::Col(ColIden::new(
                 TagIden::UpdatedDatetime,
                 FieldType::DateTime,
-            )),
+            ))),
             _ => Err(()),
         }
     }

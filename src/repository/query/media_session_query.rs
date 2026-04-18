@@ -6,7 +6,7 @@ use sea_query::{
 use uuid::Uuid;
 
 use crate::entities::{
-    MediaIden, MediaListSearch, MediaSession, MediaSessionIden, QUERY_TIME_ALIAS,
+    AggregateQuery, MediaIden, MediaListSearch, MediaSession, MediaSessionIden, QUERY_TIME_ALIAS,
     SESSION_ADDED_DATETIME_ALIAS, SESSION_DEVICE_ID_ALIAS, SESSION_END_DATE_ALIAS,
     SESSION_FINISHED_STATUS_ALIAS, SESSION_GROUP_ID_ALIAS, SESSION_START_DATE_ALIAS,
     SESSION_STARTED_ALIAS, SESSION_UPDATED_DATETIME_ALIAS, SearchQuery,
@@ -25,7 +25,7 @@ mod tests {
     use super::*;
     use crate::entities::{
         AggregateCountMetric, AggregateDateHistogramGroup, AggregateGroup, AggregateMetric,
-        DateHistogramInterval, FieldIden, FieldType,
+        AggregateSumMetric, ColIden, DateHistogramInterval, ExprIden, FieldIden, FieldType,
     };
 
     #[test]
@@ -36,18 +36,39 @@ mod tests {
             SessionAggregateSearch {
                 filter: None,
                 aggr: AggregateMetric::Count(AggregateCountMetric::new(
-                    FieldIden::new::<MediaSessionIden>(
-                        MediaSessionIden::MediaId,
-                        FieldType::String,
-                    ),
+                    FieldIden::Col(ColIden::new(MediaSessionIden::MediaId, FieldType::String)),
                     None,
                     false,
                 )),
             },
         );
         assert_eq!(
-            query.unwrap().to_string(PostgresQueryBuilder),
+            query.unwrap().query.to_string(PostgresQueryBuilder),
             r#"SELECT COUNT("MediaSession"."media_id") FROM "MediaSession" WHERE "MediaSession"."user_id" = '00000000-0000-0000-0000-000000000000'"#
+        );
+    }
+
+    #[test]
+    fn sum_time_all_sessions() {
+        let user_id = Uuid::try_parse("00000000-0000-0000-0000-000000000000").unwrap();
+        let query = aggregate_all_by_user_id(
+            &user_id,
+            SessionAggregateSearch {
+                filter: None,
+                aggr: AggregateMetric::Sum(AggregateSumMetric::new(
+                    FieldIden::Expr(ExprIden::new::<MediaSessionIden>(
+                        Expr::col((MediaSessionIden::Table, MediaSessionIden::EndDate)).sub(
+                            Expr::col((MediaSessionIden::Table, MediaSessionIden::StartDate)),
+                        ),
+                        FieldType::Integer,
+                    )),
+                    None,
+                )),
+            },
+        );
+        assert_eq!(
+            query.unwrap().query.to_string(PostgresQueryBuilder),
+            r#"SELECT SUM("MediaSession"."end_date" - "MediaSession"."start_date") FROM "MediaSession" WHERE "MediaSession"."user_id" = '00000000-0000-0000-0000-000000000000'"#
         );
     }
 
@@ -59,18 +80,15 @@ mod tests {
             SessionAggregateGroupSearch {
                 filter: None,
                 aggr: AggregateMetric::Count(AggregateCountMetric::new(
-                    FieldIden::new::<MediaSessionIden>(
-                        MediaSessionIden::MediaId,
-                        FieldType::String,
-                    ),
+                    FieldIden::Col(ColIden::new(MediaSessionIden::MediaId, FieldType::String)),
                     None,
                     true,
                 )),
                 group: AggregateGroup::DateHistogram(AggregateDateHistogramGroup::new(
-                    FieldIden::new::<MediaSessionIden>(
+                    FieldIden::Col(ColIden::new(
                         MediaSessionIden::StartDate,
                         FieldType::DateTime,
-                    ),
+                    )),
                     None,
                     DateHistogramInterval::Month,
                 )),
@@ -81,18 +99,6 @@ mod tests {
             r#"SELECT DATE_PART('month', "MediaSession"."start_date"), COUNT(DISTINCT "MediaSession"."media_id") FROM "MediaSession" WHERE "MediaSession"."user_id" = '00000000-0000-0000-0000-000000000000' GROUP BY DATE_PART('month', "MediaSession"."start_date")"#
         );
     }
-}
-
-pub fn select_sum_time_by_user_id_and_media_id(
-    user_id: &Uuid,
-    media_id: &Uuid,
-) -> impl QueryStatementWriter {
-    let mut select = Query::select();
-
-    from_and_where_user_id_and_media_id(&mut select, user_id, media_id);
-    select.expr(coalesce_time_sum());
-
-    select
 }
 
 pub fn select_by_id(
@@ -128,7 +134,7 @@ pub fn aggregate_all_by_user_id_and_media_id(
     user_id: &Uuid,
     media_id: &Uuid,
     search: SessionAggregateSearch,
-) -> Result<SelectStatement, SearchErrors> {
+) -> Result<AggregateQuery, SearchErrors> {
     let mut select = Query::select();
 
     from_and_where_user_id_and_media_id(&mut select, user_id, media_id);
@@ -139,7 +145,7 @@ pub fn aggregate_all_by_user_id_and_media_id(
 pub fn aggregate_all_by_user_id(
     user_id: &Uuid,
     search: SessionAggregateSearch,
-) -> Result<SelectStatement, SearchErrors> {
+) -> Result<AggregateQuery, SearchErrors> {
     let mut select = Query::select();
 
     from_and_where_user_id(&mut select, user_id);

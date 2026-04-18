@@ -10,7 +10,7 @@ use crate::models::{
 use crate::repository::MediaAvailableRepository;
 
 use super::helpers::{
-    handle_action_result, handle_already_exists_result, handle_get_aggregate_result,
+    handle_action_result, handle_already_exists_result, handle_get_count_result,
     handle_get_list_paged_result, handle_list_search_mapping, handle_not_found_result,
 };
 use super::{LocationService, MediaService};
@@ -72,7 +72,7 @@ impl MediaAvailableService {
             .repository
             .count_all_medias_with_location(user_id, location_id, search)
             .await;
-        handle_get_aggregate_result::<MediaDTO>(count_result)
+        handle_get_count_result::<MediaDTO>(count_result)
     }
 
     pub async fn search_media_locations(
@@ -108,7 +108,7 @@ impl MediaAvailableService {
             .repository
             .count_all_locations_with_media(user_id, media_id, search)
             .await;
-        handle_get_aggregate_result::<LocationDTO>(count_result)
+        handle_get_count_result::<LocationDTO>(count_result)
     }
 
     pub async fn create_media_available(

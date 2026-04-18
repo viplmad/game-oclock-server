@@ -8,7 +8,7 @@ use crate::models::{
 use crate::repository::MediaTagRepository;
 
 use super::helpers::{
-    handle_action_result, handle_already_exists_result, handle_get_aggregate_result,
+    handle_action_result, handle_already_exists_result, handle_get_count_result,
     handle_get_list_paged_result, handle_list_search_mapping, handle_not_found_result,
 };
 use super::{MediaService, TagService};
@@ -66,7 +66,7 @@ impl MediaTagService {
             .repository
             .count_all_medias_with_tag(user_id, tag_id, search)
             .await;
-        handle_get_aggregate_result::<MediaDTO>(count_result)
+        handle_get_count_result::<MediaDTO>(count_result)
     }
 
     pub async fn search_media_tags(
@@ -100,7 +100,7 @@ impl MediaTagService {
             .repository
             .count_all_tags_with_media(user_id, media_id, search)
             .await;
-        handle_get_aggregate_result::<TagDTO>(find_result)
+        handle_get_count_result::<TagDTO>(find_result)
     }
 
     pub async fn create_media_tag(

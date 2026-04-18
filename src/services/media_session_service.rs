@@ -6,7 +6,8 @@ use crate::entities::{
 };
 use crate::errors::ApiErrors;
 use crate::models::{
-    AggregateSearchDTO, ListSearchDTO, Merge, NewSessionDTO, SessionDTO, SessionPageResult,
+    AggregateResultDTO, AggregateSearchDTO, ListSearchDTO, Merge, NewSessionDTO, SessionDTO,
+    SessionPageResult,
 };
 use crate::repository::MediaSessionRepository;
 
@@ -78,7 +79,7 @@ impl MediaSessionService {
         media_id: &Uuid,
         search: AggregateSearchDTO,
         quicksearch: Option<String>,
-    ) -> Result<u64, ApiErrors> {
+    ) -> Result<AggregateResultDTO, ApiErrors> {
         self.media_service.exists_media(media_id).await?;
 
         let search = handle_aggregate_search_mapping::<SessionDTO, SessionAggregateSearch>(
@@ -97,7 +98,7 @@ impl MediaSessionService {
         user_id: &Uuid,
         search: AggregateSearchDTO,
         quicksearch: Option<String>,
-    ) -> Result<u64, ApiErrors> {
+    ) -> Result<AggregateResultDTO, ApiErrors> {
         let search = handle_aggregate_search_mapping::<SessionDTO, SessionAggregateSearch>(
             search,
             quicksearch,
