@@ -1,9 +1,12 @@
+use std::collections::HashMap;
+
 use sea_query::{PostgresQueryBuilder, QueryStatementWriter};
 use sqlx::{Postgres, postgres::types::PgInterval};
 use uuid::Uuid;
 
 use crate::entities::{
-    AggregateQuery, AggregateResult, AggregateType, FieldType, PageResult, SearchQuery,
+    AggregateGroupQuery, AggregateGroupResultKey, AggregateQuery, AggregateResult, AggregateType,
+    FieldType, PageResult, SearchQuery,
 };
 use crate::errors::{RepositoryError, SearchErrors};
 
@@ -111,18 +114,18 @@ where
 
 pub(super) async fn fetch_all_search<'c, X, T>(
     executor: X,
-    search_query: SearchQuery,
+    query: SearchQuery,
 ) -> Result<PageResult<T>, SearchErrors>
 where
     X: sqlx::Executor<'c, Database = Postgres>,
     T: for<'r> sqlx::FromRow<'r, sqlx::postgres::PgRow> + Send + Unpin,
 {
-    fetch_all(executor, search_query.query)
+    fetch_all(executor, query.query)
         .await
         .map(|list| PageResult {
             data: list,
-            page: search_query.page,
-            size: search_query.size,
+            page: query.page,
+            size: query.size,
         })
         .map_err(SearchErrors::Repository)
 }
@@ -143,23 +146,59 @@ where
 
 pub(super) async fn aggregate_all_search<'c, X>(
     executor: X,
-    aggregate_query: AggregateQuery,
+    query: AggregateQuery,
 ) -> Result<AggregateResult, SearchErrors>
 where
     X: sqlx::Executor<'c, Database = Postgres>,
 {
-    if aggregate_query.kind == AggregateType::Sum
-        && aggregate_query.field_kind == FieldType::Interval
-    {
-        return fetch_one(executor, aggregate_query.query)
+    if query.kind == AggregateType::Sum && query.field_kind == FieldType::Interval {
+        return fetch_one(executor, query.query)
             .await
             .map(|tuple: (PgInterval,)| AggregateResult::Duration(tuple.0))
             .map_err(SearchErrors::Repository);
     }
 
-    return fetch_one(executor, aggregate_query.query)
+    return fetch_one(executor, query.query)
         .await
         .map(|tuple: (i64,)| AggregateResult::Integer(tuple.0))
+        .map_err(SearchErrors::Repository);
+}
+
+pub(super) async fn aggregate_group_search<'c, X>(
+    executor: X,
+    query: AggregateGroupQuery,
+) -> Result<HashMap<AggregateGroupResultKey, AggregateResult>, SearchErrors>
+where
+    X: sqlx::Executor<'c, Database = Postgres>,
+{
+    if query.kind == AggregateType::Sum && query.field_kind == FieldType::Interval {
+        return fetch_all(executor, query.query)
+            .await
+            .map(|list: Vec<(i64, PgInterval)>| {
+                list.into_iter()
+                    .map(|tuple| {
+                        (
+                            AggregateGroupResultKey::Integer(tuple.0),
+                            AggregateResult::Duration(tuple.1),
+                        )
+                    })
+                    .collect()
+            })
+            .map_err(SearchErrors::Repository);
+    }
+
+    return fetch_all(executor, query.query)
+        .await
+        .map(|list: Vec<(i64, i64)>| {
+            list.into_iter()
+                .map(|tuple| {
+                    (
+                        AggregateGroupResultKey::Integer(tuple.0),
+                        AggregateResult::Integer(tuple.1),
+                    )
+                })
+                .collect()
+        })
         .map_err(SearchErrors::Repository);
 }
 

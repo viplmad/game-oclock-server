@@ -10,3 +10,8 @@ pub enum AggregateResult {
     Integer(i64),
     Duration(PgInterval),
 }
+
+#[derive(Eq, PartialEq, Hash)]
+pub enum AggregateGroupResultKey {
+    Integer(i64),
+}

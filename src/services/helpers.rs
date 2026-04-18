@@ -1,14 +1,15 @@
+use std::collections::HashMap;
 use std::future::Future;
 
 use chrono::{DateTime, NaiveDate, Utc};
 
-use crate::entities::{AggregateResult, PageResult};
+use crate::entities::{AggregateGroupResultKey, AggregateResult, PageResult};
 use crate::errors::{
     ApiErrors, MappingError, RepositoryError, SearchErrors, error_message_builder,
 };
 use crate::models::{
-    AggregateResultDTO, AggregateSearchDTO, DurationDef, FilterDTO, ListSearchDTO, Merge,
-    ModelInfo, PageResultDTO,
+    AggregateGroupResultKeyDTO, AggregateGroupSearchDTO, AggregateResultDTO, AggregateSearchDTO,
+    FilterDTO, ListSearchDTO, Merge, ModelInfo, PageResultDTO,
 };
 
 pub fn handle_result<E, T>(repository_result: Result<E, RepositoryError>) -> Result<E, ApiErrors>
@@ -112,10 +113,35 @@ where
             ApiErrors::UnknownError(error_message_builder::database_error(T::MODEL_NAME))
         }
     })?;
-    Ok(match entity_search {
-        AggregateResult::Integer(i) => AggregateResultDTO::Integer(i),
-        AggregateResult::Duration(d) => AggregateResultDTO::Duration(DurationDef::from(d)),
-    })
+    Ok(AggregateResultDTO::from(entity_search))
+}
+
+pub(super) fn handle_get_aggregate_group_result<T>(
+    repository_result: Result<HashMap<AggregateGroupResultKey, AggregateResult>, SearchErrors>,
+) -> Result<HashMap<AggregateGroupResultKeyDTO, AggregateResultDTO>, ApiErrors>
+where
+    T: ModelInfo,
+{
+    let entity_search = repository_result.map_err(|err| match err {
+        SearchErrors::Mapping(map_err) => {
+            ApiErrors::InvalidParameter(error_message_builder::inner_error(
+                &error_message_builder::database_error(T::MODEL_NAME),
+                &map_err.0,
+            ))
+        }
+        SearchErrors::Repository(_) => {
+            ApiErrors::UnknownError(error_message_builder::database_error(T::MODEL_NAME))
+        }
+    })?;
+    Ok(entity_search
+        .into_iter()
+        .map(|t| {
+            (
+                AggregateGroupResultKeyDTO::from(t.0),
+                AggregateResultDTO::from(t.1),
+            )
+        })
+        .collect())
 }
 
 pub(super) fn handle_update_result<T>(
@@ -289,6 +315,18 @@ pub(super) fn handle_aggregate_search_mapping<T, S>(
 where
     T: ModelInfo,
     S: TryFrom<AggregateSearchDTO, Error = MappingError>,
+{
+    add_quicksearch::<T>(&mut search.filter, quicksearch);
+    handle_search_mapping::<T, _, _>(search)
+}
+
+pub(super) fn handle_aggregate_group_search_mapping<T, S>(
+    mut search: AggregateGroupSearchDTO,
+    quicksearch: Option<String>,
+) -> Result<S, ApiErrors>
+where
+    T: ModelInfo,
+    S: TryFrom<AggregateGroupSearchDTO, Error = MappingError>,
 {
     add_quicksearch::<T>(&mut search.filter, quicksearch);
     handle_search_mapping::<T, _, _>(search)

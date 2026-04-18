@@ -79,7 +79,7 @@ pub struct AggregateDateHistogramGroupDTO {
 pub enum DateHistogramInterval {
     Year,
     Month,
-    Week,
+    Weekday,
     Day,
     Hour,
     Minute,

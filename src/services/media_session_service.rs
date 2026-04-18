@@ -1,20 +1,24 @@
+use std::collections::HashMap;
+
 use chrono::{DateTime, Utc};
 use uuid::Uuid;
 
 use crate::entities::{
-    MediaSession, MediaSessionWithTime, SessionAggregateSearch, SessionListSearch,
+    MediaSession, MediaSessionWithTime, SessionAggregateGroupSearch, SessionAggregateSearch,
+    SessionListSearch,
 };
 use crate::errors::ApiErrors;
 use crate::models::{
-    AggregateResultDTO, AggregateSearchDTO, ListSearchDTO, Merge, NewSessionDTO, SessionDTO,
-    SessionPageResult,
+    AggregateGroupResultKeyDTO, AggregateGroupSearchDTO, AggregateResultDTO, AggregateSearchDTO,
+    ListSearchDTO, Merge, NewSessionDTO, SessionDTO, SessionPageResult,
 };
 use crate::repository::MediaSessionRepository;
 
 use super::helpers::{
-    handle_action_result, handle_aggregate_search_mapping, handle_already_exists_result,
-    handle_get_aggregate_result, handle_get_list_paged_result, handle_get_result,
-    handle_list_search_mapping, handle_not_found_result, handle_result,
+    handle_action_result, handle_aggregate_group_search_mapping, handle_aggregate_search_mapping,
+    handle_already_exists_result, handle_get_aggregate_group_result, handle_get_aggregate_result,
+    handle_get_list_paged_result, handle_get_result, handle_list_search_mapping,
+    handle_not_found_result, handle_result,
 };
 use super::{DeviceService, MediaService};
 
@@ -105,6 +109,20 @@ impl MediaSessionService {
         )?;
         let aggregate_result = self.repository.aggregate_all(user_id, search).await;
         handle_get_aggregate_result::<SessionDTO>(aggregate_result)
+    }
+
+    pub async fn aggregate_group_sessions(
+        &self,
+        user_id: &Uuid,
+        search: AggregateGroupSearchDTO,
+        quicksearch: Option<String>,
+    ) -> Result<HashMap<AggregateGroupResultKeyDTO, AggregateResultDTO>, ApiErrors> {
+        let search = handle_aggregate_group_search_mapping::<
+            SessionDTO,
+            SessionAggregateGroupSearch,
+        >(search, quicksearch)?;
+        let aggregate_result = self.repository.aggregate_group_all(user_id, search).await;
+        handle_get_aggregate_group_result::<SessionDTO>(aggregate_result)
     }
 
     // For review

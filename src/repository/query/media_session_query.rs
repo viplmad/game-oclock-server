@@ -6,10 +6,10 @@ use sea_query::{
 use uuid::Uuid;
 
 use crate::entities::{
-    AggregateQuery, MediaIden, MediaListSearch, MediaSession, MediaSessionIden, QUERY_TIME_ALIAS,
-    SESSION_ADDED_DATETIME_ALIAS, SESSION_DEVICE_ID_ALIAS, SESSION_END_DATE_ALIAS,
-    SESSION_FINISHED_STATUS_ALIAS, SESSION_GROUP_ID_ALIAS, SESSION_START_DATE_ALIAS,
-    SESSION_STARTED_ALIAS, SESSION_UPDATED_DATETIME_ALIAS, SearchQuery,
+    AggregateGroupQuery, AggregateQuery, MediaIden, MediaListSearch, MediaSession,
+    MediaSessionIden, QUERY_TIME_ALIAS, SESSION_ADDED_DATETIME_ALIAS, SESSION_DEVICE_ID_ALIAS,
+    SESSION_END_DATE_ALIAS, SESSION_FINISHED_STATUS_ALIAS, SESSION_GROUP_ID_ALIAS,
+    SESSION_START_DATE_ALIAS, SESSION_STARTED_ALIAS, SESSION_UPDATED_DATETIME_ALIAS, SearchQuery,
     SessionAggregateGroupSearch, SessionAggregateSearch, SessionListSearch,
 };
 use crate::errors::SearchErrors;
@@ -25,7 +25,7 @@ mod tests {
     use super::*;
     use crate::entities::{
         AggregateCountMetric, AggregateDateHistogramGroup, AggregateGroup, AggregateMetric,
-        AggregateSumMetric, ColIden, DateHistogramInterval, ExprIden, FieldIden, FieldType,
+        AggregateSumMetric, ColIden, ExprIden, FieldIden, FieldType, GroupDateHistogramInterval,
     };
 
     #[test]
@@ -90,12 +90,12 @@ mod tests {
                         FieldType::DateTime,
                     )),
                     None,
-                    DateHistogramInterval::Month,
+                    GroupDateHistogramInterval::Month,
                 )),
             },
         );
         assert_eq!(
-            query.unwrap().to_string(PostgresQueryBuilder),
+            query.unwrap().query.to_string(PostgresQueryBuilder),
             r#"SELECT DATE_PART('month', "MediaSession"."start_date"), COUNT(DISTINCT "MediaSession"."media_id") FROM "MediaSession" WHERE "MediaSession"."user_id" = '00000000-0000-0000-0000-000000000000' GROUP BY DATE_PART('month', "MediaSession"."start_date")"#
         );
     }
@@ -156,7 +156,7 @@ pub fn aggregate_all_by_user_id(
 pub fn aggregate_group_by_user_id(
     user_id: &Uuid,
     search: SessionAggregateGroupSearch,
-) -> Result<SelectStatement, SearchErrors> {
+) -> Result<AggregateGroupQuery, SearchErrors> {
     let mut select = Query::select();
 
     from_and_where_user_id(&mut select, user_id);

@@ -14,6 +14,12 @@ pub struct AggregateQuery {
     pub field_kind: FieldType,
 }
 
+pub struct AggregateGroupQuery {
+    pub query: SelectStatement,
+    pub kind: AggregateType,
+    pub field_kind: FieldType,
+}
+
 pub struct ListSearch<T: TableIden> {
     pub filter: Option<Vec<Filter<T>>>,
     pub sort: Option<Vec<Sort<T>>>,
@@ -106,13 +112,13 @@ pub struct AggregateFieldGroup<T: TableIden> {
 pub struct AggregateDateHistogramGroup<T: TableIden> {
     pub field: FieldIden<T>,
     pub default_value: Option<FieldSearchValue>,
-    pub interval: DateHistogramInterval,
+    pub interval: GroupDateHistogramInterval,
 }
 
-pub enum DateHistogramInterval {
+pub enum GroupDateHistogramInterval {
     Year,
     Month,
-    Week,
+    Weekday,
     Day,
     Hour,
     Minute,
@@ -131,7 +137,7 @@ impl<T: TableIden> AggregateDateHistogramGroup<T> {
     pub fn new(
         field: FieldIden<T>,
         default_value: Option<FieldSearchValue>,
-        interval: DateHistogramInterval,
+        interval: GroupDateHistogramInterval,
     ) -> Self {
         Self {
             field,

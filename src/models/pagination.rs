@@ -38,6 +38,11 @@ pub enum AggregateResultDTO {
     Duration(DurationDef),
 }
 
+#[derive(Eq, PartialEq, Hash, ToSchema)]
+pub enum AggregateGroupResultKeyDTO {
+    Integer(i64),
+}
+
 impl Serialize for AggregateResultDTO {
     fn serialize<S>(&self, serializer: S) -> Result<S::Ok, S::Error>
     where
@@ -46,6 +51,17 @@ impl Serialize for AggregateResultDTO {
         match &self {
             AggregateResultDTO::Integer(i) => i.serialize(serializer),
             AggregateResultDTO::Duration(d) => d.serialize(serializer),
+        }
+    }
+}
+
+impl Serialize for AggregateGroupResultKeyDTO {
+    fn serialize<S>(&self, serializer: S) -> Result<S::Ok, S::Error>
+    where
+        S: serde::Serializer,
+    {
+        match &self {
+            AggregateGroupResultKeyDTO::Integer(i) => i.serialize(serializer),
         }
     }
 }

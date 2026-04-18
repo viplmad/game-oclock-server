@@ -1,10 +1,10 @@
-use sea_query::{BinOper, Cond, Expr, Func, LikeExpr, SelectStatement, Value};
+use sea_query::{BinOper, Cond, Expr, ExprTrait, Func, LikeExpr, SelectStatement, Value};
 
 use crate::entities::{
     AggregateCountMetric, AggregateDateHistogramGroup, AggregateFieldGroup, AggregateGroup,
-    AggregateGroupSearch, AggregateMetric, AggregateQuery, AggregateSearch, AggregateSumMetric,
-    AggregateType, ColIden, DateHistogramInterval, FieldIden, FieldSearchValue, FieldType,
-    FieldValue, Filter, FilterOperator, ListSearch, SearchQuery, Sort, TableIden,
+    AggregateGroupQuery, AggregateGroupSearch, AggregateMetric, AggregateQuery, AggregateSearch,
+    AggregateSumMetric, AggregateType, ColIden, FieldIden, FieldSearchValue, FieldType, FieldValue,
+    Filter, FilterOperator, GroupDateHistogramInterval, ListSearch, SearchQuery, Sort, TableIden,
 };
 use crate::errors::{MappingError, SearchErrors};
 
@@ -57,14 +57,18 @@ pub fn apply_aggregate_search<I: 'static + TableIden + Clone + Copy>(
 pub fn apply_aggregate_group_search<I: 'static + TableIden + Clone + Copy>(
     mut select: SelectStatement,
     search: AggregateGroupSearch<I>,
-) -> Result<SelectStatement, SearchErrors> {
+) -> Result<AggregateGroupQuery, SearchErrors> {
     apply_filter(&mut select, search.filter).map_err(SearchErrors::Mapping)?;
 
     apply_aggregate_group(&mut select, search.group);
 
-    apply_aggregate_metric(&mut select, search.aggr);
+    let (kind, field_kind) = apply_aggregate_metric(&mut select, search.aggr);
 
-    Ok(select)
+    Ok(AggregateGroupQuery {
+        query: select,
+        kind,
+        field_kind,
+    })
 }
 
 fn apply_filter<I: 'static + TableIden + Clone + Copy>(
@@ -251,10 +255,14 @@ fn apply_aggregate_date_histogram_group<I: 'static + TableIden + Clone + Copy>(
     let expr = coalesce_default(col, aggr.default_value);
 
     let expr = match aggr.interval {
-        DateHistogramInterval::Year => Func::cust(DatePart).arg("year").arg(expr),
-        DateHistogramInterval::Month => Func::cust(DatePart).arg("month").arg(expr),
-        _ => todo!(),
-    };
+        GroupDateHistogramInterval::Year => Func::cust(DatePart).arg("year").arg(expr),
+        GroupDateHistogramInterval::Month => Func::cust(DatePart).arg("month").arg(expr),
+        GroupDateHistogramInterval::Day => Func::cust(DatePart).arg("day").arg(expr),
+        GroupDateHistogramInterval::Weekday => Func::cust(DatePart).arg("isodow").arg(expr),
+        GroupDateHistogramInterval::Hour => Func::cust(DatePart).arg("hour").arg(expr),
+        GroupDateHistogramInterval::Minute => Func::cust(DatePart).arg("minute").arg(expr),
+    }
+    .cast_as("BIGINT"); // Cast as int as no float date parts are used
 
     select.expr(expr.clone());
     select.add_group_by([expr.into()]);
