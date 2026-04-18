@@ -12,8 +12,8 @@ use crate::entities::{
 use crate::errors::{RepositoryError, SearchErrors};
 
 use super::helpers::{
-    aggregate_all_search, aggregate_group_search, execute, exists_some, fetch_all,
-    fetch_all_search, fetch_optional,
+    aggregate_all_search, aggregate_group_search, execute, exists_some, fetch_all_search,
+    fetch_optional,
 };
 
 #[derive(Clone)]
@@ -76,21 +76,6 @@ impl MediaSessionRepository {
     ) -> Result<HashMap<AggregateGroupResultKey, AggregateResult>, SearchErrors> {
         let query = media_session_query::aggregate_group_by_user_id(user_id, search)?;
         aggregate_group_search(&self.pool, query).await
-    }
-
-    // For review
-    pub async fn find_all_first_by_user_id_and_media_id_in(
-        &self,
-        user_id: &Uuid,
-        media_ids: Vec<Uuid>,
-    ) -> Result<Vec<MediaSessionWithTime>, RepositoryError> {
-        if media_ids.is_empty() {
-            return Ok(vec![]);
-        }
-
-        let query =
-            media_session_query::select_all_first_by_user_id_and_media_id_in(user_id, media_ids);
-        fetch_all(&self.pool, query).await
     }
 
     pub async fn create(&self, media_session: MediaSession) -> Result<(), RepositoryError> {

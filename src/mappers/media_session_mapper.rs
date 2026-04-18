@@ -80,22 +80,3 @@ impl From<DeviceWithSession> for DeviceSessionDTO {
         }
     }
 }
-
-// Review
-impl From<&MediaWithStateWithSession> for SessionDTO {
-    fn from(media: &MediaWithStateWithSession) -> Self {
-        Self {
-            start_datetime: media.session_start_date,
-            end_datetime: media.session_end_date,
-            device_id: media.session_device_id,
-            group_id: media.session_group_id,
-            started: media.session_started,
-            finished_status: media
-                .session_finished_status
-                .map(|v| MediaStatus::try_from(v).expect("Status is not within valid range")),
-            time: DurationDef::from(media.query_time),
-            added_datetime: media.session_added_datetime,
-            updated_datetime: media.session_updated_datetime,
-        }
-    }
-}

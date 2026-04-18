@@ -63,7 +63,7 @@ async fn run(
     let database_connection_pool = SqlxPostgresPoolBuilder::from_env()
         .await
         .expect("Could not open database connection.");
-    // migrations::apply_migrations(&database_connection_pool).await;
+    migrations::apply_migrations(&database_connection_pool).await;
 
     let igdb_client = IgdbClientPoolBuilder::from_env()
         .await
@@ -115,10 +115,6 @@ async fn run(
         tag_service.clone(),
     );
     let media_with_session_service = MediaWithSessionService::with(media_with_session_repository);
-    let media_review_service = MediaReviewService::with(
-        media_session_service.clone(),
-        media_with_session_service.clone(),
-    );
 
     let data_auth_service = web::Data::new(auth_service.clone());
     let data_device_service = web::Data::new(device_service.clone());
@@ -130,7 +126,6 @@ async fn run(
     let data_media_session_device_service = web::Data::new(media_session_device_service.clone());
     let data_media_tag_service = web::Data::new(media_tag_service.clone());
     let data_media_with_session_service = web::Data::new(media_with_session_service.clone());
-    let data_media_review_service = web::Data::new(media_review_service.clone());
 
     // OpenAPI
     let openapi = openapi::get_openapi();
@@ -150,7 +145,6 @@ async fn run(
             .app_data(data_media_session_device_service.clone())
             .app_data(data_media_tag_service.clone())
             .app_data(data_media_with_session_service.clone())
-            .app_data(data_media_review_service.clone())
             .app_data(data_encoding_key.clone())
             .app_data(data_decoding_key.clone())
             .service(

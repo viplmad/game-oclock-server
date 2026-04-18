@@ -1,8 +1,5 @@
 use chrono::{DateTime, Utc};
-use sea_query::{
-    Alias, Expr, Func, FunctionCall, Order, Query, QueryStatementWriter, SelectStatement,
-    SimpleExpr,
-};
+use sea_query::{Alias, Expr, Order, Query, QueryStatementWriter, SelectStatement, SimpleExpr};
 use uuid::Uuid;
 
 use crate::entities::{
@@ -96,7 +93,7 @@ mod tests {
         );
         assert_eq!(
             query.unwrap().query.to_string(PostgresQueryBuilder),
-            r#"SELECT DATE_PART('month', "MediaSession"."start_date"), COUNT(DISTINCT "MediaSession"."media_id") FROM "MediaSession" WHERE "MediaSession"."user_id" = '00000000-0000-0000-0000-000000000000' GROUP BY DATE_PART('month', "MediaSession"."start_date")"#
+            r#"SELECT CAST(DATE_PART('month', "MediaSession"."start_date") AS BIGINT), COUNT(DISTINCT "MediaSession"."media_id") FROM "MediaSession" WHERE "MediaSession"."user_id" = '00000000-0000-0000-0000-000000000000' GROUP BY CAST(DATE_PART('month', "MediaSession"."start_date") AS BIGINT)"#
         );
     }
 }
@@ -162,43 +159,6 @@ pub fn aggregate_group_by_user_id(
     from_and_where_user_id(&mut select, user_id);
 
     apply_aggregate_group_search(select, search)
-}
-
-pub fn select_all_first_by_user_id_and_media_id_in(
-    user_id: &Uuid,
-    media_ids: Vec<Uuid>,
-) -> impl QueryStatementWriter {
-    let mut select = Query::select();
-
-    from_and_where_user_id(&mut select, user_id);
-    select.and_where(
-        Expr::col((MediaSessionIden::Table, MediaSessionIden::MediaId)).is_in(
-            media_ids
-                .into_iter()
-                .map(|id| crate::uuid_utils::to_string(&id)),
-        ),
-    );
-    select
-        .column((MediaSessionIden::Table, MediaSessionIden::UserId))
-        .column((MediaSessionIden::Table, MediaSessionIden::MediaId))
-        .expr_as(
-            Expr::col((MediaSessionIden::Table, MediaSessionIden::StartDate)).min(),
-            MediaSessionIden::StartDate,
-        )
-        .expr_as(
-            Expr::col((MediaSessionIden::Table, MediaSessionIden::EndDate)).max(),
-            MediaSessionIden::EndDate,
-        )
-        .expr_as(coalesce_time_sum(), Alias::new(QUERY_TIME_ALIAS));
-    select.order_by_expr(
-        Expr::col((MediaSessionIden::Table, MediaSessionIden::StartDate)).min(),
-        Order::Asc,
-    );
-    select
-        .group_by_col((MediaSessionIden::Table, MediaSessionIden::UserId))
-        .group_by_col((MediaSessionIden::Table, MediaSessionIden::MediaId));
-
-    select
 }
 
 fn select_all_media_with_session_by_start_datetime_gte_and_start_datetime_lte(
@@ -500,13 +460,6 @@ fn add_fields(select: &mut SelectStatement) {
         .column((MediaSessionIden::Table, MediaSessionIden::AddedDatetime))
         .column((MediaSessionIden::Table, MediaSessionIden::UpdatedDatetime))
         .expr_as(derived_time_expr(), Alias::new(QUERY_TIME_ALIAS));
-}
-
-fn coalesce_time_sum() -> FunctionCall {
-    Func::coalesce([
-        Expr::expr(derived_time_expr()).sum(),
-        Expr::val("0 seconds").into(),
-    ])
 }
 
 fn derived_time_expr() -> SimpleExpr {

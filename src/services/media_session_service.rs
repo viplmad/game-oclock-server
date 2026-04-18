@@ -4,8 +4,7 @@ use chrono::{DateTime, Utc};
 use uuid::Uuid;
 
 use crate::entities::{
-    MediaSession, MediaSessionWithTime, SessionAggregateGroupSearch, SessionAggregateSearch,
-    SessionListSearch,
+    MediaSession, SessionAggregateGroupSearch, SessionAggregateSearch, SessionListSearch,
 };
 use crate::errors::ApiErrors;
 use crate::models::{
@@ -18,7 +17,7 @@ use super::helpers::{
     handle_action_result, handle_aggregate_group_search_mapping, handle_aggregate_search_mapping,
     handle_already_exists_result, handle_get_aggregate_group_result, handle_get_aggregate_result,
     handle_get_list_paged_result, handle_get_result, handle_list_search_mapping,
-    handle_not_found_result, handle_result,
+    handle_not_found_result,
 };
 use super::{DeviceService, MediaService};
 
@@ -123,19 +122,6 @@ impl MediaSessionService {
         >(search, quicksearch)?;
         let aggregate_result = self.repository.aggregate_group_all(user_id, search).await;
         handle_get_aggregate_group_result::<SessionDTO>(aggregate_result)
-    }
-
-    // For review
-    pub(super) async fn find_first_media_sessions_by_medias(
-        &self,
-        user_id: &Uuid,
-        media_ids: Vec<Uuid>,
-    ) -> Result<Vec<MediaSessionWithTime>, ApiErrors> {
-        let find_result = self
-            .repository
-            .find_all_first_by_user_id_and_media_id_in(user_id, media_ids)
-            .await;
-        handle_result::<Vec<MediaSessionWithTime>, SessionDTO>(find_result)
     }
 
     pub async fn create_media_session(

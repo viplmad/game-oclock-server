@@ -287,15 +287,6 @@ pub(super) fn optional_start_end_to_datetime(
     (start_datetime, end_datetime)
 }
 
-pub(super) fn start_end_to_datetime(
-    start_date: NaiveDate,
-    end_date: NaiveDate,
-) -> (DateTime<Utc>, DateTime<Utc>) {
-    let start_datetime = crate::date_utils::date_at_start_of_day(start_date);
-    let end_datetime = crate::date_utils::date_at_midnight(end_date);
-    (start_datetime, end_datetime)
-}
-
 pub(super) fn handle_list_search_mapping<T, S>(
     mut search: ListSearchDTO,
     quicksearch: Option<String>,
