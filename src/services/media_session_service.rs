@@ -1,6 +1,6 @@
 use std::collections::HashMap;
 
-use chrono::{DateTime, Utc};
+use chrono::{DateTime, NaiveDate, Utc};
 use uuid::Uuid;
 
 use crate::entities::{
@@ -9,14 +9,15 @@ use crate::entities::{
 use crate::errors::ApiErrors;
 use crate::models::{
     AggregateGroupResultKeyDTO, AggregateGroupSearchDTO, AggregateResultDTO, AggregateSearchDTO,
-    ListSearchDTO, Merge, NewSessionDTO, SessionDTO, SessionPageResult,
+    ListSearchDTO, Merge, NewSessionDTO, SessionDTO, SessionPageResult, SessionStreakDTO,
 };
 use crate::repository::MediaSessionRepository;
 
 use super::helpers::{
-    handle_action_result, handle_aggregate_group_search_mapping, handle_aggregate_search_mapping,
-    handle_already_exists_result, handle_get_aggregate_group_result, handle_get_aggregate_result,
-    handle_get_list_paged_result, handle_get_result, handle_list_search_mapping,
+    check_start_end, handle_action_result, handle_aggregate_group_search_mapping,
+    handle_aggregate_search_mapping, handle_already_exists_result,
+    handle_get_aggregate_group_result, handle_get_aggregate_result, handle_get_list_paged_result,
+    handle_get_list_result_raw, handle_get_result, handle_list_search_mapping,
     handle_not_found_result,
 };
 use super::{DeviceService, MediaService};
@@ -205,5 +206,24 @@ impl MediaSessionService {
             .exists_by_id(user_id, media_id, start_datetime)
             .await;
         handle_not_found_result::<SessionDTO>(exists_result)
+    }
+
+    pub async fn search_streaks(
+        &self,
+        user_id: &Uuid,
+        start_date: NaiveDate,
+        end_date: NaiveDate,
+    ) -> Result<Vec<SessionStreakDTO>, ApiErrors> {
+        check_start_end(start_date, end_date)?;
+
+        let start_datetime = crate::date_utils::date_at_start_of_day(start_date);
+        let end_datetime = crate::date_utils::date_at_start_of_day(end_date);
+
+        let find_result = self
+            .repository
+            .search_streaks(user_id, start_datetime, end_datetime)
+            .await;
+        handle_get_list_result_raw::<_, SessionDTO>(find_result)
+            .map(|v| v.into_iter().map(SessionStreakDTO::from).collect())
     }
 }

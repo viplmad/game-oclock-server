@@ -1,14 +1,17 @@
 use chrono::{DateTime, Utc};
-use sea_query::{Alias, Expr, Order, Query, QueryStatementWriter, SelectStatement, SimpleExpr};
+use sea_query::{
+    Alias, Expr, ExprTrait, Func, Order, Query, QueryStatementWriter, SelectStatement, SimpleExpr,
+};
 use uuid::Uuid;
 
 use crate::entities::{
     AggregateGroupQuery, AggregateQuery, MediaIden, MediaListSearch, MediaSession,
     MediaSessionIden, QUERY_TIME_ALIAS, SESSION_ADDED_DATETIME_ALIAS, SESSION_DEVICE_ID_ALIAS,
     SESSION_END_DATE_ALIAS, SESSION_FINISHED_STATUS_ALIAS, SESSION_GROUP_ID_ALIAS,
-    SESSION_MEDIA_ID, SESSION_START_DATE_ALIAS, SESSION_STARTED_ALIAS,
-    SESSION_UPDATED_DATETIME_ALIAS, SearchQuery, SessionAggregateGroupSearch,
-    SessionAggregateSearch, SessionListSearch,
+    SESSION_MEDIA_ID_ALIAS, SESSION_START_DATE_ALIAS, SESSION_STARTED_ALIAS,
+    SESSION_UPDATED_DATETIME_ALIAS, STREAK_DAYS_ALIAS, STREAK_END_DATE_ALIAS,
+    STREAK_START_DATE_ALIAS, SearchQuery, SessionAggregateGroupSearch, SessionAggregateSearch,
+    SessionListSearch,
 };
 use crate::errors::SearchErrors;
 
@@ -17,6 +20,7 @@ use super::search::{apply_aggregate_group_search, apply_aggregate_search, apply_
 
 #[cfg(test)]
 mod tests {
+    use chrono::{TimeZone, Utc};
     use sea_query::PostgresQueryBuilder;
     use uuid::Uuid;
 
@@ -96,6 +100,17 @@ mod tests {
             query.unwrap().query.to_string(PostgresQueryBuilder),
             r#"SELECT CAST(DATE_PART('month', "MediaSession"."start_date") AS BIGINT), COUNT(DISTINCT "MediaSession"."media_id") FROM "MediaSession" WHERE "MediaSession"."user_id" = '00000000-0000-0000-0000-000000000000' GROUP BY CAST(DATE_PART('month', "MediaSession"."start_date") AS BIGINT)"#
         );
+    }
+
+    #[test]
+    fn test() {
+        let user_id = Uuid::try_parse("00000000-0000-0000-0000-000000000000").unwrap();
+        let query = select_streaks(
+            &user_id,
+            Utc.with_ymd_and_hms(2025, 1, 1, 0, 0, 0).unwrap(),
+            Utc.with_ymd_and_hms(2026, 1, 1, 0, 0, 0).unwrap(),
+        );
+        assert_eq!(query.to_string(PostgresQueryBuilder), r#""#);
     }
 }
 
@@ -241,7 +256,7 @@ fn add_join_fields(select: &mut SelectStatement) {
     select
         .expr_as(
             Expr::col((MediaSessionIden::Table, MediaSessionIden::MediaId)),
-            Alias::new(SESSION_MEDIA_ID),
+            Alias::new(SESSION_MEDIA_ID_ALIAS),
         )
         .expr_as(
             Expr::col((MediaSessionIden::Table, MediaSessionIden::StartDate)),
@@ -425,4 +440,122 @@ fn derived_time_expr() -> SimpleExpr {
         MediaSessionIden::Table,
         MediaSessionIden::StartDate,
     )))
+}
+
+/// Streaks
+const STREAK_START_DATE_SUB_ALIAS: &str = "start_date";
+const STREAK_END_DATE_SUB_ALIAS: &str = "end_date";
+const STREAK_STARTS_STREAK_SUB_ALIAS: &str = "starts_streak";
+const STREAK_GROUP_SUB_ALIAS: &str = "grp";
+
+pub fn select_streaks(
+    user_id: &Uuid,
+    start_datetime: DateTime<Utc>,
+    end_datetime: DateTime<Utc>,
+) -> impl QueryStatementWriter {
+    let mut select = Query::select();
+
+    let min_start_date = Expr::col(STREAK_START_DATE_SUB_ALIAS).min();
+    let max_end_date = Expr::col(STREAK_END_DATE_SUB_ALIAS).max();
+    let streak_days = max_end_date
+        .clone()
+        .sub(min_start_date.clone())
+        .add(Expr::val(1));
+    select
+        .expr_as(min_start_date.clone(), STREAK_START_DATE_ALIAS)
+        .expr_as(max_end_date.clone(), STREAK_END_DATE_ALIAS)
+        .expr_as(streak_days.clone(), STREAK_DAYS_ALIAS);
+    select.from_subquery(
+        streaks_group(user_id, start_datetime, end_datetime),
+        "streaks_group_sub",
+    );
+    select.add_group_by([Expr::col(STREAK_GROUP_SUB_ALIAS).into()]);
+    select.order_by_expr(streak_days.clone().into(), Order::Desc);
+
+    select
+}
+
+fn streaks_group(
+    user_id: &Uuid,
+    start_datetime: DateTime<Utc>,
+    end_datetime: DateTime<Utc>,
+) -> SelectStatement {
+    let mut select = Query::select();
+
+    select
+        .column(STREAK_START_DATE_SUB_ALIAS)
+        .column(STREAK_END_DATE_SUB_ALIAS)
+        .expr_as(
+            filter_over_order_by(
+                Expr::col(sea_query::Asterisk).count(),
+                Expr::col(STREAK_STARTS_STREAK_SUB_ALIAS).into(),
+                Expr::col(STREAK_START_DATE_SUB_ALIAS).into(),
+            ),
+            STREAK_GROUP_SUB_ALIAS,
+        );
+    select.from_subquery(
+        starts_streak(user_id, start_datetime, end_datetime),
+        "starts_streak_sub",
+    );
+    select.order_by(STREAK_START_DATE_SUB_ALIAS, Order::Asc);
+
+    select
+}
+
+fn starts_streak(
+    user_id: &Uuid,
+    start_datetime: DateTime<Utc>,
+    end_datetime: DateTime<Utc>,
+) -> SelectStatement {
+    let mut select = Query::select();
+
+    let start_date_as_date =
+        Expr::col((MediaSessionIden::Table, MediaSessionIden::StartDate)).cast_as("DATE");
+    let end_date_as_date =
+        Expr::col((MediaSessionIden::Table, MediaSessionIden::EndDate)).cast_as("DATE");
+    select
+        .expr_as(start_date_as_date.clone(), STREAK_START_DATE_SUB_ALIAS)
+        .expr_as(end_date_as_date.clone(), STREAK_END_DATE_SUB_ALIAS)
+        .expr_as(
+            Func::coalesce([
+                start_date_as_date.clone().sub(over_order_by(
+                    Func::cust(Lag).arg(end_date_as_date.clone()).into(),
+                    Expr::col((MediaSessionIden::Table, MediaSessionIden::StartDate)).into(),
+                )),
+                // 99 > 1 for first lag so it always starts streak
+                Expr::val(99).into(),
+            ])
+            .gt(Expr::val(1)),
+            STREAK_STARTS_STREAK_SUB_ALIAS,
+        );
+    from_and_where_user_id(&mut select, user_id);
+    select
+        .and_where(Expr::col(MediaSessionIden::StartDate).gte(start_datetime))
+        .and_where(Expr::col(MediaSessionIden::EndDate).lt(end_datetime));
+    select.order_by(
+        (MediaSessionIden::Table, MediaSessionIden::StartDate),
+        Order::Asc,
+    );
+
+    select
+}
+
+fn over_order_by(from: SimpleExpr, order_by: SimpleExpr) -> SimpleExpr {
+    Expr::cust_with_exprs("$1 OVER (ORDER BY $2)", vec![from, order_by])
+}
+
+fn filter_over_order_by(from: SimpleExpr, filter: SimpleExpr, order_by: SimpleExpr) -> SimpleExpr {
+    over_order_by(
+        Expr::cust_with_exprs("$1 FILTER (WHERE $2)", vec![from, filter]),
+        order_by,
+    )
+}
+
+//
+struct Lag;
+
+impl sea_query::Iden for Lag {
+    fn unquoted(&self, s: &mut dyn std::fmt::Write) {
+        write!(s, "LAG").unwrap();
+    }
 }

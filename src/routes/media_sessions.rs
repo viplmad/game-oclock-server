@@ -4,6 +4,7 @@ use crate::models::{
     AggregateGroupResultKeyDTO, AggregateGroupSearchDTO, AggregateResultDTO, AggregateSearchDTO,
     DateTimeDTO, ErrorMessage, ItemId, ListSearchDTO, LoggedUser, MediaSessionPageResult,
     NewSessionDTO, OptionalStartEndDateQuery, QuicksearchQuery, SessionDTO, SessionPageResult,
+    SessionStreakDTO, StartEndDateQuery,
 };
 use crate::services::{MediaSessionService, MediaWithSessionService};
 
@@ -176,6 +177,39 @@ pub async fn aggregate_group_sessions(
         .aggregate_group_sessions(&logged_user.id, body.0, query.0.q)
         .await;
     handle_get_result(aggregate_result)
+}
+
+/// Get all sessions
+#[utoipa::path(
+    post,
+    path = "/api/v1/medias/sessions/streaks",
+    tag = "MediaSessions",
+    params(
+        StartEndDateQuery,
+        //QuicksearchQuery,
+    ),
+    // TODO request_body(content = ListSearchDTO, description = "Query", content_type = "application/json"),
+    responses(
+        (status = 200, description = "Streaks obtained", body = [SessionStreakDTO], content_type = "application/json"),
+        (status = 401, description = "Unauthorized", body = ErrorMessage, content_type = "application/json"),
+        (status = 403, description = "Forbidden", body = ErrorMessage, content_type = "application/json"),
+        (status = 404, description = "Media not found", body = ErrorMessage, content_type = "application/json"),
+        (status = 500, description = "Internal server error", body = ErrorMessage, content_type = "application/json"),
+    ),
+    security(
+        ("OAuth2" = [])
+    )
+)]
+#[post("/medias/sessions/streaks")]
+pub async fn get_session_streaks(
+    media_session_service: web::Data<MediaSessionService>,
+    query: web::Query<StartEndDateQuery>,
+    logged_user: LoggedUser,
+) -> impl Responder {
+    let search_result = media_session_service
+        .search_streaks(&logged_user.id, query.start_date, query.end_date)
+        .await;
+    handle_get_result(search_result)
 }
 
 /// Search first medias by session

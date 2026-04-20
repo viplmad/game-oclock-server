@@ -9,6 +9,7 @@ mod media_tag_mapper;
 mod media_type_mapper;
 mod search_mapper;
 mod session_mapper;
+mod streak_mapper;
 mod tag_mapper;
 mod user_mapper;
 

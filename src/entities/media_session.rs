@@ -11,7 +11,7 @@ use super::{
 };
 
 pub const QUERY_TIME_ALIAS: &str = "query_time";
-pub const SESSION_MEDIA_ID: &str = "session_media_id";
+pub const SESSION_MEDIA_ID_ALIAS: &str = "session_media_id";
 pub const SESSION_START_DATE_ALIAS: &str = "session_start_date";
 pub const SESSION_END_DATE_ALIAS: &str = "session_end_date";
 pub const SESSION_DEVICE_ID_ALIAS: &str = "session_device_id";
