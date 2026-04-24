@@ -1,4 +1,4 @@
-use chrono::{DateTime, Utc};
+use chrono::{DateTime, FixedOffset};
 use sea_query::enum_def;
 use sqlx::FromRow;
 use uuid::Uuid;
@@ -13,7 +13,7 @@ pub struct MediaAvailable {
     pub user_id: Uuid,
     pub media_id: Uuid,
     pub location_id: Uuid,
-    pub date: DateTime<Utc>,
-    pub added_datetime: DateTime<Utc>,
-    pub updated_datetime: DateTime<Utc>,
+    pub date: DateTime<FixedOffset>,
+    pub added_datetime: DateTime<FixedOffset>,
+    pub updated_datetime: DateTime<FixedOffset>,
 }

@@ -1,4 +1,4 @@
-use chrono::{DateTime, Utc};
+use chrono::{DateTime, FixedOffset};
 use serde::{Deserialize, Serialize};
 use utoipa::{IntoParams, ToSchema};
 use uuid::Uuid;
@@ -12,9 +12,9 @@ pub struct UserDTO {
     pub username: String,
     pub role: String,
     #[schema(value_type = String, format = DateTime)]
-    pub added_datetime: DateTime<Utc>,
+    pub added_datetime: DateTime<FixedOffset>,
     #[schema(value_type = String, format = DateTime)]
-    pub updated_datetime: DateTime<Utc>,
+    pub updated_datetime: DateTime<FixedOffset>,
 }
 
 impl Merge<NewUserDTO> for UserDTO {

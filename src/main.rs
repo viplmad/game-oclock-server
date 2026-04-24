@@ -178,6 +178,7 @@ async fn run(
                         .service(routes::get_sessions)
                         .service(routes::aggregate_sessions)
                         .service(routes::aggregate_group_sessions)
+                        .service(routes::aggregate_first_sessions)
                         .service(routes::get_session_streaks)
                         .service(routes::get_first_session_medias)
                         .service(routes::get_last_session_medias)

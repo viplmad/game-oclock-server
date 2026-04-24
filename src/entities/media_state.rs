@@ -1,4 +1,4 @@
-use chrono::{DateTime, Utc};
+use chrono::{DateTime, FixedOffset};
 use sea_query::enum_def;
 use sqlx::FromRow;
 use uuid::Uuid;
@@ -19,8 +19,8 @@ pub struct MediaState {
     pub status: i16,
     pub rating: i16,
     pub notes: String,
-    pub added_datetime: DateTime<Utc>,
-    pub updated_datetime: DateTime<Utc>,
+    pub added_datetime: DateTime<FixedOffset>,
+    pub updated_datetime: DateTime<FixedOffset>,
 }
 
 #[derive(FromRow)]
@@ -30,8 +30,8 @@ pub struct MediaStateWithExternal {
     pub status: i16,
     pub rating: i16,
     pub notes: String,
-    pub added_datetime: DateTime<Utc>,
-    pub updated_datetime: DateTime<Utc>,
+    pub added_datetime: DateTime<FixedOffset>,
+    pub updated_datetime: DateTime<FixedOffset>,
     pub external_source: String,
     pub external_id: String,
 }

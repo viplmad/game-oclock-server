@@ -378,16 +378,14 @@ pub fn convert_value(value: &str, kind: FieldType) -> Result<Value, MappingError
             Ok(date_value.into())
         }
         FieldType::DateTime => {
-            let date_time_value = DateTime::parse_from_rfc3339(value)
-                .map_err(|err| {
-                    log::error!(
-                        "Error converting value. <{}> - {}",
-                        value.to_string(),
-                        err.to_string()
-                    );
-                    MappingError(error_message_builder::convert_to_error(value, "date time"))
-                })?
-                .to_utc();
+            let date_time_value = DateTime::parse_from_rfc3339(value).map_err(|err| {
+                log::error!(
+                    "Error converting value. <{}> - {}",
+                    value.to_string(),
+                    err.to_string()
+                );
+                MappingError(error_message_builder::convert_to_error(value, "date time"))
+            })?;
             Ok(date_time_value.into())
         }
         FieldType::Interval => {

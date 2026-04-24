@@ -39,8 +39,8 @@ impl From<MediaWithStateWithSession> for MediaSessionDTO {
             },
             session: SessionDTO {
                 media_id: media.session_media_id,
-                start_datetime: media.session_start_date,
-                end_datetime: media.session_end_date,
+                start_datetime: media.session_start_date.fixed_offset(),
+                end_datetime: media.session_end_date.fixed_offset(),
                 device_id: media.session_device_id,
                 group_id: media.session_group_id,
                 started: media.session_started,
@@ -67,8 +67,8 @@ impl From<DeviceWithSession> for DeviceSessionDTO {
             },
             session: SessionDTO {
                 media_id: device.session_media_id,
-                start_datetime: device.session_start_date,
-                end_datetime: device.session_end_date,
+                start_datetime: device.session_start_date.fixed_offset(),
+                end_datetime: device.session_end_date.fixed_offset(),
                 device_id: device.session_device_id,
                 group_id: device.session_group_id,
                 started: device.session_started,

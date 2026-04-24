@@ -1,6 +1,6 @@
 use std::str::FromStr;
 
-use chrono::{DateTime, Utc};
+use chrono::{DateTime, FixedOffset};
 use sea_query::{Expr, enum_def};
 use sqlx::{FromRow, postgres::types::PgInterval};
 use uuid::Uuid;
@@ -30,14 +30,16 @@ pub type SessionAggregateGroupSearch = AggregateGroupSearch<MediaSessionIden>;
 pub struct MediaSession {
     pub user_id: Uuid,
     pub media_id: Uuid,
-    pub start_date: DateTime<Utc>,
-    pub end_date: DateTime<Utc>,
+    pub start_date: DateTime<FixedOffset>,
+    pub start_date_tz: String,
+    pub end_date: DateTime<FixedOffset>,
+    pub end_date_tz: String,
     pub device_id: Option<Uuid>,
     pub group_id: Uuid,
     pub started: bool,
     pub finished_status: Option<i16>,
-    pub added_datetime: DateTime<Utc>,
-    pub updated_datetime: DateTime<Utc>,
+    pub added_datetime: DateTime<FixedOffset>,
+    pub updated_datetime: DateTime<FixedOffset>,
 }
 
 impl TableIden for MediaSessionIden {
@@ -48,15 +50,15 @@ impl TableIden for MediaSessionIden {
 pub struct MediaSessionWithTime {
     pub user_id: Uuid,
     pub media_id: Uuid,
-    pub start_date: DateTime<Utc>,
-    pub end_date: DateTime<Utc>,
+    pub start_date: DateTime<FixedOffset>,
+    pub end_date: DateTime<FixedOffset>,
     pub device_id: Option<Uuid>,
     pub group_id: Uuid,
     pub started: bool,
     pub finished_status: Option<i16>,
     pub query_time: PgInterval,
-    pub added_datetime: DateTime<Utc>,
-    pub updated_datetime: DateTime<Utc>,
+    pub added_datetime: DateTime<FixedOffset>,
+    pub updated_datetime: DateTime<FixedOffset>,
 }
 
 impl FromStr for FieldIden<MediaSessionIden> {

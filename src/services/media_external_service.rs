@@ -16,7 +16,7 @@ impl MediaExternalService {
         Self { igdb_client }
     }
 }
-
+// TODO remove unwraps
 impl MediaExternalService {
     pub async fn get(&self, id: &ExternalMediaIdDTO) -> Result<NewManualMediaDTO, ApiErrors> {
         if id.source.to_lowercase() == IGDB {
@@ -86,7 +86,7 @@ impl IgdbClient {
             edition: resp.version_title,
             release_date: resp
                 .first_release_date
-                .map(|v| DateTime::from_timestamp_secs(v).unwrap()),
+                .map(|v| DateTime::from_timestamp_secs(v).unwrap().fixed_offset()),
             genres: resp
                 .genres
                 .unwrap_or_else(|| Vec::<IgdbElementResponse>::new())
@@ -148,7 +148,7 @@ impl IgdbClient {
                         edition: item.version_title.unwrap_or_default(),
                         release_date: item
                             .first_release_date
-                            .map(|v| DateTime::from_timestamp_secs(v).unwrap()),
+                            .map(|v| DateTime::from_timestamp_secs(v).unwrap().fixed_offset()),
                         genres: item
                             .genres
                             .unwrap_or_else(|| Vec::<IgdbElementResponse>::new())

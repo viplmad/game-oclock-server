@@ -1,4 +1,4 @@
-use chrono::{DateTime, Utc};
+use chrono::{DateTime, FixedOffset};
 use serde::{Deserialize, Serialize};
 use utoipa::ToSchema;
 use uuid::Uuid;
@@ -10,9 +10,9 @@ pub struct SessionDTO {
     #[schema(value_type = String)]
     pub media_id: Uuid,
     #[schema(value_type = String, format = DateTime)]
-    pub start_datetime: DateTime<Utc>,
+    pub start_datetime: DateTime<FixedOffset>,
     #[schema(value_type = String, format = DateTime)]
-    pub end_datetime: DateTime<Utc>,
+    pub end_datetime: DateTime<FixedOffset>,
     #[schema(value_type = String)]
     #[serde(skip_serializing_if = "Option::is_none")]
     pub device_id: Option<Uuid>,
@@ -24,9 +24,9 @@ pub struct SessionDTO {
     #[schema(value_type = String)]
     pub time: DurationDef,
     #[schema(value_type = String, format = DateTime)]
-    pub added_datetime: DateTime<Utc>,
+    pub added_datetime: DateTime<FixedOffset>,
     #[schema(value_type = String, format = DateTime)]
-    pub updated_datetime: DateTime<Utc>,
+    pub updated_datetime: DateTime<FixedOffset>,
 }
 
 impl Merge<NewSessionDTO> for SessionDTO {
@@ -55,9 +55,9 @@ impl ModelInfo for SessionDTO {
 #[derive(Deserialize, ToSchema)]
 pub struct NewSessionDTO {
     #[schema(value_type = String, format = DateTime)]
-    pub start_datetime: DateTime<Utc>,
+    pub start_datetime: DateTime<FixedOffset>,
     #[schema(value_type = String, format = DateTime)]
-    pub end_datetime: DateTime<Utc>,
+    pub end_datetime: DateTime<FixedOffset>,
     #[schema(value_type = String)]
     pub device_id: Option<Uuid>,
     #[schema(value_type = String)]

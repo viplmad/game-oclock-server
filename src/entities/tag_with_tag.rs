@@ -1,4 +1,4 @@
-use chrono::{DateTime, Utc};
+use chrono::{DateTime, FixedOffset};
 use sqlx::FromRow;
 use uuid::Uuid;
 
@@ -7,9 +7,9 @@ pub struct TagWithTag {
     pub id: Uuid,
     pub user_id: Uuid,
     pub name: String,
-    pub added_datetime: DateTime<Utc>,
-    pub updated_datetime: DateTime<Utc>,
+    pub added_datetime: DateTime<FixedOffset>,
+    pub updated_datetime: DateTime<FixedOffset>,
     pub tag_order: i32,
-    pub tag_added_datetime: DateTime<Utc>,
-    pub tag_updated_datetime: DateTime<Utc>,
+    pub tag_added_datetime: DateTime<FixedOffset>,
+    pub tag_updated_datetime: DateTime<FixedOffset>,
 }

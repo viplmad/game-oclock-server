@@ -1,4 +1,4 @@
-use chrono::{DateTime, Utc};
+use chrono::{DateTime, FixedOffset};
 use serde::{Deserialize, Serialize};
 use utoipa::ToSchema;
 use uuid::Uuid;
@@ -13,9 +13,9 @@ pub struct LocationDTO {
     #[serde(skip_serializing_if = "Option::is_none")]
     pub image_url: Option<String>,
     #[schema(value_type = String, format = DateTime)]
-    pub added_datetime: DateTime<Utc>,
+    pub added_datetime: DateTime<FixedOffset>,
     #[schema(value_type = String, format = DateTime)]
-    pub updated_datetime: DateTime<Utc>,
+    pub updated_datetime: DateTime<FixedOffset>,
 }
 
 impl Merge<NewLocationDTO> for LocationDTO {

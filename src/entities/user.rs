@@ -1,6 +1,6 @@
 use std::str::FromStr;
 
-use chrono::{DateTime, Utc};
+use chrono::{DateTime, FixedOffset};
 use sea_query::enum_def;
 use sqlx::FromRow;
 use uuid::Uuid;
@@ -16,8 +16,8 @@ pub struct User {
     pub username: String,
     pub password: String,
     pub role: String,
-    pub added_datetime: DateTime<Utc>,
-    pub updated_datetime: DateTime<Utc>,
+    pub added_datetime: DateTime<FixedOffset>,
+    pub updated_datetime: DateTime<FixedOffset>,
 }
 
 impl TableIden for UserIden {

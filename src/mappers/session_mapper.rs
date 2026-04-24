@@ -7,7 +7,7 @@ impl From<MediaSessionWithTime> for SessionDTO {
     fn from(session: MediaSessionWithTime) -> Self {
         Self {
             media_id: session.media_id,
-            start_datetime: session.start_date,
+            start_datetime: session.start_date.fixed_offset(),
             end_datetime: session.end_date,
             device_id: session.device_id,
             group_id: session.group_id,
@@ -28,7 +28,9 @@ impl From<SessionDTO> for MediaSession {
             user_id: Uuid::default(),
             media_id: Uuid::default(),
             start_date: session.start_datetime,
+            start_date_tz: session.start_datetime.timezone().to_string(),
             end_date: session.end_datetime,
+            end_date_tz: session.end_datetime.timezone().to_string(),
             device_id: session.device_id,
             group_id: session.group_id,
             started: session.started,

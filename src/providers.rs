@@ -1,5 +1,5 @@
 use sqlx::{
-    PgPool,
+    Executor, PgPool,
     postgres::{PgConnectOptions, PgPoolOptions, PgSslMode},
 };
 
@@ -34,6 +34,13 @@ impl SqlxPostgresPoolBuilder {
         PgPoolOptions::new()
             .acquire_timeout(std::time::Duration::from_secs(2))
             .max_connections(5)
+            .after_connect(|conn, _meta| {
+                Box::pin(async move {
+                    conn.execute("SET TIME ZONE 'UTC';").await?;
+
+                    Ok(())
+                })
+            })
             .connect_with(conn)
             .await
             .map(|res| {

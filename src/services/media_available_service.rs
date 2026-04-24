@@ -1,4 +1,4 @@
-use chrono::{DateTime, Utc};
+use chrono::{DateTime, FixedOffset};
 use uuid::Uuid;
 
 use crate::entities::{LocationListSearch, MediaAvailable, MediaListSearch};
@@ -116,7 +116,7 @@ impl MediaAvailableService {
         user_id: &Uuid,
         media_id: &Uuid,
         location_id: &Uuid,
-        available_date: DateTime<Utc>,
+        available_date: DateTime<FixedOffset>,
     ) -> Result<(), ApiErrors> {
         self.media_service.exists_media(media_id).await?;
         self.location_service

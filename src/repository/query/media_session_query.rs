@@ -1,4 +1,4 @@
-use chrono::{DateTime, Utc};
+use chrono::{DateTime, FixedOffset};
 use sea_query::{
     Alias, Expr, ExprTrait, Func, Order, Query, QueryStatementWriter, SelectStatement, SimpleExpr,
 };
@@ -107,8 +107,12 @@ mod tests {
         let user_id = Uuid::try_parse("00000000-0000-0000-0000-000000000000").unwrap();
         let query = select_streaks(
             &user_id,
-            Utc.with_ymd_and_hms(2025, 1, 1, 0, 0, 0).unwrap(),
-            Utc.with_ymd_and_hms(2026, 1, 1, 0, 0, 0).unwrap(),
+            Utc.with_ymd_and_hms(2025, 1, 1, 0, 0, 0)
+                .unwrap()
+                .fixed_offset(),
+            Utc.with_ymd_and_hms(2026, 1, 1, 0, 0, 0)
+                .unwrap()
+                .fixed_offset(),
         );
         assert_eq!(query.to_string(PostgresQueryBuilder), r#""#);
     }
@@ -117,7 +121,7 @@ mod tests {
 pub fn select_by_id(
     user_id: &Uuid,
     media_id: &Uuid,
-    start_datetime: DateTime<Utc>,
+    start_datetime: DateTime<FixedOffset>,
 ) -> impl QueryStatementWriter {
     let mut select = Query::select();
 
@@ -189,10 +193,37 @@ pub fn aggregate_group_by_user_id(
     apply_aggregate_group_search(select, search)
 }
 
+pub fn aggregate_all_first_by_user_id(
+    user_id: &Uuid,
+    search: SessionAggregateSearch,
+) -> Result<AggregateQuery, SearchErrors> {
+    let mut select = Query::select();
+
+    from_and_where_user_id(&mut select, user_id);
+    let min_subquery = Query::select()
+        .from_as(MediaSessionIden::Table, "sub")
+        .expr(Expr::col(("sub", MediaSessionIden::StartDate)).min())
+        .and_where(
+            Expr::col(("sub", MediaSessionIden::UserId)).eq(crate::uuid_utils::to_string(user_id)),
+        )
+        .and_where(
+            Expr::col(("sub", MediaSessionIden::MediaId))
+                .equals((MediaSessionIden::Table, MediaSessionIden::MediaId)),
+        )
+        // TODO only if filters > 2
+        .and_where(Expr::col(("sub", MediaSessionIden::FinishedStatus)).is_not_null())
+        .take();
+    select.and_where(
+        Expr::col((MediaSessionIden::Table, MediaSessionIden::StartDate)).in_subquery(min_subquery),
+    );
+
+    apply_aggregate_search(select, search)
+}
+
 fn select_all_media_with_session_by_start_datetime_gte_and_start_datetime_lte(
     user_id: &Uuid,
-    start_datetime: Option<DateTime<Utc>>,
-    end_datetime: Option<DateTime<Utc>>,
+    start_datetime: Option<DateTime<FixedOffset>>,
+    end_datetime: Option<DateTime<FixedOffset>>,
 ) -> SelectStatement {
     let mut select = media_query::select_all(user_id);
 
@@ -208,8 +239,8 @@ fn select_all_media_with_session_by_start_datetime_gte_and_start_datetime_lte(
 
 pub fn select_all_first_media_with_session_with_search_by_start_datetime_gte_and_start_datetime_lte_order_by_start_datetime_desc(
     user_id: &Uuid,
-    start_datetime: Option<DateTime<Utc>>,
-    end_datetime: Option<DateTime<Utc>>,
+    start_datetime: Option<DateTime<FixedOffset>>,
+    end_datetime: Option<DateTime<FixedOffset>>,
     mut search: MediaListSearch,
 ) -> Result<SearchQuery, SearchErrors> {
     let mut select = select_all_media_with_session_by_start_datetime_gte_and_start_datetime_lte(
@@ -231,8 +262,8 @@ pub fn select_all_first_media_with_session_with_search_by_start_datetime_gte_and
 
 pub fn select_all_last_media_with_session_with_search_by_start_datetime_gte_and_start_datetime_lte_order_by_start_datetime_desc(
     user_id: &Uuid,
-    start_datetime: Option<DateTime<Utc>>,
-    end_datetime: Option<DateTime<Utc>>,
+    start_datetime: Option<DateTime<FixedOffset>>,
+    end_datetime: Option<DateTime<FixedOffset>>,
     mut search: MediaListSearch,
 ) -> Result<SearchQuery, SearchErrors> {
     let mut select = select_all_media_with_session_by_start_datetime_gte_and_start_datetime_lte(
@@ -332,7 +363,7 @@ pub fn insert(media_session: &MediaSession) -> impl QueryStatementWriter {
 pub fn delete_by_id(
     user_id: &Uuid,
     media_id: &Uuid,
-    start_datetime: DateTime<Utc>,
+    start_datetime: DateTime<FixedOffset>,
 ) -> impl QueryStatementWriter {
     let mut delete = Query::delete();
 
@@ -348,7 +379,7 @@ pub fn delete_by_id(
 pub fn exists_by_id(
     user_id: &Uuid,
     media_id: &Uuid,
-    start_datetime: DateTime<Utc>,
+    start_datetime: DateTime<FixedOffset>,
 ) -> impl QueryStatementWriter {
     let mut select = Query::select();
 
@@ -362,8 +393,8 @@ pub fn exists_by_id(
 
 pub fn exists_by_start_datetime_lt_or_end_datetime_gt(
     user_id: &Uuid,
-    end_datetime: DateTime<Utc>,
-    start_datetime: DateTime<Utc>,
+    end_datetime: DateTime<FixedOffset>,
+    start_datetime: DateTime<FixedOffset>,
 ) -> impl QueryStatementWriter {
     let mut select = Query::select();
 
@@ -405,8 +436,8 @@ fn from_and_where_user_id(select: &mut SelectStatement, user_id: &Uuid) {
 
 fn where_optional_start_datetime_gte_and_start_datetime_lte(
     select: &mut SelectStatement,
-    start_datetime: Option<DateTime<Utc>>,
-    end_datetime: Option<DateTime<Utc>>,
+    start_datetime: Option<DateTime<FixedOffset>>,
+    end_datetime: Option<DateTime<FixedOffset>>,
 ) {
     if let Some(start) = start_datetime {
         select.and_where(
@@ -415,8 +446,7 @@ fn where_optional_start_datetime_gte_and_start_datetime_lte(
     }
 
     if let Some(end) = end_datetime {
-        select
-            .and_where(Expr::col((MediaSessionIden::Table, MediaSessionIden::StartDate)).lte(end));
+        select.and_where(Expr::col((MediaSessionIden::Table, MediaSessionIden::StartDate)).lt(end));
     }
 }
 
@@ -450,8 +480,8 @@ const STREAK_GROUP_SUB_ALIAS: &str = "grp";
 
 pub fn select_streaks(
     user_id: &Uuid,
-    start_datetime: DateTime<Utc>,
-    end_datetime: DateTime<Utc>,
+    start_datetime: DateTime<FixedOffset>,
+    end_datetime: DateTime<FixedOffset>,
 ) -> impl QueryStatementWriter {
     let mut select = Query::select();
 
@@ -477,8 +507,8 @@ pub fn select_streaks(
 
 fn streaks_group(
     user_id: &Uuid,
-    start_datetime: DateTime<Utc>,
-    end_datetime: DateTime<Utc>,
+    start_datetime: DateTime<FixedOffset>,
+    end_datetime: DateTime<FixedOffset>,
 ) -> SelectStatement {
     let mut select = Query::select();
 
@@ -504,15 +534,21 @@ fn streaks_group(
 
 fn starts_streak(
     user_id: &Uuid,
-    start_datetime: DateTime<Utc>,
-    end_datetime: DateTime<Utc>,
+    start_datetime: DateTime<FixedOffset>,
+    end_datetime: DateTime<FixedOffset>,
 ) -> SelectStatement {
     let mut select = Query::select();
 
-    let start_date_as_date =
-        Expr::col((MediaSessionIden::Table, MediaSessionIden::StartDate)).cast_as("DATE");
-    let end_date_as_date =
-        Expr::col((MediaSessionIden::Table, MediaSessionIden::EndDate)).cast_as("DATE");
+    let start_date_as_date = at_time_zone(
+        Expr::col((MediaSessionIden::Table, MediaSessionIden::StartDate)).into(),
+        Expr::col((MediaSessionIden::Table, MediaSessionIden::StartDateTz)).into(),
+    )
+    .cast_as("DATE");
+    let end_date_as_date = at_time_zone(
+        Expr::col((MediaSessionIden::Table, MediaSessionIden::EndDate)).into(),
+        Expr::col((MediaSessionIden::Table, MediaSessionIden::EndDateTz)).into(),
+    )
+    .cast_as("DATE");
     select
         .expr_as(start_date_as_date.clone(), STREAK_START_DATE_SUB_ALIAS)
         .expr_as(end_date_as_date.clone(), STREAK_END_DATE_SUB_ALIAS)
@@ -549,6 +585,10 @@ fn filter_over_order_by(from: SimpleExpr, filter: SimpleExpr, order_by: SimpleEx
         Expr::cust_with_exprs("$1 FILTER (WHERE $2)", vec![from, filter]),
         order_by,
     )
+}
+
+fn at_time_zone(from: SimpleExpr, zone: SimpleExpr) -> SimpleExpr {
+    Expr::cust_with_exprs("$1 AT TIME ZONE $2", vec![from, zone])
 }
 
 //

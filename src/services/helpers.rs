@@ -1,7 +1,7 @@
 use std::collections::HashMap;
 use std::future::Future;
 
-use chrono::{DateTime, NaiveDate, Utc};
+use chrono::{DateTime, FixedOffset, NaiveDate};
 
 use crate::entities::{AggregateGroupResultKey, AggregateResult, PageResult};
 use crate::errors::{
@@ -281,9 +281,9 @@ pub(super) fn check_start_end(start_date: NaiveDate, end_date: NaiveDate) -> Res
 pub(super) fn optional_start_end_to_datetime(
     start_date: Option<NaiveDate>,
     end_date: Option<NaiveDate>,
-) -> (Option<DateTime<Utc>>, Option<DateTime<Utc>>) {
+) -> (Option<DateTime<FixedOffset>>, Option<DateTime<FixedOffset>>) {
     let start_datetime = start_date.map(crate::date_utils::date_at_start_of_day);
-    let end_datetime = end_date.map(crate::date_utils::date_at_midnight);
+    let end_datetime = end_date.map(crate::date_utils::date_at_start_of_day);
     (start_datetime, end_datetime)
 }
 

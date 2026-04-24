@@ -1,4 +1,4 @@
-use chrono::{DateTime, Utc};
+use chrono::{DateTime, FixedOffset};
 use serde::{Deserialize, Serialize};
 use utoipa::ToSchema;
 use uuid::Uuid;
@@ -31,7 +31,7 @@ pub struct MediaRawDTO {
     pub edition: String,
     #[schema(value_type = String, format = DateTime)]
     #[serde(skip_serializing_if = "Option::is_none")]
-    pub release_date: Option<DateTime<Utc>>,
+    pub release_date: Option<DateTime<FixedOffset>>,
     pub genres: Vec<String>,
     pub series: Vec<String>,
     #[serde(skip_serializing_if = "Option::is_none")]
@@ -42,9 +42,9 @@ pub struct MediaRawDTO {
     #[serde(skip_serializing_if = "Option::is_none")]
     pub parent_order: Option<u32>,
     #[schema(value_type = String, format = DateTime)]
-    pub added_datetime: DateTime<Utc>,
+    pub added_datetime: DateTime<FixedOffset>,
     #[schema(value_type = String, format = DateTime)]
-    pub updated_datetime: DateTime<Utc>,
+    pub updated_datetime: DateTime<FixedOffset>,
 }
 
 #[derive(Default, Serialize, ToSchema)]
@@ -53,9 +53,9 @@ pub struct MediaStateDTO {
     pub rating: u32,
     pub notes: String,
     #[schema(value_type = String, format = DateTime)]
-    pub added_datetime: DateTime<Utc>,
+    pub added_datetime: DateTime<FixedOffset>,
     #[schema(value_type = String, format = DateTime)]
-    pub updated_datetime: DateTime<Utc>,
+    pub updated_datetime: DateTime<FixedOffset>,
 }
 
 impl Merge<NewManualMediaDTO> for MediaRawDTO {
@@ -132,7 +132,7 @@ pub struct NewManualMediaDTO {
     pub kind: Option<MediaType>,
     pub title: Option<String>,
     pub edition: Option<String>,
-    pub release_date: Option<DateTime<Utc>>,
+    pub release_date: Option<DateTime<FixedOffset>>,
     pub genres: Vec<String>,
     pub series: Vec<String>,
     pub image_url: Option<String>,

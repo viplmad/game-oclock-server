@@ -179,6 +179,38 @@ pub async fn aggregate_group_sessions(
     handle_get_result(aggregate_result)
 }
 
+/// Aggregate all first sessions
+#[utoipa::path(
+    post,
+    path = "/api/v1/medias/sessions/first/aggregate",
+    tag = "MediaSessions",
+    params(
+        QuicksearchQuery,
+    ),
+    request_body(content = AggregateSearchDTO, description = "Query", content_type = "application/json"),
+    responses(
+        (status = 200, description = "Sessions aggregate obtained", body = AggregateResultDTO, content_type = "application/json"),
+        (status = 401, description = "Unauthorized", body = ErrorMessage, content_type = "application/json"),
+        (status = 403, description = "Forbidden", body = ErrorMessage, content_type = "application/json"),
+        (status = 500, description = "Internal server error", body = ErrorMessage, content_type = "application/json"),
+    ),
+    security(
+        ("OAuth2" = [])
+    )
+)]
+#[post("/medias/sessions/first/aggregate")]
+pub async fn aggregate_first_sessions(
+    media_session_service: web::Data<MediaSessionService>,
+    query: web::Query<QuicksearchQuery>,
+    body: web::Json<AggregateSearchDTO>,
+    logged_user: LoggedUser,
+) -> impl Responder {
+    let aggregate_result = media_session_service
+        .aggregate_first_sessions(&logged_user.id, body.0, query.0.q)
+        .await;
+    handle_get_result(aggregate_result)
+}
+
 /// Get all sessions
 #[utoipa::path(
     post,

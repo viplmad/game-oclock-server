@@ -1,6 +1,6 @@
 use std::collections::HashMap;
 
-use chrono::{DateTime, NaiveDate, Utc};
+use chrono::{DateTime, FixedOffset, NaiveDate};
 use uuid::Uuid;
 
 use crate::entities::{
@@ -48,7 +48,7 @@ impl MediaSessionService {
         &self,
         user_id: &Uuid,
         media_id: &Uuid,
-        start_datetime: DateTime<Utc>,
+        start_datetime: DateTime<FixedOffset>,
     ) -> Result<SessionDTO, ApiErrors> {
         self.media_service.exists_media(media_id).await?;
 
@@ -137,6 +137,20 @@ impl MediaSessionService {
         handle_get_aggregate_group_result::<SessionDTO>(aggregate_result)
     }
 
+    pub async fn aggregate_first_sessions(
+        &self,
+        user_id: &Uuid,
+        search: AggregateSearchDTO,
+        quicksearch: Option<String>,
+    ) -> Result<AggregateResultDTO, ApiErrors> {
+        let search = handle_aggregate_search_mapping::<SessionDTO, SessionAggregateSearch>(
+            search,
+            quicksearch,
+        )?;
+        let aggregate_result = self.repository.aggregate_all_first(user_id, search).await;
+        handle_get_aggregate_result::<SessionDTO>(aggregate_result)
+    }
+
     pub async fn create_media_session(
         &self,
         user_id: &Uuid,
@@ -182,7 +196,7 @@ impl MediaSessionService {
         &self,
         user_id: &Uuid,
         media_id: &Uuid,
-        start_datetime: DateTime<Utc>,
+        start_datetime: DateTime<FixedOffset>,
     ) -> Result<(), ApiErrors> {
         self.media_service.exists_media(media_id).await?;
         self.exists_media_session(user_id, media_id, start_datetime)
@@ -199,7 +213,7 @@ impl MediaSessionService {
         &self,
         user_id: &Uuid,
         media_id: &Uuid,
-        start_datetime: DateTime<Utc>,
+        start_datetime: DateTime<FixedOffset>,
     ) -> Result<(), ApiErrors> {
         let exists_result = self
             .repository
