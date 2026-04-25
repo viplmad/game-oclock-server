@@ -81,7 +81,7 @@ impl FromStr for FieldIden<MediaIden> {
             ))),
             "release_date" => Ok(FieldIden::Col(ColIden::new(
                 MediaIden::ReleaseDate,
-                FieldType::Integer,
+                FieldType::DateTime,
             ))),
             "image_url" => Ok(FieldIden::Col(ColIden::new(
                 MediaIden::ImageUrl,

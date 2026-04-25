@@ -645,16 +645,15 @@ fn where_parent_id(select: &mut SelectStatement, parent_id: &Uuid) {
 }
 
 fn join_state(select: &mut SelectStatement, user_id: &Uuid) {
-    select
-        .left_join(
-            MediaStateIden::Table,
-            Expr::col((MediaIden::Table, MediaIden::Id))
-                .equals((MediaStateIden::Table, MediaStateIden::MediaId)),
-        )
-        .and_where(
-            Expr::col((MediaStateIden::Table, MediaStateIden::UserId))
-                .eq(crate::uuid_utils::to_string(user_id)),
-        );
+    select.left_join(
+        MediaStateIden::Table,
+        Expr::col((MediaIden::Table, MediaIden::Id))
+            .equals((MediaStateIden::Table, MediaStateIden::MediaId))
+            .and(
+                Expr::col((MediaStateIden::Table, MediaStateIden::UserId))
+                    .eq(crate::uuid_utils::to_string(user_id)),
+            ),
+    );
 }
 
 fn join_external(select: &mut SelectStatement) {

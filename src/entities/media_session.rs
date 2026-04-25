@@ -5,9 +5,11 @@ use sea_query::{Expr, enum_def};
 use sqlx::{FromRow, postgres::types::PgInterval};
 use uuid::Uuid;
 
+use crate::entities::MediaIden;
+
 use super::{
     AggregateGroupSearch, AggregateSearch, ColIden, ExprIden, FieldIden, FieldType, ListSearch,
-    TableIden,
+    MediaStateIden, TableIden,
 };
 
 pub const QUERY_TIME_ALIAS: &str = "query_time";
@@ -108,6 +110,14 @@ impl FromStr for FieldIden<MediaSessionIden> {
             "updated_datetime" => Ok(FieldIden::Col(ColIden::new(
                 MediaSessionIden::UpdatedDatetime,
                 FieldType::DateTime,
+            ))),
+            "media_release_date" => Ok(FieldIden::ExtCol(ColIden::new(
+                MediaIden::ReleaseDate,
+                FieldType::DateTime,
+            ))),
+            "media_rating" => Ok(FieldIden::ExtCol(ColIden::new(
+                MediaStateIden::Rating,
+                FieldType::Integer,
             ))),
             _ => Err(()),
         }

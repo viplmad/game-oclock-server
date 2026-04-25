@@ -120,6 +120,19 @@ pub enum GroupDateHistogramInterval {
     Minute,
 }
 
+impl<T: TableIden> AggregateGroup<T> {
+    pub fn field_ext_table(&self) -> Option<String> {
+        let field = match self {
+            AggregateGroup::Field(f) => &f.field,
+            AggregateGroup::DateHistogram(f) => &f.field,
+        };
+        match field {
+            crate::entities::FieldIden::ExtCol(e) => Some(e.table.to_string()),
+            _ => None,
+        }
+    }
+}
+
 impl<T: TableIden> AggregateFieldGroup<T> {
     pub fn new(field: FieldIden<T>, default_value: Option<String>) -> Self {
         Self {
@@ -248,6 +261,7 @@ impl<T: TableIden> Sort<T> {
 pub enum FieldIden<T: TableIden> {
     Col(ColIden<T>),
     Expr(ExprIden<T>),
+    ExtCol(ColIden<T>),
 }
 
 pub struct ColIden<T: TableIden> {
@@ -268,6 +282,7 @@ impl<T: TableIden> FieldIden<T> {
         match self {
             FieldIden::Col(c) => c.kind.clone(),
             FieldIden::Expr(e) => e.kind.clone(),
+            FieldIden::ExtCol(e) => e.kind.clone(),
         }
     }
 }

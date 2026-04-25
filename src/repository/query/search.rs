@@ -307,6 +307,7 @@ fn apply_aggregate_field_group<I: 'static + TableIden + Clone + Copy>(
     let col = build_field_expr(aggr.field);
 
     let expr = coalesce_default(col, aggr.default_value, field_kind);
+    let expr = expr.cast_as("BIGINT");
 
     select.expr(expr.clone());
     select.add_group_by([expr.into()]);
@@ -358,6 +359,7 @@ fn build_field_expr<I: 'static + TableIden + Clone + Copy>(field: FieldIden<I>) 
     match field {
         FieldIden::Col(c) => build_col_expr(c),
         FieldIden::Expr(e) => Expr::expr(e.expr),
+        FieldIden::ExtCol(e) => build_col_expr(e),
     }
 }
 

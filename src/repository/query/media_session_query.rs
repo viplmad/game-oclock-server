@@ -1,17 +1,18 @@
 use chrono::{DateTime, FixedOffset};
 use sea_query::{
-    Alias, Expr, ExprTrait, Func, Order, Query, QueryStatementWriter, SelectStatement, SimpleExpr,
+    Alias, Expr, ExprTrait, Func, Iden, Order, Query, QueryStatementWriter, SelectStatement,
+    SimpleExpr,
 };
 use uuid::Uuid;
 
 use crate::entities::{
-    AggregateGroupQuery, AggregateQuery, MediaIden, MediaListSearch, MediaSession,
-    MediaSessionIden, QUERY_TIME_ALIAS, SESSION_ADDED_DATETIME_ALIAS, SESSION_DEVICE_ID_ALIAS,
-    SESSION_END_DATE_ALIAS, SESSION_FINISHED_STATUS_ALIAS, SESSION_GROUP_ID_ALIAS,
-    SESSION_MEDIA_ID_ALIAS, SESSION_START_DATE_ALIAS, SESSION_STARTED_ALIAS,
-    SESSION_UPDATED_DATETIME_ALIAS, STREAK_DAYS_ALIAS, STREAK_END_DATE_ALIAS,
-    STREAK_START_DATE_ALIAS, SearchQuery, SessionAggregateGroupSearch, SessionAggregateSearch,
-    SessionListSearch,
+    AggregateGroup, AggregateGroupQuery, AggregateQuery, MediaIden, MediaListSearch, MediaSession,
+    MediaSessionIden, MediaStateIden, QUERY_TIME_ALIAS, SESSION_ADDED_DATETIME_ALIAS,
+    SESSION_DEVICE_ID_ALIAS, SESSION_END_DATE_ALIAS, SESSION_FINISHED_STATUS_ALIAS,
+    SESSION_GROUP_ID_ALIAS, SESSION_MEDIA_ID_ALIAS, SESSION_START_DATE_ALIAS,
+    SESSION_STARTED_ALIAS, SESSION_UPDATED_DATETIME_ALIAS, STREAK_DAYS_ALIAS,
+    STREAK_END_DATE_ALIAS, STREAK_START_DATE_ALIAS, SearchQuery, SessionAggregateGroupSearch,
+    SessionAggregateSearch, SessionListSearch, TableIden,
 };
 use crate::errors::SearchErrors;
 
@@ -189,8 +190,38 @@ pub fn aggregate_group_by_user_id(
     let mut select = Query::select();
 
     from_and_where_user_id(&mut select, user_id);
+    join_ext_tables(&mut select, user_id, extract_group_ext_table(&search.group));
 
     apply_aggregate_group_search(select, search)
+}
+
+fn join_ext_tables(select: &mut SelectStatement, user_id: &Uuid, tables: Vec<String>) {
+    tables.into_iter().for_each(|table| {
+        if table == MediaIden::Table.to_string() {
+            select.left_join(
+                MediaIden::Table,
+                Expr::col((MediaSessionIden::Table, MediaSessionIden::MediaId))
+                    .equals((MediaIden::Table, MediaIden::Id)),
+            );
+        } else if table == MediaStateIden::Table.to_string() {
+            select.left_join(
+                MediaStateIden::Table,
+                Expr::col((MediaSessionIden::Table, MediaSessionIden::MediaId))
+                    .equals((MediaStateIden::Table, MediaStateIden::MediaId))
+                    .and(
+                        Expr::col((MediaStateIden::Table, MediaStateIden::UserId))
+                            .eq(crate::uuid_utils::to_string(user_id)),
+                    ),
+            );
+        }
+    });
+}
+
+fn extract_group_ext_table<T: TableIden>(group: &AggregateGroup<T>) -> Vec<String> {
+    group
+        .field_ext_table()
+        .map(|t| vec![t])
+        .unwrap_or_else(|| vec![])
 }
 
 pub fn aggregate_all_first_by_user_id(
