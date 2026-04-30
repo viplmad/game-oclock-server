@@ -108,7 +108,6 @@ pub fn get_openapi() -> utoipa::openapi::OpenApi {
             models::MediaAvailableDTO,
             models::MediaTagDTO,
             models::MediaSessionDTO,
-            models::MediasSessionStreakDTO,
             models::MediaStatus,
             models::ExternalMediaIdDTO,
             models::AvailableDTO,

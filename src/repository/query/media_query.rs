@@ -8,7 +8,7 @@ use crate::entities::{
 };
 use crate::errors::SearchErrors;
 
-use super::search::{apply_search, apply_search_filter};
+use super::search::{apply_search, apply_search_filter2};
 
 #[cfg(test)]
 mod tests {
@@ -31,14 +31,16 @@ mod tests {
         );
         assert_eq!(
             query.unwrap().query.to_string(PostgresQueryBuilder),
-            "SELECT \"Media\".\"id\", \"Media\".\"kind\", \"Media\".\"title\", \"Media\".\"edition\", \"Media\".\"release_date\", \"Media\".\"genres\", \"Media\".\"series\", \"Media\".\"image_url\", \"Media\".\"parent_id\", \"Media\".\"parent_order\", \"Media\".\"added_datetime\", \"Media\".\"updated_datetime\", \
-            \"MediaState\".\"user_id\", \"MediaState\".\"status\" AS \"state_status\", \"MediaState\".\"rating\" AS \"state_rating\", \"MediaState\".\"notes\" AS \"state_notes\", \"MediaState\".\"added_datetime\" AS \"state_added_datetime\", \"MediaState\".\"updated_datetime\" AS \"state_updated_datetime\", \
-            \"ExternalMedia\".\"external_source\", \"ExternalMedia\".\"external_id\" \
-            FROM \"Media\" \
-            LEFT JOIN \"MediaState\" ON \"Media\".\"id\" = \"MediaState\".\"media_id\" \
-            LEFT JOIN \"ExternalMedia\" ON \"Media\".\"id\" = \"ExternalMedia\".\"media_id\" AND \"ExternalMedia\".\"primary\" = TRUE \
-            WHERE \"MediaState\".\"user_id\" = '00000000-0000-0000-0000-000000000000' \
-            LIMIT 500 OFFSET 0"
+            [
+                r#"SELECT "Media"."id", "Media"."kind", "Media"."title", "Media"."edition", "Media"."release_date", "Media"."genres", "Media"."series", "Media"."image_url", "Media"."parent_id", "Media"."parent_order", "Media"."added_datetime", "Media"."updated_datetime","#,
+                r#""MediaState"."user_id", "MediaState"."status" AS "state_status", "MediaState"."rating" AS "state_rating", "MediaState"."notes" AS "state_notes", "MediaState"."added_datetime" AS "state_added_datetime", "MediaState"."updated_datetime" AS "state_updated_datetime","#,
+                r#""ExternalMedia"."external_source", "ExternalMedia"."external_id""#,
+                r#"FROM "Media""#,
+                r#"LEFT JOIN "MediaState" ON "Media"."id" = "MediaState"."media_id""#,
+                r#"LEFT JOIN "ExternalMedia" ON "Media"."id" = "ExternalMedia"."media_id" AND "ExternalMedia"."primary" = TRUE"#,
+                r#"WHERE "MediaState"."user_id" = '00000000-0000-0000-0000-000000000000'"#,
+                r#"LIMIT 500 OFFSET 0"#
+            ].join(" ")
         );
     }
 
@@ -56,10 +58,13 @@ mod tests {
         );
         assert_eq!(
             query.unwrap().to_string(PostgresQueryBuilder),
-            "SELECT COUNT(\"Media\".\"id\") \
-            FROM \"Media\" \
-            LEFT JOIN \"MediaState\" ON \"Media\".\"id\" = \"MediaState\".\"media_id\" \
-            WHERE \"MediaState\".\"user_id\" = '00000000-0000-0000-0000-000000000000'"
+            [
+                r#"SELECT COUNT("Media"."id")"#,
+                r#"FROM "Media""#,
+                r#"LEFT JOIN "MediaState" ON "Media"."id" = "MediaState"."media_id""#,
+                r#"WHERE "MediaState"."user_id" = '00000000-0000-0000-0000-000000000000'"#,
+            ]
+            .join(" ")
         );
     }
 
@@ -73,12 +78,14 @@ mod tests {
         let query = select_all_state_by_externals(&user_id, &external_ids);
         assert_eq!(
             query.to_string(PostgresQueryBuilder),
-            "SELECT \"MediaState\".\"user_id\", \"MediaState\".\"media_id\", \"MediaState\".\"status\", \"MediaState\".\"rating\", \"MediaState\".\"notes\", \"MediaState\".\"added_datetime\", \"MediaState\".\"updated_datetime\", \
-            \"ExternalMedia\".\"external_source\", \"ExternalMedia\".\"external_id\" \
-            FROM \"MediaState\" \
-            LEFT JOIN \"ExternalMedia\" ON \"MediaState\".\"media_id\" = \"ExternalMedia\".\"media_id\" AND \"ExternalMedia\".\"primary\" = TRUE \
-            WHERE \"MediaState\".\"user_id\" = '00000000-0000-0000-0000-000000000000' \
-            AND ((\"ExternalMedia\".\"external_source\" = 'source1' AND \"ExternalMedia\".\"external_id\" = 'id1') OR (\"ExternalMedia\".\"external_source\" = 'source1' AND \"ExternalMedia\".\"external_id\" = 'id2'))"
+            [
+                r#"SELECT "MediaState"."user_id", "MediaState"."media_id", "MediaState"."status", "MediaState"."rating", "MediaState"."notes", "MediaState"."added_datetime", "MediaState"."updated_datetime","#,
+                r#""ExternalMedia"."external_source", "ExternalMedia"."external_id""#,
+                r#"FROM "MediaState""#,
+                r#"LEFT JOIN "ExternalMedia" ON "MediaState"."media_id" = "ExternalMedia"."media_id" AND "ExternalMedia"."primary" = TRUE"#,
+                r#"WHERE "MediaState"."user_id" = '00000000-0000-0000-0000-000000000000'"#,
+                r#"AND (("ExternalMedia"."external_source" = 'source1' AND "ExternalMedia"."external_id" = 'id1') OR ("ExternalMedia"."external_source" = 'source1' AND "ExternalMedia"."external_id" = 'id2'))"#,
+            ].join(" ")
         );
     }
 }
@@ -227,7 +234,7 @@ pub fn count_all_with_search(
 ) -> Result<SelectStatement, SearchErrors> {
     let select = count_all(user_id);
 
-    apply_search_filter(select, search)
+    apply_search_filter2(select, search)
 }
 
 pub(super) fn select_all(user_id: &Uuid) -> SelectStatement {
@@ -645,15 +652,16 @@ fn where_parent_id(select: &mut SelectStatement, parent_id: &Uuid) {
 }
 
 fn join_state(select: &mut SelectStatement, user_id: &Uuid) {
-    select.left_join(
-        MediaStateIden::Table,
-        Expr::col((MediaIden::Table, MediaIden::Id))
-            .equals((MediaStateIden::Table, MediaStateIden::MediaId))
-            .and(
-                Expr::col((MediaStateIden::Table, MediaStateIden::UserId))
-                    .eq(crate::uuid_utils::to_string(user_id)),
-            ),
-    );
+    select
+        .left_join(
+            MediaStateIden::Table,
+            Expr::col((MediaIden::Table, MediaIden::Id))
+                .equals((MediaStateIden::Table, MediaStateIden::MediaId)),
+        )
+        .and_where(
+            Expr::col((MediaStateIden::Table, MediaStateIden::UserId))
+                .eq(crate::uuid_utils::to_string(user_id)),
+        );
 }
 
 fn join_external(select: &mut SelectStatement) {

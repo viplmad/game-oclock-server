@@ -3,6 +3,8 @@ use serde::Serialize;
 use utoipa::ToSchema;
 use uuid::Uuid;
 
+use crate::models::ModelInfo;
+
 #[derive(Serialize, ToSchema)]
 pub struct SessionStreakDTO {
     #[schema(value_type = String, format = Date)]
@@ -11,12 +13,13 @@ pub struct SessionStreakDTO {
     pub end_date: NaiveDate,
     pub days: u32,
     #[schema(value_type = String)]
-    pub devices_ids: Vec<Uuid>,
+    pub media_ids: Vec<Uuid>,
+    #[schema(value_type = String)]
+    pub device_ids: Vec<Uuid>,
 }
 
-#[derive(Serialize, ToSchema)]
-pub struct MediasSessionStreakDTO {
-    #[schema(value_type = String)]
-    pub medias_ids: Vec<Uuid>,
-    pub streak: SessionStreakDTO,
+impl ModelInfo for SessionStreakDTO {
+    const MODEL_NAME: &'static str = "Media session";
+    const ID_FIELDS: &'static [&'static str] = &["media id", "start datetime"];
+    const UNIQUE_FIELDS: &'static [&'static str] = SessionStreakDTO::ID_FIELDS;
 }

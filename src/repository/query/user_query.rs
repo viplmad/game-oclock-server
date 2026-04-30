@@ -4,7 +4,7 @@ use uuid::Uuid;
 use crate::entities::{SearchQuery, User, UserIden, UserListSearch};
 use crate::errors::SearchErrors;
 
-use super::search::{apply_search, apply_search_filter};
+use super::search::{apply_search, apply_search_filter2};
 
 pub fn select_by_id(id: &Uuid) -> impl QueryStatementWriter {
     let mut select = Query::select();
@@ -35,7 +35,7 @@ pub fn select_all_with_search(search: UserListSearch) -> Result<SearchQuery, Sea
 pub fn count_all_with_search(search: UserListSearch) -> Result<SelectStatement, SearchErrors> {
     let select = count_all();
 
-    apply_search_filter(select, search)
+    apply_search_filter2(select, search)
 }
 
 pub(super) fn select_all() -> SelectStatement {

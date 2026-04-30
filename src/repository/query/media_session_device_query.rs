@@ -6,7 +6,7 @@ use crate::entities::{
 };
 use crate::errors::SearchErrors;
 
-use super::search::{apply_search, apply_search_filter};
+use super::search::{apply_search, apply_search_filter2};
 use super::{device_query, media_query};
 
 pub fn select_all_medias_by_device_id_order_by_date(
@@ -33,7 +33,7 @@ pub fn count_all_medias_by_device_id_order_by_date(
     join_media_session_by_device_id(&mut select, device_id);
     // TODO Distinct?
 
-    apply_search_filter(select, search)
+    apply_search_filter2(select, search)
 }
 
 pub fn select_all_devices_by_media_id_order_by_date(
@@ -60,7 +60,7 @@ pub fn count_all_devices_by_media_id_order_by_date(
     join_media_session_by_media_id(&mut select, media_id);
     // TODO Distinct?
 
-    apply_search_filter(select, search)
+    apply_search_filter2(select, search)
 }
 
 fn join_media_session_by_device_id(select: &mut SelectStatement, device_id: &Uuid) {

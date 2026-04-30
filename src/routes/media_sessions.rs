@@ -4,7 +4,7 @@ use crate::models::{
     AggregateGroupResultKeyDTO, AggregateGroupSearchDTO, AggregateResultDTO, AggregateSearchDTO,
     DateTimeDTO, ErrorMessage, ItemId, ListSearchDTO, LoggedUser, MediaSessionPageResult,
     NewSessionDTO, OptionalStartEndDateQuery, QuicksearchQuery, SessionDTO, SessionPageResult,
-    SessionStreakDTO, StartEndDateQuery,
+    SessionStreakPageResult,
 };
 use crate::services::{MediaSessionService, MediaWithSessionService};
 
@@ -217,12 +217,11 @@ pub async fn aggregate_first_sessions(
     path = "/api/v1/medias/sessions/streaks",
     tag = "MediaSessions",
     params(
-        StartEndDateQuery,
-        //QuicksearchQuery,
+        QuicksearchQuery,
     ),
-    // TODO request_body(content = ListSearchDTO, description = "Query", content_type = "application/json"),
+    request_body(content = ListSearchDTO, description = "Query", content_type = "application/json"),
     responses(
-        (status = 200, description = "Streaks obtained", body = [SessionStreakDTO], content_type = "application/json"),
+        (status = 200, description = "Streaks obtained", body = SessionStreakPageResult, content_type = "application/json"),
         (status = 401, description = "Unauthorized", body = ErrorMessage, content_type = "application/json"),
         (status = 403, description = "Forbidden", body = ErrorMessage, content_type = "application/json"),
         (status = 404, description = "Media not found", body = ErrorMessage, content_type = "application/json"),
@@ -235,11 +234,12 @@ pub async fn aggregate_first_sessions(
 #[post("/medias/sessions/streaks")]
 pub async fn get_session_streaks(
     media_session_service: web::Data<MediaSessionService>,
-    query: web::Query<StartEndDateQuery>,
+    query: web::Query<QuicksearchQuery>,
+    body: web::Json<ListSearchDTO>,
     logged_user: LoggedUser,
 ) -> impl Responder {
     let search_result = media_session_service
-        .search_streaks(&logged_user.id, query.start_date, query.end_date)
+        .search_streaks(&logged_user.id, body.0, query.0.q)
         .await;
     handle_get_result(search_result)
 }

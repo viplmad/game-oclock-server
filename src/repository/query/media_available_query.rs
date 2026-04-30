@@ -8,7 +8,7 @@ use crate::entities::{
 };
 use crate::errors::SearchErrors;
 
-use super::search::{apply_search, apply_search_filter};
+use super::search::{apply_search, apply_search_filter2};
 use super::{location_query, media_query};
 
 pub fn select_all_medias_by_location_id_order_by_date(
@@ -34,7 +34,7 @@ pub fn count_all_medias_by_location_id_order_by_date(
 
     join_media_available_by_location_id(&mut select, location_id);
 
-    apply_search_filter(select, search)
+    apply_search_filter2(select, search)
 }
 
 pub fn select_all_locations_by_media_id_order_by_date(
@@ -60,7 +60,7 @@ pub fn count_all_locations_by_media_id_order_by_date(
 
     join_media_available_by_media_id(&mut select, media_id);
 
-    apply_search_filter(select, search)
+    apply_search_filter2(select, search)
 }
 
 pub fn insert(media_available: &MediaAvailable) -> impl QueryStatementWriter {

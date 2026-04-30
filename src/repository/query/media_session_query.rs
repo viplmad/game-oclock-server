@@ -6,29 +6,33 @@ use sea_query::{
 use uuid::Uuid;
 
 use crate::entities::{
-    AggregateGroup, AggregateGroupQuery, AggregateQuery, MediaIden, MediaListSearch, MediaSession,
-    MediaSessionIden, MediaStateIden, QUERY_TIME_ALIAS, SESSION_ADDED_DATETIME_ALIAS,
+    AggregateGroup, AggregateGroupQuery, AggregateQuery, Filter, MediaIden, MediaListSearch,
+    MediaSession, MediaSessionIden, MediaStateIden, QUERY_TIME_ALIAS, SESSION_ADDED_DATETIME_ALIAS,
     SESSION_DEVICE_ID_ALIAS, SESSION_END_DATE_ALIAS, SESSION_FINISHED_STATUS_ALIAS,
     SESSION_GROUP_ID_ALIAS, SESSION_MEDIA_ID_ALIAS, SESSION_START_DATE_ALIAS,
     SESSION_STARTED_ALIAS, SESSION_UPDATED_DATETIME_ALIAS, STREAK_DAYS_ALIAS,
-    STREAK_END_DATE_ALIAS, STREAK_START_DATE_ALIAS, SearchQuery, SessionAggregateGroupSearch,
-    SessionAggregateSearch, SessionListSearch, TableIden,
+    STREAK_DEVICE_IDS_ALIAS, STREAK_END_DATE_ALIAS, STREAK_MEDIA_IDS_ALIAS,
+    STREAK_START_DATE_ALIAS, SearchQuery, SessionAggregateGroupSearch, SessionAggregateSearch,
+    SessionListSearch, TableIden,
 };
 use crate::errors::SearchErrors;
 
 use super::media_query;
-use super::search::{apply_aggregate_group_search, apply_aggregate_search, apply_search};
+use super::search::{
+    apply_aggregate_group_search, apply_aggregate_search, apply_search, apply_search_filter,
+    apply_search_pagination,
+};
 
 #[cfg(test)]
 mod tests {
-    use chrono::{TimeZone, Utc};
-    use sea_query::PostgresQueryBuilder;
+    use sea_query::{BinOper, PostgresQueryBuilder};
     use uuid::Uuid;
 
     use super::*;
     use crate::entities::{
         AggregateCountMetric, AggregateDateHistogramGroup, AggregateGroup, AggregateMetric,
-        AggregateSumMetric, ColIden, ExprIden, FieldIden, FieldType, GroupDateHistogramInterval,
+        AggregateSumMetric, ColIden, ExprIden, FieldIden, FieldType, Filter,
+        GroupDateHistogramInterval, ListSearch, SingleValueFilter,
     };
 
     #[test]
@@ -47,7 +51,12 @@ mod tests {
         );
         assert_eq!(
             query.unwrap().query.to_string(PostgresQueryBuilder),
-            r#"SELECT COUNT("MediaSession"."media_id") FROM "MediaSession" WHERE "MediaSession"."user_id" = '00000000-0000-0000-0000-000000000000'"#
+            [
+                r#"SELECT COUNT("MediaSession"."media_id")"#,
+                r#"FROM "MediaSession""#,
+                r#"WHERE "MediaSession"."user_id" = '00000000-0000-0000-0000-000000000000'"#
+            ]
+            .join(" ")
         );
     }
 
@@ -71,7 +80,12 @@ mod tests {
         );
         assert_eq!(
             query.unwrap().query.to_string(PostgresQueryBuilder),
-            r#"SELECT SUM("MediaSession"."end_date" - "MediaSession"."start_date") FROM "MediaSession" WHERE "MediaSession"."user_id" = '00000000-0000-0000-0000-000000000000'"#
+            [
+                r#"SELECT SUM("MediaSession"."end_date" - "MediaSession"."start_date")"#,
+                r#"FROM "MediaSession""#,
+                r#"WHERE "MediaSession"."user_id" = '00000000-0000-0000-0000-000000000000'"#
+            ]
+            .join(" ")
         );
     }
 
@@ -99,23 +113,113 @@ mod tests {
         );
         assert_eq!(
             query.unwrap().query.to_string(PostgresQueryBuilder),
-            r#"SELECT CAST(DATE_PART('month', "MediaSession"."start_date") AS BIGINT), COUNT(DISTINCT "MediaSession"."media_id") FROM "MediaSession" WHERE "MediaSession"."user_id" = '00000000-0000-0000-0000-000000000000' GROUP BY CAST(DATE_PART('month', "MediaSession"."start_date") AS BIGINT)"#
+            [
+                r#"SELECT CAST(DATE_PART('month', "MediaSession"."start_date") AS BIGINT), COUNT(DISTINCT "MediaSession"."media_id")"#,
+                r#"FROM "MediaSession""#,
+                r#"WHERE "MediaSession"."user_id" = '00000000-0000-0000-0000-000000000000'"#,
+                r#"GROUP BY CAST(DATE_PART('month', "MediaSession"."start_date") AS BIGINT)"#
+            ]
+            .join(" ")
         );
     }
 
     #[test]
-    fn test() {
+    fn streaks() {
         let user_id = Uuid::try_parse("00000000-0000-0000-0000-000000000000").unwrap();
         let query = select_streaks(
             &user_id,
-            Utc.with_ymd_and_hms(2025, 1, 1, 0, 0, 0)
-                .unwrap()
-                .fixed_offset(),
-            Utc.with_ymd_and_hms(2026, 1, 1, 0, 0, 0)
-                .unwrap()
-                .fixed_offset(),
+            ListSearch {
+                filter: Some(vec![
+                    Filter::GreaterThanOrEqual(SingleValueFilter::new(
+                        FieldIden::Col(ColIden::new::<MediaSessionIden>(
+                            MediaSessionIden::StartDate,
+                            FieldType::String,
+                        )),
+                        String::from("2025-01-01T00:00:00Z"),
+                        BinOper::And,
+                    )),
+                    Filter::SmallerThan(SingleValueFilter::new(
+                        FieldIden::Col(ColIden::new::<MediaSessionIden>(
+                            MediaSessionIden::EndDate,
+                            FieldType::String,
+                        )),
+                        String::from("2026-01-01T00:00:00Z"),
+                        BinOper::And,
+                    )),
+                ]),
+                sort: None,
+                page: None,
+                size: None,
+            },
         );
-        assert_eq!(query.to_string(PostgresQueryBuilder), r#""#);
+        assert_eq!(
+            query.unwrap().query.to_string(PostgresQueryBuilder),
+            [
+                r#"SELECT MIN("start_date") AS "start_date", MAX("end_date") AS "end_date", ARRAY_REMOVE(ARRAY_AGG(DISTINCT "media_id"), NULL) AS "media_ids", ARRAY_REMOVE(ARRAY_AGG(DISTINCT "device_id"), NULL) AS "device_ids", (MAX("end_date") - MIN("start_date")) + 1 AS "days""#,
+                r#"FROM (SELECT "start_date", "end_date", "media_id", "device_id", COUNT(*) FILTER (WHERE "starts_streak") OVER (ORDER BY "start_date") AS "grp""#,
+                r#"FROM (SELECT CAST(("MediaSession"."start_date" AT TIME ZONE "MediaSession"."start_date_tz") AS DATE) AS "start_date", CAST(("MediaSession"."end_date" AT TIME ZONE "MediaSession"."end_date_tz") AS DATE) AS "end_date", "MediaSession"."media_id" AS "media_id", "MediaSession"."device_id" AS "device_id", COALESCE(CAST(("MediaSession"."start_date" AT TIME ZONE "MediaSession"."start_date_tz") AS DATE) - (LAG(CAST(("MediaSession"."end_date" AT TIME ZONE "MediaSession"."end_date_tz") AS DATE)) OVER (ORDER BY "MediaSession"."start_date")), 99) > 1 AS "starts_streak""#,
+                r#"FROM "MediaSession""#,
+                r#"WHERE "MediaSession"."user_id" = '00000000-0000-0000-0000-000000000000'"#,
+                r#"AND "MediaSession"."start_date" >= '2025-01-01T00:00:00Z'"#,
+                r#"AND "MediaSession"."end_date" < '2026-01-01T00:00:00Z'"#,
+                r#"ORDER BY "MediaSession"."start_date" ASC) AS "starts_streak_sub""#,
+                r#"ORDER BY "start_date" ASC) AS "streaks_group_sub""#,
+                r#"GROUP BY "grp" ORDER BY (MAX("end_date") - MIN("start_date")) + 1 DESC"#,
+                r#"LIMIT 500 OFFSET 0"#,
+            ]
+            .join(" ")
+        );
+    }
+
+    #[test]
+    fn total_played_first_time() {
+        let user_id = Uuid::try_parse("00000000-0000-0000-0000-000000000000").unwrap();
+        let query = aggregate_all_first_by_user_id(
+            &user_id,
+            SessionAggregateSearch {
+                filter: Some(vec![
+                    Filter::GreaterThanOrEqual(SingleValueFilter::new(
+                        FieldIden::Col(ColIden::new::<MediaSessionIden>(
+                            MediaSessionIden::StartDate,
+                            FieldType::String,
+                        )),
+                        String::from("2025-01-01T00:00:00Z"),
+                        BinOper::And,
+                    )),
+                    Filter::SmallerThan(SingleValueFilter::new(
+                        FieldIden::Col(ColIden::new::<MediaSessionIden>(
+                            MediaSessionIden::StartDate,
+                            FieldType::String,
+                        )),
+                        String::from("2026-01-01T00:00:00Z"),
+                        BinOper::And,
+                    )),
+                ]),
+                aggr: AggregateMetric::Count(AggregateCountMetric::new(
+                    FieldIden::Col(ColIden::new::<MediaSessionIden>(
+                        MediaSessionIden::MediaId,
+                        FieldType::String,
+                    )),
+                    None,
+                    true,
+                )),
+            },
+        );
+        assert_eq!(
+            query.unwrap().query.to_string(PostgresQueryBuilder),
+            [
+                r#"SELECT COUNT(DISTINCT "MediaSession"."media_id")"#,
+                r#"FROM "MediaSession""#,
+                r#"WHERE "MediaSession"."user_id" = '00000000-0000-0000-0000-000000000000'"#,
+                r#"AND "MediaSession"."start_date" IN (SELECT MIN("sub"."start_date")"#,
+                r#"FROM "MediaSession" AS "sub""#,
+                r#"WHERE "sub"."user_id" = '00000000-0000-0000-0000-000000000000'"#,
+                r#"AND "sub"."media_id" = "MediaSession"."media_id")"#,
+                r#"AND "MediaSession"."start_date" >= '2025-01-01T00:00:00Z'"#,
+                r#"AND "MediaSession"."start_date" < '2026-01-01T00:00:00Z'"#,
+            ]
+            .join(" "),
+        );
     }
 }
 
@@ -241,8 +345,6 @@ pub fn aggregate_all_first_by_user_id(
             Expr::col(("sub", MediaSessionIden::MediaId))
                 .equals((MediaSessionIden::Table, MediaSessionIden::MediaId)),
         )
-        // TODO only if filters > 2
-        .and_where(Expr::col(("sub", MediaSessionIden::FinishedStatus)).is_not_null())
         .take();
     select.and_where(
         Expr::col((MediaSessionIden::Table, MediaSessionIden::StartDate)).in_subquery(min_subquery),
@@ -506,14 +608,15 @@ fn derived_time_expr() -> SimpleExpr {
 /// Streaks
 const STREAK_START_DATE_SUB_ALIAS: &str = "start_date";
 const STREAK_END_DATE_SUB_ALIAS: &str = "end_date";
+const STREAK_MEDIA_ID_SUB_ALIAS: &str = "media_id";
+const STREAK_DEVICE_ID_SUB_ALIAS: &str = "device_id";
 const STREAK_STARTS_STREAK_SUB_ALIAS: &str = "starts_streak";
 const STREAK_GROUP_SUB_ALIAS: &str = "grp";
 
 pub fn select_streaks(
     user_id: &Uuid,
-    start_datetime: DateTime<FixedOffset>,
-    end_datetime: DateTime<FixedOffset>,
-) -> impl QueryStatementWriter {
+    search: SessionListSearch,
+) -> Result<SearchQuery, SearchErrors> {
     let mut select = Query::select();
 
     let min_start_date = Expr::col(STREAK_START_DATE_SUB_ALIAS).min();
@@ -525,27 +628,33 @@ pub fn select_streaks(
     select
         .expr_as(min_start_date.clone(), STREAK_START_DATE_ALIAS)
         .expr_as(max_end_date.clone(), STREAK_END_DATE_ALIAS)
+        .expr_as(
+            array_agg_distinct(Expr::col(STREAK_MEDIA_ID_SUB_ALIAS).into()),
+            STREAK_MEDIA_IDS_ALIAS,
+        )
+        .expr_as(
+            array_agg_distinct(Expr::col(STREAK_DEVICE_ID_SUB_ALIAS).into()),
+            STREAK_DEVICE_IDS_ALIAS,
+        )
         .expr_as(streak_days.clone(), STREAK_DAYS_ALIAS);
-    select.from_subquery(
-        streaks_group(user_id, start_datetime, end_datetime),
-        "streaks_group_sub",
-    );
+    select.from_subquery(streaks_group(user_id, search.filter)?, "streaks_group_sub");
     select.add_group_by([Expr::col(STREAK_GROUP_SUB_ALIAS).into()]);
     select.order_by_expr(streak_days.clone().into(), Order::Desc);
 
-    select
+    apply_search_pagination(select, search.page, search.size)
 }
 
 fn streaks_group(
     user_id: &Uuid,
-    start_datetime: DateTime<FixedOffset>,
-    end_datetime: DateTime<FixedOffset>,
-) -> SelectStatement {
+    filter: Option<Vec<Filter<MediaSessionIden>>>,
+) -> Result<SelectStatement, SearchErrors> {
     let mut select = Query::select();
 
     select
         .column(STREAK_START_DATE_SUB_ALIAS)
         .column(STREAK_END_DATE_SUB_ALIAS)
+        .column(STREAK_MEDIA_ID_SUB_ALIAS)
+        .column(STREAK_DEVICE_ID_SUB_ALIAS)
         .expr_as(
             filter_over_order_by(
                 Expr::col(sea_query::Asterisk).count(),
@@ -554,20 +663,16 @@ fn streaks_group(
             ),
             STREAK_GROUP_SUB_ALIAS,
         );
-    select.from_subquery(
-        starts_streak(user_id, start_datetime, end_datetime),
-        "starts_streak_sub",
-    );
+    select.from_subquery(starts_streak(user_id, filter)?, "starts_streak_sub");
     select.order_by(STREAK_START_DATE_SUB_ALIAS, Order::Asc);
 
-    select
+    Ok(select)
 }
 
 fn starts_streak(
     user_id: &Uuid,
-    start_datetime: DateTime<FixedOffset>,
-    end_datetime: DateTime<FixedOffset>,
-) -> SelectStatement {
+    filter: Option<Vec<Filter<MediaSessionIden>>>,
+) -> Result<SelectStatement, SearchErrors> {
     let mut select = Query::select();
 
     let start_date_as_date = at_time_zone(
@@ -584,6 +689,14 @@ fn starts_streak(
         .expr_as(start_date_as_date.clone(), STREAK_START_DATE_SUB_ALIAS)
         .expr_as(end_date_as_date.clone(), STREAK_END_DATE_SUB_ALIAS)
         .expr_as(
+            Expr::col((MediaSessionIden::Table, MediaSessionIden::MediaId)),
+            STREAK_MEDIA_ID_SUB_ALIAS,
+        )
+        .expr_as(
+            Expr::col((MediaSessionIden::Table, MediaSessionIden::DeviceId)),
+            STREAK_DEVICE_ID_SUB_ALIAS,
+        )
+        .expr_as(
             Func::coalesce([
                 start_date_as_date.clone().sub(over_order_by(
                     Func::cust(Lag).arg(end_date_as_date.clone()).into(),
@@ -596,15 +709,12 @@ fn starts_streak(
             STREAK_STARTS_STREAK_SUB_ALIAS,
         );
     from_and_where_user_id(&mut select, user_id);
-    select
-        .and_where(Expr::col(MediaSessionIden::StartDate).gte(start_datetime))
-        .and_where(Expr::col(MediaSessionIden::EndDate).lt(end_datetime));
     select.order_by(
         (MediaSessionIden::Table, MediaSessionIden::StartDate),
         Order::Asc,
     );
 
-    select
+    apply_search_filter(select, filter)
 }
 
 fn over_order_by(from: SimpleExpr, order_by: SimpleExpr) -> SimpleExpr {
@@ -620,6 +730,10 @@ fn filter_over_order_by(from: SimpleExpr, filter: SimpleExpr, order_by: SimpleEx
 
 fn at_time_zone(from: SimpleExpr, zone: SimpleExpr) -> SimpleExpr {
     Expr::cust_with_exprs("$1 AT TIME ZONE $2", vec![from, zone])
+}
+
+fn array_agg_distinct(from: SimpleExpr) -> SimpleExpr {
+    Expr::cust_with_exprs("ARRAY_REMOVE(ARRAY_AGG(DISTINCT $1), NULL)", vec![from])
 }
 
 //

@@ -7,7 +7,7 @@ use crate::entities::{
 };
 use crate::errors::SearchErrors;
 
-use super::search::{apply_search, apply_search_filter};
+use super::search::{apply_search, apply_search_filter2};
 use super::{media_query, tag_query};
 
 #[cfg(test)]
@@ -33,17 +33,19 @@ mod tests {
         );
         assert_eq!(
             query.unwrap().query.to_string(PostgresQueryBuilder),
-            "SELECT \"Media\".\"id\", \"Media\".\"kind\", \"Media\".\"title\", \"Media\".\"edition\", \"Media\".\"release_date\", \"Media\".\"genres\", \"Media\".\"series\", \"Media\".\"image_url\", \"Media\".\"parent_id\", \"Media\".\"parent_order\", \"Media\".\"added_datetime\", \"Media\".\"updated_datetime\", \
-            \"MediaState\".\"user_id\", \"MediaState\".\"status\" AS \"state_status\", \"MediaState\".\"rating\" AS \"state_rating\", \"MediaState\".\"notes\" AS \"state_notes\", \"MediaState\".\"added_datetime\" AS \"state_added_datetime\", \"MediaState\".\"updated_datetime\" AS \"state_updated_datetime\", \
-            \"ExternalMedia\".\"external_source\", \"ExternalMedia\".\"external_id\", \
-            \"MediaTag\".\"order\" AS \"tag_order\", \"MediaTag\".\"added_datetime\" AS \"tag_added_datetime\", \"MediaTag\".\"updated_datetime\" AS \"tag_updated_datetime\" \
-            FROM \"Media\" \
-            LEFT JOIN \"MediaState\" ON \"Media\".\"id\" = \"MediaState\".\"media_id\" \
-            LEFT JOIN \"ExternalMedia\" ON \"Media\".\"id\" = \"ExternalMedia\".\"media_id\" AND \"ExternalMedia\".\"primary\" = TRUE \
-            LEFT JOIN \"MediaTag\" ON \"Media\".\"id\" = \"MediaTag\".\"media_id\" \
-            WHERE \"MediaState\".\"user_id\" = '00000000-0000-0000-0000-000000000000' \
-            AND \"MediaTag\".\"tag_id\" = '00000000-0000-0000-0000-000000000001' \
-            LIMIT 500 OFFSET 0"
+            [
+                r#"SELECT "Media"."id", "Media"."kind", "Media"."title", "Media"."edition", "Media"."release_date", "Media"."genres", "Media"."series", "Media"."image_url", "Media"."parent_id", "Media"."parent_order", "Media"."added_datetime", "Media"."updated_datetime","#,
+                r#""MediaState"."user_id", "MediaState"."status" AS "state_status", "MediaState"."rating" AS "state_rating", "MediaState"."notes" AS "state_notes", "MediaState"."added_datetime" AS "state_added_datetime", "MediaState"."updated_datetime" AS "state_updated_datetime","#,
+                r#""ExternalMedia"."external_source", "ExternalMedia"."external_id","#,
+                r#""MediaTag"."order" AS "tag_order", "MediaTag"."added_datetime" AS "tag_added_datetime", "MediaTag"."updated_datetime" AS "tag_updated_datetime""#,
+                r#"FROM "Media""#,
+                r#"LEFT JOIN "MediaState" ON "Media"."id" = "MediaState"."media_id""#,
+                r#"LEFT JOIN "ExternalMedia" ON "Media"."id" = "ExternalMedia"."media_id" AND "ExternalMedia"."primary" = TRUE"#,
+                r#"LEFT JOIN "MediaTag" ON "Media"."id" = "MediaTag"."media_id""#,
+                r#"WHERE "MediaState"."user_id" = '00000000-0000-0000-0000-000000000000'"#,
+                r#"AND "MediaTag"."tag_id" = '00000000-0000-0000-0000-000000000001'"#,
+                r#"LIMIT 500 OFFSET 0"#
+            ].join(" ")
         );
     }
 
@@ -63,12 +65,15 @@ mod tests {
         );
         assert_eq!(
             query.unwrap().to_string(PostgresQueryBuilder),
-            "SELECT COUNT(\"Media\".\"id\") \
-            FROM \"Media\" \
-            LEFT JOIN \"MediaState\" ON \"Media\".\"id\" = \"MediaState\".\"media_id\" \
-            LEFT JOIN \"MediaTag\" ON \"Media\".\"id\" = \"MediaTag\".\"media_id\" \
-            WHERE \"MediaState\".\"user_id\" = '00000000-0000-0000-0000-000000000000' \
-            AND \"MediaTag\".\"tag_id\" = '00000000-0000-0000-0000-000000000001'"
+            [
+                r#"SELECT COUNT("Media"."id")"#,
+                r#"FROM "Media""#,
+                r#"LEFT JOIN "MediaState" ON "Media"."id" = "MediaState"."media_id""#,
+                r#"LEFT JOIN "MediaTag" ON "Media"."id" = "MediaTag"."media_id""#,
+                r#"WHERE "MediaState"."user_id" = '00000000-0000-0000-0000-000000000000'"#,
+                r#"AND "MediaTag"."tag_id" = '00000000-0000-0000-0000-000000000001'"#
+            ]
+            .join(" ")
         );
     }
 
@@ -88,13 +93,15 @@ mod tests {
         );
         assert_eq!(
             query.unwrap().query.to_string(PostgresQueryBuilder),
-            "SELECT \"Tag\".\"id\", \"Tag\".\"user_id\", \"Tag\".\"name\", \"Tag\".\"added_datetime\", \"Tag\".\"updated_datetime\", \
-            \"MediaTag\".\"order\" AS \"tag_order\", \"MediaTag\".\"added_datetime\" AS \"tag_added_datetime\", \"MediaTag\".\"updated_datetime\" AS \"tag_updated_datetime\" \
-            FROM \"Tag\" \
-            LEFT JOIN \"MediaTag\" ON \"Tag\".\"user_id\" = \"MediaTag\".\"user_id\" AND \"Tag\".\"id\" = \"MediaTag\".\"tag_id\" \
-            WHERE \"Tag\".\"user_id\" = '00000000-0000-0000-0000-000000000000' \
-            AND \"MediaTag\".\"media_id\" = '00000000-0000-0000-0000-000000000001' \
-            LIMIT 500 OFFSET 0"
+            [
+                r#"SELECT "Tag"."id", "Tag"."user_id", "Tag"."name", "Tag"."added_datetime", "Tag"."updated_datetime","#,
+                r#""MediaTag"."order" AS "tag_order", "MediaTag"."added_datetime" AS "tag_added_datetime", "MediaTag"."updated_datetime" AS "tag_updated_datetime""#,
+                r#"FROM "Tag""#,
+                r#"LEFT JOIN "MediaTag" ON "Tag"."user_id" = "MediaTag"."user_id" AND "Tag"."id" = "MediaTag"."tag_id""#,
+                r#"WHERE "Tag"."user_id" = '00000000-0000-0000-0000-000000000000'"#,
+                r#"AND "MediaTag"."media_id" = '00000000-0000-0000-0000-000000000001'"#,
+                r#"LIMIT 500 OFFSET 0"#
+            ].join(" ")
         );
     }
 
@@ -114,10 +121,12 @@ mod tests {
         );
         assert_eq!(
             query.unwrap().to_string(PostgresQueryBuilder),
-            "SELECT COUNT(\"Tag\".\"id\") \
-            FROM \"Tag\" LEFT JOIN \"MediaTag\" ON \"Tag\".\"user_id\" = \"MediaTag\".\"user_id\" AND \"Tag\".\"id\" = \"MediaTag\".\"tag_id\" \
-            WHERE \"Tag\".\"user_id\" = '00000000-0000-0000-0000-000000000000' \
-            AND \"MediaTag\".\"media_id\" = '00000000-0000-0000-0000-000000000001'"
+            [
+                r#"SELECT COUNT("Tag"."id")"#,
+                r#"FROM "Tag" LEFT JOIN "MediaTag" ON "Tag"."user_id" = "MediaTag"."user_id" AND "Tag"."id" = "MediaTag"."tag_id""#,
+                r#"WHERE "Tag"."user_id" = '00000000-0000-0000-0000-000000000000'"#,
+                r#"AND "MediaTag"."media_id" = '00000000-0000-0000-0000-000000000001'"#
+            ].join(" ")
         );
     }
 }
@@ -144,7 +153,7 @@ pub fn count_all_medias_by_tag_id(
 
     join_media_tag_by_tag_id(&mut select, tag_id);
 
-    apply_search_filter(select, search)
+    apply_search_filter2(select, search)
 }
 
 pub fn select_all_tags_by_media_id(
@@ -169,7 +178,7 @@ pub fn count_all_tags_by_media_id(
 
     join_media_tag_by_media_id(&mut select, media_id);
 
-    apply_search_filter(select, search)
+    apply_search_filter2(select, search)
 }
 
 pub fn insert(media_tag: &MediaTag) -> impl QueryStatementWriter {

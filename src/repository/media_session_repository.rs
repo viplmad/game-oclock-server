@@ -13,8 +13,8 @@ use crate::entities::{
 use crate::errors::{RepositoryError, SearchErrors};
 
 use super::helpers::{
-    aggregate_all_search, aggregate_group_search, execute, exists_some, fetch_all,
-    fetch_all_search, fetch_optional,
+    aggregate_all_search, aggregate_group_search, execute, exists_some, fetch_all_search,
+    fetch_optional,
 };
 
 #[derive(Clone)]
@@ -139,10 +139,9 @@ impl MediaSessionRepository {
     pub async fn search_streaks(
         &self,
         user_id: &Uuid,
-        start_datetime: DateTime<FixedOffset>,
-        end_datetime: DateTime<FixedOffset>,
-    ) -> Result<Vec<MediaSessionStreak>, RepositoryError> {
-        let query = media_session_query::select_streaks(user_id, start_datetime, end_datetime);
-        fetch_all(&self.pool, query).await
+        search: SessionListSearch,
+    ) -> Result<PageResult<MediaSessionStreak>, SearchErrors> {
+        let query = media_session_query::select_streaks(user_id, search)?;
+        fetch_all_search(&self.pool, query).await
     }
 }
