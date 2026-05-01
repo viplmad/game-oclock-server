@@ -44,7 +44,7 @@ impl SqlxPostgresPoolBuilder {
             })
             .connect_with(conn)
             .await
-            .map(|res| {
+            .inspect(|_| {
                 log::info!(
                     "Postgres database connected to {}:<redacted>@{}:{}/{}",
                     user,
@@ -53,7 +53,6 @@ impl SqlxPostgresPoolBuilder {
                     port,
                     database
                 );
-                res
             })
     }
 }

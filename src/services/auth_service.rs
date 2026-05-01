@@ -39,7 +39,9 @@ impl AuthService {
 
                 self.get_token_from_password(
                     encoding_key,
+                    #[allow(clippy::unwrap_used)]
                     &token_request.username.unwrap(), // Safe unwrap: already checked before
+                    #[allow(clippy::unwrap_used)]
                     &token_request.password.unwrap(), // Safe unwrap: already checked before
                 )
                 .await
@@ -56,6 +58,7 @@ impl AuthService {
                 self.get_token_from_refresh(
                     encoding_key,
                     decoding_key,
+                    #[allow(clippy::unwrap_used)]
                     &token_request.refresh_token.unwrap(), // Safe unwrap: already checked before
                 )
                 .await

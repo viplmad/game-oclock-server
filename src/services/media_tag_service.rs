@@ -128,9 +128,9 @@ impl MediaTagService {
         let create_result = self
             .repository
             .create(&MediaTag {
-                user_id: user_id.clone(),
-                media_id: media_id.clone(),
-                tag_id: tag_id.clone(),
+                user_id: *user_id,
+                media_id: *media_id,
+                tag_id: *tag_id,
                 order: order
                     .map(|o| i32::try_from(o).expect("Order is not within valid range"))
                     .unwrap_or(0),

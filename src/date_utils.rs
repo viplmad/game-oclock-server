@@ -12,6 +12,7 @@ pub fn now() -> DateTime<FixedOffset> {
 }
 
 pub fn date_at_start_of_day(date: NaiveDate) -> DateTime<FixedOffset> {
-    let start_of_day_time = NaiveTime::from_hms_opt(0, 0, 0).unwrap();
+    #[allow(clippy::unwrap_used)]
+    let start_of_day_time = NaiveTime::from_hms_opt(0, 0, 0).unwrap(); // Safe unwrap: comes from constant
     date.and_time(start_of_day_time).and_utc().fixed_offset()
 }

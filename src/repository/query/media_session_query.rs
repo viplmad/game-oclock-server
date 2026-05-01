@@ -322,10 +322,7 @@ fn join_ext_tables(select: &mut SelectStatement, user_id: &Uuid, tables: Vec<Str
 }
 
 fn extract_group_ext_table<T: TableIden>(group: &AggregateGroup<T>) -> Vec<String> {
-    group
-        .field_ext_table()
-        .map(|t| vec![t])
-        .unwrap_or_else(|| vec![])
+    group.field_ext_table().map(|t| vec![t]).unwrap_or_default()
 }
 
 pub fn aggregate_all_first_with_search(
@@ -639,7 +636,7 @@ pub fn select_streaks_with_search(
         .expr_as(streak_days.clone(), STREAK_DAYS_ALIAS);
     select.from_subquery(streaks_group(user_id, search.filter)?, "streaks_group_sub");
     select.add_group_by([Expr::col(STREAK_GROUP_SUB_ALIAS).into()]);
-    select.order_by_expr(streak_days.clone().into(), Order::Desc);
+    select.order_by_expr(streak_days.clone(), Order::Desc);
 
     apply_search_pagination(select, search.page, search.size)
 }
@@ -741,6 +738,7 @@ struct Lag;
 
 impl sea_query::Iden for Lag {
     fn unquoted(&self, s: &mut dyn std::fmt::Write) {
-        write!(s, "LAG").unwrap();
+        #[allow(clippy::unwrap_used)]
+        write!(s, "LAG").unwrap(); // Safe unwrap: just a function name
     }
 }

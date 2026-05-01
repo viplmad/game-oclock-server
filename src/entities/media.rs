@@ -12,9 +12,9 @@ use super::{
 pub type MediaListSearch = ListSearch<MediaIden>;
 pub type MediaAggregateSearch = AggregateSearch<MediaIden>;
 
-pub const MEDIA_TYPE_GAME: &'static str = "GAME";
-pub const MEDIA_TYPE_GAME_DLC: &'static str = "GAME_DLC";
-pub const MEDIA_TYPE_GAME_DEMO: &'static str = "GAME_DEMO";
+pub const MEDIA_TYPE_GAME: &str = "GAME";
+pub const MEDIA_TYPE_GAME_DLC: &str = "GAME_DLC";
+pub const MEDIA_TYPE_GAME_DEMO: &str = "GAME_DEMO";
 
 #[derive(FromRow)]
 #[enum_def(table_name = "Media")]

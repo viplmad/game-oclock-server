@@ -74,8 +74,8 @@ impl LocationService {
                     .await;
                 handle_already_exists_result::<LocationDTO>(exists_result)?;
 
-                location_to_create.user_id = user_id.clone();
-                location_to_create.id = new_id.clone();
+                location_to_create.user_id = *user_id;
+                location_to_create.id = new_id;
                 location_to_create.added_datetime = crate::date_utils::now();
                 location_to_create.updated_datetime = crate::date_utils::now();
                 let create_result = self.repository.create(&location_to_create).await;
@@ -103,8 +103,8 @@ impl LocationService {
                     .await;
                 handle_already_exists_result::<LocationDTO>(exists_result)?;
 
-                location_to_update.user_id = user_id.clone();
-                location_to_update.id = id.clone();
+                location_to_update.user_id = *user_id;
+                location_to_update.id = *id;
                 location_to_update.updated_datetime = crate::date_utils::now();
                 let update_result = self.repository.update(&location_to_update).await;
                 handle_update_result::<LocationDTO>(update_result)

@@ -24,7 +24,7 @@ where
         .fetch_one(executor)
         .await
         .map_err(|err| {
-            log::error!("Error executing query. - {}", err.to_string());
+            log::error!("Error executing query. - {}", err);
             RepositoryError()
         })
 }
@@ -43,7 +43,7 @@ where
         .await
         .map(|_| ())
         .map_err(|err| {
-            log::error!("Error executing query. - {}", err.to_string());
+            log::error!("Error executing query. - {}", err);
             RepositoryError()
         })
 }
@@ -62,7 +62,7 @@ where
         .fetch_optional(executor)
         .await
         .map_err(|err| {
-            log::error!("Error executing query. - {}", err.to_string());
+            log::error!("Error executing query. - {}", err);
             RepositoryError()
         })
 }
@@ -94,7 +94,7 @@ where
         .fetch_all(executor)
         .await
         .map_err(|err| {
-            log::error!("Error executing query. - {}", err.to_string());
+            log::error!("Error executing query. - {}", err);
             RepositoryError()
         })
 }

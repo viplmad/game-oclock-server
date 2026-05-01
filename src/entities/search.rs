@@ -196,22 +196,22 @@ pub struct NoValueFilter<T: TableIden> {
 impl<T: TableIden> Filter<T> {
     pub fn chain_operator(&self) -> BinOper {
         match self {
-            Filter::Equal(f) => f.chain_operator.clone(),
-            Filter::NotEqual(f) => f.chain_operator.clone(),
-            Filter::GreaterThan(f) => f.chain_operator.clone(),
-            Filter::GreaterThanOrEqual(f) => f.chain_operator.clone(),
-            Filter::SmallerThan(f) => f.chain_operator.clone(),
-            Filter::SmallerThanOrEqual(f) => f.chain_operator.clone(),
-            Filter::In(f) => f.chain_operator.clone(),
-            Filter::NotIn(f) => f.chain_operator.clone(),
-            Filter::StartsWith(f) => f.chain_operator.clone(),
-            Filter::NotStartsWith(f) => f.chain_operator.clone(),
-            Filter::EndsWith(f) => f.chain_operator.clone(),
-            Filter::NotEndsWith(f) => f.chain_operator.clone(),
-            Filter::Contains(f) => f.chain_operator.clone(),
-            Filter::NotContains(f) => f.chain_operator.clone(),
-            Filter::Null(f) => f.chain_operator.clone(),
-            Filter::NotNull(f) => f.chain_operator.clone(),
+            Filter::Equal(f) => f.chain_operator,
+            Filter::NotEqual(f) => f.chain_operator,
+            Filter::GreaterThan(f) => f.chain_operator,
+            Filter::GreaterThanOrEqual(f) => f.chain_operator,
+            Filter::SmallerThan(f) => f.chain_operator,
+            Filter::SmallerThanOrEqual(f) => f.chain_operator,
+            Filter::In(f) => f.chain_operator,
+            Filter::NotIn(f) => f.chain_operator,
+            Filter::StartsWith(f) => f.chain_operator,
+            Filter::NotStartsWith(f) => f.chain_operator,
+            Filter::EndsWith(f) => f.chain_operator,
+            Filter::NotEndsWith(f) => f.chain_operator,
+            Filter::Contains(f) => f.chain_operator,
+            Filter::NotContains(f) => f.chain_operator,
+            Filter::Null(f) => f.chain_operator,
+            Filter::NotNull(f) => f.chain_operator,
         }
     }
 }

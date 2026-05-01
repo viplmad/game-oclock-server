@@ -15,7 +15,7 @@ impl From<MediaSessionWithTime> for SessionDTO {
             finished_status: session
                 .finished_status
                 .map(|v| MediaStatus::try_from(v).expect("Status is not within valid range")),
-            time: DurationDef::from(session.query_time.clone()),
+            time: DurationDef::from(session.query_time),
             added_datetime: session.added_datetime,
             updated_datetime: session.updated_datetime,
         }
@@ -34,7 +34,7 @@ impl From<SessionDTO> for MediaSession {
             device_id: session.device_id,
             group_id: session.group_id,
             started: session.started,
-            finished_status: session.finished_status.map(|v| i16::from(v)),
+            finished_status: session.finished_status.map(i16::from),
             added_datetime: session.added_datetime,
             updated_datetime: session.updated_datetime,
         }

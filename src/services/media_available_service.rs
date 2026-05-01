@@ -139,9 +139,9 @@ impl MediaAvailableService {
         let create_result = self
             .repository
             .create(&MediaAvailable {
-                user_id: user_id.clone(),
-                media_id: media_id.clone(),
-                location_id: location_id.clone(),
+                user_id: *user_id,
+                media_id: *media_id,
+                location_id: *location_id,
                 date: available_date,
                 added_datetime: crate::date_utils::now(),
                 updated_datetime: crate::date_utils::now(),

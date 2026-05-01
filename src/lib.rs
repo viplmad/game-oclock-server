@@ -1,3 +1,7 @@
+#![deny(clippy::all)]
+#![deny(clippy::unwrap_used)]
+#![forbid(unsafe_code)]
+
 pub mod auth;
 pub mod entities;
 pub mod extractors;

@@ -31,13 +31,17 @@ impl FromRequest for LoggedUser {
         let request = req.clone();
 
         Box::pin(async move {
-            let bearer_auth = BearerAuth::extract(&request).await.unwrap();
+            let bearer_auth = BearerAuth::extract(&request)
+                .await
+                .expect("Could not extract Bearer Authentication header");
             let token = bearer_auth.token();
 
             let (_, message) = expect_two!(token.rsplitn(2, '.'));
             let (payload, _) = expect_two!(message.rsplitn(2, '.'));
-            let decoded = b64_decode(payload).unwrap();
-            let claims: UserClaims = serde_json::from_slice(&decoded).unwrap();
+            let decoded =
+                b64_decode(payload).expect("Could not base 64 decode authentication token");
+            let claims: UserClaims = serde_json::from_slice(&decoded)
+                .expect("Could not deserialize authentication token");
 
             let user_id = claims.sub;
 

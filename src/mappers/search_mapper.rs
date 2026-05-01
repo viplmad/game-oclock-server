@@ -368,22 +368,14 @@ pub fn convert_value(value: &str, kind: FieldType) -> Result<Value, MappingError
         }
         FieldType::Date => {
             let date_value = NaiveDate::parse_from_str(value, "%Y-%m-%d").map_err(|err| {
-                log::error!(
-                    "Error converting value. <{}> - {}",
-                    value.to_string(),
-                    err.to_string()
-                );
+                log::error!("Error converting value. <{}> - {}", value, err);
                 MappingError(error_message_builder::convert_to_error(value, "date"))
             })?;
             Ok(date_value.into())
         }
         FieldType::DateTime => {
             let date_time_value = DateTime::parse_from_rfc3339(value).map_err(|err| {
-                log::error!(
-                    "Error converting value. <{}> - {}",
-                    value.to_string(),
-                    err.to_string()
-                );
+                log::error!("Error converting value. <{}> - {}", value, err);
                 MappingError(error_message_builder::convert_to_error(value, "date time"))
             })?;
             Ok(date_time_value.into())
@@ -406,11 +398,7 @@ where
     T: serde::de::Deserialize<'a>,
 {
     serde_json::from_str::<T>(value).map_err(|err| {
-        log::error!(
-            "Error converting value. <{}> - {}",
-            value.to_string(),
-            err.to_string()
-        );
+        log::error!("Error converting value. <{}> - {}", value, err);
         MappingError(error_message_builder::convert_to_error(value, type_string))
     })
 }

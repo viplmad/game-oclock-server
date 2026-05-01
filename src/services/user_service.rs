@@ -77,7 +77,7 @@ impl UserService {
                 let password_hash = crate::auth::hash_password(password).map_err(|_| {
                     ApiErrors::UnknownError(String::from("Password hashing error."))
                 })?;
-                user_to_create.id = new_id.clone();
+                user_to_create.id = new_id;
                 user_to_create.password = password_hash;
                 user_to_create.added_datetime = crate::date_utils::now();
                 user_to_create.updated_datetime = crate::date_utils::now();
@@ -101,7 +101,7 @@ impl UserService {
                     .await;
                 handle_already_exists_result::<UserDTO>(exists_result)?;
 
-                user_to_update.id = id.clone();
+                user_to_update.id = *id;
                 user_to_update.updated_datetime = crate::date_utils::now();
                 let update_result = self.repository.update(&user_to_update).await;
                 handle_update_result::<UserDTO>(update_result)

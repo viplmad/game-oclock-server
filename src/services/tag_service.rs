@@ -64,8 +64,8 @@ impl TagService {
                 .await;
             handle_already_exists_result::<TagDTO>(exists_result)?;
 
-            tag_to_create.user_id = user_id.clone();
-            tag_to_create.id = new_id.clone();
+            tag_to_create.user_id = *user_id;
+            tag_to_create.id = new_id;
             tag_to_create.added_datetime = crate::date_utils::now();
             tag_to_create.updated_datetime = crate::date_utils::now();
             let create_result = self.repository.create(&tag_to_create).await;
@@ -92,8 +92,8 @@ impl TagService {
                     .await;
                 handle_already_exists_result::<TagDTO>(exists_result)?;
 
-                tag_to_update.user_id = user_id.clone();
-                tag_to_update.id = id.clone();
+                tag_to_update.user_id = *user_id;
+                tag_to_update.id = *id;
                 tag_to_update.updated_datetime = crate::date_utils::now();
                 let update_result = self.repository.update(&tag_to_update).await;
                 handle_update_result::<TagDTO>(update_result)

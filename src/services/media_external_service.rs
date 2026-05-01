@@ -21,10 +21,10 @@ impl MediaExternalService {
         if id.source.to_lowercase() == SOURCE_IGDB {
             return self.igdb_client.get(&id.id).await;
         }
-        return Err(ApiErrors::NotSupported(format!(
+        Err(ApiErrors::NotSupported(format!(
             "Unsupported media source '{}'",
             id.source
-        )));
+        )))
     }
 
     pub async fn search(
@@ -36,10 +36,10 @@ impl MediaExternalService {
         if source.to_lowercase() == SOURCE_IGDB {
             return self.igdb_client.search(query, size).await;
         }
-        return Err(ApiErrors::NotSupported(format!(
+        Err(ApiErrors::NotSupported(format!(
             "Unsupported media source '{}'",
             source
-        )));
+        )))
     }
 }
 
@@ -76,17 +76,14 @@ impl IgdbClient {
             .send()
             .await
             .map_err(|err| {
-                log::error!("Error fetching from IGDB. - {}", err.to_string());
-                ApiErrors::UnknownError(error_message_builder::external_error())
+                log::error!("Error fetching from IGDB. - {}", err);
+                ApiErrors::UnknownError(error_message_builder::external_error(SOURCE_IGDB))
             })?
             .json::<Vec<IgdbGamesResponse>>()
             .await
             .map_err(|err| {
-                log::error!(
-                    "Error deserializing response from IGDB. - {}",
-                    err.to_string()
-                );
-                ApiErrors::UnknownError(error_message_builder::external_error())
+                log::error!("Error deserializing response from IGDB. - {}", err);
+                ApiErrors::UnknownError(error_message_builder::external_error(SOURCE_IGDB))
             })?;
 
         match resp.is_empty() {
@@ -107,13 +104,13 @@ impl IgdbClient {
                     .map(|d| d.fixed_offset()),
                     genres: item
                         .genres
-                        .unwrap_or_else(|| Vec::<IgdbElementResponse>::new())
+                        .unwrap_or_else(Vec::<IgdbElementResponse>::new)
                         .into_iter()
                         .map(|e| e.name)
                         .collect(),
                     series: item
                         .collections
-                        .unwrap_or_else(|| Vec::<IgdbElementResponse>::new())
+                        .unwrap_or_else(Vec::<IgdbElementResponse>::new)
                         .into_iter()
                         .map(|e| e.name)
                         .collect(),
@@ -149,17 +146,14 @@ impl IgdbClient {
             .send()
             .await
             .map_err(|err| {
-                log::error!("Error searching on IGDB. - {}", err.to_string());
-                ApiErrors::UnknownError(error_message_builder::external_error())
+                log::error!("Error searching on IGDB. - {}", err);
+                ApiErrors::UnknownError(error_message_builder::external_error(SOURCE_IGDB))
             })?
             .json::<Vec<IgdbGamesResponse>>()
             .await
             .map_err(|err| {
-                log::error!(
-                    "Error deserializing response from IGDB. - {}",
-                    err.to_string()
-                );
-                ApiErrors::UnknownError(error_message_builder::external_error())
+                log::error!("Error deserializing response from IGDB. - {}", err);
+                ApiErrors::UnknownError(error_message_builder::external_error(SOURCE_IGDB))
             })?;
 
         Ok(resp
@@ -182,13 +176,13 @@ impl IgdbClient {
                         .map(|d| d.fixed_offset()),
                         genres: item
                             .genres
-                            .unwrap_or_else(|| Vec::<IgdbElementResponse>::new())
+                            .unwrap_or_else(Vec::<IgdbElementResponse>::new)
                             .into_iter()
                             .map(|e| e.name)
                             .collect(),
                         series: item
                             .collections
-                            .unwrap_or_else(|| Vec::<IgdbElementResponse>::new())
+                            .unwrap_or_else(Vec::<IgdbElementResponse>::new)
                             .into_iter()
                             .map(|e| e.name)
                             .collect(),
@@ -234,17 +228,14 @@ impl IgdbClient {
             .send()
             .await
             .map_err(|err| {
-                log::error!("Error authenticating on Twitch. - {}", err.to_string());
-                ApiErrors::UnknownError(error_message_builder::external_error())
+                log::error!("Error authenticating on Twitch. - {}", err);
+                ApiErrors::UnknownError(error_message_builder::external_error(SOURCE_IGDB))
             })?
             .json::<TwitchAuthResponse>()
             .await
             .map_err(|err| {
-                log::error!(
-                    "Error deserializing response from Twitch. - {}",
-                    err.to_string()
-                );
-                ApiErrors::UnknownError(error_message_builder::external_error())
+                log::error!("Error deserializing response from Twitch. - {}", err);
+                ApiErrors::UnknownError(error_message_builder::external_error(SOURCE_IGDB))
             })?;
 
         Ok(resp.access_token)
@@ -292,9 +283,8 @@ impl IgdbClientPoolBuilder {
         );
 
         // Manually-constructed options
-        let client = Client::builder().build().map(|res| {
+        let client = Client::builder().build().inspect(|_| {
             log::info!("Igdb client set with client id {}", client_id,);
-            res
         })?;
 
         Ok(IgdbClient {

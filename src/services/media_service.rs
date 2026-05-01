@@ -128,7 +128,7 @@ impl MediaService {
                 });
 
                 // Update with existing id
-                media.id = state.map(|s| s.media_id.clone());
+                media.id = state.map(|s| s.media_id);
 
                 PotentialMediaDTO {
                     external,
@@ -220,7 +220,7 @@ impl MediaService {
                     .await;
                 handle_already_exists_result::<MediaDTO>(exists_result)?;
 
-                media_to_create.id = id.clone();
+                media_to_create.id = *id;
                 media_to_create.added_datetime = crate::date_utils::now();
                 media_to_create.updated_datetime = crate::date_utils::now();
                 let create_result = self.repository.create_data(&media_to_create).await;
@@ -239,8 +239,8 @@ impl MediaService {
         create_merged::<MediaState, MediaStateDTO, NewMediaStateDTO, _>(
             state,
             async move |mut state_to_create: MediaState| {
-                state_to_create.user_id = user_id.clone();
-                state_to_create.media_id = id.clone();
+                state_to_create.user_id = *user_id;
+                state_to_create.media_id = *id;
                 state_to_create.added_datetime = crate::date_utils::now();
                 state_to_create.updated_datetime = crate::date_utils::now();
 
@@ -260,7 +260,7 @@ impl MediaService {
             .repository
             .create_external(&ExternalMedia {
                 primary: true,
-                media_id: id.clone(),
+                media_id: *id,
                 external_source: external.source.clone(),
                 external_id: external.id.clone(),
             })
@@ -345,7 +345,7 @@ impl MediaService {
                     .await;
                 handle_already_exists_result::<MediaDTO>(exists_result)?;
 
-                media_to_update.id = id.clone();
+                media_to_update.id = *id;
                 media_to_update.updated_datetime = crate::date_utils::now();
                 let update_result = self.repository.update_data(&media_to_update).await;
                 handle_update_result::<MediaDTO>(update_result)
@@ -364,8 +364,8 @@ impl MediaService {
             state,
             async move || self.get_media_state(user_id, id).await,
             async move |mut state_to_update: MediaState| {
-                state_to_update.user_id = user_id.clone();
-                state_to_update.media_id = id.clone();
+                state_to_update.user_id = *user_id;
+                state_to_update.media_id = *id;
                 state_to_update.updated_datetime = crate::date_utils::now();
 
                 let update_result = self.repository.update_state(&state_to_update).await;
@@ -384,7 +384,7 @@ impl MediaService {
             .repository
             .update_external(&ExternalMedia {
                 primary: true,
-                media_id: id.clone(),
+                media_id: *id,
                 external_source: external.source.clone(),
                 external_id: external.id.clone(),
             })
@@ -453,15 +453,15 @@ impl MediaService {
     ) -> Result<(), ApiErrors> {
         self.exists_media(id).await?;
 
-        if let Some(id) = &parent_id {
+        if let Some(pid) = &parent_id {
             // Set base media
-            if id == id {
+            if id == pid {
                 return Err(ApiErrors::InvalidParameter(String::from(
                     "Media and base media cannot be the same",
                 )));
             }
 
-            let parent = self.get_media_data(id).await?;
+            let parent = self.get_media_data(pid).await?;
             if parent.parent_id.is_some() {
                 return Err(ApiErrors::InvalidParameter(String::from(
                     "Base media cannot be itself a child of another media",

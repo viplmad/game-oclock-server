@@ -48,7 +48,7 @@ pub fn validate_token(
     validation.set_required_spec_claims(&["iss", "sub", "iat", "exp", "jti"]);
 
     jsonwebtoken::decode::<UserClaims>(token, decoding_key, &validation).map_err(|err| {
-        log::error!("Error decoding JWT. - {}", err.to_string());
+        log::error!("Error decoding JWT. - {}", err);
         ValidationError()
     })
 }
@@ -77,7 +77,7 @@ fn create_access_token_claims(user_id: &Uuid) -> UserClaims {
 }
 
 fn create_refresh_token_claims(user_id: &Uuid, access_token_id: &Uuid) -> UserClaims {
-    create_token_claims(user_id, SECONDS_PER_ONE_WEEK, Some(access_token_id.clone()))
+    create_token_claims(user_id, SECONDS_PER_ONE_WEEK, Some(*access_token_id))
 }
 
 fn create_token_claims(
@@ -88,10 +88,11 @@ fn create_token_claims(
     let now = crate::date_utils::now().timestamp();
     UserClaims {
         iss: String::from(ISSUER),
-        sub: user_id.clone(),
+        sub: *user_id,
         iat: now,
         exp: now + expiry_seconds,
-        kid: uuid_utils::parse_uuid(KID).unwrap(),
+        #[allow(clippy::unwrap_used)]
+        kid: uuid_utils::parse_uuid(KID).unwrap(), // Safe unwrap: comes from constant
         jti: crate::uuid_utils::new_random_uuid(),
         ati: access_token_id,
     }
@@ -102,7 +103,7 @@ fn generate_token(
     encoding_key: &EncodingKey,
 ) -> Result<String, ValidationError> {
     jsonwebtoken::encode(&Header::default(), &claims, encoding_key).map_err(|err| {
-        log::error!("Error encodign JWT. - {}", err.to_string());
+        log::error!("Error encodign JWT. - {}", err);
         ValidationError()
     })
 }

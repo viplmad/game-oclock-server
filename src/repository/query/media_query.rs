@@ -174,7 +174,7 @@ pub fn select_by_external_id(user_id: &Uuid, source: &str, id: &str) -> impl Que
     where_external_id(&mut select, source, id);
     add_fields(&mut select);
 
-    join_state(&mut select, &user_id);
+    join_state(&mut select, user_id);
     add_state_join_fields(&mut select);
 
     select

@@ -161,7 +161,8 @@ pub fn get_openapi() -> utoipa::openapi::OpenApi {
     struct SecurityAddon;
     impl Modify for SecurityAddon {
         fn modify(&self, openapi: &mut utoipa::openapi::OpenApi) {
-            let components = openapi.components.as_mut().unwrap(); // Safe unwrap: there already are components registered.
+            #[allow(clippy::unwrap_used)]
+            let components = openapi.components.as_mut().unwrap(); // Safe unwrap: there already are components registered
             components.add_security_scheme(
                 "OAuth2",
                 SecurityScheme::OAuth2(OAuth2::with_description(

@@ -60,7 +60,8 @@ pub fn apply_aggregate_search<I: 'static + TableIden + Clone + Copy>(
 ) -> Result<AggregateQuery, SearchErrors> {
     apply_filter(&mut select, search.filter).map_err(SearchErrors::Mapping)?;
 
-    let (kind, field_kind) = apply_aggregate_metric(&mut select, search.aggr);
+    let (kind, field_kind) =
+        apply_aggregate_metric(&mut select, search.aggr).map_err(SearchErrors::Mapping)?;
 
     Ok(AggregateQuery {
         query: select,
@@ -75,9 +76,10 @@ pub fn apply_aggregate_group_search<I: 'static + TableIden + Clone + Copy>(
 ) -> Result<AggregateGroupQuery, SearchErrors> {
     apply_filter(&mut select, search.filter).map_err(SearchErrors::Mapping)?;
 
-    apply_aggregate_group(&mut select, search.group);
+    apply_aggregate_group(&mut select, search.group).map_err(SearchErrors::Mapping)?;
 
-    let (kind, field_kind) = apply_aggregate_metric(&mut select, search.aggr);
+    let (kind, field_kind) =
+        apply_aggregate_metric(&mut select, search.aggr).map_err(SearchErrors::Mapping)?;
 
     Ok(AggregateGroupQuery {
         query: select,
@@ -90,117 +92,119 @@ fn apply_filter<I: 'static + TableIden + Clone + Copy>(
     select: &mut SelectStatement,
     filter: Option<Vec<Filter<I>>>,
 ) -> Result<(), MappingError> {
-    Ok(if let Some(filters) = filter {
-        if !filters.is_empty() {
-            let mut ands = Cond::all();
-            let mut ors = Cond::any();
+    if let Some(filters) = filter
+        && !filters.is_empty()
+    {
+        let mut ands = Cond::all();
+        let mut ors = Cond::any();
 
-            for filter in filters {
-                let chain_operator = filter.chain_operator();
-                let expr = match filter {
-                    Filter::Equal(f) => {
-                        let (col, value) = build_single_value(f)?;
+        for filter in filters {
+            let chain_operator = filter.chain_operator();
+            let expr = match filter {
+                Filter::Equal(f) => {
+                    let (col, value) = build_single_value(f)?;
 
-                        col.eq(value)
-                    }
-                    Filter::NotEqual(f) => {
-                        let (col, value) = build_single_value(f)?;
+                    col.eq(value)
+                }
+                Filter::NotEqual(f) => {
+                    let (col, value) = build_single_value(f)?;
 
-                        col.ne(value)
-                    }
-                    Filter::GreaterThan(f) => {
-                        let (col, value) = build_single_value(f)?;
+                    col.ne(value)
+                }
+                Filter::GreaterThan(f) => {
+                    let (col, value) = build_single_value(f)?;
 
-                        col.gt(value)
-                    }
-                    Filter::GreaterThanOrEqual(f) => {
-                        let (col, value) = build_single_value(f)?;
+                    col.gt(value)
+                }
+                Filter::GreaterThanOrEqual(f) => {
+                    let (col, value) = build_single_value(f)?;
 
-                        col.gte(value)
-                    }
-                    Filter::SmallerThan(f) => {
-                        let (col, value) = build_single_value(f)?;
+                    col.gte(value)
+                }
+                Filter::SmallerThan(f) => {
+                    let (col, value) = build_single_value(f)?;
 
-                        col.lt(value)
-                    }
-                    Filter::SmallerThanOrEqual(f) => {
-                        let (col, value) = build_single_value(f)?;
+                    col.lt(value)
+                }
+                Filter::SmallerThanOrEqual(f) => {
+                    let (col, value) = build_single_value(f)?;
 
-                        col.lte(value)
-                    }
-                    Filter::In(f) => {
-                        let (col, values) = build_multiple_values(f)?;
+                    col.lte(value)
+                }
+                Filter::In(f) => {
+                    let (col, values) = build_multiple_values(f)?;
 
-                        col.is_in(values)
-                    }
-                    Filter::NotIn(f) => {
-                        let (col, values) = build_multiple_values(f)?;
+                    col.is_in(values)
+                }
+                Filter::NotIn(f) => {
+                    let (col, values) = build_multiple_values(f)?;
 
-                        col.is_not_in(values)
-                    }
-                    Filter::StartsWith(f) => {
-                        let value = &f.value;
-                        let col = build_field_expr(f.field);
+                    col.is_not_in(values)
+                }
+                Filter::StartsWith(f) => {
+                    let value = &f.value;
+                    let col = build_field_expr(f.field);
 
-                        to_lower(col).like(LikeExpr::new(format_like_starts_with(value)))
-                    }
-                    Filter::NotStartsWith(f) => {
-                        let value = &f.value;
-                        let col = build_field_expr(f.field);
+                    to_lower(col).like(LikeExpr::new(format_like_starts_with(value)))
+                }
+                Filter::NotStartsWith(f) => {
+                    let value = &f.value;
+                    let col = build_field_expr(f.field);
 
-                        to_lower(col).not_like(LikeExpr::new(format_like_starts_with(value)))
-                    }
-                    Filter::EndsWith(f) => {
-                        let value = &f.value;
-                        let col = build_field_expr(f.field);
+                    to_lower(col).not_like(LikeExpr::new(format_like_starts_with(value)))
+                }
+                Filter::EndsWith(f) => {
+                    let value = &f.value;
+                    let col = build_field_expr(f.field);
 
-                        to_lower(col).like(LikeExpr::new(format_like_ends_with(value)))
-                    }
-                    Filter::NotEndsWith(f) => {
-                        let value = &f.value;
-                        let col = build_field_expr(f.field);
+                    to_lower(col).like(LikeExpr::new(format_like_ends_with(value)))
+                }
+                Filter::NotEndsWith(f) => {
+                    let value = &f.value;
+                    let col = build_field_expr(f.field);
 
-                        to_lower(col).not_like(LikeExpr::new(format_like_ends_with(value)))
-                    }
-                    Filter::Contains(f) => {
-                        let value = &f.value;
-                        let col = build_field_expr(f.field);
+                    to_lower(col).not_like(LikeExpr::new(format_like_ends_with(value)))
+                }
+                Filter::Contains(f) => {
+                    let value = &f.value;
+                    let col = build_field_expr(f.field);
 
-                        to_lower(col).like(LikeExpr::new(format_like_contains(value)))
-                    }
-                    Filter::NotContains(f) => {
-                        let value = &f.value;
-                        let col = build_field_expr(f.field);
+                    to_lower(col).like(LikeExpr::new(format_like_contains(value)))
+                }
+                Filter::NotContains(f) => {
+                    let value = &f.value;
+                    let col = build_field_expr(f.field);
 
-                        to_lower(col).not_like(LikeExpr::new(format_like_contains(value)))
-                    }
-                    Filter::Null(f) => {
-                        let col = build_field_expr(f.field);
+                    to_lower(col).not_like(LikeExpr::new(format_like_contains(value)))
+                }
+                Filter::Null(f) => {
+                    let col = build_field_expr(f.field);
 
-                        col.is_null()
-                    }
-                    Filter::NotNull(f) => {
-                        let col = build_field_expr(f.field);
+                    col.is_null()
+                }
+                Filter::NotNull(f) => {
+                    let col = build_field_expr(f.field);
 
-                        col.is_not_null()
-                    }
-                };
+                    col.is_not_null()
+                }
+            };
 
-                match chain_operator {
-                    BinOper::And => ands = ands.add(expr),
-                    BinOper::Or => ors = ors.add(expr),
-                    _ => unreachable!(),
-                };
-            }
-
-            if !ands.is_empty() {
-                select.cond_where(ands);
-            }
-            if !ors.is_empty() {
-                select.cond_where(ors);
-            }
+            match chain_operator {
+                BinOper::And => ands = ands.add(expr),
+                BinOper::Or => ors = ors.add(expr),
+                _ => unreachable!(),
+            };
         }
-    })
+
+        if !ands.is_empty() {
+            select.cond_where(ands);
+        }
+        if !ors.is_empty() {
+            select.cond_where(ors);
+        }
+    }
+
+    Ok(())
 }
 
 fn build_single_value<I: 'static + TableIden + Clone + Copy>(
@@ -223,7 +227,7 @@ fn build_multiple_values<I: 'static + TableIden + Clone + Copy>(
     let values = filter
         .value
         .iter()
-        .map(|v| convert_value(&v, field_kind.clone()))
+        .map(|v| convert_value(v, field_kind.clone()))
         .collect::<Result<Vec<Value>, MappingError>>()?;
 
     Ok((col, values))
@@ -260,25 +264,25 @@ fn apply_pagination(
 fn apply_aggregate_metric<I: 'static + TableIden + Clone + Copy>(
     select: &mut SelectStatement,
     aggr: AggregateMetric<I>,
-) -> (AggregateType, FieldType) {
+) -> Result<(AggregateType, FieldType), MappingError> {
     let kind = aggr.kind();
     let field_kind = aggr.field_kind();
     match aggr {
         AggregateMetric::Count(c) => apply_aggregate_count_metric(select, c),
         AggregateMetric::Sum(s) => apply_aggregate_sum_metric(select, s),
-    }
+    }?;
 
-    (kind, field_kind)
+    Ok((kind, field_kind))
 }
 
 fn apply_aggregate_count_metric<I: 'static + TableIden + Clone + Copy>(
     select: &mut SelectStatement,
     aggr: AggregateCountMetric<I>,
-) {
+) -> Result<(), MappingError> {
     let field_kind = aggr.field.kind();
     let col = build_field_expr(aggr.field);
 
-    let expr = coalesce_default(col, aggr.default_value, field_kind);
+    let expr = coalesce_default(col, aggr.default_value, field_kind)?;
 
     let expr = match aggr.distinct {
         true => expr.count_distinct(),
@@ -286,26 +290,30 @@ fn apply_aggregate_count_metric<I: 'static + TableIden + Clone + Copy>(
     };
 
     select.expr(expr);
+
+    Ok(())
 }
 
 fn apply_aggregate_sum_metric<I: 'static + TableIden + Clone + Copy>(
     select: &mut SelectStatement,
     aggr: AggregateSumMetric<I>,
-) {
+) -> Result<(), MappingError> {
     let field_kind = aggr.field.kind();
     let col = build_field_expr(aggr.field);
 
-    let expr = coalesce_default(col, aggr.default_value, field_kind);
+    let expr = coalesce_default(col, aggr.default_value, field_kind)?;
 
     let expr = expr.sum();
 
     select.expr(expr);
+
+    Ok(())
 }
 
 fn apply_aggregate_group<I: 'static + TableIden + Clone + Copy>(
     select: &mut SelectStatement,
     aggr: AggregateGroup<I>,
-) {
+) -> Result<(), MappingError> {
     match aggr {
         AggregateGroup::Field(f) => apply_aggregate_field_group(select, f),
         AggregateGroup::DateHistogram(d) => apply_aggregate_date_histogram_group(select, d),
@@ -315,25 +323,27 @@ fn apply_aggregate_group<I: 'static + TableIden + Clone + Copy>(
 fn apply_aggregate_field_group<I: 'static + TableIden + Clone + Copy>(
     select: &mut SelectStatement,
     aggr: AggregateFieldGroup<I>,
-) {
+) -> Result<(), MappingError> {
     let field_kind = aggr.field.kind();
     let col = build_field_expr(aggr.field);
 
-    let expr = coalesce_default(col, aggr.default_value, field_kind);
+    let expr = coalesce_default(col, aggr.default_value, field_kind)?;
     let expr = expr.cast_as("BIGINT");
 
     select.expr(expr.clone());
-    select.add_group_by([expr.into()]);
+    select.add_group_by([expr]);
+
+    Ok(())
 }
 
 fn apply_aggregate_date_histogram_group<I: 'static + TableIden + Clone + Copy>(
     select: &mut SelectStatement,
     aggr: AggregateDateHistogramGroup<I>,
-) {
+) -> Result<(), MappingError> {
     let field_kind = aggr.field.kind();
     let col = build_field_expr(aggr.field);
 
-    let expr = coalesce_default(col, aggr.default_value, field_kind);
+    let expr = coalesce_default(col, aggr.default_value, field_kind)?;
 
     let expr = match aggr.interval {
         GroupDateHistogramInterval::Year => Func::cust(DatePart).arg("year").arg(expr),
@@ -346,7 +356,9 @@ fn apply_aggregate_date_histogram_group<I: 'static + TableIden + Clone + Copy>(
     .cast_as("BIGINT"); // Cast as int as no float date parts are used
 
     select.expr(expr.clone());
-    select.add_group_by([expr.into()]);
+    select.add_group_by([expr]);
+
+    Ok(())
 }
 
 fn to_lower(col: Expr) -> Expr {
@@ -382,21 +394,26 @@ fn build_col_expr<I: 'static + TableIden + Clone + Copy>(field: ColIden<I>) -> E
     Expr::col((table, field))
 }
 
-fn coalesce_default(column: Expr, default_value: Option<String>, field_kind: FieldType) -> Expr {
-    match default_value {
+fn coalesce_default(
+    column: Expr,
+    default_value: Option<String>,
+    field_kind: FieldType,
+) -> Result<Expr, MappingError> {
+    Ok(match default_value {
         Some(def) => Expr::expr(Func::coalesce([
             column.into(),
-            convert_value(&def, field_kind).unwrap().into(),
+            convert_value(&def, field_kind)?.into(),
         ])),
         None => column,
-    }
+    })
 }
 
-///
+//
 struct DatePart;
 
 impl sea_query::Iden for DatePart {
     fn unquoted(&self, s: &mut dyn std::fmt::Write) {
-        write!(s, "DATE_PART").unwrap();
+        #[allow(clippy::unwrap_used)]
+        write!(s, "DATE_PART").unwrap(); // Safe unwrap: just a function name
     }
 }

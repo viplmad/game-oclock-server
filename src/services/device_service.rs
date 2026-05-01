@@ -74,8 +74,8 @@ impl DeviceService {
                     .await;
                 handle_already_exists_result::<DeviceDTO>(exists_result)?;
 
-                device_to_create.user_id = user_id.clone();
-                device_to_create.id = new_id.clone();
+                device_to_create.user_id = *user_id;
+                device_to_create.id = new_id;
                 device_to_create.added_datetime = crate::date_utils::now();
                 device_to_create.updated_datetime = crate::date_utils::now();
                 let create_result = self.repository.create(&device_to_create).await;
@@ -103,8 +103,8 @@ impl DeviceService {
                     .await;
                 handle_already_exists_result::<DeviceDTO>(exists_result)?;
 
-                device_to_update.user_id = user_id.clone();
-                device_to_update.id = id.clone();
+                device_to_update.user_id = *user_id;
+                device_to_update.id = *id;
                 device_to_update.updated_datetime = crate::date_utils::now();
                 let update_result = self.repository.update(&device_to_update).await;
                 handle_update_result::<DeviceDTO>(update_result)

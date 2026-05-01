@@ -217,10 +217,10 @@ pub(super) fn check_optional_start_end(
             "Start date and end date cannot be empty",
         )));
     }
-    if let Some(start) = start_date {
-        if let Some(end) = end_date {
-            check_start_end(start, end)?;
-        }
+    if let Some(start) = start_date
+        && let Some(end) = end_date
+    {
+        check_start_end(start, end)?;
     }
     Ok(())
 }
