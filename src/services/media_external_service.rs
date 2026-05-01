@@ -86,39 +86,38 @@ impl IgdbClient {
                 ApiErrors::UnknownError(error_message_builder::external_error(SOURCE_IGDB))
             })?;
 
-        match resp.is_empty() {
-            true => Err(ApiErrors::NotFound(error_message_builder::not_found(
+        if resp.is_empty() {
+            Err(ApiErrors::NotFound(error_message_builder::not_found(
                 "IGDB Game",
                 &["id"],
-            ))),
-            false => {
-                let item = resp.remove(0);
-                Ok(NewManualMediaDTO {
-                    kind: Some(Self::get_kind(item.game_type)),
-                    title: Some(item.name),
-                    edition: item.version_title,
-                    release_date: match item.first_release_date {
-                        Some(v) => DateTime::from_timestamp_secs(v),
-                        None => None,
-                    }
-                    .map(|d| d.fixed_offset()),
-                    genres: item
-                        .genres
-                        .unwrap_or_else(Vec::<IgdbElementResponse>::new)
-                        .into_iter()
-                        .map(|e| e.name)
-                        .collect(),
-                    series: item
-                        .collections
-                        .unwrap_or_else(Vec::<IgdbElementResponse>::new)
-                        .into_iter()
-                        .map(|e| e.name)
-                        .collect(),
-                    image_url: item.cover.map(|v| v.url),
-                    parent_id: None,
-                    parent_order: None,
-                })
-            }
+            )))
+        } else {
+            let item = resp.remove(0);
+            Ok(NewManualMediaDTO {
+                kind: Some(Self::get_kind(item.game_type)),
+                title: Some(item.name),
+                edition: item.version_title,
+                release_date: match item.first_release_date {
+                    Some(v) => DateTime::from_timestamp_secs(v),
+                    None => None,
+                }
+                .map(|d| d.fixed_offset()),
+                genres: item
+                    .genres
+                    .unwrap_or_else(Vec::<IgdbElementResponse>::new)
+                    .into_iter()
+                    .map(|e| e.name)
+                    .collect(),
+                series: item
+                    .collections
+                    .unwrap_or_else(Vec::<IgdbElementResponse>::new)
+                    .into_iter()
+                    .map(|e| e.name)
+                    .collect(),
+                image_url: item.cover.map(|v| v.url),
+                parent_id: None,
+                parent_order: None,
+            })
         }
     }
 
@@ -275,7 +274,7 @@ struct IgdbElementResponse {
 pub struct IgdbClientPoolBuilder;
 
 impl IgdbClientPoolBuilder {
-    pub async fn from_env() -> Result<IgdbClient, reqwest::Error> {
+    pub fn from_env() -> Result<IgdbClient, reqwest::Error> {
         let client_id = std::env::var("IGDB_CLIENT_ID")
             .expect("IGDB client id not set. Set through 'IGDB_CLIENT_ID' environemnt variable.");
         let client_secret = std::env::var("IGDB_CLIENT_SECRET").expect(
@@ -284,7 +283,7 @@ impl IgdbClientPoolBuilder {
 
         // Manually-constructed options
         let client = Client::builder().build().inspect(|_| {
-            log::info!("Igdb client set with client id {}", client_id,);
+            log::info!("Igdb client set with client id {}", client_id);
         })?;
 
         Ok(IgdbClient {

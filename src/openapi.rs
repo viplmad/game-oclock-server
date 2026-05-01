@@ -172,7 +172,7 @@ pub fn get_openapi() -> utoipa::openapi::OpenApi {
                     ))],
                     "OAuth2 flow",
                 )),
-            )
+            );
         }
     }
 

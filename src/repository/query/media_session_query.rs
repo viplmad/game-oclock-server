@@ -638,7 +638,7 @@ pub fn select_streaks_with_search(
     select.add_group_by([Expr::col(STREAK_GROUP_SUB_ALIAS).into()]);
     select.order_by_expr(streak_days.clone(), Order::Desc);
 
-    apply_search_pagination(select, search.page, search.size)
+    Ok(apply_search_pagination(select, search.page, search.size))
 }
 
 fn streaks_group(

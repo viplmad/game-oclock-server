@@ -62,8 +62,9 @@ pub(super) async fn require_admin_or_current_user(
     user_id: &Uuid,
     id: &Uuid,
 ) -> Result<(), HttpResponse> {
-    match user_id == id {
-        true => Ok(()),
-        false => require_admin(user_service, user_id).await,
+    if user_id == id {
+        Ok(())
+    } else {
+        require_admin(user_service, user_id).await
     }
 }

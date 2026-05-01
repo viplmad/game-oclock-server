@@ -65,9 +65,7 @@ async fn run(
         .expect("Could not open database connection.");
     // migrations::apply_migrations(&database_connection_pool).await;
 
-    let igdb_client = IgdbClientPoolBuilder::from_env()
-        .await
-        .expect("Could not create IGDB client.");
+    let igdb_client = IgdbClientPoolBuilder::from_env().expect("Could not create IGDB client.");
 
     let user_repository = UserRepository::with_connection(database_connection_pool.clone());
     let user_service = UserService::with(user_repository);

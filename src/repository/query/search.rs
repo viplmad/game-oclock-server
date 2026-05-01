@@ -44,14 +44,14 @@ pub fn apply_search_pagination(
     mut select: SelectStatement,
     page: Option<u64>,
     size: Option<u64>,
-) -> Result<SearchQuery, SearchErrors> {
+) -> SearchQuery {
     let (page, size) = apply_pagination(&mut select, page, size);
 
-    Ok(SearchQuery {
+    SearchQuery {
         query: select,
         page,
         size,
-    })
+    }
 }
 
 pub fn apply_aggregate_search<I: 'static + TableIden + Clone + Copy>(
@@ -193,7 +193,7 @@ fn apply_filter<I: 'static + TableIden + Clone + Copy>(
                 BinOper::And => ands = ands.add(expr),
                 BinOper::Or => ors = ors.add(expr),
                 _ => unreachable!(),
-            };
+            }
         }
 
         if !ands.is_empty() {
@@ -284,9 +284,10 @@ fn apply_aggregate_count_metric<I: 'static + TableIden + Clone + Copy>(
 
     let expr = coalesce_default(col, aggr.default_value, field_kind)?;
 
-    let expr = match aggr.distinct {
-        true => expr.count_distinct(),
-        false => expr.count(),
+    let expr = if aggr.distinct {
+        expr.count_distinct()
+    } else {
+        expr.count()
     };
 
     select.expr(expr);

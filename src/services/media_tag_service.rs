@@ -131,9 +131,9 @@ impl MediaTagService {
                 user_id: *user_id,
                 media_id: *media_id,
                 tag_id: *tag_id,
-                order: order
-                    .map(|o| i32::try_from(o).expect("Order is not within valid range"))
-                    .unwrap_or(0),
+                order: order.map_or(0, |o| {
+                    i32::try_from(o).expect("Order is not within valid range")
+                }),
                 added_datetime: crate::date_utils::now(),
                 updated_datetime: crate::date_utils::now(),
             })

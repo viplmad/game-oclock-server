@@ -150,11 +150,12 @@ where
     T: ModelInfo,
 {
     let exists = handle_result::<bool, T>(repository_result)?;
-    match exists {
-        true => Err(ApiErrors::AlreadyExists(
+    if exists {
+        Err(ApiErrors::AlreadyExists(
             error_message_builder::already_exists(T::MODEL_NAME, T::UNIQUE_FIELDS),
-        )),
-        false => Ok(()),
+        ))
+    } else {
+        Ok(())
     }
 }
 
@@ -165,12 +166,13 @@ where
     T: ModelInfo,
 {
     let exists = handle_result::<bool, T>(repository_result)?;
-    match exists {
-        true => Ok(()),
-        false => Err(ApiErrors::NotFound(error_message_builder::not_found(
+    if exists {
+        Ok(())
+    } else {
+        Err(ApiErrors::NotFound(error_message_builder::not_found(
             T::MODEL_NAME,
             T::ID_FIELDS,
-        ))),
+        )))
     }
 }
 
@@ -309,7 +311,7 @@ where
             .collect();
 
         if let Some(filters) = filter {
-            quicksearch_filters.append(filters)
+            quicksearch_filters.append(filters);
         }
         *filter = Some(quicksearch_filters);
     }

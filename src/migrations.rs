@@ -22,26 +22,25 @@ pub async fn check_admin_user(user_service: &UserService) {
         .exists_admin_user()
         .await
         .expect("Could not check if admin user exists");
-    match exists_admin {
-        true => log::info!("Admin user present."),
-        false => {
-            let admin_user_id = user_service
-                .create_user(
-                    NewUserDTO {
-                        username: Some(String::from("admin")),
-                    },
-                    "admin",
-                )
-                .await
-                .expect("Could not create admin user");
-            user_service
-                .promote_user(&admin_user_id)
-                .await
-                .expect("Could not promote admin user");
+    if exists_admin {
+        log::info!("Admin user present.");
+    } else {
+        let admin_user_id = user_service
+            .create_user(
+                NewUserDTO {
+                    username: Some(String::from("admin")),
+                },
+                "admin",
+            )
+            .await
+            .expect("Could not create admin user");
+        user_service
+            .promote_user(&admin_user_id)
+            .await
+            .expect("Could not promote admin user");
 
-            log::info!(
-                "Admin user not present, created 'admin' user with default 'admin' password. PLEASE CHANGE PASSWORD."
-            );
-        }
+        log::info!(
+            "Admin user not present, created 'admin' user with default 'admin' password. PLEASE CHANGE PASSWORD."
+        );
     }
 }
