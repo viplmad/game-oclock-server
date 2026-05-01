@@ -114,7 +114,6 @@ impl MediaService {
             .iter()
             .map(|(external_id, _)| (external_id.source.clone(), external_id.id.clone()))
             .collect();
-
         let find_states_result = self
             .repository
             .find_all_states_by_external_ids(user_id, &external_ids)
@@ -123,18 +122,18 @@ impl MediaService {
 
         Ok(externals
             .into_iter()
-            .map(|(external, media)| {
-                let state = states
-                    .iter()
-                    .find(|state| {
-                        state.external_source == external.source && state.external_id == external.id
-                    })
-                    .map(MediaStateDTO::from);
+            .map(|(external, mut media)| {
+                let state = states.iter().find(|state| {
+                    state.external_source == external.source && state.external_id == external.id
+                });
+
+                // Update with existing id
+                media.id = state.map(|s| s.media_id.clone());
 
                 PotentialMediaDTO {
                     external,
                     media,
-                    state,
+                    state: state.map(MediaStateDTO::from),
                 }
             })
             .collect())

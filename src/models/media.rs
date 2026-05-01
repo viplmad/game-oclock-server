@@ -14,7 +14,7 @@ pub struct MediaDTO {
 
 #[derive(Default, Serialize, ToSchema)]
 pub struct PotentialMediaDTO {
-    pub media: MediaDataDTO,
+    pub media: ExternalMediaDataDTO,
     pub external: ExternalMediaIdDTO,
     #[serde(skip_serializing_if = "Option::is_none")]
     pub state: Option<MediaStateDTO>,
@@ -43,6 +43,27 @@ pub struct MediaDataDTO {
     pub added_datetime: DateTime<FixedOffset>,
     #[schema(value_type = String, format = DateTime)]
     pub updated_datetime: DateTime<FixedOffset>,
+}
+
+#[derive(Default, Serialize, ToSchema)]
+pub struct ExternalMediaDataDTO {
+    #[schema(value_type = String)]
+    pub id: Option<Uuid>,
+    pub kind: MediaType,
+    pub title: String,
+    pub edition: String,
+    #[schema(value_type = String, format = DateTime)]
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub release_date: Option<DateTime<FixedOffset>>,
+    pub genres: Vec<String>,
+    pub series: Vec<String>,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub image_url: Option<String>,
+    #[schema(value_type = String)]
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub parent_id: Option<Uuid>,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub parent_order: Option<u32>,
 }
 
 #[derive(Default, Serialize, ToSchema)]

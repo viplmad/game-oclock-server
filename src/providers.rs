@@ -36,7 +36,8 @@ impl SqlxPostgresPoolBuilder {
             .max_connections(5)
             .after_connect(|conn, _meta| {
                 Box::pin(async move {
-                    conn.execute("SET TIME ZONE 'UTC';").await?;
+                    conn.execute("SET TIME ZONE 'UTC';SET client_encoding = 'UTF8';")
+                        .await?;
 
                     Ok(())
                 })

@@ -29,6 +29,10 @@ pub mod error_message_builder {
         format!("Database error accessing {model_name}.")
     }
 
+    pub fn external_error() -> String {
+        format!("Request error accessing external service")
+    }
+
     pub fn created_but_error_get(model_name: &str) -> String {
         format!("{model_name} was created but cannot be retrieved.")
     }

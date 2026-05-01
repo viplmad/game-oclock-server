@@ -1,10 +1,9 @@
-use crate::errors::ApiErrors;
-use crate::models::{ExternalMediaIdDTO, MediaDataDTO, MediaType, NewManualMediaDTO};
+use crate::errors::{ApiErrors, error_message_builder};
+use crate::models::{ExternalMediaDataDTO, ExternalMediaIdDTO, MediaType, NewManualMediaDTO};
 
 use chrono::DateTime;
 use reqwest::Client;
 use serde::Deserialize;
-use uuid::Uuid;
 
 #[derive(Clone)]
 pub struct MediaExternalService {
@@ -16,10 +15,10 @@ impl MediaExternalService {
         Self { igdb_client }
     }
 }
-// TODO remove unwraps
+
 impl MediaExternalService {
     pub async fn get(&self, id: &ExternalMediaIdDTO) -> Result<NewManualMediaDTO, ApiErrors> {
-        if id.source.to_lowercase() == IGDB {
+        if id.source.to_lowercase() == SOURCE_IGDB {
             return self.igdb_client.get(&id.id).await;
         }
         return Err(ApiErrors::NotSupported(format!(
@@ -33,8 +32,8 @@ impl MediaExternalService {
         source: &str,
         query: &str,
         size: u64,
-    ) -> Result<Vec<(ExternalMediaIdDTO, MediaDataDTO)>, ApiErrors> {
-        if source.to_lowercase() == IGDB {
+    ) -> Result<Vec<(ExternalMediaIdDTO, ExternalMediaDataDTO)>, ApiErrors> {
+        if source.to_lowercase() == SOURCE_IGDB {
             return self.igdb_client.search(query, size).await;
         }
         return Err(ApiErrors::NotSupported(format!(
@@ -51,13 +50,15 @@ pub struct IgdbClient {
     client_secret: String,
 }
 
-const IGDB: &str = "igdb";
+const SOURCE_IGDB: &str = "igdb";
 
 const AUTH_BASE_URL: &str = "https://id.twitch.tv/oauth2";
 const AUTH_PATH: &str = "/token";
 
 const IGDB_BASE_URL: &str = "https://api.igdb.com/v4";
 const IGDB_GAMES_PATH: &str = "/games";
+
+const HEADER_CLIENT_ID: &str = "Client-ID";
 
 impl IgdbClient {
     pub async fn get(&self, id: &str) -> Result<NewManualMediaDTO, ApiErrors> {
@@ -66,50 +67,69 @@ impl IgdbClient {
         let fields = Self::get_fields();
         let body = format!("where id = {};fields {};", id, fields.join(","));
 
-        let resp = self
+        let mut resp = self
             .client
             .post(format!("{}{}", IGDB_BASE_URL, IGDB_GAMES_PATH))
-            .header(String::from("Client-ID"), self.client_id.clone())
+            .header(String::from(HEADER_CLIENT_ID), self.client_id.clone())
             .bearer_auth(access_token)
             .body(body)
             .send()
             .await
-            .unwrap() // TODO
+            .map_err(|err| {
+                log::error!("Error fetching from IGDB. - {}", err.to_string());
+                ApiErrors::UnknownError(error_message_builder::external_error())
+            })?
             .json::<Vec<IgdbGamesResponse>>()
             .await
-            .unwrap()
-            .remove(0); // TODO
+            .map_err(|err| {
+                log::error!(
+                    "Error deserializing response from IGDB. - {}",
+                    err.to_string()
+                );
+                ApiErrors::UnknownError(error_message_builder::external_error())
+            })?;
 
-        Ok(NewManualMediaDTO {
-            kind: Some(Self::get_kind(resp.game_type)),
-            title: Some(resp.name),
-            edition: resp.version_title,
-            release_date: resp
-                .first_release_date
-                .map(|v| DateTime::from_timestamp_secs(v).unwrap().fixed_offset()),
-            genres: resp
-                .genres
-                .unwrap_or_else(|| Vec::<IgdbElementResponse>::new())
-                .into_iter()
-                .map(|e| e.name)
-                .collect(),
-            series: resp
-                .collections
-                .unwrap_or_else(|| Vec::<IgdbElementResponse>::new())
-                .into_iter()
-                .map(|e| e.name)
-                .collect(),
-            image_url: resp.cover.map(|v| v.url),
-            parent_id: None,
-            parent_order: None,
-        })
+        match resp.is_empty() {
+            true => Err(ApiErrors::NotFound(error_message_builder::not_found(
+                "IGDB Game",
+                &["id"],
+            ))),
+            false => {
+                let item = resp.remove(0);
+                Ok(NewManualMediaDTO {
+                    kind: Some(Self::get_kind(item.game_type)),
+                    title: Some(item.name),
+                    edition: item.version_title,
+                    release_date: match item.first_release_date {
+                        Some(v) => DateTime::from_timestamp_secs(v),
+                        None => None,
+                    }
+                    .map(|d| d.fixed_offset()),
+                    genres: item
+                        .genres
+                        .unwrap_or_else(|| Vec::<IgdbElementResponse>::new())
+                        .into_iter()
+                        .map(|e| e.name)
+                        .collect(),
+                    series: item
+                        .collections
+                        .unwrap_or_else(|| Vec::<IgdbElementResponse>::new())
+                        .into_iter()
+                        .map(|e| e.name)
+                        .collect(),
+                    image_url: item.cover.map(|v| v.url),
+                    parent_id: None,
+                    parent_order: None,
+                })
+            }
+        }
     }
 
     pub async fn search(
         &self,
         query: &str,
         size: u64,
-    ) -> Result<Vec<(ExternalMediaIdDTO, MediaDataDTO)>, ApiErrors> {
+    ) -> Result<Vec<(ExternalMediaIdDTO, ExternalMediaDataDTO)>, ApiErrors> {
         let access_token = self.auth().await?;
 
         let fields = Self::get_fields();
@@ -123,32 +143,43 @@ impl IgdbClient {
         let resp = self
             .client
             .post(format!("{}{}", IGDB_BASE_URL, IGDB_GAMES_PATH))
-            .header(String::from("Client-ID"), self.client_id.clone())
+            .header(String::from(HEADER_CLIENT_ID), self.client_id.clone())
             .bearer_auth(access_token)
             .body(body)
             .send()
             .await
-            .unwrap() // TODO
+            .map_err(|err| {
+                log::error!("Error searching on IGDB. - {}", err.to_string());
+                ApiErrors::UnknownError(error_message_builder::external_error())
+            })?
             .json::<Vec<IgdbGamesResponse>>()
             .await
-            .unwrap(); // TODO
+            .map_err(|err| {
+                log::error!(
+                    "Error deserializing response from IGDB. - {}",
+                    err.to_string()
+                );
+                ApiErrors::UnknownError(error_message_builder::external_error())
+            })?;
 
         Ok(resp
             .into_iter()
             .map(|item| {
                 (
                     ExternalMediaIdDTO {
-                        source: String::from(IGDB),
+                        source: String::from(SOURCE_IGDB),
                         id: item.id.to_string(),
                     },
-                    MediaDataDTO {
-                        id: Uuid::default(), // TODO
+                    ExternalMediaDataDTO {
+                        id: None,
                         kind: Self::get_kind(item.game_type),
                         title: item.name,
                         edition: item.version_title.unwrap_or_default(),
-                        release_date: item
-                            .first_release_date
-                            .map(|v| DateTime::from_timestamp_secs(v).unwrap().fixed_offset()),
+                        release_date: match item.first_release_date {
+                            Some(v) => DateTime::from_timestamp_secs(v),
+                            None => None,
+                        }
+                        .map(|d| d.fixed_offset()),
                         genres: item
                             .genres
                             .unwrap_or_else(|| Vec::<IgdbElementResponse>::new())
@@ -164,8 +195,6 @@ impl IgdbClient {
                         image_url: item.cover.map(|v| v.url),
                         parent_id: None,
                         parent_order: None,
-                        added_datetime: crate::date_utils::now(), // TODO
-                        updated_datetime: crate::date_utils::now(), // TODO
                     },
                 )
             })
@@ -196,7 +225,7 @@ impl IgdbClient {
 
     async fn auth(&self) -> Result<String, ApiErrors> {
         let grant_type = "client_credentials";
-        let auth_resp = self
+        let resp = self
             .client
             .post(format!(
                 "{}{}?client_id={}&client_secret={}&grant_type={}",
@@ -204,12 +233,21 @@ impl IgdbClient {
             ))
             .send()
             .await
-            .unwrap() // TODO
+            .map_err(|err| {
+                log::error!("Error authenticating on Twitch. - {}", err.to_string());
+                ApiErrors::UnknownError(error_message_builder::external_error())
+            })?
             .json::<TwitchAuthResponse>()
             .await
-            .unwrap();
+            .map_err(|err| {
+                log::error!(
+                    "Error deserializing response from Twitch. - {}",
+                    err.to_string()
+                );
+                ApiErrors::UnknownError(error_message_builder::external_error())
+            })?;
 
-        Ok(auth_resp.access_token)
+        Ok(resp.access_token)
     }
 }
 
