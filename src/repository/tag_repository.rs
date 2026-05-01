@@ -2,10 +2,12 @@ use sqlx::PgPool;
 use uuid::Uuid;
 
 use super::query::tag_query;
-use crate::entities::{PageResult, Tag, TagListSearch};
+use crate::entities::{AggregateResult, PageResult, Tag, TagAggregateSearch, TagListSearch};
 use crate::errors::{RepositoryError, SearchErrors};
 
-use super::helpers::{count_all_search, execute, exists_some, fetch_all_search, fetch_optional};
+use super::helpers::{
+    aggregate_all_search, execute, exists_some, fetch_all_search, fetch_optional,
+};
 
 #[derive(Clone)]
 pub struct TagRepository {
@@ -33,17 +35,17 @@ impl TagRepository {
         user_id: &Uuid,
         search: TagListSearch,
     ) -> Result<PageResult<Tag>, SearchErrors> {
-        let search_query = tag_query::select_all_with_query(user_id, search)?;
-        fetch_all_search(&self.pool, search_query).await
+        let query = tag_query::select_all_with_query(user_id, search)?;
+        fetch_all_search(&self.pool, query).await
     }
 
-    pub async fn count_all(
+    pub async fn aggregate_all(
         &self,
         user_id: &Uuid,
-        search: TagListSearch,
-    ) -> Result<u64, SearchErrors> {
-        let count_query = tag_query::count_all_with_query(user_id, search)?;
-        count_all_search(&self.pool, count_query).await
+        search: TagAggregateSearch,
+    ) -> Result<AggregateResult, SearchErrors> {
+        let query = tag_query::aggregate_all_with_query(user_id, search)?;
+        aggregate_all_search(&self.pool, query).await
     }
 
     pub async fn create(&self, tag: &Tag) -> Result<(), RepositoryError> {

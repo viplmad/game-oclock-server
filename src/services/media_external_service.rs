@@ -1,5 +1,5 @@
 use crate::errors::ApiErrors;
-use crate::models::{ExternalMediaIdDTO, MediaRawDTO, MediaType, NewManualMediaDTO};
+use crate::models::{ExternalMediaIdDTO, MediaDataDTO, MediaType, NewManualMediaDTO};
 
 use chrono::DateTime;
 use reqwest::Client;
@@ -33,7 +33,7 @@ impl MediaExternalService {
         source: &str,
         query: &str,
         size: u64,
-    ) -> Result<Vec<(ExternalMediaIdDTO, MediaRawDTO)>, ApiErrors> {
+    ) -> Result<Vec<(ExternalMediaIdDTO, MediaDataDTO)>, ApiErrors> {
         if source.to_lowercase() == IGDB {
             return self.igdb_client.search(query, size).await;
         }
@@ -109,7 +109,7 @@ impl IgdbClient {
         &self,
         query: &str,
         size: u64,
-    ) -> Result<Vec<(ExternalMediaIdDTO, MediaRawDTO)>, ApiErrors> {
+    ) -> Result<Vec<(ExternalMediaIdDTO, MediaDataDTO)>, ApiErrors> {
         let access_token = self.auth().await?;
 
         let fields = Self::get_fields();
@@ -141,7 +141,7 @@ impl IgdbClient {
                         source: String::from(IGDB),
                         id: item.id.to_string(),
                     },
-                    MediaRawDTO {
+                    MediaDataDTO {
                         id: Uuid::default(), // TODO
                         kind: Self::get_kind(item.game_type),
                         title: item.name,

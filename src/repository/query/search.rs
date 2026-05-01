@@ -31,16 +31,6 @@ pub fn apply_search<I: 'static + TableIden + Clone + Copy>(
     })
 }
 
-// TODO remove
-pub fn apply_search_filter2<I: 'static + TableIden + Clone + Copy>(
-    mut select: SelectStatement,
-    search: ListSearch<I>,
-) -> Result<SelectStatement, SearchErrors> {
-    apply_filter(&mut select, search.filter).map_err(SearchErrors::Mapping)?;
-
-    Ok(select)
-}
-
 pub fn apply_search_filter<I: 'static + TableIden + Clone + Copy>(
     mut select: SelectStatement,
     filter: Option<Vec<Filter<I>>>,

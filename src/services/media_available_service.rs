@@ -1,17 +1,21 @@
 use chrono::{DateTime, FixedOffset};
 use uuid::Uuid;
 
-use crate::entities::{LocationListSearch, MediaAvailable, MediaListSearch};
+use crate::entities::{
+    LocationAggregateSearch, LocationListSearch, MediaAggregateSearch, MediaAvailable,
+    MediaListSearch,
+};
 use crate::errors::ApiErrors;
 use crate::models::{
-    ListSearchDTO, LocationAvailablePageResult, LocationDTO, MediaAvailableDTO,
-    MediaAvailablePageResult, MediaDTO,
+    AggregateResultDTO, AggregateSearchDTO, ListSearchDTO, LocationAvailablePageResult,
+    LocationDTO, MediaAvailableDTO, MediaAvailablePageResult, MediaDTO,
 };
 use crate::repository::MediaAvailableRepository;
 
 use super::helpers::{
-    handle_action_result, handle_already_exists_result, handle_get_count_result,
-    handle_get_list_paged_result, handle_list_search_mapping, handle_not_found_result,
+    handle_action_result, handle_aggregate_search_mapping, handle_already_exists_result,
+    handle_get_aggregate_result, handle_get_list_paged_result, handle_list_search_mapping,
+    handle_not_found_result,
 };
 use super::{LocationService, MediaService};
 
@@ -56,23 +60,24 @@ impl MediaAvailableService {
         handle_get_list_paged_result(find_result)
     }
 
-    pub async fn count_location_medias(
+    pub async fn aggregate_location_medias(
         &self,
         user_id: &Uuid,
         location_id: &Uuid,
-        search: ListSearchDTO,
+        search: AggregateSearchDTO,
         quicksearch: Option<String>,
-    ) -> Result<u64, ApiErrors> {
+    ) -> Result<AggregateResultDTO, ApiErrors> {
         self.location_service
             .exists_location(user_id, location_id)
             .await?;
 
-        let search = handle_list_search_mapping::<MediaDTO, MediaListSearch>(search, quicksearch)?;
-        let count_result = self
+        let search =
+            handle_aggregate_search_mapping::<MediaDTO, MediaAggregateSearch>(search, quicksearch)?;
+        let aggregate_result = self
             .repository
-            .count_all_medias_with_location(user_id, location_id, search)
+            .aggregate_all_medias_with_location(user_id, location_id, search)
             .await;
-        handle_get_count_result::<MediaDTO>(count_result)
+        handle_get_aggregate_result::<MediaDTO>(aggregate_result)
     }
 
     pub async fn search_media_locations(
@@ -93,22 +98,24 @@ impl MediaAvailableService {
         handle_get_list_paged_result(find_result)
     }
 
-    pub async fn count_media_locations(
+    pub async fn aggregate_media_locations(
         &self,
         user_id: &Uuid,
         media_id: &Uuid,
-        search: ListSearchDTO,
+        search: AggregateSearchDTO,
         quicksearch: Option<String>,
-    ) -> Result<u64, ApiErrors> {
+    ) -> Result<AggregateResultDTO, ApiErrors> {
         self.media_service.exists_media(media_id).await?;
 
-        let search =
-            handle_list_search_mapping::<LocationDTO, LocationListSearch>(search, quicksearch)?;
-        let count_result = self
+        let search = handle_aggregate_search_mapping::<LocationDTO, LocationAggregateSearch>(
+            search,
+            quicksearch,
+        )?;
+        let aggregate_result = self
             .repository
-            .count_all_locations_with_media(user_id, media_id, search)
+            .aggregate_all_locations_with_media(user_id, media_id, search)
             .await;
-        handle_get_count_result::<LocationDTO>(count_result)
+        handle_get_aggregate_result::<LocationDTO>(aggregate_result)
     }
 
     pub async fn create_media_available(

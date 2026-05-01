@@ -1,14 +1,18 @@
 use uuid::Uuid;
 
-use crate::entities::{Location, LocationListSearch};
+use crate::entities::{Location, LocationAggregateSearch, LocationListSearch};
 use crate::errors::ApiErrors;
-use crate::models::{ListSearchDTO, LocationDTO, LocationPageResult, NewLocationDTO};
+use crate::models::{
+    AggregateResultDTO, AggregateSearchDTO, ListSearchDTO, LocationDTO, LocationPageResult,
+    NewLocationDTO,
+};
 use crate::repository::LocationRepository;
 
 use super::helpers::{
-    create_merged, handle_action_result, handle_already_exists_result, handle_get_count_result,
-    handle_get_list_paged_result, handle_get_result, handle_list_search_mapping,
-    handle_not_found_result, handle_update_result, update_merged,
+    create_merged, handle_action_result, handle_aggregate_search_mapping,
+    handle_already_exists_result, handle_get_aggregate_result, handle_get_list_paged_result,
+    handle_get_result, handle_list_search_mapping, handle_not_found_result, handle_update_result,
+    update_merged,
 };
 
 #[derive(Clone)]
@@ -40,16 +44,18 @@ impl LocationService {
         handle_get_list_paged_result(find_result)
     }
 
-    pub async fn count_locations(
+    pub async fn aggregate_locations(
         &self,
         user_id: &Uuid,
-        search: ListSearchDTO,
+        search: AggregateSearchDTO,
         quicksearch: Option<String>,
-    ) -> Result<u64, ApiErrors> {
-        let search =
-            handle_list_search_mapping::<LocationDTO, LocationListSearch>(search, quicksearch)?;
-        let count_result = self.repository.count_all(user_id, search).await;
-        handle_get_count_result::<LocationDTO>(count_result)
+    ) -> Result<AggregateResultDTO, ApiErrors> {
+        let search = handle_aggregate_search_mapping::<LocationDTO, LocationAggregateSearch>(
+            search,
+            quicksearch,
+        )?;
+        let aggregate_result = self.repository.aggregate_all(user_id, search).await;
+        handle_get_aggregate_result::<LocationDTO>(aggregate_result)
     }
 
     pub async fn create_location(

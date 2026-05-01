@@ -3,13 +3,13 @@ use uuid::Uuid;
 
 use super::query::media_query;
 use crate::entities::{
-    ExternalMedia, Media, MediaListSearch, MediaState, MediaStateWithExternal, MediaWithState,
-    PageResult,
+    AggregateResult, ExternalMedia, Media, MediaAggregateSearch, MediaListSearch, MediaState,
+    MediaStateWithExternal, MediaWithState, PageResult,
 };
 use crate::errors::{RepositoryError, SearchErrors};
 
 use super::helpers::{
-    count_all_search, execute, exists_some, fetch_all, fetch_all_search, fetch_optional,
+    aggregate_all_search, execute, exists_some, fetch_all, fetch_all_search, fetch_optional,
 };
 
 #[derive(Clone)]
@@ -97,17 +97,17 @@ impl MediaRepository {
         user_id: &Uuid,
         search: MediaListSearch,
     ) -> Result<PageResult<MediaWithState>, SearchErrors> {
-        let search_query = media_query::select_all_with_search(user_id, search)?;
-        fetch_all_search(&self.pool, search_query).await
+        let query = media_query::select_all_with_search(user_id, search)?;
+        fetch_all_search(&self.pool, query).await
     }
 
-    pub async fn count_all(
+    pub async fn aggregate_all(
         &self,
         user_id: &Uuid,
-        search: MediaListSearch,
-    ) -> Result<u64, SearchErrors> {
-        let count_query = media_query::count_all_with_search(user_id, search)?;
-        count_all_search(&self.pool, count_query).await
+        search: MediaAggregateSearch,
+    ) -> Result<AggregateResult, SearchErrors> {
+        let query = media_query::aggregate_all_with_search(user_id, search)?;
+        aggregate_all_search(&self.pool, query).await
     }
 
     pub async fn create_basic(&self, media: &Media) -> Result<(), RepositoryError> {

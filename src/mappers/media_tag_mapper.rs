@@ -1,6 +1,6 @@
 use crate::entities::{MediaWithStateWithTag, TagWithTag};
 use crate::models::{
-    ExternalMediaIdDTO, MediaDTO, MediaRawDTO, MediaStateDTO, MediaStatus, MediaTagDTO, MediaType,
+    ExternalMediaIdDTO, MediaDTO, MediaDataDTO, MediaStateDTO, MediaStatus, MediaTagDTO, MediaType,
     TagDTO, TagMediaDTO, TaggedDTO,
 };
 
@@ -8,7 +8,7 @@ impl From<MediaWithStateWithTag> for MediaTagDTO {
     fn from(media: MediaWithStateWithTag) -> Self {
         Self {
             media: MediaDTO {
-                media: MediaRawDTO {
+                media: MediaDataDTO {
                     id: media.id,
                     kind: MediaType::try_from(media.kind).expect("Type is not within valid range"),
                     title: media.title,

@@ -1,8 +1,8 @@
 use actix_web::{Responder, delete, get, post, put, web};
 
 use crate::models::{
-    ErrorMessage, ItemId, ListSearchDTO, LoggedUser, NewUserDTO, PasswordChangeDTO, PasswordQuery,
-    QuicksearchQuery, UserDTO, UserPageResult,
+    AggregateResultDTO, AggregateSearchDTO, ErrorMessage, ItemId, ListSearchDTO, LoggedUser,
+    NewUserDTO, PasswordChangeDTO, PasswordQuery, QuicksearchQuery, UserDTO, UserPageResult,
 };
 use crate::routes::helpers::require_admin_or_current_user;
 use crate::services::UserService;
@@ -106,17 +106,17 @@ pub async fn get_users(
     handle_get_result(search_result)
 }
 
-/// Count users
+/// Aggregate users
 #[utoipa::path(
     post,
-    path = "/api/v1/users/count",
+    path = "/api/v1/users/aggregate",
     tag = "Users",
     params(
         QuicksearchQuery,
     ),
-    request_body(content = ListSearchDTO, description = "Query", content_type = "application/json"),
+    request_body(content = AggregateSearchDTO, description = "Query", content_type = "application/json"),
     responses(
-        (status = 200, description = "Users count obtained", body = u64, content_type = "application/json"),
+        (status = 200, description = "Users aggregate obtained", body = AggregateResultDTO, content_type = "application/json"),
         (status = 401, description = "Unauthorized", body = ErrorMessage, content_type = "application/json"),
         (status = 403, description = "Forbidden", body = ErrorMessage, content_type = "application/json"),
         (status = 500, description = "Internal server error", body = ErrorMessage, content_type = "application/json"),
@@ -125,19 +125,19 @@ pub async fn get_users(
         ("OAuth2" = [])
     )
 )]
-#[post("/users/count")]
-pub async fn count_users(
+#[post("/users/aggregate")]
+pub async fn aggregate_users(
     user_service: web::Data<UserService>,
     query: web::Query<QuicksearchQuery>,
-    body: web::Json<ListSearchDTO>,
+    body: web::Json<AggregateSearchDTO>,
     logged_user: LoggedUser,
 ) -> impl Responder {
     if let Err(error) = require_admin(&user_service, &logged_user.id).await {
         return error;
     }
 
-    let count_result = user_service.count_users(body.0, query.0.q).await;
-    handle_get_result(count_result)
+    let aggregate_result = user_service.aggregate_users(body.0, query.0.q).await;
+    handle_get_result(aggregate_result)
 }
 
 /// Create a user

@@ -5,9 +5,10 @@ use sea_query::enum_def;
 use sqlx::FromRow;
 use uuid::Uuid;
 
-use super::{ColIden, FieldIden, FieldType, ListSearch, TableIden};
+use super::{AggregateSearch, ColIden, FieldIden, FieldType, ListSearch, TableIden};
 
 pub type TagListSearch = ListSearch<TagIden>;
+pub type TagAggregateSearch = AggregateSearch<TagIden>;
 
 #[derive(FromRow)]
 #[enum_def(table_name = "Tag")]

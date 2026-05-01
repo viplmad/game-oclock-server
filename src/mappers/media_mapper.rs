@@ -2,13 +2,13 @@ use uuid::Uuid;
 
 use crate::entities::{ExternalMedia, Media, MediaState, MediaStateWithExternal, MediaWithState};
 use crate::models::{
-    ExternalMediaIdDTO, MediaDTO, MediaRawDTO, MediaStateDTO, MediaStatus, MediaType,
+    ExternalMediaIdDTO, MediaDTO, MediaDataDTO, MediaStateDTO, MediaStatus, MediaType,
 };
 
 impl From<MediaWithState> for MediaDTO {
     fn from(media: MediaWithState) -> Self {
         Self {
-            media: MediaRawDTO {
+            media: MediaDataDTO {
                 id: media.id,
                 kind: MediaType::try_from(media.kind).expect("Type is not within valid range"),
                 title: media.title,
@@ -40,7 +40,7 @@ impl From<MediaWithState> for MediaDTO {
     }
 }
 
-impl From<Media> for MediaRawDTO {
+impl From<Media> for MediaDataDTO {
     fn from(media: Media) -> Self {
         Self {
             id: media.id,
@@ -94,8 +94,8 @@ impl From<ExternalMedia> for ExternalMediaIdDTO {
     }
 }
 
-impl From<MediaRawDTO> for Media {
-    fn from(media: MediaRawDTO) -> Self {
+impl From<MediaDataDTO> for Media {
+    fn from(media: MediaDataDTO) -> Self {
         Self {
             id: media.id,
             title: media.title,

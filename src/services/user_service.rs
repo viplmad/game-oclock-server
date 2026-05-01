@@ -1,15 +1,18 @@
 use uuid::Uuid;
 
-use crate::entities::{User, UserListSearch};
+use crate::entities::{User, UserAggregateSearch, UserListSearch};
 use crate::errors::ApiErrors;
-use crate::models::{ListSearchDTO, NewUserDTO, PasswordChangeDTO, UserDTO, UserPageResult};
+use crate::models::{
+    AggregateResultDTO, AggregateSearchDTO, ListSearchDTO, NewUserDTO, PasswordChangeDTO, UserDTO,
+    UserPageResult,
+};
 use crate::repository::UserRepository;
 
 use super::helpers::{
-    create_merged, handle_action_result, handle_already_exists_result, handle_get_count_result,
-    handle_get_list_paged_result, handle_get_result, handle_get_result_raw,
-    handle_list_search_mapping, handle_not_found_result, handle_result, handle_update_result,
-    update_merged,
+    create_merged, handle_action_result, handle_aggregate_search_mapping,
+    handle_already_exists_result, handle_get_aggregate_result, handle_get_list_paged_result,
+    handle_get_result, handle_get_result_raw, handle_list_search_mapping, handle_not_found_result,
+    handle_result, handle_update_result, update_merged,
 };
 
 const ROLE_ADMIN: &str = "ROLE_ADMIN";
@@ -48,14 +51,15 @@ impl UserService {
         handle_get_list_paged_result(find_result)
     }
 
-    pub async fn count_users(
+    pub async fn aggregate_users(
         &self,
-        search: ListSearchDTO,
+        search: AggregateSearchDTO,
         quicksearch: Option<String>,
-    ) -> Result<u64, ApiErrors> {
-        let search = handle_list_search_mapping::<UserDTO, UserListSearch>(search, quicksearch)?;
-        let count_result = self.repository.count_all(search).await;
-        handle_get_count_result::<UserDTO>(count_result)
+    ) -> Result<AggregateResultDTO, ApiErrors> {
+        let search =
+            handle_aggregate_search_mapping::<UserDTO, UserAggregateSearch>(search, quicksearch)?;
+        let aggregate_result = self.repository.aggregate_all(search).await;
+        handle_get_aggregate_result::<UserDTO>(aggregate_result)
     }
 
     pub async fn create_user(

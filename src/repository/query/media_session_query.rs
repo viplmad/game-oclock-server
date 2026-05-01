@@ -38,7 +38,7 @@ mod tests {
     #[test]
     fn count_all_sessions() {
         let user_id = Uuid::try_parse("00000000-0000-0000-0000-000000000000").unwrap();
-        let query = aggregate_all_by_user_id(
+        let query = aggregate_all_with_search(
             &user_id,
             SessionAggregateSearch {
                 filter: None,
@@ -63,7 +63,7 @@ mod tests {
     #[test]
     fn sum_time_all_sessions() {
         let user_id = Uuid::try_parse("00000000-0000-0000-0000-000000000000").unwrap();
-        let query = aggregate_all_by_user_id(
+        let query = aggregate_all_with_search(
             &user_id,
             SessionAggregateSearch {
                 filter: None,
@@ -92,7 +92,7 @@ mod tests {
     #[test]
     fn group_medias_by_month_played() {
         let user_id = Uuid::try_parse("00000000-0000-0000-0000-000000000000").unwrap();
-        let query = aggregate_group_by_user_id(
+        let query = aggregate_group_with_search(
             &user_id,
             SessionAggregateGroupSearch {
                 filter: None,
@@ -126,7 +126,7 @@ mod tests {
     #[test]
     fn streaks() {
         let user_id = Uuid::try_parse("00000000-0000-0000-0000-000000000000").unwrap();
-        let query = select_streaks(
+        let query = select_streaks_with_search(
             &user_id,
             ListSearch {
                 filter: Some(vec![
@@ -174,7 +174,7 @@ mod tests {
     #[test]
     fn total_played_first_time() {
         let user_id = Uuid::try_parse("00000000-0000-0000-0000-000000000000").unwrap();
-        let query = aggregate_all_first_by_user_id(
+        let query = aggregate_all_first_with_search(
             &user_id,
             SessionAggregateSearch {
                 filter: Some(vec![
@@ -239,7 +239,7 @@ pub fn select_by_id(
     select
 }
 
-pub fn select_all_by_user_id_and_media_id(
+pub fn select_all_by_media_id_with_search(
     user_id: &Uuid,
     media_id: &Uuid,
     search: SessionListSearch,
@@ -252,7 +252,7 @@ pub fn select_all_by_user_id_and_media_id(
     apply_search(select, search)
 }
 
-pub fn select_all_by_user_id(
+pub fn select_all_with_search(
     user_id: &Uuid,
     search: SessionListSearch,
 ) -> Result<SearchQuery, SearchErrors> {
@@ -264,7 +264,7 @@ pub fn select_all_by_user_id(
     apply_search(select, search)
 }
 
-pub fn aggregate_all_by_user_id_and_media_id(
+pub fn aggregate_all_by_media_id_with_search(
     user_id: &Uuid,
     media_id: &Uuid,
     search: SessionAggregateSearch,
@@ -276,7 +276,7 @@ pub fn aggregate_all_by_user_id_and_media_id(
     apply_aggregate_search(select, search)
 }
 
-pub fn aggregate_all_by_user_id(
+pub fn aggregate_all_with_search(
     user_id: &Uuid,
     search: SessionAggregateSearch,
 ) -> Result<AggregateQuery, SearchErrors> {
@@ -287,7 +287,7 @@ pub fn aggregate_all_by_user_id(
     apply_aggregate_search(select, search)
 }
 
-pub fn aggregate_group_by_user_id(
+pub fn aggregate_group_with_search(
     user_id: &Uuid,
     search: SessionAggregateGroupSearch,
 ) -> Result<AggregateGroupQuery, SearchErrors> {
@@ -328,7 +328,7 @@ fn extract_group_ext_table<T: TableIden>(group: &AggregateGroup<T>) -> Vec<Strin
         .unwrap_or_else(|| vec![])
 }
 
-pub fn aggregate_all_first_by_user_id(
+pub fn aggregate_all_first_with_search(
     user_id: &Uuid,
     search: SessionAggregateSearch,
 ) -> Result<AggregateQuery, SearchErrors> {
@@ -613,7 +613,7 @@ const STREAK_DEVICE_ID_SUB_ALIAS: &str = "device_id";
 const STREAK_STARTS_STREAK_SUB_ALIAS: &str = "starts_streak";
 const STREAK_GROUP_SUB_ALIAS: &str = "grp";
 
-pub fn select_streaks(
+pub fn select_streaks_with_search(
     user_id: &Uuid,
     search: SessionListSearch,
 ) -> Result<SearchQuery, SearchErrors> {

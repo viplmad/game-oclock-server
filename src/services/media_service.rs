@@ -1,19 +1,20 @@
 use uuid::Uuid;
 
-use crate::entities::{ExternalMedia, Media, MediaListSearch, MediaState};
+use crate::entities::{ExternalMedia, Media, MediaAggregateSearch, MediaListSearch, MediaState};
 use crate::errors::ApiErrors;
 use crate::models::{
-    ExternalMediaIdDTO, ListSearchDTO, Media2DTO, MediaDTO, MediaPageResult, MediaRawDTO,
-    MediaStateDTO, MediaStatus, NewManualMediaDTO, NewMediaDTO, NewMediaStateDTO,
+    AggregateResultDTO, AggregateSearchDTO, ExternalMediaIdDTO, ListSearchDTO, MediaDTO,
+    MediaDataDTO, MediaPageResult, MediaStateDTO, MediaStatus, NewManualMediaDTO, NewMediaDTO,
+    NewMediaStateDTO, PotentialMediaDTO,
 };
 use crate::repository::MediaRepository;
 
 use super::MediaExternalService;
 use super::helpers::{
-    create_merged2, handle_action_result, handle_already_exists_result, handle_get_count_result,
-    handle_get_list_paged_result, handle_get_list_result_raw, handle_get_result,
-    handle_list_search_mapping, handle_not_found_result, handle_result, handle_update_result,
-    update_merged,
+    create_merged2, handle_action_result, handle_aggregate_search_mapping,
+    handle_already_exists_result, handle_get_aggregate_result, handle_get_list_paged_result,
+    handle_get_list_result_raw, handle_get_result, handle_list_search_mapping,
+    handle_not_found_result, handle_result, handle_update_result, update_merged,
 };
 
 #[derive(Clone)]
@@ -37,7 +38,7 @@ impl MediaService {
         handle_get_result(find_result)
     }
 
-    async fn get_media_basic(&self, id: &Uuid) -> Result<MediaRawDTO, ApiErrors> {
+    async fn get_media_basic(&self, id: &Uuid) -> Result<MediaDataDTO, ApiErrors> {
         let find_result = self.repository.find_basic_by_id(id).await;
         handle_get_result(find_result)
     }
@@ -67,7 +68,7 @@ impl MediaService {
     async fn get_media_basic_by_external(
         &self,
         external: &ExternalMediaIdDTO,
-    ) -> Result<MediaRawDTO, ApiErrors> {
+    ) -> Result<MediaDataDTO, ApiErrors> {
         let find_result = self
             .repository
             .find_basic_by_external(&external.source, &external.id)
@@ -86,15 +87,16 @@ impl MediaService {
         handle_get_list_paged_result(find_result)
     }
 
-    pub async fn count_medias(
+    pub async fn aggregate_medias(
         &self,
         user_id: &Uuid,
-        search: ListSearchDTO,
+        search: AggregateSearchDTO,
         quicksearch: Option<String>,
-    ) -> Result<u64, ApiErrors> {
-        let search = handle_list_search_mapping::<MediaDTO, MediaListSearch>(search, quicksearch)?;
-        let count_result = self.repository.count_all(user_id, search).await;
-        handle_get_count_result::<MediaDTO>(count_result)
+    ) -> Result<AggregateResultDTO, ApiErrors> {
+        let search =
+            handle_aggregate_search_mapping::<MediaDTO, MediaAggregateSearch>(search, quicksearch)?;
+        let aggregate_result = self.repository.aggregate_all(user_id, search).await;
+        handle_get_aggregate_result::<MediaDTO>(aggregate_result)
     }
 
     pub async fn search_external_medias(
@@ -102,7 +104,7 @@ impl MediaService {
         user_id: &Uuid,
         source: &str,
         quicksearch: &str,
-    ) -> Result<Vec<Media2DTO>, ApiErrors> {
+    ) -> Result<Vec<PotentialMediaDTO>, ApiErrors> {
         let externals = self
             .external_service
             .search(source, quicksearch, 20)
@@ -129,7 +131,7 @@ impl MediaService {
                     })
                     .map(MediaStateDTO::from);
 
-                Media2DTO {
+                PotentialMediaDTO {
                     external,
                     media,
                     state,
@@ -210,7 +212,7 @@ impl MediaService {
         id: &Uuid,
         media: NewManualMediaDTO,
     ) -> Result<(), ApiErrors> {
-        create_merged2::<Media, MediaRawDTO, NewManualMediaDTO, _>(
+        create_merged2::<Media, MediaDataDTO, NewManualMediaDTO, _>(
             media,
             async move |mut media_to_create: Media| {
                 let exists_result = self
@@ -258,7 +260,7 @@ impl MediaService {
         let create_result = self
             .repository
             .create_external(&ExternalMedia {
-                primary: true, // TODO
+                primary: true,
                 media_id: id.clone(),
                 external_source: external.source.clone(),
                 external_id: external.id.clone(),
@@ -330,7 +332,7 @@ impl MediaService {
         id: &Uuid,
         manual: NewManualMediaDTO,
     ) -> Result<(), ApiErrors> {
-        update_merged::<Media, MediaRawDTO, NewManualMediaDTO, _, _>(
+        update_merged::<Media, MediaDataDTO, NewManualMediaDTO, _, _>(
             manual,
             async move || self.get_media_basic(id).await,
             async move |mut media_to_update: Media| {
@@ -382,7 +384,7 @@ impl MediaService {
         let update_result = self
             .repository
             .update_external(&ExternalMedia {
-                primary: true, // TODO
+                primary: true,
                 media_id: id.clone(),
                 external_source: external.source.clone(),
                 external_id: external.id.clone(),

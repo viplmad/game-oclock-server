@@ -1,10 +1,12 @@
 use sea_query::{Expr, Query, QueryStatementWriter, SelectStatement, SimpleExpr};
 use uuid::Uuid;
 
-use crate::entities::{SearchQuery, User, UserIden, UserListSearch};
+use crate::entities::{
+    AggregateQuery, SearchQuery, User, UserAggregateSearch, UserIden, UserListSearch,
+};
 use crate::errors::SearchErrors;
 
-use super::search::{apply_search, apply_search_filter2};
+use super::search::{apply_aggregate_search, apply_search};
 
 pub fn select_by_id(id: &Uuid) -> impl QueryStatementWriter {
     let mut select = Query::select();
@@ -32,10 +34,12 @@ pub fn select_all_with_search(search: UserListSearch) -> Result<SearchQuery, Sea
     apply_search(select, search)
 }
 
-pub fn count_all_with_search(search: UserListSearch) -> Result<SelectStatement, SearchErrors> {
-    let select = count_all();
+pub fn aggregate_all_with_search(
+    search: UserAggregateSearch,
+) -> Result<AggregateQuery, SearchErrors> {
+    let select = aggregate_all();
 
-    apply_search_filter2(select, search)
+    apply_aggregate_search(select, search)
 }
 
 pub(super) fn select_all() -> SelectStatement {
@@ -47,11 +51,10 @@ pub(super) fn select_all() -> SelectStatement {
     select
 }
 
-pub(super) fn count_all() -> SelectStatement {
+pub(super) fn aggregate_all() -> SelectStatement {
     let mut select = Query::select();
 
     from(&mut select);
-    select.expr(Expr::col((UserIden::Table, UserIden::Id)).count());
 
     select
 }

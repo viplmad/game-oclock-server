@@ -130,20 +130,6 @@ where
         .map_err(SearchErrors::Repository)
 }
 
-// TODO remove
-pub(super) async fn count_all_search<'c, X>(
-    executor: X,
-    query: impl QueryStatementWriter,
-) -> Result<u64, SearchErrors>
-where
-    X: sqlx::Executor<'c, Database = Postgres>,
-{
-    fetch_one(executor, query)
-        .await
-        .map(|tuple: (i64,)| u64::try_from(tuple.0).expect("Count is not positive"))
-        .map_err(SearchErrors::Repository)
-}
-
 pub(super) async fn aggregate_all_search<'c, X>(
     executor: X,
     query: AggregateQuery,
@@ -215,5 +201,6 @@ where
 }
 
 fn build_sql(query: impl QueryStatementWriter) -> String {
-    query.to_string(PostgresQueryBuilder) // TODO search a way to use CommonSqlQueryBuilder
+    // Only Postgres allowed
+    query.to_string(PostgresQueryBuilder)
 }

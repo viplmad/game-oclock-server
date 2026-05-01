@@ -1,10 +1,13 @@
 use sea_query::{Expr, Query, QueryStatementWriter, SelectStatement, SimpleExpr};
 use uuid::Uuid;
 
-use crate::entities::{Location, LocationIden, LocationListSearch, SearchQuery};
+use crate::entities::{
+    AggregateQuery, Location, LocationAggregateSearch, LocationIden, LocationListSearch,
+    SearchQuery,
+};
 use crate::errors::SearchErrors;
 
-use super::search::{apply_search, apply_search_filter2};
+use super::search::{apply_aggregate_search, apply_search};
 
 pub fn select_by_id(user_id: &Uuid, id: &Uuid) -> impl QueryStatementWriter {
     let mut select = Query::select();
@@ -25,13 +28,13 @@ pub fn select_all_with_search(
     apply_search(select, search)
 }
 
-pub fn count_all_with_search(
+pub fn aggregate_all_with_search(
     user_id: &Uuid,
-    search: LocationListSearch,
-) -> Result<SelectStatement, SearchErrors> {
-    let select = count_all(user_id);
+    search: LocationAggregateSearch,
+) -> Result<AggregateQuery, SearchErrors> {
+    let select = aggregate_all(user_id);
 
-    apply_search_filter2(select, search)
+    apply_aggregate_search(select, search)
 }
 
 pub(super) fn select_all(user_id: &Uuid) -> SelectStatement {
@@ -43,11 +46,10 @@ pub(super) fn select_all(user_id: &Uuid) -> SelectStatement {
     select
 }
 
-pub(super) fn count_all(user_id: &Uuid) -> SelectStatement {
+pub(super) fn aggregate_all(user_id: &Uuid) -> SelectStatement {
     let mut select = Query::select();
 
     from_and_where_user_id(&mut select, user_id);
-    select.expr(Expr::col((LocationIden::Table, LocationIden::Id)).count());
 
     select
 }

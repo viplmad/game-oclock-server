@@ -1,9 +1,9 @@
 use actix_web::{Responder, delete, get, post, put, web};
 
 use crate::models::{
-    DateTimeDTO, ErrorMessage, ExternalQuicksearchQuery, ItemId, ItemIdAndRelatedId, ListSearchDTO,
-    LoggedUser, Media2DTO, MediaAvailablePageResult, MediaDTO, MediaPageResult, MediaTagPageResult,
-    NewMediaDTO, OrderDTO, QuicksearchQuery,
+    AggregateResultDTO, AggregateSearchDTO, DateTimeDTO, ErrorMessage, ExternalQuicksearchQuery,
+    ItemId, ItemIdAndRelatedId, ListSearchDTO, LoggedUser, PotentialMediaDTO, MediaAvailablePageResult,
+    MediaDTO, MediaPageResult, MediaTagPageResult, NewMediaDTO, OrderDTO, QuicksearchQuery,
 };
 use crate::services::{
     MediaAvailableService, MediaService, MediaSessionDeviceService, MediaTagService,
@@ -80,18 +80,18 @@ pub async fn get_tag_medias(
     handle_get_result(search_result)
 }
 
-/// Count all medias with specified tag
+/// Aggregate all medias with specified tag
 #[utoipa::path(
     post,
-    path = "/api/v1/tags/{id}/medias/count",
+    path = "/api/v1/tags/{id}/medias/aggregate",
     tag = "Medias",
     params(
         ("id" = String, Path, description = "Tag id"),
         QuicksearchQuery,
     ),
-    request_body(content = ListSearchDTO, description = "Query", content_type = "application/json"),
+    request_body(content = AggregateSearchDTO, description = "Query", content_type = "application/json"),
     responses(
-        (status = 200, description = "Medias count obtained", body = u64, content_type = "application/json"),
+        (status = 200, description = "Medias aggregate obtained", body = AggregateResultDTO, content_type = "application/json"),
         (status = 401, description = "Unauthorized", body = ErrorMessage, content_type = "application/json"),
         (status = 403, description = "Forbidden", body = ErrorMessage, content_type = "application/json"),
         (status = 404, description = "Tag not found", body = ErrorMessage, content_type = "application/json"),
@@ -101,19 +101,19 @@ pub async fn get_tag_medias(
         ("OAuth2" = [])
     )
 )]
-#[post("/tags/{id}/medias/count")]
-pub async fn count_tag_medias(
+#[post("/tags/{id}/medias/aggregate")]
+pub async fn aggregate_tag_medias(
     media_tag_service: web::Data<MediaTagService>,
     path: web::Path<ItemId>,
     query: web::Query<QuicksearchQuery>,
-    body: web::Json<ListSearchDTO>,
+    body: web::Json<AggregateSearchDTO>,
     logged_user: LoggedUser,
 ) -> impl Responder {
     let ItemId(id) = path.into_inner();
-    let count_result = media_tag_service
-        .count_tag_medias(&logged_user.id, &id, body.0, query.0.q)
+    let aggregate_result = media_tag_service
+        .aggregate_tag_medias(&logged_user.id, &id, body.0, query.0.q)
         .await;
-    handle_get_result(count_result)
+    handle_get_result(aggregate_result)
 }
 
 /// Get all medias avaiable in a location
@@ -152,18 +152,18 @@ pub async fn get_location_medias(
     handle_get_result(search_result)
 }
 
-/// Count all medias avaiable in a location
+/// Aggregate all medias avaiable in a location
 #[utoipa::path(
     post,
-    path = "/api/v1/locations/{id}/medias/count",
+    path = "/api/v1/locations/{id}/medias/aggregate",
     tag = "Medias",
     params(
         ("id" = String, Path, description = "Location id"),
         QuicksearchQuery,
     ),
-    request_body(content = ListSearchDTO, description = "Query", content_type = "application/json"),
+    request_body(content = AggregateSearchDTO, description = "Query", content_type = "application/json"),
     responses(
-        (status = 200, description = "Medias count obtained", body = u64, content_type = "application/json"),
+        (status = 200, description = "Medias aggregate obtained", body = AggregateResultDTO, content_type = "application/json"),
         (status = 401, description = "Unauthorized", body = ErrorMessage, content_type = "application/json"),
         (status = 403, description = "Forbidden", body = ErrorMessage, content_type = "application/json"),
         (status = 404, description = "Location not found", body = ErrorMessage, content_type = "application/json"),
@@ -173,19 +173,19 @@ pub async fn get_location_medias(
         ("OAuth2" = [])
     )
 )]
-#[post("/locations/{id}/medias/count")]
-pub async fn count_location_medias(
+#[post("/locations/{id}/medias/aggregate")]
+pub async fn aggregate_location_medias(
     media_available_service: web::Data<MediaAvailableService>,
     path: web::Path<ItemId>,
     query: web::Query<QuicksearchQuery>,
-    body: web::Json<ListSearchDTO>,
+    body: web::Json<AggregateSearchDTO>,
     logged_user: LoggedUser,
 ) -> impl Responder {
     let ItemId(id) = path.into_inner();
-    let count_result = media_available_service
-        .search_location_medias(&logged_user.id, &id, body.0, query.0.q)
+    let aggregate_result = media_available_service
+        .aggregate_location_medias(&logged_user.id, &id, body.0, query.0.q)
         .await;
-    handle_get_result(count_result)
+    handle_get_result(aggregate_result)
 }
 
 /// Get medias where a session has been on a specified device
@@ -224,18 +224,18 @@ pub async fn get_device_medias(
     handle_get_result(search_result)
 }
 
-/// Count medias where a session has been on a specified device
+/// Aggregate medias where a session has been on a specified device
 #[utoipa::path(
     post,
-    path = "/api/v1/devices/{id}/medias/count",
+    path = "/api/v1/devices/{id}/medias/aggregate",
     tag = "Medias",
     params(
         ("id" = String, Path, description = "Device id"),
         QuicksearchQuery,
     ),
-    request_body(content = ListSearchDTO, description = "Query", content_type = "application/json"),
+    request_body(content = AggregateSearchDTO, description = "Query", content_type = "application/json"),
     responses(
-        (status = 200, description = "Medias count obtained", body = u64, content_type = "application/json"),
+        (status = 200, description = "Medias aggregate obtained", body = AggregateResultDTO, content_type = "application/json"),
         (status = 401, description = "Unauthorized", body = ErrorMessage, content_type = "application/json"),
         (status = 403, description = "Forbidden", body = ErrorMessage, content_type = "application/json"),
         (status = 404, description = "Device not found", body = ErrorMessage, content_type = "application/json"),
@@ -245,19 +245,19 @@ pub async fn get_device_medias(
         ("OAuth2" = [])
     )
 )]
-#[post("/devices/{id}/medias/count")]
-pub async fn count_device_medias(
+#[post("/devices/{id}/medias/aggregate")]
+pub async fn aggregate_device_medias(
     media_session_device_service: web::Data<MediaSessionDeviceService>,
     path: web::Path<ItemId>,
     query: web::Query<QuicksearchQuery>,
-    body: web::Json<ListSearchDTO>,
+    body: web::Json<AggregateSearchDTO>,
     logged_user: LoggedUser,
 ) -> impl Responder {
     let ItemId(id) = path.into_inner();
-    let count_result = media_session_device_service
-        .count_device_session_medias(&logged_user.id, &id, body.0, query.0.q)
+    let aggregate_result = media_session_device_service
+        .aggregate_device_session_medias(&logged_user.id, &id, body.0, query.0.q)
         .await;
-    handle_get_result(count_result)
+    handle_get_result(aggregate_result)
 }
 
 /// Search medias
@@ -292,17 +292,17 @@ pub async fn get_medias(
     handle_get_result(search_result)
 }
 
-/// Count medias
+/// Aggregate medias
 #[utoipa::path(
     post,
-    path = "/api/v1/medias/count",
+    path = "/api/v1/medias/aggregate",
     tag = "Medias",
     params(
         QuicksearchQuery,
     ),
-    request_body(content = ListSearchDTO, description = "Query", content_type = "application/json"),
+    request_body(content = AggregateSearchDTO, description = "Query", content_type = "application/json"),
     responses(
-        (status = 200, description = "Medias count obtained", body = u64, content_type = "application/json"),
+        (status = 200, description = "Medias aggregate obtained", body = AggregateResultDTO, content_type = "application/json"),
         (status = 401, description = "Unauthorized", body = ErrorMessage, content_type = "application/json"),
         (status = 403, description = "Forbidden", body = ErrorMessage, content_type = "application/json"),
         (status = 500, description = "Internal server error", body = ErrorMessage, content_type = "application/json"),
@@ -311,17 +311,17 @@ pub async fn get_medias(
         ("OAuth2" = [])
     )
 )]
-#[post("/medias/count")]
-pub async fn count_medias(
+#[post("/medias/aggregate")]
+pub async fn aggregate_medias(
     media_service: web::Data<MediaService>,
     query: web::Query<QuicksearchQuery>,
-    body: web::Json<ListSearchDTO>,
+    body: web::Json<AggregateSearchDTO>,
     logged_user: LoggedUser,
 ) -> impl Responder {
-    let count_result = media_service
-        .search_medias(&logged_user.id, body.0, query.0.q)
+    let aggregate_result = media_service
+        .aggregate_medias(&logged_user.id, body.0, query.0.q)
         .await;
-    handle_get_result(count_result)
+    handle_get_result(aggregate_result)
 }
 
 /// Create a media
@@ -655,7 +655,7 @@ pub async fn sync_media(
         ExternalQuicksearchQuery,
     ),
     responses(
-        (status = 200, description = "Medias count obtained", body = [Media2DTO], content_type = "application/json"),
+        (status = 200, description = "Medias external obtained", body = [PotentialMediaDTO], content_type = "application/json"),
         (status = 401, description = "Unauthorized", body = ErrorMessage, content_type = "application/json"),
         (status = 403, description = "Forbidden", body = ErrorMessage, content_type = "application/json"),
         (status = 500, description = "Internal server error", body = ErrorMessage, content_type = "application/json"),

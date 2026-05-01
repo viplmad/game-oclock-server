@@ -46,7 +46,7 @@ impl MediaSessionRepository {
         search: SessionListSearch,
     ) -> Result<PageResult<MediaSessionWithTime>, SearchErrors> {
         let query =
-            media_session_query::select_all_by_user_id_and_media_id(user_id, media_id, search)?;
+            media_session_query::select_all_by_media_id_with_search(user_id, media_id, search)?;
         fetch_all_search(&self.pool, query).await
     }
 
@@ -55,7 +55,7 @@ impl MediaSessionRepository {
         user_id: &Uuid,
         search: SessionListSearch,
     ) -> Result<PageResult<MediaSessionWithTime>, SearchErrors> {
-        let query = media_session_query::select_all_by_user_id(user_id, search)?;
+        let query = media_session_query::select_all_with_search(user_id, search)?;
         fetch_all_search(&self.pool, query).await
     }
 
@@ -66,7 +66,7 @@ impl MediaSessionRepository {
         search: SessionAggregateSearch,
     ) -> Result<AggregateResult, SearchErrors> {
         let query =
-            media_session_query::aggregate_all_by_user_id_and_media_id(user_id, media_id, search)?;
+            media_session_query::aggregate_all_by_media_id_with_search(user_id, media_id, search)?;
         aggregate_all_search(&self.pool, query).await
     }
 
@@ -75,7 +75,7 @@ impl MediaSessionRepository {
         user_id: &Uuid,
         search: SessionAggregateSearch,
     ) -> Result<AggregateResult, SearchErrors> {
-        let query = media_session_query::aggregate_all_by_user_id(user_id, search)?;
+        let query = media_session_query::aggregate_all_with_search(user_id, search)?;
         aggregate_all_search(&self.pool, query).await
     }
 
@@ -84,7 +84,7 @@ impl MediaSessionRepository {
         user_id: &Uuid,
         search: SessionAggregateGroupSearch,
     ) -> Result<HashMap<AggregateGroupResultKey, AggregateResult>, SearchErrors> {
-        let query = media_session_query::aggregate_group_by_user_id(user_id, search)?;
+        let query = media_session_query::aggregate_group_with_search(user_id, search)?;
         aggregate_group_search(&self.pool, query).await
     }
 
@@ -93,7 +93,7 @@ impl MediaSessionRepository {
         user_id: &Uuid,
         search: SessionAggregateSearch,
     ) -> Result<AggregateResult, SearchErrors> {
-        let query = media_session_query::aggregate_all_first_by_user_id(user_id, search)?;
+        let query = media_session_query::aggregate_all_first_with_search(user_id, search)?;
         aggregate_all_search(&self.pool, query).await
     }
 
@@ -141,7 +141,7 @@ impl MediaSessionRepository {
         user_id: &Uuid,
         search: SessionListSearch,
     ) -> Result<PageResult<MediaSessionStreak>, SearchErrors> {
-        let query = media_session_query::select_streaks(user_id, search)?;
+        let query = media_session_query::select_streaks_with_search(user_id, search)?;
         fetch_all_search(&self.pool, query).await
     }
 }

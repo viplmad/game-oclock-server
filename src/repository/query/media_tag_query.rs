@@ -2,12 +2,13 @@ use sea_query::{Alias, Expr, Query, QueryStatementWriter, SelectStatement};
 use uuid::Uuid;
 
 use crate::entities::{
-    MediaIden, MediaListSearch, MediaTag, MediaTagIden, SearchQuery, TAG_ADDED_DATETIME_ALIAS,
-    TAG_ORDER_ALIAS, TAG_UPDATED_DATETIME_ALIAS, TagIden, TagListSearch,
+    AggregateQuery, MediaAggregateSearch, MediaIden, MediaListSearch, MediaTag, MediaTagIden,
+    SearchQuery, TAG_ADDED_DATETIME_ALIAS, TAG_ORDER_ALIAS, TAG_UPDATED_DATETIME_ALIAS,
+    TagAggregateSearch, TagIden, TagListSearch,
 };
 use crate::errors::SearchErrors;
 
-use super::search::{apply_search, apply_search_filter2};
+use super::search::{apply_aggregate_search, apply_search};
 use super::{media_query, tag_query};
 
 #[cfg(test)]
@@ -16,6 +17,7 @@ mod tests {
     use uuid::Uuid;
 
     use super::*;
+    use crate::entities::{AggregateCountMetric, AggregateMetric, ColIden, FieldIden, FieldType};
 
     #[test]
     fn select_all_medias() {
@@ -53,18 +55,20 @@ mod tests {
     fn count_all_medias() {
         let user_id = Uuid::try_parse("00000000-0000-0000-0000-000000000000").unwrap();
         let tag_id = Uuid::try_parse("00000000-0000-0000-0000-000000000001").unwrap();
-        let query = count_all_medias_by_tag_id(
+        let query = aggregate_all_medias_by_tag_id(
             &user_id,
             &tag_id,
-            MediaListSearch {
+            MediaAggregateSearch {
                 filter: None,
-                sort: None,
-                page: None,
-                size: None,
+                aggr: AggregateMetric::Count(AggregateCountMetric::new(
+                    FieldIden::Col(ColIden::new(MediaIden::Id, FieldType::String)),
+                    None,
+                    false,
+                )),
             },
         );
         assert_eq!(
-            query.unwrap().to_string(PostgresQueryBuilder),
+            query.unwrap().query.to_string(PostgresQueryBuilder),
             [
                 r#"SELECT COUNT("Media"."id")"#,
                 r#"FROM "Media""#,
@@ -109,18 +113,20 @@ mod tests {
     fn count_all_tags() {
         let user_id = Uuid::try_parse("00000000-0000-0000-0000-000000000000").unwrap();
         let media_id = Uuid::try_parse("00000000-0000-0000-0000-000000000001").unwrap();
-        let query = count_all_tags_by_media_id(
+        let query = aggregate_all_tags_by_media_id(
             &user_id,
             &media_id,
-            TagListSearch {
+            TagAggregateSearch {
                 filter: None,
-                sort: None,
-                page: None,
-                size: None,
+                aggr: AggregateMetric::Count(AggregateCountMetric::new(
+                    FieldIden::Col(ColIden::new(TagIden::Id, FieldType::String)),
+                    None,
+                    false,
+                )),
             },
         );
         assert_eq!(
-            query.unwrap().to_string(PostgresQueryBuilder),
+            query.unwrap().query.to_string(PostgresQueryBuilder),
             [
                 r#"SELECT COUNT("Tag"."id")"#,
                 r#"FROM "Tag" LEFT JOIN "MediaTag" ON "Tag"."user_id" = "MediaTag"."user_id" AND "Tag"."id" = "MediaTag"."tag_id""#,
@@ -144,16 +150,16 @@ pub fn select_all_medias_by_tag_id(
     apply_search(select, search)
 }
 
-pub fn count_all_medias_by_tag_id(
+pub fn aggregate_all_medias_by_tag_id(
     user_id: &Uuid,
     tag_id: &Uuid,
-    search: MediaListSearch,
-) -> Result<SelectStatement, SearchErrors> {
-    let mut select = media_query::count_all(user_id);
+    search: MediaAggregateSearch,
+) -> Result<AggregateQuery, SearchErrors> {
+    let mut select = media_query::aggregate_all(user_id);
 
     join_media_tag_by_tag_id(&mut select, tag_id);
 
-    apply_search_filter2(select, search)
+    apply_aggregate_search(select, search)
 }
 
 pub fn select_all_tags_by_media_id(
@@ -169,16 +175,16 @@ pub fn select_all_tags_by_media_id(
     apply_search(select, search)
 }
 
-pub fn count_all_tags_by_media_id(
+pub fn aggregate_all_tags_by_media_id(
     user_id: &Uuid,
     media_id: &Uuid,
-    search: TagListSearch,
-) -> Result<SelectStatement, SearchErrors> {
-    let mut select = tag_query::count_all(user_id);
+    search: TagAggregateSearch,
+) -> Result<AggregateQuery, SearchErrors> {
+    let mut select = tag_query::aggregate_all(user_id);
 
     join_media_tag_by_media_id(&mut select, media_id);
 
-    apply_search_filter2(select, search)
+    apply_aggregate_search(select, search)
 }
 
 pub fn insert(media_tag: &MediaTag) -> impl QueryStatementWriter {

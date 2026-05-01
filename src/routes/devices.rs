@@ -1,8 +1,8 @@
 use actix_web::{Responder, delete, get, post, put, web};
 
 use crate::models::{
-    DeviceDTO, DevicePageResult, ErrorMessage, ItemId, ListSearchDTO, LoggedUser, NewDeviceDTO,
-    QuicksearchQuery,
+    AggregateResultDTO, AggregateSearchDTO, DeviceDTO, DevicePageResult, ErrorMessage, ItemId,
+    ListSearchDTO, LoggedUser, NewDeviceDTO, QuicksearchQuery,
 };
 use crate::services::{DeviceService, MediaSessionDeviceService};
 
@@ -76,18 +76,18 @@ pub async fn get_media_devices(
     handle_get_result(search_result)
 }
 
-/// Count all devices where a media has been in a session
+/// Aggregate all devices where a media has been in a session
 #[utoipa::path(
     post,
-    path = "/api/v1/medias/{id}/devices/count",
+    path = "/api/v1/medias/{id}/devices/aggregate",
     tag = "Devices",
     params(
         ("id" = String, Path, description = "Media id"),
         QuicksearchQuery,
     ),
-    request_body(content = ListSearchDTO, description = "Query", content_type = "application/json"),
+    request_body(content = AggregateSearchDTO, description = "Query", content_type = "application/json"),
     responses(
-        (status = 200, description = "Devices count obtained", body = u64, content_type = "application/json"),
+        (status = 200, description = "Devices aggregate obtained", body = AggregateResultDTO, content_type = "application/json"),
         (status = 401, description = "Unauthorized", body = ErrorMessage, content_type = "application/json"),
         (status = 403, description = "Forbidden", body = ErrorMessage, content_type = "application/json"),
         (status = 404, description = "Media not found", body = ErrorMessage, content_type = "application/json"),
@@ -97,19 +97,19 @@ pub async fn get_media_devices(
         ("OAuth2" = [])
     )
 )]
-#[post("/medias/{id}/devices/count")]
-pub async fn count_media_devices(
+#[post("/medias/{id}/devices/aggregate")]
+pub async fn aggregate_media_devices(
     media_session_device_service: web::Data<MediaSessionDeviceService>,
     path: web::Path<ItemId>,
     query: web::Query<QuicksearchQuery>,
-    body: web::Json<ListSearchDTO>,
+    body: web::Json<AggregateSearchDTO>,
     logged_user: LoggedUser,
 ) -> impl Responder {
     let ItemId(id) = path.into_inner();
-    let count_result = media_session_device_service
-        .count_media_session_devices(&logged_user.id, &id, body.0, query.0.q)
+    let aggregate_result = media_session_device_service
+        .aggregate_media_session_devices(&logged_user.id, &id, body.0, query.0.q)
         .await;
-    handle_get_result(count_result)
+    handle_get_result(aggregate_result)
 }
 
 /// Get devices
@@ -144,17 +144,17 @@ pub async fn get_devices(
     handle_get_result(search_result)
 }
 
-/// Count devices
+/// Aggregate devices
 #[utoipa::path(
     post,
-    path = "/api/v1/devices/count",
+    path = "/api/v1/devices/aggregate",
     tag = "Devices",
     params(
         QuicksearchQuery,
     ),
-    request_body(content = ListSearchDTO, description = "Query", content_type = "application/json"),
+    request_body(content = AggregateSearchDTO, description = "Query", content_type = "application/json"),
     responses(
-        (status = 200, description = "Devices count obtained", body = u64, content_type = "application/json"),
+        (status = 200, description = "Devices aggregate obtained", body = AggregateResultDTO, content_type = "application/json"),
         (status = 401, description = "Unauthorized", body = ErrorMessage, content_type = "application/json"),
         (status = 403, description = "Forbidden", body = ErrorMessage, content_type = "application/json"),
         (status = 500, description = "Internal server error", body = ErrorMessage, content_type = "application/json"),
@@ -163,17 +163,17 @@ pub async fn get_devices(
         ("OAuth2" = [])
     )
 )]
-#[post("/devices/count")]
-pub async fn count_devices(
+#[post("/devices/aggregate")]
+pub async fn aggregate_devices(
     device_service: web::Data<DeviceService>,
     query: web::Query<QuicksearchQuery>,
-    body: web::Json<ListSearchDTO>,
+    body: web::Json<AggregateSearchDTO>,
     logged_user: LoggedUser,
 ) -> impl Responder {
-    let count_result = device_service
-        .count_devices(&logged_user.id, body.0, query.0.q)
+    let aggregate_result = device_service
+        .aggregate_devices(&logged_user.id, body.0, query.0.q)
         .await;
-    handle_get_result(count_result)
+    handle_get_result(aggregate_result)
 }
 
 /// Create a device

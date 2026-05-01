@@ -1,14 +1,14 @@
 use crate::entities::{LocationWithAvailable, MediaWithStateWithAvailable};
 use crate::models::{
     AvailableDTO, ExternalMediaIdDTO, LocationAvailableDTO, LocationDTO, MediaAvailableDTO,
-    MediaDTO, MediaRawDTO, MediaStateDTO, MediaStatus, MediaType,
+    MediaDTO, MediaDataDTO, MediaStateDTO, MediaStatus, MediaType,
 };
 
 impl From<MediaWithStateWithAvailable> for MediaAvailableDTO {
     fn from(media: MediaWithStateWithAvailable) -> Self {
         Self {
             media: MediaDTO {
-                media: MediaRawDTO {
+                media: MediaDataDTO {
                     id: media.id,
                     kind: MediaType::try_from(media.kind).expect("Type is not within valid range"),
                     title: media.title,

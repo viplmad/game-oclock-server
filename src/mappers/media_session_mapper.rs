@@ -1,6 +1,6 @@
 use crate::entities::{DeviceWithSession, MediaWithStateWithSession};
 use crate::models::{
-    DeviceDTO, DeviceSessionDTO, DurationDef, ExternalMediaIdDTO, MediaDTO, MediaRawDTO,
+    DeviceDTO, DeviceSessionDTO, DurationDef, ExternalMediaIdDTO, MediaDTO, MediaDataDTO,
     MediaSessionDTO, MediaStateDTO, MediaStatus, MediaType, SessionDTO,
 };
 
@@ -8,7 +8,7 @@ impl From<MediaWithStateWithSession> for MediaSessionDTO {
     fn from(media: MediaWithStateWithSession) -> Self {
         Self {
             media: MediaDTO {
-                media: MediaRawDTO {
+                media: MediaDataDTO {
                     id: media.id,
                     kind: MediaType::try_from(media.kind).expect("Type is not within valid range"),
                     title: media.title,

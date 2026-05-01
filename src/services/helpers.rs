@@ -77,25 +77,6 @@ where
     })
 }
 
-pub(super) fn handle_get_count_result<T>(
-    repository_result: Result<u64, SearchErrors>,
-) -> Result<u64, ApiErrors>
-where
-    T: ModelInfo,
-{
-    repository_result.map_err(|err| match err {
-        SearchErrors::Mapping(map_err) => {
-            ApiErrors::InvalidParameter(error_message_builder::inner_error(
-                &error_message_builder::database_error(T::MODEL_NAME),
-                &map_err.0,
-            ))
-        }
-        SearchErrors::Repository(_) => {
-            ApiErrors::UnknownError(error_message_builder::database_error(T::MODEL_NAME))
-        }
-    })
-}
-
 pub(super) fn handle_get_aggregate_result<T>(
     repository_result: Result<AggregateResult, SearchErrors>,
 ) -> Result<AggregateResultDTO, ApiErrors>

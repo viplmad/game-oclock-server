@@ -2,11 +2,12 @@ use sea_query::{Expr, Order, SelectStatement};
 use uuid::Uuid;
 
 use crate::entities::{
-    DeviceIden, DeviceListSearch, MediaIden, MediaListSearch, MediaSessionIden, SearchQuery,
+    AggregateQuery, DeviceAggregateSearch, DeviceIden, DeviceListSearch, MediaAggregateSearch,
+    MediaIden, MediaListSearch, MediaSessionIden, SearchQuery,
 };
 use crate::errors::SearchErrors;
 
-use super::search::{apply_search, apply_search_filter2};
+use super::search::{apply_aggregate_search, apply_search};
 use super::{device_query, media_query};
 
 pub fn select_all_medias_by_device_id_order_by_date(
@@ -23,17 +24,17 @@ pub fn select_all_medias_by_device_id_order_by_date(
     apply_search(select, search)
 }
 
-pub fn count_all_medias_by_device_id_order_by_date(
+pub fn aggregate_all_medias_by_device_id_order_by_date(
     user_id: &Uuid,
     device_id: &Uuid,
-    search: MediaListSearch,
-) -> Result<SelectStatement, SearchErrors> {
-    let mut select = media_query::count_all(user_id);
+    search: MediaAggregateSearch,
+) -> Result<AggregateQuery, SearchErrors> {
+    let mut select = media_query::aggregate_all(user_id);
 
     join_media_session_by_device_id(&mut select, device_id);
     // TODO Distinct?
 
-    apply_search_filter2(select, search)
+    apply_aggregate_search(select, search)
 }
 
 pub fn select_all_devices_by_media_id_order_by_date(
@@ -50,17 +51,17 @@ pub fn select_all_devices_by_media_id_order_by_date(
     apply_search(select, search)
 }
 
-pub fn count_all_devices_by_media_id_order_by_date(
+pub fn aggregate_all_devices_by_media_id_order_by_date(
     user_id: &Uuid,
     media_id: &Uuid,
-    search: DeviceListSearch,
-) -> Result<SelectStatement, SearchErrors> {
-    let mut select = device_query::count_all(user_id);
+    search: DeviceAggregateSearch,
+) -> Result<AggregateQuery, SearchErrors> {
+    let mut select = device_query::aggregate_all(user_id);
 
     join_media_session_by_media_id(&mut select, media_id);
     // TODO Distinct?
 
-    apply_search_filter2(select, search)
+    apply_aggregate_search(select, search)
 }
 
 fn join_media_session_by_device_id(select: &mut SelectStatement, device_id: &Uuid) {

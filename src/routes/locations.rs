@@ -1,8 +1,7 @@
 use actix_web::{Responder, delete, get, post, put, web};
 
 use crate::models::{
-    ErrorMessage, ItemId, ListSearchDTO, LocationAvailablePageResult, LocationDTO,
-    LocationPageResult, LoggedUser, NewLocationDTO, QuicksearchQuery,
+    AggregateResultDTO, AggregateSearchDTO, ErrorMessage, ItemId, ListSearchDTO, LocationAvailablePageResult, LocationDTO, LocationPageResult, LoggedUser, NewLocationDTO, QuicksearchQuery
 };
 use crate::services::{LocationService, MediaAvailableService};
 
@@ -76,18 +75,18 @@ pub async fn get_media_locations(
     handle_get_result(search_result)
 }
 
-/// Count all locations where a media is available
+/// Aggregate all locations where a media is available
 #[utoipa::path(
     post,
-    path = "/api/v1/medias/{id}/locations/count",
+    path = "/api/v1/medias/{id}/locations/aggregate",
     tag = "Locations",
     params(
         ("id" = String, Path, description = "Media id"),
         QuicksearchQuery,
     ),
-    request_body(content = ListSearchDTO, description = "Query", content_type = "application/json"),
+    request_body(content = AggregateSearchDTO, description = "Query", content_type = "application/json"),
     responses(
-        (status = 200, description = "Locations count obtained", body = u64, content_type = "application/json"),
+        (status = 200, description = "Locations aggregate obtained", body = AggregateResultDTO, content_type = "application/json"),
         (status = 401, description = "Unauthorized", body = ErrorMessage, content_type = "application/json"),
         (status = 403, description = "Forbidden", body = ErrorMessage, content_type = "application/json"),
         (status = 404, description = "Media not found", body = ErrorMessage, content_type = "application/json"),
@@ -97,17 +96,17 @@ pub async fn get_media_locations(
         ("OAuth2" = [])
     )
 )]
-#[post("/medias/{id}/locations/count")]
-pub async fn count_media_locations(
+#[post("/medias/{id}/locations/aggregate")]
+pub async fn aggregate_media_locations(
     media_available_service: web::Data<MediaAvailableService>,
     path: web::Path<ItemId>,
     query: web::Query<QuicksearchQuery>,
-    body: web::Json<ListSearchDTO>,
+    body: web::Json<AggregateSearchDTO>,
     logged_user: LoggedUser,
 ) -> impl Responder {
     let ItemId(id) = path.into_inner();
     let get_result = media_available_service
-        .count_media_locations(&logged_user.id, &id, body.0, query.0.q)
+        .aggregate_media_locations(&logged_user.id, &id, body.0, query.0.q)
         .await;
     handle_get_result(get_result)
 }
@@ -144,17 +143,17 @@ pub async fn get_locations(
     handle_get_result(search_result)
 }
 
-/// Count locations
+/// Aggregate locations
 #[utoipa::path(
     post,
-    path = "/api/v1/locations/count",
+    path = "/api/v1/locations/aggregate",
     tag = "Locations",
     params(
         QuicksearchQuery,
     ),
-    request_body(content = ListSearchDTO, description = "Query", content_type = "application/json"),
+    request_body(content = AggregateSearchDTO, description = "Query", content_type = "application/json"),
     responses(
-        (status = 200, description = "Locations count obtained", body = u64, content_type = "application/json"),
+        (status = 200, description = "Locations aggregate obtained", body = AggregateResultDTO, content_type = "application/json"),
         (status = 401, description = "Unauthorized", body = ErrorMessage, content_type = "application/json"),
         (status = 403, description = "Forbidden", body = ErrorMessage, content_type = "application/json"),
         (status = 500, description = "Internal server error", body = ErrorMessage, content_type = "application/json"),
@@ -163,17 +162,17 @@ pub async fn get_locations(
         ("OAuth2" = [])
     )
 )]
-#[post("/locations/count")]
-pub async fn count_locations(
+#[post("/locations/aggregate")]
+pub async fn aggregate_locations(
     location_service: web::Data<LocationService>,
     query: web::Query<QuicksearchQuery>,
-    body: web::Json<ListSearchDTO>,
+    body: web::Json<AggregateSearchDTO>,
     logged_user: LoggedUser,
 ) -> impl Responder {
-    let count_result = location_service
-        .count_locations(&logged_user.id, body.0, query.0.q)
+    let aggregate_result = location_service
+        .aggregate_locations(&logged_user.id, body.0, query.0.q)
         .await;
-    handle_get_result(count_result)
+    handle_get_result(aggregate_result)
 }
 
 /// Create a location

@@ -2,13 +2,13 @@ use sea_query::{Alias, Expr, Query, QueryStatementWriter, SelectStatement, Simpl
 use uuid::Uuid;
 
 use crate::entities::{
-    ExternalMedia, ExternalMediaIden, Media, MediaIden, MediaListSearch, MediaState,
-    MediaStateIden, STATE_ADDED_DATETIME_ALIAS, STATE_NOTES_ALIAS, STATE_RATING_ALIAS,
-    STATE_STATUS_ALIAS, STATE_UPDATED_DATETIME_ALIAS, SearchQuery,
+    AggregateQuery, ExternalMedia, ExternalMediaIden, Media, MediaAggregateSearch, MediaIden,
+    MediaListSearch, MediaState, MediaStateIden, STATE_ADDED_DATETIME_ALIAS, STATE_NOTES_ALIAS,
+    STATE_RATING_ALIAS, STATE_STATUS_ALIAS, STATE_UPDATED_DATETIME_ALIAS, SearchQuery,
 };
 use crate::errors::SearchErrors;
 
-use super::search::{apply_search, apply_search_filter2};
+use super::search::{apply_aggregate_search, apply_search};
 
 #[cfg(test)]
 mod tests {
@@ -16,6 +16,7 @@ mod tests {
     use uuid::Uuid;
 
     use super::*;
+    use crate::entities::{AggregateCountMetric, AggregateMetric, ColIden, FieldIden, FieldType};
 
     #[test]
     fn select_all_medias() {
@@ -47,17 +48,19 @@ mod tests {
     #[test]
     fn count_all_medias() {
         let user_id = Uuid::try_parse("00000000-0000-0000-0000-000000000000").unwrap();
-        let query = count_all_with_search(
+        let query = aggregate_all_with_search(
             &user_id,
-            MediaListSearch {
+            MediaAggregateSearch {
                 filter: None,
-                sort: None,
-                page: None,
-                size: None,
+                aggr: AggregateMetric::Count(AggregateCountMetric::new(
+                    FieldIden::Col(ColIden::new(MediaIden::Id, FieldType::String)),
+                    None,
+                    false,
+                )),
             },
         );
         assert_eq!(
-            query.unwrap().to_string(PostgresQueryBuilder),
+            query.unwrap().query.to_string(PostgresQueryBuilder),
             [
                 r#"SELECT COUNT("Media"."id")"#,
                 r#"FROM "Media""#,
@@ -228,13 +231,13 @@ pub fn select_all_with_search(
     apply_search(select, search)
 }
 
-pub fn count_all_with_search(
+pub fn aggregate_all_with_search(
     user_id: &Uuid,
-    search: MediaListSearch,
-) -> Result<SelectStatement, SearchErrors> {
-    let select = count_all(user_id);
+    search: MediaAggregateSearch,
+) -> Result<AggregateQuery, SearchErrors> {
+    let select = aggregate_all(user_id);
 
-    apply_search_filter2(select, search)
+    apply_aggregate_search(select, search)
 }
 
 pub(super) fn select_all(user_id: &Uuid) -> SelectStatement {
@@ -251,12 +254,11 @@ pub(super) fn select_all(user_id: &Uuid) -> SelectStatement {
     select
 }
 
-pub(super) fn count_all(user_id: &Uuid) -> SelectStatement {
+pub(super) fn aggregate_all(user_id: &Uuid) -> SelectStatement {
     let mut select = Query::select();
 
     from(&mut select);
     join_state(&mut select, user_id);
-    select.expr(Expr::col((MediaIden::Table, MediaIden::Id)).count());
 
     select
 }

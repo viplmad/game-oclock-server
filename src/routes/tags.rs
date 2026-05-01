@@ -1,8 +1,8 @@
 use actix_web::{Responder, delete, get, post, put, web};
 
 use crate::models::{
-    ErrorMessage, ItemId, ListSearchDTO, LoggedUser, NewTagDTO, QuicksearchQuery, TagDTO,
-    TagMediaPageResult, TagPageResult,
+    AggregateResultDTO, AggregateSearchDTO, ErrorMessage, ItemId, ListSearchDTO, LoggedUser,
+    NewTagDTO, QuicksearchQuery, TagDTO, TagMediaPageResult, TagPageResult,
 };
 use crate::services::{MediaTagService, TagService};
 
@@ -76,18 +76,18 @@ pub async fn get_media_tags(
     handle_get_result(search_result)
 }
 
-/// Count all tags from a media
+/// Aggregate all tags from a media
 #[utoipa::path(
     post,
-    path = "/api/v1/medias/{id}/tags/count",
+    path = "/api/v1/medias/{id}/tags/aggregate",
     tag = "Tags",
     params(
         ("id" = String, Path, description = "Media id"),
         QuicksearchQuery,
     ),
-    request_body(content = ListSearchDTO, description = "Query", content_type = "application/json"),
+    request_body(content = AggregateSearchDTO, description = "Query", content_type = "application/json"),
     responses(
-        (status = 200, description = "Tags count obtained", body = u64, content_type = "application/json"),
+        (status = 200, description = "Tags aggregate obtained", body = AggregateResultDTO, content_type = "application/json"),
         (status = 401, description = "Unauthorized", body = ErrorMessage, content_type = "application/json"),
         (status = 403, description = "Forbidden", body = ErrorMessage, content_type = "application/json"),
         (status = 404, description = "Media not found", body = ErrorMessage, content_type = "application/json"),
@@ -97,19 +97,19 @@ pub async fn get_media_tags(
         ("OAuth2" = [])
     )
 )]
-#[post("/medias/{id}/tags/count")]
-pub async fn count_media_tags(
+#[post("/medias/{id}/tags/aggregate")]
+pub async fn aggregate_media_tags(
     media_tag_service: web::Data<MediaTagService>,
     path: web::Path<ItemId>,
     query: web::Query<QuicksearchQuery>,
-    body: web::Json<ListSearchDTO>,
+    body: web::Json<AggregateSearchDTO>,
     logged_user: LoggedUser,
 ) -> impl Responder {
     let ItemId(id) = path.into_inner();
-    let count_result = media_tag_service
-        .count_media_tags(&logged_user.id, &id, body.0, query.0.q)
+    let aggregate_result = media_tag_service
+        .aggregate_media_tags(&logged_user.id, &id, body.0, query.0.q)
         .await;
-    handle_get_result(count_result)
+    handle_get_result(aggregate_result)
 }
 
 /// Search tags
@@ -144,17 +144,17 @@ pub async fn get_tags(
     handle_get_result(search_result)
 }
 
-/// Count tags
+/// Aggregate tags
 #[utoipa::path(
     post,
-    path = "/api/v1/tags/count",
+    path = "/api/v1/tags/aggregate",
     tag = "Tags",
     params(
         QuicksearchQuery,
     ),
-    request_body(content = ListSearchDTO, description = "Query", content_type = "application/json"),
+    request_body(content = AggregateSearchDTO, description = "Query", content_type = "application/json"),
     responses(
-        (status = 200, description = "Tags count obtained", body = u64, content_type = "application/json"),
+        (status = 200, description = "Tags aggregate obtained", body = AggregateResultDTO, content_type = "application/json"),
         (status = 401, description = "Unauthorized", body = ErrorMessage, content_type = "application/json"),
         (status = 403, description = "Forbidden", body = ErrorMessage, content_type = "application/json"),
         (status = 500, description = "Internal server error", body = ErrorMessage, content_type = "application/json"),
@@ -163,17 +163,17 @@ pub async fn get_tags(
         ("OAuth2" = [])
     )
 )]
-#[post("/tags/count")]
-pub async fn count_tags(
+#[post("/tags/aggregate")]
+pub async fn aggregate_tags(
     tag_service: web::Data<TagService>,
     query: web::Query<QuicksearchQuery>,
-    body: web::Json<ListSearchDTO>,
+    body: web::Json<AggregateSearchDTO>,
     logged_user: LoggedUser,
 ) -> impl Responder {
-    let count_result = tag_service
-        .count_tags(&logged_user.id, body.0, query.0.q)
+    let aggregate_result = tag_service
+        .aggregate_tags(&logged_user.id, body.0, query.0.q)
         .await;
-    handle_get_result(count_result)
+    handle_get_result(aggregate_result)
 }
 
 /// Create a tag

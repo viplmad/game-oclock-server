@@ -7,23 +7,21 @@ use super::{ExternalMediaIdDTO, MediaStatus, MediaType, Merge, ModelInfo};
 
 #[derive(Default, Serialize, ToSchema)]
 pub struct MediaDTO {
-    pub media: MediaRawDTO,
+    pub media: MediaDataDTO,
     pub external: ExternalMediaIdDTO,
     pub state: MediaStateDTO,
 }
 
 #[derive(Default, Serialize, ToSchema)]
-// TODO
-pub struct Media2DTO {
-    pub media: MediaRawDTO,
+pub struct PotentialMediaDTO {
+    pub media: MediaDataDTO,
     pub external: ExternalMediaIdDTO,
     #[serde(skip_serializing_if = "Option::is_none")]
     pub state: Option<MediaStateDTO>,
 }
 
 #[derive(Default, Serialize, ToSchema)]
-// TODO
-pub struct MediaRawDTO {
+pub struct MediaDataDTO {
     #[schema(value_type = String)]
     pub id: Uuid,
     pub kind: MediaType,
@@ -58,7 +56,7 @@ pub struct MediaStateDTO {
     pub updated_datetime: DateTime<FixedOffset>,
 }
 
-impl Merge<NewManualMediaDTO> for MediaRawDTO {
+impl Merge<NewManualMediaDTO> for MediaDataDTO {
     fn merge(self, other: NewManualMediaDTO) -> Self {
         Self {
             id: self.id,
@@ -95,7 +93,7 @@ impl ModelInfo for MediaDTO {
     const UNIQUE_FIELDS: &'static [&'static str] = &["kind", "title", "edition"];
 }
 
-impl ModelInfo for MediaRawDTO {
+impl ModelInfo for MediaDataDTO {
     const MODEL_NAME: &'static str = "Media";
     const ID_FIELDS: &'static [&'static str] = &["id"];
     const UNIQUE_FIELDS: &'static [&'static str] = &["kind", "title", "edition"];
