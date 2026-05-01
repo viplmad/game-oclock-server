@@ -1,7 +1,9 @@
 use actix_web::{Responder, delete, get, post, put, web};
 
 use crate::models::{
-    AggregateResultDTO, AggregateSearchDTO, ErrorMessage, ItemId, ListSearchDTO, LocationAvailablePageResult, LocationDTO, LocationPageResult, LoggedUser, NewLocationDTO, QuicksearchQuery
+    AggregateResultDTO, AggregateSearchDTO, ErrorMessage, ItemId, ListSearchDTO,
+    LocationAvailablePageResult, LocationDTO, LocationPageResult, LoggedUser, NewLocationDTO,
+    QuicksearchQuery,
 };
 use crate::services::{LocationService, MediaAvailableService};
 
@@ -182,7 +184,7 @@ pub async fn aggregate_locations(
     tag = "Locations",
     request_body(content = NewLocationDTO, description = "Location to be createad", content_type = "application/json"),
     responses(
-        (status = 201, description = "Location created", body = LocationDTO, content_type = "application/json"),
+        (status = 201, description = "Location created", body = String, content_type = "application/json"),
         (status = 400, description = "Bad request", body = ErrorMessage, content_type = "application/json"),
         (status = 401, description = "Unauthorized", body = ErrorMessage, content_type = "application/json"),
         (status = 403, description = "Forbidden", body = ErrorMessage, content_type = "application/json"),

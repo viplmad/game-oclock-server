@@ -25,7 +25,7 @@ pub async fn check_admin_user(user_service: &UserService) {
     match exists_admin {
         true => log::info!("Admin user present."),
         false => {
-            let admin_user = user_service
+            let admin_user_id = user_service
                 .create_user(
                     NewUserDTO {
                         username: Some(String::from("admin")),
@@ -35,7 +35,7 @@ pub async fn check_admin_user(user_service: &UserService) {
                 .await
                 .expect("Could not create admin user");
             user_service
-                .promote_user(&admin_user.id)
+                .promote_user(&admin_user_id)
                 .await
                 .expect("Could not promote admin user");
 

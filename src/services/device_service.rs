@@ -62,11 +62,11 @@ impl DeviceService {
         &self,
         user_id: &Uuid,
         device: NewDeviceDTO,
-    ) -> Result<DeviceDTO, ApiErrors> {
+    ) -> Result<Uuid, ApiErrors> {
         let new_id = crate::uuid_utils::new_model_uuid();
-        create_merged(
+
+        create_merged::<Device, DeviceDTO, NewDeviceDTO, _>(
             device,
-            async move || self.get_device(user_id, &new_id).await,
             async move |mut device_to_create: Device| {
                 let exists_result = self
                     .repository
@@ -82,7 +82,9 @@ impl DeviceService {
                 handle_action_result::<DeviceDTO>(create_result)
             },
         )
-        .await
+        .await?;
+
+        Ok(new_id)
     }
 
     pub async fn update_device(

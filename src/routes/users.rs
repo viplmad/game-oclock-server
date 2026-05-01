@@ -150,7 +150,7 @@ pub async fn aggregate_users(
     ),
     request_body(content = NewUserDTO, description = "User to be created", content_type = "application/json"),
     responses(
-        (status = 201, description = "User created", body = UserDTO, content_type = "application/json"),
+        (status = 201, description = "User created", body = String, content_type = "application/json"),
         (status = 400, description = "Bad request", body = ErrorMessage, content_type = "application/json"),
         (status = 401, description = "Unauthorized", body = ErrorMessage, content_type = "application/json"),
         (status = 403, description = "Forbidden", body = ErrorMessage, content_type = "application/json"),

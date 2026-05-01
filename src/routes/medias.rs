@@ -2,8 +2,9 @@ use actix_web::{Responder, delete, get, post, put, web};
 
 use crate::models::{
     AggregateResultDTO, AggregateSearchDTO, DateTimeDTO, ErrorMessage, ExternalQuicksearchQuery,
-    ItemId, ItemIdAndRelatedId, ListSearchDTO, LoggedUser, PotentialMediaDTO, MediaAvailablePageResult,
-    MediaDTO, MediaPageResult, MediaTagPageResult, NewMediaDTO, OrderDTO, QuicksearchQuery,
+    ItemId, ItemIdAndRelatedId, ListSearchDTO, LoggedUser, MediaAvailablePageResult, MediaDTO,
+    MediaPageResult, MediaTagPageResult, NewMediaDTO, OrderDTO, PotentialMediaDTO,
+    QuicksearchQuery,
 };
 use crate::services::{
     MediaAvailableService, MediaService, MediaSessionDeviceService, MediaTagService,
@@ -331,7 +332,7 @@ pub async fn aggregate_medias(
     tag = "Medias",
     request_body(content = NewMediaDTO, description = "Media to be created", content_type = "application/json"),
     responses(
-        (status = 201, description = "Media created", body = MediaDTO, content_type = "application/json"),
+        (status = 201, description = "Media created", body = String, content_type = "application/json"),
         (status = 400, description = "Bad request", body = ErrorMessage, content_type = "application/json"),
         (status = 401, description = "Unauthorized", body = ErrorMessage, content_type = "application/json"),
         (status = 403, description = "Forbidden", body = ErrorMessage, content_type = "application/json"),

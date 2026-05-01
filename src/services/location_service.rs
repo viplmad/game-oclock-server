@@ -62,11 +62,11 @@ impl LocationService {
         &self,
         user_id: &Uuid,
         location: NewLocationDTO,
-    ) -> Result<LocationDTO, ApiErrors> {
+    ) -> Result<Uuid, ApiErrors> {
         let new_id = crate::uuid_utils::new_model_uuid();
-        create_merged(
+
+        create_merged::<Location, LocationDTO, NewLocationDTO, _>(
             location,
-            async move || self.get_location(user_id, &new_id).await,
             async move |mut location_to_create: Location| {
                 let exists_result = self
                     .repository
@@ -82,7 +82,9 @@ impl LocationService {
                 handle_action_result::<LocationDTO>(create_result)
             },
         )
-        .await
+        .await?;
+
+        Ok(new_id)
     }
 
     pub async fn update_location(

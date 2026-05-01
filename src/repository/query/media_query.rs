@@ -108,7 +108,7 @@ pub fn select_by_id(user_id: &Uuid, id: &Uuid) -> impl QueryStatementWriter {
     select
 }
 
-pub fn select_basic_by_id(id: &Uuid) -> impl QueryStatementWriter {
+pub fn select_data_by_id(id: &Uuid) -> impl QueryStatementWriter {
     let mut select = Query::select();
 
     from(&mut select);
@@ -180,7 +180,7 @@ pub fn select_by_external_id(user_id: &Uuid, source: &str, id: &str) -> impl Que
     select
 }
 
-pub fn select_basic_by_external_id(source: &str, id: &str) -> impl QueryStatementWriter {
+pub fn select_data_by_external_id(source: &str, id: &str) -> impl QueryStatementWriter {
     let mut select = Query::select();
 
     from(&mut select);
@@ -263,7 +263,7 @@ pub(super) fn aggregate_all(user_id: &Uuid) -> SelectStatement {
     select
 }
 
-pub fn insert_basic(media: &Media) -> impl QueryStatementWriter {
+pub fn insert_data(media: &Media) -> impl QueryStatementWriter {
     let mut insert = Query::insert();
 
     insert
@@ -351,8 +351,8 @@ pub fn insert_external(media: &ExternalMedia) -> impl QueryStatementWriter {
     insert
 }
 
-pub fn update_basic_by_id(media: &Media) -> impl QueryStatementWriter {
-    update_basic_values_by_id(
+pub fn update_data_by_id(media: &Media) -> impl QueryStatementWriter {
+    update_data_values_by_id(
         &media.id,
         vec![
             (MediaIden::Kind, media.kind.clone().into()),
@@ -382,7 +382,7 @@ pub fn update_basic_by_id(media: &Media) -> impl QueryStatementWriter {
 }
 
 pub fn update_parent_id_by_id(id: &Uuid, parent_id: Option<Uuid>) -> impl QueryStatementWriter {
-    update_basic_values_by_id(
+    update_data_values_by_id(
         id,
         vec![
             (
@@ -394,7 +394,7 @@ pub fn update_parent_id_by_id(id: &Uuid, parent_id: Option<Uuid>) -> impl QueryS
     )
 }
 
-fn update_basic_values_by_id(
+fn update_data_values_by_id(
     id: &Uuid,
     values: Vec<(MediaIden, SimpleExpr)>,
 ) -> impl QueryStatementWriter {
@@ -487,7 +487,7 @@ fn update_external_values_by_id(
     update
 }
 
-pub fn delete_basic_by_id(id: &Uuid) -> impl QueryStatementWriter {
+pub fn delete_data_by_id(id: &Uuid) -> impl QueryStatementWriter {
     let mut delete = Query::delete();
 
     delete
@@ -518,7 +518,7 @@ pub fn delete_external_by_id(id: &Uuid) -> impl QueryStatementWriter {
     delete
 }
 
-pub fn exists_basic_by_id(id: &Uuid) -> impl QueryStatementWriter {
+pub fn exists_data_by_id(id: &Uuid) -> impl QueryStatementWriter {
     let mut select = Query::select();
 
     from(&mut select);

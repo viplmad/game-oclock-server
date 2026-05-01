@@ -62,15 +62,11 @@ impl UserService {
         handle_get_aggregate_result::<UserDTO>(aggregate_result)
     }
 
-    pub async fn create_user(
-        &self,
-        user: NewUserDTO,
-        password: &str,
-    ) -> Result<UserDTO, ApiErrors> {
+    pub async fn create_user(&self, user: NewUserDTO, password: &str) -> Result<Uuid, ApiErrors> {
         let new_id = crate::uuid_utils::new_model_uuid();
-        create_merged(
+
+        create_merged::<User, UserDTO, NewUserDTO, _>(
             user,
-            async move || self.get_user(&new_id).await,
             async move |mut user_to_create: User| {
                 let exists_result = self
                     .repository
@@ -89,7 +85,9 @@ impl UserService {
                 handle_action_result::<UserDTO>(create_result)
             },
         )
-        .await
+        .await?;
+
+        Ok(new_id)
     }
 
     pub async fn update_user(&self, id: &Uuid, user: NewUserDTO) -> Result<(), ApiErrors> {

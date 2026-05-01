@@ -54,27 +54,26 @@ impl TagService {
         handle_get_aggregate_result::<TagDTO>(find_result)
     }
 
-    pub async fn create_tag(&self, user_id: &Uuid, tag: NewTagDTO) -> Result<TagDTO, ApiErrors> {
+    pub async fn create_tag(&self, user_id: &Uuid, tag: NewTagDTO) -> Result<Uuid, ApiErrors> {
         let new_id = crate::uuid_utils::new_model_uuid();
-        create_merged(
-            tag,
-            async move || self.get_tag(user_id, &new_id).await,
-            async move |mut tag_to_create: Tag| {
-                let exists_result = self
-                    .repository
-                    .exists_by_name(user_id, &tag_to_create.name)
-                    .await;
-                handle_already_exists_result::<TagDTO>(exists_result)?;
 
-                tag_to_create.user_id = user_id.clone();
-                tag_to_create.id = new_id.clone();
-                tag_to_create.added_datetime = crate::date_utils::now();
-                tag_to_create.updated_datetime = crate::date_utils::now();
-                let create_result = self.repository.create(&tag_to_create).await;
-                handle_action_result::<TagDTO>(create_result)
-            },
-        )
-        .await
+        create_merged::<Tag, TagDTO, NewTagDTO, _>(tag, async move |mut tag_to_create: Tag| {
+            let exists_result = self
+                .repository
+                .exists_by_name(user_id, &tag_to_create.name)
+                .await;
+            handle_already_exists_result::<TagDTO>(exists_result)?;
+
+            tag_to_create.user_id = user_id.clone();
+            tag_to_create.id = new_id.clone();
+            tag_to_create.added_datetime = crate::date_utils::now();
+            tag_to_create.updated_datetime = crate::date_utils::now();
+            let create_result = self.repository.create(&tag_to_create).await;
+            handle_action_result::<TagDTO>(create_result)
+        })
+        .await?;
+
+        Ok(new_id)
     }
 
     pub async fn update_tag(

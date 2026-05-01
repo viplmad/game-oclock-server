@@ -183,7 +183,7 @@ pub async fn aggregate_devices(
     tag = "Devices",
     request_body(content = NewDeviceDTO, description = "Device to be createad", content_type = "application/json"),
     responses(
-        (status = 201, description = "Device created", body = DeviceDTO, content_type = "application/json"),
+        (status = 201, description = "Device created", body = String, content_type = "application/json"),
         (status = 400, description = "Bad request", body = ErrorMessage, content_type = "application/json"),
         (status = 401, description = "Unauthorized", body = ErrorMessage, content_type = "application/json"),
         (status = 403, description = "Forbidden", body = ErrorMessage, content_type = "application/json"),

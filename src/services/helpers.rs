@@ -174,8 +174,7 @@ where
     }
 }
 
-// TODO
-pub(super) async fn create_merged2<E, T, N, CF>(
+pub(super) async fn create_merged<E, T, N, CF>(
     new: N,
     create_function: impl FnOnce(E) -> CF,
 ) -> Result<(), ApiErrors>
@@ -188,30 +187,6 @@ where
     let entity_to_create = E::from(merged_new);
 
     create_function(entity_to_create).await
-}
-
-pub(super) async fn create_merged<E, T, N, GF, CF>(
-    new: N,
-    get_function: impl FnOnce() -> GF,
-    create_function: impl FnOnce(E) -> CF,
-) -> Result<T, ApiErrors>
-where
-    T: From<E> + Merge<N> + Default + ModelInfo,
-    E: From<T>,
-    GF: Future<Output = Result<T, ApiErrors>>,
-    CF: Future<Output = Result<(), ApiErrors>>,
-{
-    let merged_new = T::merge_with_default(new);
-    let entity_to_create = E::from(merged_new);
-
-    create_function(entity_to_create).await?;
-
-    get_function().await.map_err(|err| match err {
-        ApiErrors::NotFound(_) => {
-            ApiErrors::NotFound(error_message_builder::created_but_error_get(T::MODEL_NAME))
-        }
-        other => other,
-    })
 }
 
 pub(super) async fn update_merged<E, T, N, GF, UF>(

@@ -11,7 +11,7 @@ use crate::repository::MediaRepository;
 
 use super::MediaExternalService;
 use super::helpers::{
-    create_merged2, handle_action_result, handle_aggregate_search_mapping,
+    create_merged, handle_action_result, handle_aggregate_search_mapping,
     handle_already_exists_result, handle_get_aggregate_result, handle_get_list_paged_result,
     handle_get_list_result_raw, handle_get_result, handle_list_search_mapping,
     handle_not_found_result, handle_result, handle_update_result, update_merged,
@@ -38,8 +38,8 @@ impl MediaService {
         handle_get_result(find_result)
     }
 
-    async fn get_media_basic(&self, id: &Uuid) -> Result<MediaDataDTO, ApiErrors> {
-        let find_result = self.repository.find_basic_by_id(id).await;
+    async fn get_media_data(&self, id: &Uuid) -> Result<MediaDataDTO, ApiErrors> {
+        let find_result = self.repository.find_data_by_id(id).await;
         handle_get_result(find_result)
     }
 
@@ -65,13 +65,13 @@ impl MediaService {
         handle_get_result(find_result)
     }
 
-    async fn get_media_basic_by_external(
+    async fn get_media_data_by_external(
         &self,
         external: &ExternalMediaIdDTO,
     ) -> Result<MediaDataDTO, ApiErrors> {
         let find_result = self
             .repository
-            .find_basic_by_external(&external.source, &external.id)
+            .find_data_by_external(&external.source, &external.id)
             .await;
         handle_get_result(find_result)
     }
@@ -165,7 +165,7 @@ impl MediaService {
         external: ExternalMediaIdDTO,
         state: NewMediaStateDTO,
     ) -> Result<Uuid, ApiErrors> {
-        let existing_media_result = self.get_media_basic_by_external(&external).await;
+        let existing_media_result = self.get_media_data_by_external(&external).await;
 
         match existing_media_result {
             Ok(existing_media) => {
@@ -182,7 +182,7 @@ impl MediaService {
 
                     let new_id = crate::uuid_utils::new_model_uuid();
 
-                    self.create_media_basic(&new_id, media).await?;
+                    self.create_media_data(&new_id, media).await?;
                     self.create_media_external(&new_id, external).await?;
                     self.create_media_state(user_id, &new_id, state).await?;
 
@@ -201,18 +201,18 @@ impl MediaService {
     ) -> Result<Uuid, ApiErrors> {
         let new_id = crate::uuid_utils::new_model_uuid();
 
-        self.create_media_basic(&new_id, media).await?;
+        self.create_media_data(&new_id, media).await?;
         self.create_media_state(user_id, &new_id, state).await?;
 
         Ok(new_id)
     }
 
-    async fn create_media_basic(
+    async fn create_media_data(
         &self,
         id: &Uuid,
         media: NewManualMediaDTO,
     ) -> Result<(), ApiErrors> {
-        create_merged2::<Media, MediaDataDTO, NewManualMediaDTO, _>(
+        create_merged::<Media, MediaDataDTO, NewManualMediaDTO, _>(
             media,
             async move |mut media_to_create: Media| {
                 let exists_result = self
@@ -224,7 +224,7 @@ impl MediaService {
                 media_to_create.id = id.clone();
                 media_to_create.added_datetime = crate::date_utils::now();
                 media_to_create.updated_datetime = crate::date_utils::now();
-                let create_result = self.repository.create_basic(&media_to_create).await;
+                let create_result = self.repository.create_data(&media_to_create).await;
                 handle_action_result::<MediaDTO>(create_result)
             },
         )
@@ -237,7 +237,7 @@ impl MediaService {
         id: &Uuid,
         state: NewMediaStateDTO,
     ) -> Result<(), ApiErrors> {
-        create_merged2::<MediaState, MediaStateDTO, NewMediaStateDTO, _>(
+        create_merged::<MediaState, MediaStateDTO, NewMediaStateDTO, _>(
             state,
             async move |mut state_to_create: MediaState| {
                 state_to_create.user_id = user_id.clone();
@@ -311,7 +311,7 @@ impl MediaService {
 
         let media = self.external_service.get(&external).await?;
 
-        self.update_media_basic(id, media).await?;
+        self.update_media_data(id, media).await?;
         self.update_media_external(id, external).await?;
         self.update_media_state(user_id, id, state).await
     }
@@ -323,18 +323,18 @@ impl MediaService {
         media: NewManualMediaDTO,
         state: NewMediaStateDTO,
     ) -> Result<(), ApiErrors> {
-        self.update_media_basic(id, media).await?;
+        self.update_media_data(id, media).await?;
         self.update_media_state(user_id, id, state).await
     }
 
-    async fn update_media_basic(
+    async fn update_media_data(
         &self,
         id: &Uuid,
         manual: NewManualMediaDTO,
     ) -> Result<(), ApiErrors> {
         update_merged::<Media, MediaDataDTO, NewManualMediaDTO, _, _>(
             manual,
-            async move || self.get_media_basic(id).await,
+            async move || self.get_media_data(id).await,
             async move |mut media_to_update: Media| {
                 let exists_result = self
                     .repository
@@ -348,7 +348,7 @@ impl MediaService {
 
                 media_to_update.id = id.clone();
                 media_to_update.updated_datetime = crate::date_utils::now();
-                let update_result = self.repository.update_basic(&media_to_update).await;
+                let update_result = self.repository.update_data(&media_to_update).await;
                 handle_update_result::<MediaDTO>(update_result)
             },
         )
@@ -415,15 +415,15 @@ impl MediaService {
         let existing_states_result = self.repository.exists_any_state_by_id(id).await;
         let existing_states = handle_result::<bool, MediaDTO>(existing_states_result)?;
         if !existing_states {
-            self.delete_media_basic(id).await?;
+            self.delete_media_data(id).await?;
             self.delete_media_external(id).await?;
         }
 
         Ok(())
     }
 
-    async fn delete_media_basic(&self, id: &Uuid) -> Result<(), ApiErrors> {
-        let delete_result = self.repository.delete_basic_by_id(id).await;
+    async fn delete_media_data(&self, id: &Uuid) -> Result<(), ApiErrors> {
+        let delete_result = self.repository.delete_data_by_id(id).await;
         handle_action_result::<MediaDTO>(delete_result)
     }
 
@@ -438,7 +438,7 @@ impl MediaService {
     }
 
     pub async fn exists_media(&self, id: &Uuid) -> Result<(), ApiErrors> {
-        let exists_result = self.repository.exists_basic_by_id(id).await;
+        let exists_result = self.repository.exists_data_by_id(id).await;
         handle_not_found_result::<MediaDTO>(exists_result)
     }
 
@@ -462,7 +462,7 @@ impl MediaService {
                 )));
             }
 
-            let parent = self.get_media_basic(id).await?;
+            let parent = self.get_media_data(id).await?;
             if parent.parent_id.is_some() {
                 return Err(ApiErrors::InvalidParameter(String::from(
                     "Base media cannot be itself a child of another media",
@@ -490,7 +490,7 @@ impl MediaService {
     pub async fn sync_media(&self, id: &Uuid) -> Result<(), ApiErrors> {
         let external = self.get_media_external_primary(id).await?;
         let new_media = self.external_service.get(&external).await?;
-        self.update_media_basic(id, new_media).await
+        self.update_media_data(id, new_media).await
     }
 }
 

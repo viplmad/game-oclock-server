@@ -33,8 +33,8 @@ impl MediaRepository {
         fetch_optional(&self.pool, query).await
     }
 
-    pub async fn find_basic_by_id(&self, id: &Uuid) -> Result<Option<Media>, RepositoryError> {
-        let query = media_query::select_basic_by_id(id);
+    pub async fn find_data_by_id(&self, id: &Uuid) -> Result<Option<Media>, RepositoryError> {
+        let query = media_query::select_data_by_id(id);
         fetch_optional(&self.pool, query).await
     }
 
@@ -65,12 +65,12 @@ impl MediaRepository {
         fetch_optional(&self.pool, query).await
     }
 
-    pub async fn find_basic_by_external(
+    pub async fn find_data_by_external(
         &self,
         source: &str,
         id: &str,
     ) -> Result<Option<Media>, RepositoryError> {
-        let query = media_query::select_basic_by_external_id(source, id);
+        let query = media_query::select_data_by_external_id(source, id);
         fetch_optional(&self.pool, query).await
     }
 
@@ -110,8 +110,8 @@ impl MediaRepository {
         aggregate_all_search(&self.pool, query).await
     }
 
-    pub async fn create_basic(&self, media: &Media) -> Result<(), RepositoryError> {
-        let query = media_query::insert_basic(media);
+    pub async fn create_data(&self, media: &Media) -> Result<(), RepositoryError> {
+        let query = media_query::insert_data(media);
         execute(&self.pool, query).await
     }
 
@@ -125,8 +125,8 @@ impl MediaRepository {
         execute(&self.pool, query).await
     }
 
-    pub async fn update_basic(&self, media: &Media) -> Result<(), RepositoryError> {
-        let query = media_query::update_basic_by_id(media);
+    pub async fn update_data(&self, media: &Media) -> Result<(), RepositoryError> {
+        let query = media_query::update_data_by_id(media);
         execute(&self.pool, query).await
     }
 
@@ -159,8 +159,8 @@ impl MediaRepository {
         execute(&self.pool, query).await
     }
 
-    pub async fn delete_basic_by_id(&self, id: &Uuid) -> Result<(), RepositoryError> {
-        let query = media_query::delete_basic_by_id(id);
+    pub async fn delete_data_by_id(&self, id: &Uuid) -> Result<(), RepositoryError> {
+        let query = media_query::delete_data_by_id(id);
         execute(&self.pool, query).await
     }
 
@@ -178,8 +178,8 @@ impl MediaRepository {
         execute(&self.pool, query).await
     }
 
-    pub async fn exists_basic_by_id(&self, id: &Uuid) -> Result<bool, RepositoryError> {
-        let query = media_query::exists_basic_by_id(id);
+    pub async fn exists_data_by_id(&self, id: &Uuid) -> Result<bool, RepositoryError> {
+        let query = media_query::exists_data_by_id(id);
         exists_some(&self.pool, query).await
     }
 
