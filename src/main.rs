@@ -115,6 +115,7 @@ async fn run(
     let media_with_session_service = MediaWithSessionService::with(media_with_session_repository);
 
     let data_auth_service = web::Data::new(auth_service.clone());
+    let data_user_service = web::Data::new(user_service.clone());
     let data_device_service = web::Data::new(device_service.clone());
     let data_media_service = web::Data::new(media_service.clone());
     let data_location_service = web::Data::new(location_service.clone());
@@ -134,6 +135,7 @@ async fn run(
         App::new()
             // Data injection
             .app_data(data_auth_service.clone())
+            .app_data(data_user_service.clone())
             .app_data(data_device_service.clone())
             .app_data(data_media_service.clone())
             .app_data(data_location_service.clone())
