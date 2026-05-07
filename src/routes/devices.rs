@@ -1,8 +1,8 @@
 use actix_web::{Responder, delete, get, post, put, web};
 
 use crate::models::{
-    AggregateResultDTO, AggregateSearchDTO, DeviceDTO, DevicePageResult, ErrorMessage, ItemId,
-    ListSearchDTO, LoggedUser, NewDeviceDTO, QuicksearchQuery,
+    AggregateResultDTO, AggregateSearchDTO, DeviceDTO, ErrorMessage, ItemId, ListSearchDTO,
+    LoggedUser, NewDeviceDTO, PageResultDTO, QuicksearchQuery,
 };
 use crate::services::{DeviceService, MediaSessionDeviceService};
 
@@ -51,7 +51,7 @@ pub async fn get_device(
     ),
     request_body(content = ListSearchDTO, description = "Query", content_type = "application/json"),
     responses(
-        (status = 200, description = "Devices obtained", body = DevicePageResult, content_type = "application/json"),
+        (status = 200, description = "Devices obtained", body = PageResultDTO<DeviceDTO>, content_type = "application/json"),
         (status = 401, description = "Unauthorized", body = ErrorMessage, content_type = "application/json"),
         (status = 403, description = "Forbidden", body = ErrorMessage, content_type = "application/json"),
         (status = 404, description = "Media not found", body = ErrorMessage, content_type = "application/json"),
@@ -122,7 +122,7 @@ pub async fn aggregate_media_devices(
     ),
     request_body(content = ListSearchDTO, description = "Query", content_type = "application/json"),
     responses(
-        (status = 200, description = "Devices obtained", body = DevicePageResult, content_type = "application/json"),
+        (status = 200, description = "Devices obtained", body = PageResultDTO<DeviceDTO>, content_type = "application/json"),
         (status = 401, description = "Unauthorized", body = ErrorMessage, content_type = "application/json"),
         (status = 403, description = "Forbidden", body = ErrorMessage, content_type = "application/json"),
         (status = 500, description = "Internal server error", body = ErrorMessage, content_type = "application/json"),

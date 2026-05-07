@@ -2,9 +2,8 @@ use actix_web::{Responder, delete, get, post, put, web};
 
 use crate::models::{
     AggregateResultDTO, AggregateSearchDTO, DateTimeDTO, ErrorMessage, ExternalQuicksearchQuery,
-    ItemId, ItemIdAndRelatedId, ListSearchDTO, LoggedUser, MediaAvailablePageResult, MediaDTO,
-    MediaPageResult, MediaTagPageResult, NewMediaDTO, OrderDTO, PotentialMediaDTO,
-    QuicksearchQuery,
+    ItemId, ItemIdAndRelatedId, ListSearchDTO, LoggedUser, MediaAvailableDTO, MediaDTO,
+    MediaTagDTO, NewMediaDTO, OrderDTO, PageResultDTO, PotentialMediaDTO, QuicksearchQuery,
 };
 use crate::services::{
     MediaAvailableService, MediaService, MediaSessionDeviceService, MediaTagService,
@@ -56,7 +55,7 @@ pub async fn get_media(
     ),
     request_body(content = ListSearchDTO, description = "Query", content_type = "application/json"),
     responses(
-        (status = 200, description = "Medias obtained", body = MediaTagPageResult, content_type = "application/json"),
+        (status = 200, description = "Medias obtained", body = PageResultDTO<MediaTagDTO>, content_type = "application/json"),
         (status = 401, description = "Unauthorized", body = ErrorMessage, content_type = "application/json"),
         (status = 403, description = "Forbidden", body = ErrorMessage, content_type = "application/json"),
         (status = 404, description = "Tag not found", body = ErrorMessage, content_type = "application/json"),
@@ -128,7 +127,7 @@ pub async fn aggregate_tag_medias(
     ),
     request_body(content = ListSearchDTO, description = "Query", content_type = "application/json"),
     responses(
-        (status = 200, description = "Medias obtained", body = MediaAvailablePageResult, content_type = "application/json"),
+        (status = 200, description = "Medias obtained", body = PageResultDTO<MediaAvailableDTO>, content_type = "application/json"),
         (status = 401, description = "Unauthorized", body = ErrorMessage, content_type = "application/json"),
         (status = 403, description = "Forbidden", body = ErrorMessage, content_type = "application/json"),
         (status = 404, description = "Location not found", body = ErrorMessage, content_type = "application/json"),
@@ -200,7 +199,7 @@ pub async fn aggregate_location_medias(
     ),
     request_body(content = ListSearchDTO, description = "Query", content_type = "application/json"),
     responses(
-        (status = 200, description = "Medias obtained", body = MediaPageResult, content_type = "application/json"),
+        (status = 200, description = "Medias obtained", body = PageResultDTO<MediaDTO>, content_type = "application/json"),
         (status = 401, description = "Unauthorized", body = ErrorMessage, content_type = "application/json"),
         (status = 403, description = "Forbidden", body = ErrorMessage, content_type = "application/json"),
         (status = 404, description = "Device not found", body = ErrorMessage, content_type = "application/json"),
@@ -271,7 +270,7 @@ pub async fn aggregate_device_medias(
     ),
     request_body(content = ListSearchDTO, description = "Query", content_type = "application/json"),
     responses(
-        (status = 200, description = "Medias obtained", body = MediaPageResult, content_type = "application/json"),
+        (status = 200, description = "Medias obtained", body = PageResultDTO<MediaDTO>, content_type = "application/json"),
         (status = 401, description = "Unauthorized", body = ErrorMessage, content_type = "application/json"),
         (status = 403, description = "Forbidden", body = ErrorMessage, content_type = "application/json"),
         (status = 500, description = "Internal server error", body = ErrorMessage, content_type = "application/json"),

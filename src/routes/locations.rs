@@ -2,8 +2,7 @@ use actix_web::{Responder, delete, get, post, put, web};
 
 use crate::models::{
     AggregateResultDTO, AggregateSearchDTO, ErrorMessage, ItemId, ListSearchDTO,
-    LocationAvailablePageResult, LocationDTO, LocationPageResult, LoggedUser, NewLocationDTO,
-    QuicksearchQuery,
+    LocationAvailableDTO, LocationDTO, LoggedUser, NewLocationDTO, PageResultDTO, QuicksearchQuery,
 };
 use crate::services::{LocationService, MediaAvailableService};
 
@@ -52,7 +51,7 @@ pub async fn get_location(
     ),
     request_body(content = ListSearchDTO, description = "Query", content_type = "application/json"),
     responses(
-        (status = 200, description = "Locations obtained", body = LocationAvailablePageResult, content_type = "application/json"),
+        (status = 200, description = "Locations obtained", body = PageResultDTO<LocationAvailableDTO>, content_type = "application/json"),
         (status = 401, description = "Unauthorized", body = ErrorMessage, content_type = "application/json"),
         (status = 403, description = "Forbidden", body = ErrorMessage, content_type = "application/json"),
         (status = 404, description = "Media not found", body = ErrorMessage, content_type = "application/json"),
@@ -123,7 +122,7 @@ pub async fn aggregate_media_locations(
     ),
     request_body(content = ListSearchDTO, description = "Query", content_type = "application/json"),
     responses(
-        (status = 200, description = "Locations obtained", body = LocationPageResult, content_type = "application/json"),
+        (status = 200, description = "Locations obtained", body = PageResultDTO<LocationDTO>, content_type = "application/json"),
         (status = 401, description = "Unauthorized", body = ErrorMessage, content_type = "application/json"),
         (status = 403, description = "Forbidden", body = ErrorMessage, content_type = "application/json"),
         (status = 500, description = "Internal server error", body = ErrorMessage, content_type = "application/json"),

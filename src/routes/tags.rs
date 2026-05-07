@@ -2,7 +2,7 @@ use actix_web::{Responder, delete, get, post, put, web};
 
 use crate::models::{
     AggregateResultDTO, AggregateSearchDTO, ErrorMessage, ItemId, ListSearchDTO, LoggedUser,
-    NewTagDTO, QuicksearchQuery, TagDTO, TagMediaPageResult, TagPageResult,
+    NewTagDTO, PageResultDTO, QuicksearchQuery, TagDTO, TagMediaDTO,
 };
 use crate::services::{MediaTagService, TagService};
 
@@ -51,7 +51,7 @@ pub async fn get_tag(
     ),
     request_body(content = ListSearchDTO, description = "Query", content_type = "application/json"),
     responses(
-        (status = 200, description = "Tags obtained", body = TagMediaPageResult, content_type = "application/json"),
+        (status = 200, description = "Tags obtained", body = PageResultDTO<TagMediaDTO>, content_type = "application/json"),
         (status = 401, description = "Unauthorized", body = ErrorMessage, content_type = "application/json"),
         (status = 403, description = "Forbidden", body = ErrorMessage, content_type = "application/json"),
         (status = 404, description = "Media not found", body = ErrorMessage, content_type = "application/json"),
@@ -122,7 +122,7 @@ pub async fn aggregate_media_tags(
     ),
     request_body(content = ListSearchDTO, description = "Query", content_type = "application/json"),
     responses(
-        (status = 200, description = "Tags obtained", body = TagPageResult, content_type = "application/json"),
+        (status = 200, description = "Tags obtained", body = PageResultDTO<TagDTO>, content_type = "application/json"),
         (status = 401, description = "Unauthorized", body = ErrorMessage, content_type = "application/json"),
         (status = 403, description = "Forbidden", body = ErrorMessage, content_type = "application/json"),
         (status = 500, description = "Internal server error", body = ErrorMessage, content_type = "application/json"),

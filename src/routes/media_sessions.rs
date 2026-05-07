@@ -2,9 +2,8 @@ use actix_web::{Responder, delete, get, post, web};
 
 use crate::models::{
     AggregateGroupResultKeyDTO, AggregateGroupSearchDTO, AggregateResultDTO, AggregateSearchDTO,
-    DateTimeDTO, ErrorMessage, ItemId, ListSearchDTO, LoggedUser, MediaSessionPageResult,
-    NewSessionDTO, OptionalStartEndDateQuery, QuicksearchQuery, SessionDTO, SessionPageResult,
-    SessionStreakPageResult,
+    DateTimeDTO, ErrorMessage, ItemId, ListSearchDTO, LoggedUser, MediaSessionDTO, NewSessionDTO,
+    OptionalStartEndDateQuery, PageResultDTO, QuicksearchQuery, SessionDTO, SessionStreakDTO,
 };
 use crate::services::{MediaSessionService, MediaWithSessionService};
 
@@ -21,7 +20,7 @@ use super::helpers::{handle_action_result, handle_delete_result, handle_get_resu
     ),
     request_body(content = ListSearchDTO, description = "Query", content_type = "application/json"),
     responses(
-        (status = 200, description = "Sessions obtained", body = SessionPageResult, content_type = "application/json"),
+        (status = 200, description = "Sessions obtained", body = PageResultDTO<SessionDTO>, content_type = "application/json"),
         (status = 401, description = "Unauthorized", body = ErrorMessage, content_type = "application/json"),
         (status = 403, description = "Forbidden", body = ErrorMessage, content_type = "application/json"),
         (status = 404, description = "Media not found", body = ErrorMessage, content_type = "application/json"),
@@ -92,7 +91,7 @@ pub async fn aggregate_media_sessions(
     ),
     request_body(content = ListSearchDTO, description = "Query", content_type = "application/json"),
     responses(
-        (status = 200, description = "Sessions obtained", body = SessionPageResult, content_type = "application/json"),
+        (status = 200, description = "Sessions obtained", body = PageResultDTO<SessionDTO>, content_type = "application/json"),
         (status = 401, description = "Unauthorized", body = ErrorMessage, content_type = "application/json"),
         (status = 403, description = "Forbidden", body = ErrorMessage, content_type = "application/json"),
         (status = 404, description = "Media not found", body = ErrorMessage, content_type = "application/json"),
@@ -221,7 +220,7 @@ pub async fn aggregate_first_sessions(
     ),
     request_body(content = ListSearchDTO, description = "Query", content_type = "application/json"),
     responses(
-        (status = 200, description = "Streaks obtained", body = SessionStreakPageResult, content_type = "application/json"),
+        (status = 200, description = "Streaks obtained", body = PageResultDTO<SessionStreakDTO>, content_type = "application/json"),
         (status = 401, description = "Unauthorized", body = ErrorMessage, content_type = "application/json"),
         (status = 403, description = "Forbidden", body = ErrorMessage, content_type = "application/json"),
         (status = 404, description = "Media not found", body = ErrorMessage, content_type = "application/json"),
@@ -255,7 +254,7 @@ pub async fn get_session_streaks(
     ),
     request_body(content = ListSearchDTO, description = "Query", content_type = "application/json"),
     responses(
-        (status = 200, description = "Medias obtained", body = MediaSessionPageResult, content_type = "application/json"),
+        (status = 200, description = "Medias obtained", body = PageResultDTO<MediaSessionDTO>, content_type = "application/json"),
         (status = 400, description = "Bad request", body = ErrorMessage, content_type = "application/json"),
         (status = 401, description = "Unauthorized", body = ErrorMessage, content_type = "application/json"),
         (status = 403, description = "Forbidden", body = ErrorMessage, content_type = "application/json"),
@@ -296,7 +295,7 @@ pub async fn get_first_session_medias(
     ),
     request_body(content = ListSearchDTO, description = "Query", content_type = "application/json"),
     responses(
-        (status = 200, description = "Medias obtained", body = MediaSessionPageResult, content_type = "application/json"),
+        (status = 200, description = "Medias obtained", body = PageResultDTO<MediaSessionDTO>, content_type = "application/json"),
         (status = 400, description = "Bad request", body = ErrorMessage, content_type = "application/json"),
         (status = 401, description = "Unauthorized", body = ErrorMessage, content_type = "application/json"),
         (status = 403, description = "Forbidden", body = ErrorMessage, content_type = "application/json"),
