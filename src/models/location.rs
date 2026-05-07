@@ -7,7 +7,6 @@ use super::{Merge, ModelInfo};
 
 #[derive(Default, Serialize, ToSchema)]
 pub struct LocationDTO {
-    #[schema(value_type = String)]
     pub id: Uuid,
     pub name: String,
     #[serde(skip_serializing_if = "Option::is_none")]

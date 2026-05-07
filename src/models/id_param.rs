@@ -5,14 +5,11 @@ use uuid::Uuid;
 
 #[derive(Deserialize, IntoParams)]
 #[into_params(names("id"))]
-pub struct ItemId(#[param(value_type = String)] pub Uuid);
+pub struct ItemId(pub Uuid);
 
 #[derive(Deserialize, IntoParams)]
 #[into_params(names("id", "other_id"))]
-pub struct ItemIdAndRelatedId(
-    #[param(value_type = String)] pub Uuid,
-    #[param(value_type = String)] pub Uuid,
-);
+pub struct ItemIdAndRelatedId(pub Uuid, pub Uuid);
 
 #[derive(Deserialize, IntoParams)]
 pub struct OptionalStartEndDateQuery {

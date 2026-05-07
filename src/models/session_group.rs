@@ -5,7 +5,6 @@ use uuid::Uuid;
 
 #[derive(Default, Serialize, ToSchema)]
 pub struct MediaSessionGroupDTO {
-    #[schema(value_type = String)]
     pub id: Uuid,
     pub name: String,
     #[schema(value_type = String, format = DateTime)]

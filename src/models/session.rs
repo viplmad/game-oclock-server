@@ -7,16 +7,13 @@ use super::{DurationDef, MediaStatus, Merge, ModelInfo};
 
 #[derive(Default, Clone, Serialize, Deserialize, ToSchema)]
 pub struct SessionDTO {
-    #[schema(value_type = String)]
     pub media_id: Uuid,
     #[schema(value_type = String, format = DateTime)]
     pub start_datetime: DateTime<FixedOffset>,
     #[schema(value_type = String, format = DateTime)]
     pub end_datetime: DateTime<FixedOffset>,
-    #[schema(value_type = String)]
     #[serde(skip_serializing_if = "Option::is_none")]
     pub device_id: Option<Uuid>,
-    #[schema(value_type = String)]
     pub group_id: Uuid,
     pub started: bool,
     #[serde(skip_serializing_if = "Option::is_none")]
@@ -58,9 +55,7 @@ pub struct NewSessionDTO {
     pub start_datetime: DateTime<FixedOffset>,
     #[schema(value_type = String, format = DateTime)]
     pub end_datetime: DateTime<FixedOffset>,
-    #[schema(value_type = String)]
     pub device_id: Option<Uuid>,
-    #[schema(value_type = String)]
     pub group_id: Option<Uuid>,
     pub started: bool,
     pub finished_status: Option<MediaStatus>,

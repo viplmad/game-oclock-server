@@ -38,7 +38,9 @@ impl From<MediaWithStateWithTag> for MediaTagDTO {
                 },
             },
             tagged: TaggedDTO {
-                order: u32::try_from(media.tag_order).expect("Order is not positive"),
+                order: media
+                    .tag_order
+                    .map(|v| u32::try_from(v).expect("Order is not positive")),
                 added_datetime: media.tag_added_datetime,
                 updated_datetime: media.tag_updated_datetime,
             },
@@ -56,7 +58,9 @@ impl From<TagWithTag> for TagMediaDTO {
                 updated_datetime: tag.updated_datetime,
             },
             tagged: TaggedDTO {
-                order: u32::try_from(tag.tag_order).expect("Order is not positive"),
+                order: tag
+                    .tag_order
+                    .map(|v| u32::try_from(v).expect("Order is not positive")),
                 added_datetime: tag.tag_added_datetime,
                 updated_datetime: tag.tag_updated_datetime,
             },

@@ -7,7 +7,6 @@ use super::{Merge, ModelInfo};
 
 #[derive(Default, Serialize, ToSchema)]
 pub struct UserDTO {
-    #[schema(value_type = String)]
     pub id: Uuid,
     pub username: String,
     pub role: String,

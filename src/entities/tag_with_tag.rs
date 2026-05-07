@@ -9,7 +9,7 @@ pub struct TagWithTag {
     pub name: String,
     pub added_datetime: DateTime<FixedOffset>,
     pub updated_datetime: DateTime<FixedOffset>,
-    pub tag_order: i32,
+    pub tag_order: Option<i32>,
     pub tag_added_datetime: DateTime<FixedOffset>,
     pub tag_updated_datetime: DateTime<FixedOffset>,
 }

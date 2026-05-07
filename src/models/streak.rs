@@ -12,9 +12,7 @@ pub struct SessionStreakDTO {
     #[schema(value_type = String, format = Date)]
     pub end_date: NaiveDate,
     pub days: u32,
-    #[schema(value_type = String)]
     pub media_ids: Vec<Uuid>,
-    #[schema(value_type = String)]
     pub device_ids: Vec<Uuid>,
 }
 

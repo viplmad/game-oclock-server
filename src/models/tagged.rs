@@ -4,7 +4,7 @@ use utoipa::ToSchema;
 
 #[derive(Default, Serialize, ToSchema)]
 pub struct TaggedDTO {
-    pub order: u32,
+    pub order: Option<u32>,
     #[schema(value_type = String, format = DateTime)]
     pub added_datetime: DateTime<FixedOffset>,
     #[schema(value_type = String, format = DateTime)]

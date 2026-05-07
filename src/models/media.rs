@@ -22,7 +22,6 @@ pub struct PotentialMediaDTO {
 
 #[derive(Default, Serialize, ToSchema)]
 pub struct MediaDataDTO {
-    #[schema(value_type = String)]
     pub id: Uuid,
     pub kind: MediaType,
     pub title: String,
@@ -34,7 +33,6 @@ pub struct MediaDataDTO {
     pub series: Vec<String>,
     #[serde(skip_serializing_if = "Option::is_none")]
     pub image_url: Option<String>,
-    #[schema(value_type = String)]
     #[serde(skip_serializing_if = "Option::is_none")]
     pub parent_id: Option<Uuid>,
     #[serde(skip_serializing_if = "Option::is_none")]
@@ -47,7 +45,6 @@ pub struct MediaDataDTO {
 
 #[derive(Default, Serialize, ToSchema)]
 pub struct ExternalMediaDataDTO {
-    #[schema(value_type = String)]
     pub id: Option<Uuid>,
     pub kind: MediaType,
     pub title: String,
@@ -59,7 +56,6 @@ pub struct ExternalMediaDataDTO {
     pub series: Vec<String>,
     #[serde(skip_serializing_if = "Option::is_none")]
     pub image_url: Option<String>,
-    #[schema(value_type = String)]
     #[serde(skip_serializing_if = "Option::is_none")]
     pub parent_id: Option<Uuid>,
     #[serde(skip_serializing_if = "Option::is_none")]
@@ -155,7 +151,6 @@ pub struct NewManualMediaDTO {
     pub genres: Vec<String>,
     pub series: Vec<String>,
     pub image_url: Option<String>,
-    #[schema(value_type = String)]
     pub parent_id: Option<Uuid>,
     pub parent_order: Option<u32>,
 }

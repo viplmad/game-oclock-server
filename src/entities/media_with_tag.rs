@@ -24,7 +24,7 @@ pub struct MediaWithStateWithTag {
     pub state_notes: String,
     pub state_added_datetime: DateTime<FixedOffset>,
     pub state_updated_datetime: DateTime<FixedOffset>,
-    pub tag_order: i32,
+    pub tag_order: Option<i32>,
     pub tag_added_datetime: DateTime<FixedOffset>,
     pub tag_updated_datetime: DateTime<FixedOffset>,
 }

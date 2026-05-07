@@ -7,7 +7,6 @@ use super::{Merge, ModelInfo};
 
 #[derive(Default, Serialize, ToSchema)]
 pub struct TagDTO {
-    #[schema(value_type = String)]
     pub id: Uuid,
     pub name: String,
     #[schema(value_type = String, format = DateTime)]
