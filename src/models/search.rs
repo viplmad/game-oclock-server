@@ -23,56 +23,46 @@ pub struct ListSearchDTO {
 #[derive(Deserialize, ToSchema)]
 pub struct AggregateSearchDTO {
     pub filter: Option<Vec<FilterDTO>>,
-    pub aggr: AggregateMetric,
+    pub aggr: AggregateMetricDTO,
 }
 
 #[derive(Deserialize, ToSchema)]
 pub struct AggregateGroupSearchDTO {
     pub filter: Option<Vec<FilterDTO>>,
-    pub aggr: AggregateMetric,
-    pub group: AggregateGroup,
+    pub aggr: AggregateMetricDTO,
+    pub group: AggregateGroupDTO,
 }
 
 /// Aggregate metric
-#[derive(Deserialize, ToSchema)]
-#[serde(tag = "kind")]
-pub enum AggregateMetric {
-    Count(AggregateCountMetricDTO),
-    Sum(AggregateSumMetricDTO),
+#[derive(Clone, Deserialize, ToSchema)]
+pub enum AggregateMetricType {
+    Count,
+    Sum,
 }
 
 #[derive(Deserialize, ToSchema)]
-pub struct AggregateSumMetricDTO {
+pub struct AggregateMetricDTO {
+    pub kind: AggregateMetricType,
     pub field: String,
     pub default_value: Option<String>,
-}
-
-#[derive(Deserialize, ToSchema)]
-pub struct AggregateCountMetricDTO {
-    pub field: String,
-    pub default_value: Option<String>,
+    // Count
     pub distinct: Option<bool>,
 }
 
 /// Aggregate group
-#[derive(Deserialize, ToSchema)]
-#[serde(tag = "kind")]
-pub enum AggregateGroup {
-    Field(AggregateFieldGroupDTO),
-    DateHistogram(AggregateDateHistogramGroupDTO),
+#[derive(Clone, Deserialize, ToSchema)]
+pub enum AggregateGroupType {
+    Field,
+    DateHistogram,
 }
 
 #[derive(Deserialize, ToSchema)]
-pub struct AggregateFieldGroupDTO {
+pub struct AggregateGroupDTO {
+    pub kind: AggregateGroupType,
     pub field: String,
     pub default_value: Option<String>,
-}
-
-#[derive(Deserialize, ToSchema)]
-pub struct AggregateDateHistogramGroupDTO {
-    pub field: String,
-    pub default_value: Option<String>,
-    pub interval: DateHistogramInterval,
+    // DateHistogram
+    pub interval: Option<DateHistogramInterval>,
 }
 
 #[derive(Clone, Deserialize, ToSchema)]
@@ -86,45 +76,40 @@ pub enum DateHistogramInterval {
 }
 
 /// Filter
-#[derive(Deserialize, ToSchema)]
-#[serde(tag = "operator")]
-pub enum FilterDTO {
-    Eq(SingleValueFilterDTO),
-    NotEq(SingleValueFilterDTO),
-    Gt(SingleValueFilterDTO),
-    Gte(SingleValueFilterDTO),
-    Lt(SingleValueFilterDTO),
-    Lte(SingleValueFilterDTO),
-    In(MultipleValuesFilterDTO),
-    NotIn(MultipleValuesFilterDTO),
-    StartsWith(SingleValueFilterDTO),
-    NotStartsWith(SingleValueFilterDTO),
-    EndsWith(SingleValueFilterDTO),
-    NotEndsWith(SingleValueFilterDTO),
-    Contains(SingleValueFilterDTO),
-    NotContains(SingleValueFilterDTO),
-    Null(NoValueFilterDTO),
-    NotNull(NoValueFilterDTO),
+#[derive(Debug, Clone, Deserialize, ToSchema)]
+pub enum OperatorType {
+    Eq,
+    NotEq,
+    Gt,
+    Gte,
+    Lt,
+    Lte,
+    In,
+    NotIn,
+    StartsWith,
+    NotStartsWith,
+    EndsWith,
+    NotEndsWith,
+    Contains,
+    NotContains,
+    Null,
+    NotNull,
 }
 
 #[derive(Deserialize, ToSchema)]
-pub struct SingleValueFilterDTO {
+pub struct FilterDTO {
+    pub operator: OperatorType,
     pub field: String,
-    pub value: String,
     pub chain_operator: Option<ChainOperatorType>,
+    // Single and Multiple
+    pub value: Option<SearchValue>,
 }
 
-#[derive(Deserialize, ToSchema)]
-pub struct MultipleValuesFilterDTO {
-    pub field: String,
-    pub value: Vec<String>,
-    pub chain_operator: Option<ChainOperatorType>,
-}
-
-#[derive(Deserialize, ToSchema)]
-pub struct NoValueFilterDTO {
-    pub field: String,
-    pub chain_operator: Option<ChainOperatorType>,
+#[derive(Clone, Deserialize, ToSchema)]
+#[serde(untagged)]
+pub enum SearchValue {
+    Single(String),
+    Multiple(Vec<String>),
 }
 
 #[derive(Clone, Deserialize, ToSchema)]

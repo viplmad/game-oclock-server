@@ -4,18 +4,17 @@ use chrono::{DateTime, NaiveDate};
 use sea_query::{BinOper, Order, Value};
 
 use crate::entities::{
-    AggregateCountMetric, AggregateDateHistogramGroup, AggregateFieldGroup,
-    AggregateGroupResultKey, AggregateGroupSearch, AggregateResult, AggregateSearch,
-    AggregateSumMetric, FieldIden, FieldType, Filter, GroupDateHistogramInterval, ListSearch,
-    MultipleValuesFilter, NoValueFilter, SingleValueFilter, Sort, TableIden,
+    AggregateCountMetric, AggregateDateHistogramGroup, AggregateFieldGroup, AggregateGroup,
+    AggregateGroupResultKey, AggregateGroupSearch, AggregateMetric, AggregateResult,
+    AggregateSearch, AggregateSumMetric, FieldIden, FieldType, Filter, GroupDateHistogramInterval,
+    ListSearch, MultipleValuesFilter, NoValueFilter, SingleValueFilter, Sort, TableIden,
 };
 use crate::errors::{MappingError, error_message_builder};
 use crate::models::{
-    AggregateCountMetricDTO, AggregateDateHistogramGroupDTO, AggregateFieldGroupDTO,
-    AggregateGroup, AggregateGroupResultKeyDTO, AggregateGroupSearchDTO, AggregateMetric,
-    AggregateResultDTO, AggregateSearchDTO, AggregateSumMetricDTO, ChainOperatorType,
-    DateHistogramInterval, DurationDef, FilterDTO, ListSearchDTO, MediaStatus,
-    MultipleValuesFilterDTO, NoValueFilterDTO, OrderType, SingleValueFilterDTO, SortDTO,
+    AggregateGroupDTO, AggregateGroupResultKeyDTO, AggregateGroupSearchDTO, AggregateGroupType,
+    AggregateMetricDTO, AggregateMetricType, AggregateResultDTO, AggregateSearchDTO,
+    ChainOperatorType, DateHistogramInterval, DurationDef, FilterDTO, ListSearchDTO, MediaStatus,
+    OperatorType, OrderType, SearchValue, SortDTO,
 };
 
 impl From<DateHistogramInterval> for GroupDateHistogramInterval {
@@ -56,27 +55,9 @@ where
     type Error = MappingError;
 
     fn try_from(search: ListSearchDTO) -> Result<Self, Self::Error> {
-        let filter_result = search.filter.map(|filters| {
-            filters
-                .into_iter()
-                .map(Filter::try_from)
-                .collect::<Result<Vec<Filter<I>>, MappingError>>()
-        });
-        let filter = match filter_result {
-            Some(res) => Some(res?),
-            None => None,
-        };
+        let filter = convert_filters(search.filter)?;
 
-        let sort_result = search.sort.map(|sorts| {
-            sorts
-                .into_iter()
-                .map(Sort::try_from)
-                .collect::<Result<Vec<Sort<I>>, MappingError>>()
-        });
-        let sort = match sort_result {
-            Some(res) => Some(res?),
-            None => None,
-        };
+        let sort = convert_sorts(search.sort)?;
 
         Ok(Self {
             filter,
@@ -94,18 +75,9 @@ where
     type Error = MappingError;
 
     fn try_from(search: AggregateSearchDTO) -> Result<Self, Self::Error> {
-        let filter_result = search.filter.map(|filters| {
-            filters
-                .into_iter()
-                .map(Filter::try_from)
-                .collect::<Result<Vec<Filter<I>>, MappingError>>()
-        });
-        let filter = match filter_result {
-            Some(res) => Some(res?),
-            None => None,
-        };
+        let filter = convert_filters(search.filter)?;
 
-        let aggr = convert_aggr(search.aggr)?;
+        let aggr = AggregateMetric::try_from(search.aggr)?;
 
         Ok(Self { filter, aggr })
     }
@@ -118,20 +90,11 @@ where
     type Error = MappingError;
 
     fn try_from(search: AggregateGroupSearchDTO) -> Result<Self, Self::Error> {
-        let filter_result = search.filter.map(|filters| {
-            filters
-                .into_iter()
-                .map(Filter::try_from)
-                .collect::<Result<Vec<Filter<I>>, MappingError>>()
-        });
-        let filter = match filter_result {
-            Some(res) => Some(res?),
-            None => None,
-        };
+        let filter = convert_filters(search.filter)?;
 
-        let aggr = convert_aggr(search.aggr)?;
+        let aggr = AggregateMetric::try_from(search.aggr)?;
 
-        let group = convert_group(search.group)?;
+        let group = AggregateGroup::try_from(search.group)?;
 
         Ok(Self {
             filter,
@@ -141,36 +104,74 @@ where
     }
 }
 
-fn convert_aggr<I: TableIden>(
-    aggr: AggregateMetric,
-) -> Result<crate::entities::AggregateMetric<I>, MappingError>
+fn convert_filters<I: TableIden>(
+    filter_option: Option<Vec<FilterDTO>>,
+) -> Result<Option<Vec<Filter<I>>>, MappingError>
 where
     FieldIden<I>: FromStr,
 {
-    Ok(match aggr {
-        AggregateMetric::Count(c) => {
-            crate::entities::AggregateMetric::Count(AggregateCountMetric::try_from(c)?)
-        }
-        AggregateMetric::Sum(s) => {
-            crate::entities::AggregateMetric::Sum(AggregateSumMetric::try_from(s)?)
-        }
+    let filter_result = filter_option.map(|filters| {
+        filters
+            .into_iter()
+            .map(Filter::try_from)
+            .collect::<Result<Vec<Filter<I>>, MappingError>>()
+    });
+    Ok(match filter_result {
+        Some(res) => Some(res?),
+        None => None,
     })
 }
 
-fn convert_group<I: TableIden>(
-    group: AggregateGroup,
-) -> Result<crate::entities::AggregateGroup<I>, MappingError>
+fn convert_sorts<I: TableIden>(
+    optional_sort: Option<Vec<SortDTO>>,
+) -> Result<Option<Vec<Sort<I>>>, MappingError>
 where
     FieldIden<I>: FromStr,
 {
-    Ok(match group {
-        AggregateGroup::Field(f) => {
-            crate::entities::AggregateGroup::Field(AggregateFieldGroup::try_from(f)?)
-        }
-        AggregateGroup::DateHistogram(d) => crate::entities::AggregateGroup::DateHistogram(
-            AggregateDateHistogramGroup::try_from(d)?,
-        ),
+    let sort_result = optional_sort.map(|sorts| {
+        sorts
+            .into_iter()
+            .map(Sort::try_from)
+            .collect::<Result<Vec<Sort<I>>, MappingError>>()
+    });
+    Ok(match sort_result {
+        Some(res) => Some(res?),
+        None => None,
     })
+}
+
+impl<I: TableIden> TryFrom<AggregateMetricDTO> for AggregateMetric<I>
+where
+    FieldIden<I>: FromStr,
+{
+    type Error = MappingError;
+
+    fn try_from(aggr: AggregateMetricDTO) -> Result<Self, Self::Error> {
+        Ok(match aggr.kind {
+            AggregateMetricType::Count => {
+                AggregateMetric::Count(AggregateCountMetric::try_from(aggr)?)
+            }
+            AggregateMetricType::Sum => AggregateMetric::Sum(AggregateSumMetric::try_from(aggr)?),
+        })
+    }
+}
+
+impl<I: TableIden> TryFrom<AggregateGroupDTO> for AggregateGroup<I>
+where
+    FieldIden<I>: FromStr,
+{
+    type Error = MappingError;
+
+    fn try_from(group: AggregateGroupDTO) -> Result<Self, Self::Error> {
+        Ok(match group.kind {
+            AggregateGroupType::Field => {
+                AggregateGroup::Field(AggregateFieldGroup::try_from(group)?)
+            }
+            AggregateGroupType::DateHistogram => {
+                AggregateGroup::DateHistogram(AggregateDateHistogramGroup::try_from(group)?)
+            }
+        })
+    }
 }
 
 impl From<AggregateResult> for AggregateResultDTO {
@@ -190,13 +191,13 @@ impl From<AggregateGroupResultKey> for AggregateGroupResultKeyDTO {
     }
 }
 
-impl<I: TableIden> TryFrom<AggregateCountMetricDTO> for AggregateCountMetric<I>
+impl<I: TableIden> TryFrom<AggregateMetricDTO> for AggregateCountMetric<I>
 where
     FieldIden<I>: FromStr,
 {
     type Error = MappingError;
 
-    fn try_from(aggr: AggregateCountMetricDTO) -> Result<Self, Self::Error> {
+    fn try_from(aggr: AggregateMetricDTO) -> Result<Self, Self::Error> {
         let field = FieldIden::<I>::from_str(&aggr.field).map_err(|_| MappingError(aggr.field))?;
 
         Ok(Self::new(
@@ -207,26 +208,26 @@ where
     }
 }
 
-impl<I: TableIden> TryFrom<AggregateSumMetricDTO> for AggregateSumMetric<I>
+impl<I: TableIden> TryFrom<AggregateMetricDTO> for AggregateSumMetric<I>
 where
     FieldIden<I>: FromStr,
 {
     type Error = MappingError;
 
-    fn try_from(aggr: AggregateSumMetricDTO) -> Result<Self, Self::Error> {
+    fn try_from(aggr: AggregateMetricDTO) -> Result<Self, Self::Error> {
         let field = FieldIden::<I>::from_str(&aggr.field).map_err(|_| MappingError(aggr.field))?;
 
         Ok(Self::new(field, aggr.default_value))
     }
 }
 
-impl<I: TableIden> TryFrom<AggregateFieldGroupDTO> for AggregateFieldGroup<I>
+impl<I: TableIden> TryFrom<AggregateGroupDTO> for AggregateFieldGroup<I>
 where
     FieldIden<I>: FromStr,
 {
     type Error = MappingError;
 
-    fn try_from(group: AggregateFieldGroupDTO) -> Result<Self, Self::Error> {
+    fn try_from(group: AggregateGroupDTO) -> Result<Self, Self::Error> {
         let field =
             FieldIden::<I>::from_str(&group.field).map_err(|_| MappingError(group.field))?;
 
@@ -234,20 +235,25 @@ where
     }
 }
 
-impl<I: TableIden> TryFrom<AggregateDateHistogramGroupDTO> for AggregateDateHistogramGroup<I>
+impl<I: TableIden> TryFrom<AggregateGroupDTO> for AggregateDateHistogramGroup<I>
 where
     FieldIden<I>: FromStr,
 {
     type Error = MappingError;
 
-    fn try_from(group: AggregateDateHistogramGroupDTO) -> Result<Self, Self::Error> {
+    fn try_from(group: AggregateGroupDTO) -> Result<Self, Self::Error> {
         let field =
             FieldIden::<I>::from_str(&group.field).map_err(|_| MappingError(group.field))?;
 
         Ok(Self::new(
             field,
             group.default_value,
-            GroupDateHistogramInterval::from(group.interval),
+            match group.interval {
+                Some(v) => Ok(GroupDateHistogramInterval::from(v)),
+                None => Err(MappingError(error_message_builder::missing_body_field(
+                    "date_histogram",
+                ))),
+            }?,
         ))
     }
 }
@@ -259,40 +265,55 @@ where
     type Error = MappingError;
 
     fn try_from(filter: FilterDTO) -> Result<Self, Self::Error> {
-        Ok(match filter {
-            FilterDTO::Eq(f) => Filter::Equal(SingleValueFilter::try_from(f)?),
-            FilterDTO::NotEq(f) => Filter::NotEqual(SingleValueFilter::try_from(f)?),
-            FilterDTO::Gt(f) => Filter::GreaterThan(SingleValueFilter::try_from(f)?),
-            FilterDTO::Gte(f) => Filter::GreaterThanOrEqual(SingleValueFilter::try_from(f)?),
-            FilterDTO::Lt(f) => Filter::SmallerThan(SingleValueFilter::try_from(f)?),
-            FilterDTO::Lte(f) => Filter::SmallerThanOrEqual(SingleValueFilter::try_from(f)?),
-            FilterDTO::In(f) => Filter::In(MultipleValuesFilter::try_from(f)?),
-            FilterDTO::NotIn(f) => Filter::NotIn(MultipleValuesFilter::try_from(f)?),
-            FilterDTO::StartsWith(f) => Filter::StartsWith(SingleValueFilter::try_from(f)?),
-            FilterDTO::NotStartsWith(f) => Filter::NotStartsWith(SingleValueFilter::try_from(f)?),
-            FilterDTO::EndsWith(f) => Filter::EndsWith(SingleValueFilter::try_from(f)?),
-            FilterDTO::NotEndsWith(f) => Filter::NotEndsWith(SingleValueFilter::try_from(f)?),
-            FilterDTO::Contains(f) => Filter::Contains(SingleValueFilter::try_from(f)?),
-            FilterDTO::NotContains(f) => Filter::NotContains(SingleValueFilter::try_from(f)?),
-            FilterDTO::Null(f) => Filter::NotNull(NoValueFilter::try_from(f)?),
-            FilterDTO::NotNull(f) => Filter::NotNull(NoValueFilter::try_from(f)?),
+        Ok(match filter.operator {
+            OperatorType::Eq => Filter::Equal(SingleValueFilter::try_from(filter)?),
+            OperatorType::NotEq => Filter::NotEqual(SingleValueFilter::try_from(filter)?),
+            OperatorType::Gt => Filter::GreaterThan(SingleValueFilter::try_from(filter)?),
+            OperatorType::Gte => Filter::GreaterThanOrEqual(SingleValueFilter::try_from(filter)?),
+            OperatorType::Lt => Filter::SmallerThan(SingleValueFilter::try_from(filter)?),
+            OperatorType::Lte => Filter::SmallerThanOrEqual(SingleValueFilter::try_from(filter)?),
+            OperatorType::In => Filter::In(MultipleValuesFilter::try_from(filter)?),
+            OperatorType::NotIn => Filter::NotIn(MultipleValuesFilter::try_from(filter)?),
+            OperatorType::StartsWith => Filter::StartsWith(SingleValueFilter::try_from(filter)?),
+            OperatorType::NotStartsWith => {
+                Filter::NotStartsWith(SingleValueFilter::try_from(filter)?)
+            }
+            OperatorType::EndsWith => Filter::EndsWith(SingleValueFilter::try_from(filter)?),
+            OperatorType::NotEndsWith => Filter::NotEndsWith(SingleValueFilter::try_from(filter)?),
+            OperatorType::Contains => Filter::Contains(SingleValueFilter::try_from(filter)?),
+            OperatorType::NotContains => Filter::NotContains(SingleValueFilter::try_from(filter)?),
+            OperatorType::Null => Filter::NotNull(NoValueFilter::try_from(filter)?),
+            OperatorType::NotNull => Filter::NotNull(NoValueFilter::try_from(filter)?),
         })
     }
 }
 
-impl<I: TableIden> TryFrom<SingleValueFilterDTO> for SingleValueFilter<I>
+impl<I: TableIden> TryFrom<FilterDTO> for SingleValueFilter<I>
 where
     FieldIden<I>: FromStr,
 {
     type Error = MappingError;
 
-    fn try_from(filter: SingleValueFilterDTO) -> Result<Self, Self::Error> {
+    fn try_from(filter: FilterDTO) -> Result<Self, Self::Error> {
         let field =
             FieldIden::<I>::from_str(&filter.field).map_err(|_| MappingError(filter.field))?;
 
         Ok(Self::new(
             field,
-            filter.value,
+            match filter.value {
+                Some(sv) => match sv {
+                    SearchValue::Single(v) => Ok(v),
+                    _ => {
+                        let operator = filter.operator;
+                        Err(MappingError(format!(
+                            "Field search_value must be a single value for operator \"{operator:?}\"."
+                        )))
+                    }
+                },
+                None => Err(MappingError(error_message_builder::missing_body_field(
+                    "value",
+                ))),
+            }?,
             match filter.chain_operator {
                 Some(chain_op) => BinOper::from(chain_op),
                 None => BinOper::And,
@@ -301,19 +322,32 @@ where
     }
 }
 
-impl<I: TableIden> TryFrom<MultipleValuesFilterDTO> for MultipleValuesFilter<I>
+impl<I: TableIden> TryFrom<FilterDTO> for MultipleValuesFilter<I>
 where
     FieldIden<I>: FromStr,
 {
     type Error = MappingError;
 
-    fn try_from(filter: MultipleValuesFilterDTO) -> Result<Self, Self::Error> {
+    fn try_from(filter: FilterDTO) -> Result<Self, Self::Error> {
         let field =
             FieldIden::<I>::from_str(&filter.field).map_err(|_| MappingError(filter.field))?;
 
         Ok(Self::new(
             field,
-            filter.value,
+            match filter.value {
+                Some(sv) => match sv {
+                    SearchValue::Multiple(v) => Ok(v),
+                    _ => {
+                        let operator = filter.operator;
+                        Err(MappingError(format!(
+                            "Field search_value must be a list for operator \"{operator:?}\"."
+                        )))
+                    }
+                },
+                None => Err(MappingError(error_message_builder::missing_body_field(
+                    "value",
+                ))),
+            }?,
             match filter.chain_operator {
                 Some(chain_op) => BinOper::from(chain_op),
                 None => BinOper::And,
@@ -322,13 +356,13 @@ where
     }
 }
 
-impl<I: TableIden> TryFrom<NoValueFilterDTO> for NoValueFilter<I>
+impl<I: TableIden> TryFrom<FilterDTO> for NoValueFilter<I>
 where
     FieldIden<I>: FromStr,
 {
     type Error = MappingError;
 
-    fn try_from(filter: NoValueFilterDTO) -> Result<Self, Self::Error> {
+    fn try_from(filter: FilterDTO) -> Result<Self, Self::Error> {
         let field =
             FieldIden::<I>::from_str(&filter.field).map_err(|_| MappingError(filter.field))?;
 
