@@ -2,8 +2,8 @@ use sea_query::{BinOper, Cond, Expr, ExprTrait, Func, LikeExpr, SelectStatement,
 
 use crate::entities::{
     AggregateCountMetric, AggregateDateHistogramGroup, AggregateFieldGroup, AggregateGroup,
-    AggregateGroupQuery, AggregateGroupSearch, AggregateMetric, AggregateQuery, AggregateSearch,
-    AggregateSumMetric, AggregateType, ColIden, FieldIden, FieldType, Filter,
+    AggregateGroupQuery, AggregateGroupSearch, AggregateGroupType, AggregateMetric, AggregateQuery,
+    AggregateSearch, AggregateSumMetric, AggregateType, ColIden, FieldIden, FieldType, Filter,
     GroupDateHistogramInterval, ListSearch, MultipleValuesFilter, SearchQuery, SingleValueFilter,
     Sort, TableIden,
 };
@@ -76,7 +76,8 @@ pub fn apply_aggregate_group_search<I: 'static + TableIden + Clone + Copy>(
 ) -> Result<AggregateGroupQuery, SearchErrors> {
     apply_filter(&mut select, search.filter).map_err(SearchErrors::Mapping)?;
 
-    apply_aggregate_group(&mut select, search.group).map_err(SearchErrors::Mapping)?;
+    let (group_kind, group_field_kind) =
+        apply_aggregate_group(&mut select, search.group).map_err(SearchErrors::Mapping)?;
 
     let (kind, field_kind) =
         apply_aggregate_metric(&mut select, search.aggr).map_err(SearchErrors::Mapping)?;
@@ -85,6 +86,8 @@ pub fn apply_aggregate_group_search<I: 'static + TableIden + Clone + Copy>(
         query: select,
         kind,
         field_kind,
+        group_kind,
+        group_field_kind,
     })
 }
 
@@ -314,11 +317,15 @@ fn apply_aggregate_sum_metric<I: 'static + TableIden + Clone + Copy>(
 fn apply_aggregate_group<I: 'static + TableIden + Clone + Copy>(
     select: &mut SelectStatement,
     aggr: AggregateGroup<I>,
-) -> Result<(), MappingError> {
+) -> Result<(AggregateGroupType, FieldType), MappingError> {
+    let kind = aggr.kind();
+    let field_kind = aggr.field_kind();
     match aggr {
         AggregateGroup::Field(f) => apply_aggregate_field_group(select, f),
         AggregateGroup::DateHistogram(d) => apply_aggregate_date_histogram_group(select, d),
-    }
+    }?;
+
+    Ok((kind, field_kind))
 }
 
 fn apply_aggregate_field_group<I: 'static + TableIden + Clone + Copy>(
@@ -328,8 +335,12 @@ fn apply_aggregate_field_group<I: 'static + TableIden + Clone + Copy>(
     let field_kind = aggr.field.kind();
     let col = build_field_expr(aggr.field);
 
-    let expr = coalesce_default(col, aggr.default_value, field_kind)?;
-    let expr = expr.cast_as("BIGINT");
+    let expr = coalesce_default(col, aggr.default_value, field_kind.clone())?;
+    let expr = if field_kind == FieldType::String {
+        expr.cast_as("TEXT")
+    } else {
+        expr.cast_as("BIGINT")
+    };
 
     select.expr(expr.clone());
     select.add_group_by([expr]);

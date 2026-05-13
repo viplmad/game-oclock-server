@@ -18,6 +18,8 @@ pub struct AggregateGroupQuery {
     pub query: SelectStatement,
     pub kind: AggregateType,
     pub field_kind: FieldType,
+    pub group_kind: AggregateGroupType,
+    pub group_field_kind: FieldType,
 }
 
 pub struct ListSearch<T: TableIden> {
@@ -101,11 +103,13 @@ pub enum AggregateGroup<T: TableIden> {
 }
 
 pub struct AggregateFieldGroup<T: TableIden> {
+    pub kind: AggregateGroupType,
     pub field: FieldIden<T>,
     pub default_value: Option<String>,
 }
 
 pub struct AggregateDateHistogramGroup<T: TableIden> {
+    pub kind: AggregateGroupType,
     pub field: FieldIden<T>,
     pub default_value: Option<String>,
     pub interval: GroupDateHistogramInterval,
@@ -131,11 +135,26 @@ impl<T: TableIden> AggregateGroup<T> {
             _ => None,
         }
     }
+
+    pub fn kind(&self) -> AggregateGroupType {
+        match self {
+            AggregateGroup::Field(f) => f.kind.clone(),
+            AggregateGroup::DateHistogram(f) => f.kind.clone(),
+        }
+    }
+
+    pub fn field_kind(&self) -> FieldType {
+        match self {
+            AggregateGroup::Field(f) => f.field.kind(),
+            AggregateGroup::DateHistogram(f) => f.field.kind(),
+        }
+    }
 }
 
 impl<T: TableIden> AggregateFieldGroup<T> {
     pub fn new(field: FieldIden<T>, default_value: Option<String>) -> Self {
         Self {
+            kind: AggregateGroupType::Field,
             field,
             default_value,
         }
@@ -149,6 +168,7 @@ impl<T: TableIden> AggregateDateHistogramGroup<T> {
         interval: GroupDateHistogramInterval,
     ) -> Self {
         Self {
+            kind: AggregateGroupType::DateHistogram,
             field,
             default_value,
             interval,
@@ -323,4 +343,10 @@ pub enum FieldType {
 pub enum AggregateType {
     Count,
     Sum,
+}
+
+#[derive(Clone, PartialEq)]
+pub enum AggregateGroupType {
+    Field,
+    DateHistogram,
 }

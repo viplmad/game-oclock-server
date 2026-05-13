@@ -187,6 +187,7 @@ impl From<AggregateGroupResultKey> for AggregateGroupResultKeyDTO {
     fn from(res: AggregateGroupResultKey) -> Self {
         match res {
             AggregateGroupResultKey::Integer(i) => AggregateGroupResultKeyDTO::Integer(i),
+            AggregateGroupResultKey::String(s) => AggregateGroupResultKeyDTO::String(s),
         }
     }
 }

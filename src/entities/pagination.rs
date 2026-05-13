@@ -14,4 +14,5 @@ pub enum AggregateResult {
 #[derive(Eq, PartialEq, Hash)]
 pub enum AggregateGroupResultKey {
     Integer(i64),
+    String(String),
 }

@@ -43,6 +43,7 @@ pub enum AggregateResultDTO {
 #[derive(Eq, PartialEq, Hash, ToSchema)]
 pub enum AggregateGroupResultKeyDTO {
     Integer(i64),
+    String(String),
 }
 
 impl Serialize for AggregateResultDTO {
@@ -64,6 +65,7 @@ impl Serialize for AggregateGroupResultKeyDTO {
     {
         match &self {
             AggregateGroupResultKeyDTO::Integer(i) => i.serialize(serializer),
+            AggregateGroupResultKeyDTO::String(s) => s.serialize(serializer),
         }
     }
 }

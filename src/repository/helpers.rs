@@ -5,8 +5,8 @@ use sqlx::{Postgres, postgres::types::PgInterval};
 use uuid::Uuid;
 
 use crate::entities::{
-    AggregateGroupQuery, AggregateGroupResultKey, AggregateQuery, AggregateResult, AggregateType,
-    FieldType, PageResult, SearchQuery,
+    AggregateGroupQuery, AggregateGroupResultKey, AggregateGroupType, AggregateQuery,
+    AggregateResult, AggregateType, FieldType, PageResult, SearchQuery,
 };
 use crate::errors::{RepositoryError, SearchErrors};
 
@@ -157,6 +157,23 @@ pub(super) async fn aggregate_group_search<'c, X>(
 where
     X: sqlx::Executor<'c, Database = Postgres>,
 {
+    if query.group_kind == AggregateGroupType::Field && query.group_field_kind == FieldType::String
+    {
+        return fetch_all(executor, query.query)
+            .await
+            .map(|list: Vec<(String, PgInterval)>| {
+                list.into_iter()
+                    .map(|tuple| {
+                        (
+                            AggregateGroupResultKey::String(tuple.0),
+                            AggregateResult::Duration(tuple.1),
+                        )
+                    })
+                    .collect()
+            })
+            .map_err(SearchErrors::Repository);
+    }
+
     if query.kind == AggregateType::Sum && query.field_kind == FieldType::Interval {
         return fetch_all(executor, query.query)
             .await
