@@ -11,6 +11,11 @@ pub enum AggregateResult {
     Duration(PgInterval),
 }
 
+pub struct AggregateGroupResult {
+    pub key: AggregateGroupResultKey,
+    pub value: AggregateResult,
+}
+
 #[derive(Eq, PartialEq, Hash)]
 pub enum AggregateGroupResultKey {
     Integer(i64),

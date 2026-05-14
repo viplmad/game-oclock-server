@@ -139,6 +139,7 @@ pub fn get_openapi() -> utoipa::openapi::OpenApi {
             models::AggregateGroupDTO,
             models::AggregateGroupType,
             models::AggregateResultDTO,
+            models::AggregateGroupResultDTO,
             models::FilterDTO,
             models::OperatorType,
             models::SearchValue,

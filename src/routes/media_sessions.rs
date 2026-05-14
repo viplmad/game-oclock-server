@@ -1,7 +1,7 @@
 use actix_web::{Responder, delete, get, post, web};
 
 use crate::models::{
-    AggregateGroupResultKeyDTO, AggregateGroupSearchDTO, AggregateResultDTO, AggregateSearchDTO,
+    AggregateGroupResultDTO, AggregateGroupSearchDTO, AggregateResultDTO, AggregateSearchDTO,
     DateTimeDTO, ErrorMessage, ItemId, ListSearchDTO, LoggedUser, MediaSessionDTO, NewSessionDTO,
     OptionalStartEndDateQuery, PageResultDTO, QuicksearchQuery, SessionDTO, SessionStreakDTO,
 };
@@ -156,7 +156,7 @@ pub async fn aggregate_sessions(
     ),
     request_body(content = AggregateGroupSearchDTO, description = "Query", content_type = "application/json"),
     responses(
-        (status = 200, description = "Sessions aggregate group obtained", body = HashMap<AggregateGroupResultKeyDTO, AggregateResultDTO>, content_type = "application/json"),
+        (status = 200, description = "Sessions aggregate group obtained", body = [AggregateGroupResultDTO], content_type = "application/json"),
         (status = 401, description = "Unauthorized", body = ErrorMessage, content_type = "application/json"),
         (status = 403, description = "Forbidden", body = ErrorMessage, content_type = "application/json"),
         (status = 500, description = "Internal server error", body = ErrorMessage, content_type = "application/json"),

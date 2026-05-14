@@ -1,14 +1,11 @@
-use std::collections::HashMap;
-
 use chrono::{DateTime, FixedOffset};
 use sqlx::PgPool;
 use uuid::Uuid;
 
 use super::query::media_session_query;
 use crate::entities::{
-    AggregateGroupResultKey, AggregateResult, MediaSession, MediaSessionStreak,
-    MediaSessionWithTime, PageResult, SessionAggregateGroupSearch, SessionAggregateSearch,
-    SessionListSearch,
+    AggregateGroupResult, AggregateResult, MediaSession, MediaSessionStreak, MediaSessionWithTime,
+    PageResult, SessionAggregateGroupSearch, SessionAggregateSearch, SessionListSearch,
 };
 use crate::errors::{RepositoryError, SearchErrors};
 
@@ -83,7 +80,7 @@ impl MediaSessionRepository {
         &self,
         user_id: &Uuid,
         search: SessionAggregateGroupSearch,
-    ) -> Result<HashMap<AggregateGroupResultKey, AggregateResult>, SearchErrors> {
+    ) -> Result<Vec<AggregateGroupResult>, SearchErrors> {
         let query = media_session_query::aggregate_group_with_search(user_id, search)?;
         aggregate_group_search(&self.pool, query).await
     }

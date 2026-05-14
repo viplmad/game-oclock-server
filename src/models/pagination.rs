@@ -40,6 +40,12 @@ pub enum AggregateResultDTO {
     Duration(DurationDef),
 }
 
+#[derive(Serialize, ToSchema)]
+pub struct AggregateGroupResultDTO {
+    pub key: AggregateGroupResultKeyDTO,
+    pub value: AggregateResultDTO,
+}
+
 #[derive(Eq, PartialEq, Hash, ToSchema)]
 pub enum AggregateGroupResultKeyDTO {
     Integer(i64),

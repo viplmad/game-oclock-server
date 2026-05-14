@@ -5,16 +5,17 @@ use sea_query::{BinOper, Order, Value};
 
 use crate::entities::{
     AggregateCountMetric, AggregateDateHistogramGroup, AggregateFieldGroup, AggregateGroup,
-    AggregateGroupResultKey, AggregateGroupSearch, AggregateMetric, AggregateResult,
-    AggregateSearch, AggregateSumMetric, FieldIden, FieldType, Filter, GroupDateHistogramInterval,
-    ListSearch, MultipleValuesFilter, NoValueFilter, SingleValueFilter, Sort, TableIden,
+    AggregateGroupResultKey, AggregateGroupSearch, AggregateGroupSort, AggregateMetric,
+    AggregateResult, AggregateSearch, AggregateSumMetric, FieldIden, FieldType, Filter,
+    GroupDateHistogramInterval, GroupSortType, ListSearch, MultipleValuesFilter, NoValueFilter,
+    SingleValueFilter, Sort, TableIden,
 };
 use crate::errors::{MappingError, error_message_builder};
 use crate::models::{
-    AggregateGroupDTO, AggregateGroupResultKeyDTO, AggregateGroupSearchDTO, AggregateGroupType,
-    AggregateMetricDTO, AggregateMetricType, AggregateResultDTO, AggregateSearchDTO,
-    ChainOperatorType, DateHistogramInterval, DurationDef, FilterDTO, ListSearchDTO, MediaStatus,
-    OperatorType, OrderType, SearchValue, SortDTO,
+    AggregateGroupDTO, AggregateGroupResultKeyDTO, AggregateGroupSearchDTO, AggregateGroupSortDTO,
+    AggregateGroupSortType, AggregateGroupType, AggregateMetricDTO, AggregateMetricType,
+    AggregateResultDTO, AggregateSearchDTO, ChainOperatorType, DateHistogramInterval, DurationDef,
+    FilterDTO, ListSearchDTO, MediaStatus, OperatorType, OrderType, SearchValue, SortDTO,
 };
 
 impl From<DateHistogramInterval> for GroupDateHistogramInterval {
@@ -26,6 +27,15 @@ impl From<DateHistogramInterval> for GroupDateHistogramInterval {
             DateHistogramInterval::Day => GroupDateHistogramInterval::Day,
             DateHistogramInterval::Hour => GroupDateHistogramInterval::Hour,
             DateHistogramInterval::Minute => GroupDateHistogramInterval::Minute,
+        }
+    }
+}
+
+impl From<AggregateGroupSortType> for GroupSortType {
+    fn from(value: AggregateGroupSortType) -> Self {
+        match value {
+            AggregateGroupSortType::Group => GroupSortType::Group,
+            AggregateGroupSortType::Metric => GroupSortType::Metric,
         }
     }
 }
@@ -92,14 +102,18 @@ where
     fn try_from(search: AggregateGroupSearchDTO) -> Result<Self, Self::Error> {
         let filter = convert_filters(search.filter)?;
 
+        let sort = search.sort.map(AggregateGroupSort::from);
+
         let aggr = AggregateMetric::try_from(search.aggr)?;
 
         let group = AggregateGroup::try_from(search.group)?;
 
         Ok(Self {
             filter,
+            sort,
             aggr,
             group,
+            size: search.size,
         })
     }
 }
@@ -138,6 +152,14 @@ where
         Some(res) => Some(res?),
         None => None,
     })
+}
+
+impl From<AggregateGroupSortDTO> for AggregateGroupSort {
+    fn from(sort: AggregateGroupSortDTO) -> Self {
+        let field = GroupSortType::from(sort.field);
+
+        Self::new(field, Order::from(sort.order))
+    }
 }
 
 impl<I: TableIden> TryFrom<AggregateMetricDTO> for AggregateMetric<I>

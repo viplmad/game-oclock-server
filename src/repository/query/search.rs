@@ -1,11 +1,13 @@
-use sea_query::{BinOper, Cond, Expr, ExprTrait, Func, LikeExpr, SelectStatement, Value};
+use sea_query::{
+    BinOper, Cond, Expr, ExprTrait, Func, LikeExpr, SelectStatement, SimpleExpr, Value,
+};
 
 use crate::entities::{
     AggregateCountMetric, AggregateDateHistogramGroup, AggregateFieldGroup, AggregateGroup,
-    AggregateGroupQuery, AggregateGroupSearch, AggregateGroupType, AggregateMetric, AggregateQuery,
-    AggregateSearch, AggregateSumMetric, AggregateType, ColIden, FieldIden, FieldType, Filter,
-    GroupDateHistogramInterval, ListSearch, MultipleValuesFilter, SearchQuery, SingleValueFilter,
-    Sort, TableIden,
+    AggregateGroupQuery, AggregateGroupSearch, AggregateGroupSort, AggregateGroupType,
+    AggregateMetric, AggregateQuery, AggregateSearch, AggregateSumMetric, AggregateType, ColIden,
+    FieldIden, FieldType, Filter, GroupDateHistogramInterval, GroupSortType, ListSearch,
+    MultipleValuesFilter, SearchQuery, SingleValueFilter, Sort, TableIden,
 };
 use crate::errors::{MappingError, SearchErrors};
 use crate::mappers::convert_value;
@@ -60,7 +62,7 @@ pub fn apply_aggregate_search<I: 'static + TableIden + Clone + Copy>(
 ) -> Result<AggregateQuery, SearchErrors> {
     apply_filter(&mut select, search.filter).map_err(SearchErrors::Mapping)?;
 
-    let (kind, field_kind) =
+    let (kind, field_kind, _) =
         apply_aggregate_metric(&mut select, search.aggr).map_err(SearchErrors::Mapping)?;
 
     Ok(AggregateQuery {
@@ -76,11 +78,15 @@ pub fn apply_aggregate_group_search<I: 'static + TableIden + Clone + Copy>(
 ) -> Result<AggregateGroupQuery, SearchErrors> {
     apply_filter(&mut select, search.filter).map_err(SearchErrors::Mapping)?;
 
-    let (group_kind, group_field_kind) =
+    let (_, size) = apply_pagination(&mut select, None, search.size);
+
+    let (group_kind, group_field_kind, group_expr) =
         apply_aggregate_group(&mut select, search.group).map_err(SearchErrors::Mapping)?;
 
-    let (kind, field_kind) =
+    let (kind, field_kind, metric_expr) =
         apply_aggregate_metric(&mut select, search.aggr).map_err(SearchErrors::Mapping)?;
+
+    apply_aggregate_group_sort(&mut select, search.sort, group_expr, metric_expr);
 
     Ok(AggregateGroupQuery {
         query: select,
@@ -88,6 +94,7 @@ pub fn apply_aggregate_group_search<I: 'static + TableIden + Clone + Copy>(
         field_kind,
         group_kind,
         group_field_kind,
+        size,
     })
 }
 
@@ -242,46 +249,63 @@ fn apply_sort<I: 'static + TableIden + Clone + Copy>(
 ) {
     if let Some(sorts) = sort {
         for sort in sorts {
-            let col = build_field_expr(sort.field);
+            let expr = build_field_expr(sort.field);
             let order = sort.order;
 
-            select.order_by_expr(col.into(), order);
+            select.order_by_expr(expr.into(), order);
         }
     }
 }
 
 fn apply_pagination(
     select: &mut SelectStatement,
-    page: Option<u64>,
-    size: Option<u64>,
+    optional_page: Option<u64>,
+    optional_size: Option<u64>,
 ) -> (u64, u64) {
-    let size = size.unwrap_or(DEFAULT_PAGE_SIZE);
+    let size = optional_size.unwrap_or(DEFAULT_PAGE_SIZE);
     select.limit(size);
 
-    let page = page.unwrap_or(INITIAL_PAGE);
+    let page = optional_page.unwrap_or(INITIAL_PAGE);
     select.offset(page * size);
 
     (page, size)
 }
 
+fn apply_aggregate_group_sort(
+    select: &mut SelectStatement,
+    optional_sort: Option<AggregateGroupSort>,
+    group_expr: SimpleExpr,
+    metric_expr: SimpleExpr,
+) {
+    if let Some(sort) = optional_sort {
+        let expr = match sort.field {
+            GroupSortType::Group => group_expr,
+            GroupSortType::Metric => metric_expr,
+        };
+        let order = sort.order;
+
+        select.order_by_expr(expr.into(), order);
+    }
+}
+
 fn apply_aggregate_metric<I: 'static + TableIden + Clone + Copy>(
     select: &mut SelectStatement,
     aggr: AggregateMetric<I>,
-) -> Result<(AggregateType, FieldType), MappingError> {
+) -> Result<(AggregateType, FieldType, SimpleExpr), MappingError> {
     let kind = aggr.kind();
     let field_kind = aggr.field_kind();
-    match aggr {
+    let expr = match aggr {
         AggregateMetric::Count(c) => apply_aggregate_count_metric(select, c),
         AggregateMetric::Sum(s) => apply_aggregate_sum_metric(select, s),
     }?;
 
-    Ok((kind, field_kind))
+    Ok((kind, field_kind, expr))
 }
 
 fn apply_aggregate_count_metric<I: 'static + TableIden + Clone + Copy>(
     select: &mut SelectStatement,
     aggr: AggregateCountMetric<I>,
-) -> Result<(), MappingError> {
+) -> Result<SimpleExpr, MappingError> {
     let field_kind = aggr.field.kind();
     let col = build_field_expr(aggr.field);
 
@@ -293,15 +317,15 @@ fn apply_aggregate_count_metric<I: 'static + TableIden + Clone + Copy>(
         expr.count()
     };
 
-    select.expr(expr);
+    select.expr(expr.clone());
 
-    Ok(())
+    Ok(expr)
 }
 
 fn apply_aggregate_sum_metric<I: 'static + TableIden + Clone + Copy>(
     select: &mut SelectStatement,
     aggr: AggregateSumMetric<I>,
-) -> Result<(), MappingError> {
+) -> Result<SimpleExpr, MappingError> {
     let field_kind = aggr.field.kind();
     let col = build_field_expr(aggr.field);
 
@@ -309,49 +333,48 @@ fn apply_aggregate_sum_metric<I: 'static + TableIden + Clone + Copy>(
 
     let expr = expr.sum();
 
-    select.expr(expr);
+    select.expr(expr.clone());
 
-    Ok(())
+    Ok(expr)
 }
 
 fn apply_aggregate_group<I: 'static + TableIden + Clone + Copy>(
     select: &mut SelectStatement,
     aggr: AggregateGroup<I>,
-) -> Result<(AggregateGroupType, FieldType), MappingError> {
+) -> Result<(AggregateGroupType, FieldType, SimpleExpr), MappingError> {
     let kind = aggr.kind();
     let field_kind = aggr.field_kind();
-    match aggr {
+    let expr = match aggr {
         AggregateGroup::Field(f) => apply_aggregate_field_group(select, f),
         AggregateGroup::DateHistogram(d) => apply_aggregate_date_histogram_group(select, d),
     }?;
 
-    Ok((kind, field_kind))
+    Ok((kind, field_kind, expr))
 }
 
 fn apply_aggregate_field_group<I: 'static + TableIden + Clone + Copy>(
     select: &mut SelectStatement,
     aggr: AggregateFieldGroup<I>,
-) -> Result<(), MappingError> {
+) -> Result<SimpleExpr, MappingError> {
     let field_kind = aggr.field.kind();
     let col = build_field_expr(aggr.field);
 
     let expr = coalesce_default(col, aggr.default_value, field_kind.clone())?;
-    let expr = if field_kind == FieldType::String {
-        expr.cast_as("TEXT")
-    } else {
-        expr.cast_as("BIGINT")
+    let expr = match field_kind {
+        FieldType::String => expr.cast_as("TEXT"),
+        _ => expr.cast_as("BIGINT"),
     };
 
     select.expr(expr.clone());
-    select.add_group_by([expr]);
+    select.add_group_by([expr.clone()]);
 
-    Ok(())
+    Ok(expr)
 }
 
 fn apply_aggregate_date_histogram_group<I: 'static + TableIden + Clone + Copy>(
     select: &mut SelectStatement,
     aggr: AggregateDateHistogramGroup<I>,
-) -> Result<(), MappingError> {
+) -> Result<SimpleExpr, MappingError> {
     let field_kind = aggr.field.kind();
     let col = build_field_expr(aggr.field);
 
@@ -368,9 +391,9 @@ fn apply_aggregate_date_histogram_group<I: 'static + TableIden + Clone + Copy>(
     .cast_as("BIGINT"); // Cast as int as no float date parts are used
 
     select.expr(expr.clone());
-    select.add_group_by([expr]);
+    select.add_group_by([expr.clone()]);
 
-    Ok(())
+    Ok(expr)
 }
 
 fn to_lower(col: Expr) -> Expr {

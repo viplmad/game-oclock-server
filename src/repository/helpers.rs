@@ -1,12 +1,10 @@
-use std::collections::HashMap;
-
 use sea_query::{PostgresQueryBuilder, QueryStatementWriter};
 use sqlx::{Postgres, postgres::types::PgInterval};
 use uuid::Uuid;
 
 use crate::entities::{
-    AggregateGroupQuery, AggregateGroupResultKey, AggregateGroupType, AggregateQuery,
-    AggregateResult, AggregateType, FieldType, PageResult, SearchQuery,
+    AggregateGroupQuery, AggregateGroupResult, AggregateGroupResultKey, AggregateGroupType,
+    AggregateQuery, AggregateResult, AggregateType, FieldType, PageResult, SearchQuery,
 };
 use crate::errors::{RepositoryError, SearchErrors};
 
@@ -153,7 +151,7 @@ where
 pub(super) async fn aggregate_group_search<'c, X>(
     executor: X,
     query: AggregateGroupQuery,
-) -> Result<HashMap<AggregateGroupResultKey, AggregateResult>, SearchErrors>
+) -> Result<Vec<AggregateGroupResult>, SearchErrors>
 where
     X: sqlx::Executor<'c, Database = Postgres>,
 {
@@ -163,11 +161,9 @@ where
             .await
             .map(|list: Vec<(String, PgInterval)>| {
                 list.into_iter()
-                    .map(|tuple| {
-                        (
-                            AggregateGroupResultKey::String(tuple.0),
-                            AggregateResult::Duration(tuple.1),
-                        )
+                    .map(|tuple| AggregateGroupResult {
+                        key: AggregateGroupResultKey::String(tuple.0),
+                        value: AggregateResult::Duration(tuple.1),
                     })
                     .collect()
             })
@@ -179,11 +175,9 @@ where
             .await
             .map(|list: Vec<(i64, PgInterval)>| {
                 list.into_iter()
-                    .map(|tuple| {
-                        (
-                            AggregateGroupResultKey::Integer(tuple.0),
-                            AggregateResult::Duration(tuple.1),
-                        )
+                    .map(|tuple| AggregateGroupResult {
+                        key: AggregateGroupResultKey::Integer(tuple.0),
+                        value: AggregateResult::Duration(tuple.1),
                     })
                     .collect()
             })
@@ -194,11 +188,9 @@ where
         .await
         .map(|list: Vec<(i64, i64)>| {
             list.into_iter()
-                .map(|tuple| {
-                    (
-                        AggregateGroupResultKey::Integer(tuple.0),
-                        AggregateResult::Integer(tuple.1),
-                    )
+                .map(|tuple| AggregateGroupResult {
+                    key: AggregateGroupResultKey::Integer(tuple.0),
+                    value: AggregateResult::Integer(tuple.1),
                 })
                 .collect()
         })

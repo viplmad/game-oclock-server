@@ -20,6 +20,7 @@ pub struct AggregateGroupQuery {
     pub field_kind: FieldType,
     pub group_kind: AggregateGroupType,
     pub group_field_kind: FieldType,
+    pub size: u64,
 }
 
 pub struct ListSearch<T: TableIden> {
@@ -36,8 +37,10 @@ pub struct AggregateSearch<T: TableIden> {
 
 pub struct AggregateGroupSearch<T: TableIden> {
     pub filter: Option<Vec<Filter<T>>>,
+    pub sort: Option<AggregateGroupSort>,
     pub aggr: AggregateMetric<T>,
     pub group: AggregateGroup<T>,
+    pub size: Option<u64>,
 }
 
 /// Aggregate metric
@@ -173,6 +176,22 @@ impl<T: TableIden> AggregateDateHistogramGroup<T> {
             default_value,
             interval,
         }
+    }
+}
+//
+pub struct AggregateGroupSort {
+    pub field: GroupSortType,
+    pub order: Order,
+}
+
+pub enum GroupSortType {
+    Group,
+    Metric,
+}
+
+impl AggregateGroupSort {
+    pub fn new(field: GroupSortType, order: Order) -> Self {
+        Self { field, order }
     }
 }
 

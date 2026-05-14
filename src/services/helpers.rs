@@ -1,15 +1,15 @@
-use std::collections::HashMap;
 use std::future::Future;
 
 use chrono::{DateTime, FixedOffset, NaiveDate};
 
-use crate::entities::{AggregateGroupResultKey, AggregateResult, PageResult};
+use crate::entities::{AggregateGroupResult, AggregateResult, PageResult};
 use crate::errors::{
     ApiErrors, MappingError, RepositoryError, SearchErrors, error_message_builder,
 };
 use crate::models::{
-    AggregateGroupResultKeyDTO, AggregateGroupSearchDTO, AggregateResultDTO, AggregateSearchDTO,
-    FilterDTO, ListSearchDTO, Merge, ModelInfo, OperatorType, PageResultDTO, SearchValue,
+    AggregateGroupResultDTO, AggregateGroupResultKeyDTO, AggregateGroupSearchDTO,
+    AggregateResultDTO, AggregateSearchDTO, FilterDTO, ListSearchDTO, Merge, ModelInfo,
+    OperatorType, PageResultDTO, SearchValue,
 };
 
 pub fn handle_result<E, T>(repository_result: Result<E, RepositoryError>) -> Result<E, ApiErrors>
@@ -98,8 +98,8 @@ where
 }
 
 pub(super) fn handle_get_aggregate_group_result<T>(
-    repository_result: Result<HashMap<AggregateGroupResultKey, AggregateResult>, SearchErrors>,
-) -> Result<HashMap<AggregateGroupResultKeyDTO, AggregateResultDTO>, ApiErrors>
+    repository_result: Result<Vec<AggregateGroupResult>, SearchErrors>,
+) -> Result<Vec<AggregateGroupResultDTO>, ApiErrors>
 where
     T: ModelInfo,
 {
@@ -116,11 +116,9 @@ where
     })?;
     Ok(entity_search
         .into_iter()
-        .map(|t| {
-            (
-                AggregateGroupResultKeyDTO::from(t.0),
-                AggregateResultDTO::from(t.1),
-            )
+        .map(|t| AggregateGroupResultDTO {
+            key: AggregateGroupResultKeyDTO::from(t.key),
+            value: AggregateResultDTO::from(t.value),
         })
         .collect())
 }

@@ -1,5 +1,3 @@
-use std::collections::HashMap;
-
 use chrono::{DateTime, FixedOffset};
 use uuid::Uuid;
 
@@ -8,7 +6,7 @@ use crate::entities::{
 };
 use crate::errors::ApiErrors;
 use crate::models::{
-    AggregateGroupResultKeyDTO, AggregateGroupSearchDTO, AggregateResultDTO, AggregateSearchDTO,
+    AggregateGroupResultDTO, AggregateGroupSearchDTO, AggregateResultDTO, AggregateSearchDTO,
     ListSearchDTO, Merge, NewSessionDTO, SessionDTO, SessionPageResult, SessionStreakPageResult,
 };
 use crate::repository::MediaSessionRepository;
@@ -127,7 +125,7 @@ impl MediaSessionService {
         user_id: &Uuid,
         search: AggregateGroupSearchDTO,
         quicksearch: Option<String>,
-    ) -> Result<HashMap<AggregateGroupResultKeyDTO, AggregateResultDTO>, ApiErrors> {
+    ) -> Result<Vec<AggregateGroupResultDTO>, ApiErrors> {
         let search = handle_aggregate_group_search_mapping::<
             SessionDTO,
             SessionAggregateGroupSearch,

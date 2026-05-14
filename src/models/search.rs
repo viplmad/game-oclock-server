@@ -29,8 +29,10 @@ pub struct AggregateSearchDTO {
 #[derive(Deserialize, ToSchema)]
 pub struct AggregateGroupSearchDTO {
     pub filter: Option<Vec<FilterDTO>>,
+    pub sort: Option<AggregateGroupSortDTO>,
     pub aggr: AggregateMetricDTO,
     pub group: AggregateGroupDTO,
+    pub size: Option<u64>,
 }
 
 /// Aggregate metric
@@ -73,6 +75,18 @@ pub enum DateHistogramInterval {
     Day,
     Hour,
     Minute,
+}
+//
+#[derive(Deserialize, ToSchema)]
+pub struct AggregateGroupSortDTO {
+    pub field: AggregateGroupSortType,
+    pub order: OrderType,
+}
+
+#[derive(Clone, Deserialize, ToSchema)]
+pub enum AggregateGroupSortType {
+    Group,
+    Metric,
 }
 
 /// Filter

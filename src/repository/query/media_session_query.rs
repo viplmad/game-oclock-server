@@ -96,6 +96,7 @@ mod tests {
             &user_id,
             SessionAggregateGroupSearch {
                 filter: None,
+                sort: None,
                 aggr: AggregateMetric::Count(AggregateCountMetric::new(
                     FieldIden::Col(ColIden::new(MediaSessionIden::MediaId, FieldType::String)),
                     None,
@@ -109,6 +110,7 @@ mod tests {
                     None,
                     GroupDateHistogramInterval::Month,
                 )),
+                size: None,
             },
         );
         assert_eq!(
