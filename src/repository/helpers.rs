@@ -188,18 +188,35 @@ where
             .map_err(SearchErrors::Repository);
     }
 
-    // String -> Duration => Id -> Time
-    if query.group_kind == AggregateGroupType::Field && query.group_field_kind == FieldType::String
+    if query.group_kind == AggregateGroupType::Field
+        && (query.group_field_kind == FieldType::String
+            || query.group_field_kind == FieldType::Array)
     {
+        // String -> Duration => Id -> Time
+        if query.kind == AggregateType::Sum && query.field_kind == FieldType::Interval {
+            return fetch_all(executor, query.query)
+                .await
+                .map(|list: Vec<(String, PgInterval)>| {
+                    list.into_iter()
+                        .map(|tuple| AggregateGroupResult {
+                            key: AggregateGroupResultKey::String(tuple.0),
+                            value: AggregateGroupResultValue::Simple(AggregateResult::Duration(
+                                tuple.1,
+                            )),
+                        })
+                        .collect()
+                })
+                .map_err(SearchErrors::Repository);
+        }
+
+        // String -> Integer => Genre -> Total
         return fetch_all(executor, query.query)
             .await
-            .map(|list: Vec<(String, PgInterval)>| {
+            .map(|list: Vec<(String, i64)>| {
                 list.into_iter()
                     .map(|tuple| AggregateGroupResult {
                         key: AggregateGroupResultKey::String(tuple.0),
-                        value: AggregateGroupResultValue::Simple(AggregateResult::Duration(
-                            tuple.1,
-                        )),
+                        value: AggregateGroupResultValue::Simple(AggregateResult::Integer(tuple.1)),
                     })
                     .collect()
             })
