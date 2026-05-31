@@ -29,9 +29,10 @@ pub struct AggregateSearchDTO {
 #[derive(Deserialize, ToSchema)]
 pub struct AggregateGroupSearchDTO {
     pub filter: Option<Vec<FilterDTO>>,
-    pub sort: Option<AggregateGroupSortDTO>,
+    pub sort: Option<Vec<AggregateGroupSortDTO>>,
     pub aggr: AggregateMetricDTO,
     pub group: AggregateGroupDTO,
+    pub subgroup: Option<AggregateGroupDTO>,
     pub size: Option<u64>,
 }
 
@@ -85,8 +86,9 @@ pub struct AggregateGroupSortDTO {
 
 #[derive(Clone, Deserialize, ToSchema)]
 pub enum AggregateGroupSortType {
-    Group,
     Metric,
+    Group,
+    Subgroup,
 }
 
 /// Filter

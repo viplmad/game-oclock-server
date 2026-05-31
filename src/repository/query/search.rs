@@ -83,10 +83,26 @@ pub fn apply_aggregate_group_search<I: 'static + TableIden + Clone + Copy>(
     let (group_kind, group_field_kind, group_expr) =
         apply_aggregate_group(&mut select, search.group).map_err(SearchErrors::Mapping)?;
 
+    let (subgroup_kind, subgroup_field_kind, subgroup_expr) = match search.subgroup {
+        Some(subgroup) => {
+            let (group_kind, group_field_kind, group_expr) =
+                apply_aggregate_group(&mut select, subgroup).map_err(SearchErrors::Mapping)?;
+            (Some(group_kind), Some(group_field_kind), Some(group_expr))
+        }
+        None => (None, None, None),
+    };
+
     let (kind, field_kind, metric_expr) =
         apply_aggregate_metric(&mut select, search.aggr).map_err(SearchErrors::Mapping)?;
 
-    apply_aggregate_group_sort(&mut select, search.sort, group_expr, metric_expr);
+    apply_aggregate_group_sort(
+        &mut select,
+        search.sort,
+        metric_expr,
+        group_expr,
+        subgroup_expr,
+    )
+    .map_err(SearchErrors::Mapping)?;
 
     Ok(AggregateGroupQuery {
         query: select,
@@ -94,6 +110,8 @@ pub fn apply_aggregate_group_search<I: 'static + TableIden + Clone + Copy>(
         field_kind,
         group_kind,
         group_field_kind,
+        subgroup_kind,
+        subgroup_field_kind,
         size,
     })
 }
@@ -245,9 +263,9 @@ fn build_multiple_values<I: 'static + TableIden + Clone + Copy>(
 
 fn apply_sort<I: 'static + TableIden + Clone + Copy>(
     select: &mut SelectStatement,
-    sort: Option<Vec<Sort<I>>>,
+    optional_sort: Option<Vec<Sort<I>>>,
 ) {
-    if let Some(sorts) = sort {
+    if let Some(sorts) = optional_sort {
         for sort in sorts {
             let expr = build_field_expr(sort.field);
             let order = sort.order;
@@ -273,19 +291,30 @@ fn apply_pagination(
 
 fn apply_aggregate_group_sort(
     select: &mut SelectStatement,
-    optional_sort: Option<AggregateGroupSort>,
-    group_expr: SimpleExpr,
+    optional_sort: Option<Vec<AggregateGroupSort>>,
     metric_expr: SimpleExpr,
-) {
-    if let Some(sort) = optional_sort {
-        let expr = match sort.field {
-            GroupSortType::Group => group_expr,
-            GroupSortType::Metric => metric_expr,
-        };
-        let order = sort.order;
+    group_expr: SimpleExpr,
+    subgroup_expr: Option<SimpleExpr>,
+) -> Result<(), MappingError> {
+    if let Some(sorts) = optional_sort {
+        for sort in sorts {
+            let expr = match sort.field {
+                GroupSortType::Metric => metric_expr.clone(),
+                GroupSortType::Group => group_expr.clone(),
+                GroupSortType::Subgroup => match subgroup_expr.clone() {
+                    Some(expr) => Ok(expr),
+                    None => Err(MappingError(String::from(
+                        "Cannot use subgroup sort when not using subgroup",
+                    ))),
+                }?,
+            };
+            let order = sort.order;
 
-        select.order_by_expr(expr.into(), order);
+            select.order_by_expr(expr.into(), order);
+        }
     }
+
+    Ok(())
 }
 
 fn apply_aggregate_metric<I: 'static + TableIden + Clone + Copy>(

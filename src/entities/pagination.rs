@@ -13,11 +13,20 @@ pub enum AggregateResult {
 
 pub struct AggregateGroupResult {
     pub key: AggregateGroupResultKey,
-    pub value: AggregateResult,
+    pub value: AggregateGroupResultValue,
 }
 
-#[derive(Eq, PartialEq, Hash)]
 pub enum AggregateGroupResultKey {
     Integer(i64),
     String(String),
+}
+
+pub enum AggregateGroupResultValue {
+    Simple(AggregateResult),
+    Sub(Vec<AggregateSubgroupResult>),
+}
+
+pub struct AggregateSubgroupResult {
+    pub key: AggregateGroupResultKey,
+    pub value: AggregateResult,
 }

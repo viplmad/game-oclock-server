@@ -3,8 +3,9 @@ use sqlx::{Postgres, postgres::types::PgInterval};
 use uuid::Uuid;
 
 use crate::entities::{
-    AggregateGroupQuery, AggregateGroupResult, AggregateGroupResultKey, AggregateGroupType,
-    AggregateQuery, AggregateResult, AggregateType, FieldType, PageResult, SearchQuery,
+    AggregateGroupQuery, AggregateGroupResult, AggregateGroupResultKey, AggregateGroupResultValue,
+    AggregateGroupType, AggregateQuery, AggregateResult, AggregateSubgroupResult, AggregateType,
+    FieldType, PageResult, SearchQuery,
 };
 use crate::errors::{RepositoryError, SearchErrors};
 
@@ -155,6 +156,39 @@ pub(super) async fn aggregate_group_search<'c, X>(
 where
     X: sqlx::Executor<'c, Database = Postgres>,
 {
+    // Integer -> String -> Duration => (Year/Month) -> Id -> Time
+    if query.subgroup_kind.is_some() && query.subgroup_field_kind.is_some() {
+        return fetch_all(executor, query.query)
+            .await
+            .map(|list: Vec<(i64, String, PgInterval)>| {
+                let mut m: Vec<(i64, Vec<(String, PgInterval)>)> = vec![];
+                for tuple in list {
+                    let existing = m.iter().position(|x| x.0 == tuple.0);
+                    if let Some(ex) = existing {
+                        m.get_mut(ex).unwrap().1.push((tuple.1, tuple.2));
+                    } else {
+                        m.push((tuple.0, vec![(tuple.1, tuple.2)]));
+                    }
+                }
+
+                m.into_iter()
+                    .map(|e| AggregateGroupResult {
+                        key: AggregateGroupResultKey::Integer(e.0),
+                        value: AggregateGroupResultValue::Sub(
+                            e.1.into_iter()
+                                .map(|se| AggregateSubgroupResult {
+                                    key: AggregateGroupResultKey::String(se.0),
+                                    value: AggregateResult::Duration(se.1),
+                                })
+                                .collect(),
+                        ),
+                    })
+                    .collect()
+            })
+            .map_err(SearchErrors::Repository);
+    }
+
+    // String -> Duration => Id -> Time
     if query.group_kind == AggregateGroupType::Field && query.group_field_kind == FieldType::String
     {
         return fetch_all(executor, query.query)
@@ -163,13 +197,16 @@ where
                 list.into_iter()
                     .map(|tuple| AggregateGroupResult {
                         key: AggregateGroupResultKey::String(tuple.0),
-                        value: AggregateResult::Duration(tuple.1),
+                        value: AggregateGroupResultValue::Simple(AggregateResult::Duration(
+                            tuple.1,
+                        )),
                     })
                     .collect()
             })
             .map_err(SearchErrors::Repository);
     }
 
+    // Integer -> Duration => (Year/Month) -> Time
     if query.kind == AggregateType::Sum && query.field_kind == FieldType::Interval {
         return fetch_all(executor, query.query)
             .await
@@ -177,20 +214,23 @@ where
                 list.into_iter()
                     .map(|tuple| AggregateGroupResult {
                         key: AggregateGroupResultKey::Integer(tuple.0),
-                        value: AggregateResult::Duration(tuple.1),
+                        value: AggregateGroupResultValue::Simple(AggregateResult::Duration(
+                            tuple.1,
+                        )),
                     })
                     .collect()
             })
             .map_err(SearchErrors::Repository);
     }
 
+    // Integer -> Integer => (Year/Month) -> Total
     return fetch_all(executor, query.query)
         .await
         .map(|list: Vec<(i64, i64)>| {
             list.into_iter()
                 .map(|tuple| AggregateGroupResult {
                     key: AggregateGroupResultKey::Integer(tuple.0),
-                    value: AggregateResult::Integer(tuple.1),
+                    value: AggregateGroupResultValue::Simple(AggregateResult::Integer(tuple.1)),
                 })
                 .collect()
         })

@@ -30,9 +30,10 @@ mod tests {
 
     use super::*;
     use crate::entities::{
-        AggregateCountMetric, AggregateDateHistogramGroup, AggregateGroup, AggregateMetric,
-        AggregateSumMetric, ColIden, ExprIden, FieldIden, FieldType, Filter,
-        GroupDateHistogramInterval, ListSearch, SingleValueFilter,
+        AggregateCountMetric, AggregateDateHistogramGroup, AggregateFieldGroup, AggregateGroup,
+        AggregateGroupSort, AggregateMetric, AggregateSumMetric, ColIden, ExprIden, FieldIden,
+        FieldType, Filter, GroupDateHistogramInterval, GroupSortType, ListSearch,
+        SingleValueFilter,
     };
 
     #[test]
@@ -110,6 +111,60 @@ mod tests {
                     None,
                     GroupDateHistogramInterval::Month,
                 )),
+                subgroup: None,
+                size: None,
+            },
+        );
+        assert_eq!(
+            query.unwrap().query.to_string(PostgresQueryBuilder),
+            [
+                r#"SELECT CAST(DATE_PART('month', "MediaSession"."start_date") AS BIGINT), COUNT(DISTINCT "MediaSession"."media_id")"#,
+                r#"FROM "MediaSession""#,
+                r#"WHERE "MediaSession"."user_id" = '00000000-0000-0000-0000-000000000000'"#,
+                r#"GROUP BY CAST(DATE_PART('month', "MediaSession"."start_date") AS BIGINT)"#
+            ]
+            .join(" ")
+        );
+    }
+
+    #[test]
+    fn group_time_by_month_played_then_media() {
+        let user_id = Uuid::try_parse("00000000-0000-0000-0000-000000000000").unwrap();
+        let query = aggregate_group_with_search(
+            &user_id,
+            SessionAggregateGroupSearch {
+                filter: None,
+                sort: Some(vec![
+                    AggregateGroupSort {
+                        field: GroupSortType::Group,
+                        order: Order::Asc,
+                    },
+                    AggregateGroupSort {
+                        field: GroupSortType::Metric,
+                        order: Order::Desc,
+                    },
+                ]),
+                aggr: AggregateMetric::Sum(AggregateSumMetric::new(
+                    FieldIden::Expr(ExprIden::new::<MediaSessionIden>(
+                        Expr::col((MediaSessionIden::Table, MediaSessionIden::EndDate)).sub(
+                            Expr::col((MediaSessionIden::Table, MediaSessionIden::StartDate)),
+                        ),
+                        FieldType::Integer,
+                    )),
+                    None,
+                )),
+                group: AggregateGroup::DateHistogram(AggregateDateHistogramGroup::new(
+                    FieldIden::Col(ColIden::new(
+                        MediaSessionIden::StartDate,
+                        FieldType::DateTime,
+                    )),
+                    None,
+                    GroupDateHistogramInterval::Month,
+                )),
+                subgroup: Some(AggregateGroup::Field(AggregateFieldGroup::new(
+                    FieldIden::Col(ColIden::new(MediaSessionIden::MediaId, FieldType::String)),
+                    None,
+                ))),
                 size: None,
             },
         );

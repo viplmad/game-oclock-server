@@ -5,17 +5,18 @@ use sea_query::{BinOper, Order, Value};
 
 use crate::entities::{
     AggregateCountMetric, AggregateDateHistogramGroup, AggregateFieldGroup, AggregateGroup,
-    AggregateGroupResultKey, AggregateGroupSearch, AggregateGroupSort, AggregateMetric,
-    AggregateResult, AggregateSearch, AggregateSumMetric, FieldIden, FieldType, Filter,
-    GroupDateHistogramInterval, GroupSortType, ListSearch, MultipleValuesFilter, NoValueFilter,
-    SingleValueFilter, Sort, TableIden,
+    AggregateGroupResultKey, AggregateGroupResultValue, AggregateGroupSearch, AggregateGroupSort,
+    AggregateMetric, AggregateResult, AggregateSearch, AggregateSumMetric, FieldIden, FieldType,
+    Filter, GroupDateHistogramInterval, GroupSortType, ListSearch, MultipleValuesFilter,
+    NoValueFilter, SingleValueFilter, Sort, TableIden,
 };
 use crate::errors::{MappingError, error_message_builder};
 use crate::models::{
-    AggregateGroupDTO, AggregateGroupResultKeyDTO, AggregateGroupSearchDTO, AggregateGroupSortDTO,
-    AggregateGroupSortType, AggregateGroupType, AggregateMetricDTO, AggregateMetricType,
-    AggregateResultDTO, AggregateSearchDTO, ChainOperatorType, DateHistogramInterval, DurationDef,
-    FilterDTO, ListSearchDTO, MediaStatus, OperatorType, OrderType, SearchValue, SortDTO,
+    AggregateGroupDTO, AggregateGroupResultKeyDTO, AggregateGroupResultValueDTO,
+    AggregateGroupSearchDTO, AggregateGroupSortDTO, AggregateGroupSortType, AggregateGroupType,
+    AggregateMetricDTO, AggregateMetricType, AggregateResultDTO, AggregateSearchDTO,
+    AggregateSubgroupResultDTO, ChainOperatorType, DateHistogramInterval, DurationDef, FilterDTO,
+    ListSearchDTO, MediaStatus, OperatorType, OrderType, SearchValue, SortDTO,
 };
 
 impl From<DateHistogramInterval> for GroupDateHistogramInterval {
@@ -34,8 +35,9 @@ impl From<DateHistogramInterval> for GroupDateHistogramInterval {
 impl From<AggregateGroupSortType> for GroupSortType {
     fn from(value: AggregateGroupSortType) -> Self {
         match value {
-            AggregateGroupSortType::Group => GroupSortType::Group,
             AggregateGroupSortType::Metric => GroupSortType::Metric,
+            AggregateGroupSortType::Group => GroupSortType::Group,
+            AggregateGroupSortType::Subgroup => GroupSortType::Subgroup,
         }
     }
 }
@@ -102,17 +104,28 @@ where
     fn try_from(search: AggregateGroupSearchDTO) -> Result<Self, Self::Error> {
         let filter = convert_filters(search.filter)?;
 
-        let sort = search.sort.map(AggregateGroupSort::from);
+        let sort = search.sort.map(|sorts| {
+            sorts
+                .into_iter()
+                .map(AggregateGroupSort::from)
+                .collect::<Vec<AggregateGroupSort>>()
+        });
 
         let aggr = AggregateMetric::try_from(search.aggr)?;
 
         let group = AggregateGroup::try_from(search.group)?;
+
+        let subgroup = match search.subgroup {
+            Some(g) => Some(AggregateGroup::try_from(g)?),
+            None => None,
+        };
 
         Ok(Self {
             filter,
             sort,
             aggr,
             group,
+            subgroup,
             size: search.size,
         })
     }
@@ -210,6 +223,24 @@ impl From<AggregateGroupResultKey> for AggregateGroupResultKeyDTO {
         match res {
             AggregateGroupResultKey::Integer(i) => AggregateGroupResultKeyDTO::Integer(i),
             AggregateGroupResultKey::String(s) => AggregateGroupResultKeyDTO::String(s),
+        }
+    }
+}
+
+impl From<AggregateGroupResultValue> for AggregateGroupResultValueDTO {
+    fn from(res: AggregateGroupResultValue) -> Self {
+        match res {
+            AggregateGroupResultValue::Simple(s) => {
+                AggregateGroupResultValueDTO::Simple(AggregateResultDTO::from(s))
+            }
+            AggregateGroupResultValue::Sub(s) => AggregateGroupResultValueDTO::Sub(
+                s.into_iter()
+                    .map(|t| AggregateSubgroupResultDTO {
+                        key: AggregateGroupResultKeyDTO::from(t.key),
+                        value: AggregateResultDTO::from(t.value),
+                    })
+                    .collect(),
+            ),
         }
     }
 }

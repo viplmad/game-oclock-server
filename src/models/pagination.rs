@@ -43,13 +43,25 @@ pub enum AggregateResultDTO {
 #[derive(Serialize, ToSchema)]
 pub struct AggregateGroupResultDTO {
     pub key: AggregateGroupResultKeyDTO,
-    pub value: AggregateResultDTO,
+    pub value: AggregateGroupResultValueDTO,
 }
 
-#[derive(Eq, PartialEq, Hash, ToSchema)]
+#[derive(ToSchema)]
 pub enum AggregateGroupResultKeyDTO {
     Integer(i64),
     String(String),
+}
+
+#[derive(ToSchema)]
+pub enum AggregateGroupResultValueDTO {
+    Simple(AggregateResultDTO),
+    Sub(Vec<AggregateSubgroupResultDTO>),
+}
+
+#[derive(Serialize, ToSchema)]
+pub struct AggregateSubgroupResultDTO {
+    pub key: AggregateGroupResultKeyDTO,
+    pub value: AggregateResultDTO,
 }
 
 impl Serialize for AggregateResultDTO {
@@ -72,6 +84,18 @@ impl Serialize for AggregateGroupResultKeyDTO {
         match &self {
             AggregateGroupResultKeyDTO::Integer(i) => i.serialize(serializer),
             AggregateGroupResultKeyDTO::String(s) => s.serialize(serializer),
+        }
+    }
+}
+
+impl Serialize for AggregateGroupResultValueDTO {
+    fn serialize<S>(&self, serializer: S) -> Result<S::Ok, S::Error>
+    where
+        S: serde::Serializer,
+    {
+        match &self {
+            AggregateGroupResultValueDTO::Simple(s) => s.serialize(serializer),
+            AggregateGroupResultValueDTO::Sub(s) => s.serialize(serializer),
         }
     }
 }

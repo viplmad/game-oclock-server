@@ -20,6 +20,8 @@ pub struct AggregateGroupQuery {
     pub field_kind: FieldType,
     pub group_kind: AggregateGroupType,
     pub group_field_kind: FieldType,
+    pub subgroup_kind: Option<AggregateGroupType>,
+    pub subgroup_field_kind: Option<FieldType>,
     pub size: u64,
 }
 
@@ -37,9 +39,10 @@ pub struct AggregateSearch<T: TableIden> {
 
 pub struct AggregateGroupSearch<T: TableIden> {
     pub filter: Option<Vec<Filter<T>>>,
-    pub sort: Option<AggregateGroupSort>,
+    pub sort: Option<Vec<AggregateGroupSort>>,
     pub aggr: AggregateMetric<T>,
     pub group: AggregateGroup<T>,
+    pub subgroup: Option<AggregateGroup<T>>,
     pub size: Option<u64>,
 }
 
@@ -185,8 +188,9 @@ pub struct AggregateGroupSort {
 }
 
 pub enum GroupSortType {
-    Group,
     Metric,
+    Group,
+    Subgroup,
 }
 
 impl AggregateGroupSort {

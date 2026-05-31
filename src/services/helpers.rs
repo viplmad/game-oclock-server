@@ -7,9 +7,9 @@ use crate::errors::{
     ApiErrors, MappingError, RepositoryError, SearchErrors, error_message_builder,
 };
 use crate::models::{
-    AggregateGroupResultDTO, AggregateGroupResultKeyDTO, AggregateGroupSearchDTO,
-    AggregateResultDTO, AggregateSearchDTO, FilterDTO, ListSearchDTO, Merge, ModelInfo,
-    OperatorType, PageResultDTO, SearchValue,
+    AggregateGroupResultDTO, AggregateGroupResultKeyDTO, AggregateGroupResultValueDTO,
+    AggregateGroupSearchDTO, AggregateResultDTO, AggregateSearchDTO, FilterDTO, ListSearchDTO,
+    Merge, ModelInfo, OperatorType, PageResultDTO, SearchValue,
 };
 
 pub fn handle_result<E, T>(repository_result: Result<E, RepositoryError>) -> Result<E, ApiErrors>
@@ -118,7 +118,7 @@ where
         .into_iter()
         .map(|t| AggregateGroupResultDTO {
             key: AggregateGroupResultKeyDTO::from(t.key),
-            value: AggregateResultDTO::from(t.value),
+            value: AggregateGroupResultValueDTO::from(t.value),
         })
         .collect())
 }
