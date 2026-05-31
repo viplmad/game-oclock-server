@@ -181,6 +181,41 @@ mod tests {
     }
 
     #[test]
+    fn group_medias_by_genre() {
+        let user_id = Uuid::try_parse("00000000-0000-0000-0000-000000000000").unwrap();
+        let query = aggregate_group_with_search(
+            &user_id,
+            SessionAggregateGroupSearch {
+                filter: None,
+                sort: None,
+                aggr: AggregateMetric::Count(AggregateCountMetric::new(
+                    FieldIden::Col(ColIden::new(MediaSessionIden::MediaId, FieldType::String)),
+                    None,
+                    true,
+                )),
+                group: AggregateGroup::Field(AggregateFieldGroup::new(
+                    FieldIden::ExtCol(ColIden::new(MediaIden::Genres, FieldType::Array)),
+                    None,
+                )),
+                subgroup: None,
+                size: None,
+            },
+        );
+        assert_eq!(
+            query.unwrap().query.to_string(PostgresQueryBuilder),
+            [
+                r#"SELECT CAST(UNNEST("Media"."genres") AS TEXT), COUNT(DISTINCT "MediaSession"."media_id")"#,
+                r#"FROM "MediaSession""#,
+                r#"LEFT JOIN "Media" ON "MediaSession"."media_id" = "Media"."id""#,
+                r#"WHERE "MediaSession"."user_id" = '00000000-0000-0000-0000-000000000000'"#,
+                r#"GROUP BY CAST(UNNEST("Media"."genres") AS TEXT)"#,
+                r#"LIMIT 500 OFFSET 0"#,
+            ]
+            .join(" ")
+        );
+    }
+
+    #[test]
     fn streaks() {
         let user_id = Uuid::try_parse("00000000-0000-0000-0000-000000000000").unwrap();
         let query = select_streaks_with_search(

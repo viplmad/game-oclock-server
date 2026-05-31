@@ -472,6 +472,9 @@ pub fn convert_value(value: &str, kind: FieldType) -> Result<Value, MappingError
             let int_value = convert_with_serde::<i32>(value, "integer")?;
             Ok(int_value.into())
         }
+        FieldType::Array => Err(MappingError(error_message_builder::convert_to_error(
+            value, "array",
+        ))),
         FieldType::MediaStatus => {
             let status =
                 convert_with_serde::<MediaStatus>(&format!("\"{value}\""), "media status")?;

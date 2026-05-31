@@ -391,6 +391,7 @@ fn apply_aggregate_field_group<I: 'static + TableIden + Clone + Copy>(
     let expr = coalesce_default(col, aggr.default_value, field_kind.clone())?;
     let expr = match field_kind {
         FieldType::String => expr.cast_as("TEXT"),
+        FieldType::Array => Func::cust(Unnest).arg(expr).cast_as("TEXT"),
         _ => expr.cast_as("BIGINT"),
     };
 
@@ -474,10 +475,17 @@ fn coalesce_default(
 
 //
 struct DatePart;
-
 impl sea_query::Iden for DatePart {
     fn unquoted(&self, s: &mut dyn std::fmt::Write) {
         #[allow(clippy::unwrap_used)]
         write!(s, "DATE_PART").unwrap(); // Safe unwrap: just a function name
+    }
+}
+
+struct Unnest;
+impl sea_query::Iden for Unnest {
+    fn unquoted(&self, s: &mut dyn std::fmt::Write) {
+        #[allow(clippy::unwrap_used)]
+        write!(s, "UNNEST").unwrap(); // Safe unwrap: just a function name
     }
 }

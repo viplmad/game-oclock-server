@@ -119,6 +119,10 @@ impl FromStr for FieldIden<MediaSessionIden> {
                 MediaStateIden::Rating,
                 FieldType::Integer,
             ))),
+            "media_genre" => Ok(FieldIden::ExtCol(ColIden::new(
+                MediaIden::Genres,
+                FieldType::Array,
+            ))),
             _ => Err(()),
         }
     }

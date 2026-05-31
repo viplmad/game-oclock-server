@@ -359,6 +359,7 @@ pub enum FieldType {
     Date,
     DateTime,
     Interval,
+    Array,
     MediaStatus,
 }
 
