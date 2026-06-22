@@ -165,6 +165,8 @@ where
                 for tuple in list {
                     let existing = m.iter().position(|x| x.0 == tuple.0);
                     if let Some(ex) = existing {
+                        // Safe unwrap, index from an existing element
+                        #[allow(clippy::unwrap_used)]
                         m.get_mut(ex).unwrap().1.push((tuple.1, tuple.2));
                     } else {
                         m.push((tuple.0, vec![(tuple.1, tuple.2)]));

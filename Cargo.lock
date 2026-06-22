@@ -1011,6 +1011,7 @@ dependencies = [
  "sea-query",
  "serde",
  "serde_json",
+ "sha2",
  "sqlx",
  "utoipa",
  "utoipa-swagger-ui",

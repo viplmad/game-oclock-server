@@ -8,6 +8,7 @@ mod media_session_repository;
 mod media_tag_repository;
 mod media_with_session_repository;
 mod query;
+mod stored_response_repository;
 mod tag_repository;
 mod user_repository;
 
@@ -19,5 +20,6 @@ pub use media_session_device_repository::*;
 pub use media_session_repository::*;
 pub use media_tag_repository::*;
 pub use media_with_session_repository::*;
+pub use stored_response_repository::*;
 pub use tag_repository::*;
 pub use user_repository::*;

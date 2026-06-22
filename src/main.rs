@@ -63,7 +63,7 @@ async fn run(
     let database_connection_pool = SqlxPostgresPoolBuilder::from_env()
         .await
         .expect("Could not open database connection.");
-    // migrations::apply_migrations(&database_connection_pool).await;
+    migrations::apply_migrations(&database_connection_pool).await;
 
     let igdb_client = IgdbClientPoolBuilder::from_env().expect("Could not create IGDB client.");
 
@@ -85,8 +85,11 @@ async fn run(
         MediaWithSessionRepository::with_connection(database_connection_pool.clone());
     let location_repository = LocationRepository::with_connection(database_connection_pool.clone());
     let tag_repository = TagRepository::with_connection(database_connection_pool.clone());
+    let stored_response_repository =
+        StoredResponseRepository::with_connection(database_connection_pool.clone());
 
     let auth_service = AuthService::with(user_service.clone());
+    let stored_response_service = StoredResponseService::with(stored_response_repository);
     let device_service = DeviceService::with(device_repository);
     let external_media_service = MediaExternalService::with(igdb_client);
     let media_service = MediaService::with(external_media_service.clone(), media_repository);
@@ -101,6 +104,7 @@ async fn run(
         media_session_repository,
         media_service.clone(),
         device_service.clone(),
+        stored_response_service,
     );
     let media_session_device_service = MediaSessionDeviceService::with(
         media_session_device_repository,

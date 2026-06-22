@@ -44,7 +44,7 @@ impl<'de> Deserialize<'de> for DurationDef {
 
 struct DurationVisitor;
 
-impl<'de> Visitor<'de> for DurationVisitor {
+impl Visitor<'_> for DurationVisitor {
     type Value = DurationDef;
 
     fn expecting(&self, formatter: &mut std::fmt::Formatter) -> std::fmt::Result {

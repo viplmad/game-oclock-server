@@ -25,7 +25,7 @@ pub(super) fn handle_create_result(
 
 pub(super) fn handle_update_result(service_result: Result<(), impl ToError>) -> HttpResponse {
     match service_result {
-        Ok(_) => HttpResponse::NoContent().finish(),
+        Ok(()) => HttpResponse::NoContent().finish(),
         Err(error) => error.to_error(),
     }
 }
@@ -36,7 +36,7 @@ pub(super) fn handle_delete_result(service_result: Result<(), impl ToError>) -> 
 
 pub(super) fn handle_action_result(service_result: Result<(), impl ToError>) -> HttpResponse {
     match service_result {
-        Ok(_) => HttpResponse::NoContent().finish(),
+        Ok(()) => HttpResponse::NoContent().finish(),
         Err(error) => error.to_error(),
     }
 }

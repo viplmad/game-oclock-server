@@ -1,11 +1,11 @@
 use chrono::NaiveDate;
-use serde::Serialize;
+use serde::{Deserialize, Serialize};
 use utoipa::ToSchema;
 use uuid::Uuid;
 
 use crate::models::ModelInfo;
 
-#[derive(Serialize, ToSchema)]
+#[derive(Deserialize, Serialize, ToSchema)]
 pub struct SessionStreakDTO {
     #[schema(value_type = String, format = Date)]
     pub start_date: NaiveDate,

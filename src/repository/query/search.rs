@@ -310,7 +310,7 @@ fn apply_aggregate_group_sort(
             };
             let order = sort.order;
 
-            select.order_by_expr(expr.into(), order);
+            select.order_by_expr(expr, order);
         }
     }
 

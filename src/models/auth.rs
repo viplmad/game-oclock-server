@@ -7,11 +7,11 @@ use uuid::Uuid;
 pub struct TokenRequest {
     /// Grant type
     pub grant_type: GrantType,
-    /// Username (used in password grant type)
+    /// Username (used in `password` grant type)
     pub username: Option<String>,
-    /// Password (used in password grant type)
+    /// Password (used in `password` grant type)
     pub password: Option<String>,
-    /// Refresh token (used in refresh_token grant type)
+    /// Refresh token (used in `refresh_token` grant type)
     pub refresh_token: Option<String>,
 }
 

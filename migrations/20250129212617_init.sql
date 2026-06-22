@@ -143,3 +143,15 @@ CREATE TABLE IF NOT EXISTS "MediaTag" (
 	CONSTRAINT "MediaTag_fk_Tag" FOREIGN KEY (tag_id) REFERENCES public."Tag"(id) ON DELETE CASCADE,
 	CONSTRAINT "MediaTag_fk_User" FOREIGN KEY (user_id) REFERENCES public."User"(id) ON DELETE CASCADE
 );
+
+CREATE TABLE IF NOT EXISTS "StoredResponse" (
+	user_id uuid NOT NULL,
+	scope text NOT NULL,
+	request_hash text NOT NULL,
+	response text NOT NULL,
+	last_used_date timestamptz NOT NULL,
+	added_datetime timestamptz NOT NULL,
+	updated_datetime timestamptz NOT NULL,
+	CONSTRAINT "StoredResponse_pk" PRIMARY KEY (user_id, scope, request_hash),
+	CONSTRAINT "StoredResponse_fk_User" FOREIGN KEY (user_id) REFERENCES public."User"(id) ON DELETE CASCADE
+);

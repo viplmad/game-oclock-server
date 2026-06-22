@@ -9,6 +9,7 @@ mod media_session_device_service;
 mod media_session_service;
 mod media_tag_service;
 mod media_with_session_service;
+mod stored_response_service;
 mod tag_service;
 mod user_service;
 
@@ -22,5 +23,6 @@ pub use media_session_device_service::*;
 pub use media_session_service::*;
 pub use media_tag_service::*;
 pub use media_with_session_service::*;
+pub use stored_response_service::*;
 pub use tag_service::*;
 pub use user_service::*;

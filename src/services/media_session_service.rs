@@ -7,7 +7,8 @@ use crate::entities::{
 use crate::errors::ApiErrors;
 use crate::models::{
     AggregateGroupResultDTO, AggregateGroupSearchDTO, AggregateResultDTO, AggregateSearchDTO,
-    ListSearchDTO, Merge, NewSessionDTO, SessionDTO, SessionPageResult, SessionStreakPageResult,
+    FetchMode, ListSearchDTO, Merge, NewSessionDTO, SessionDTO, SessionPageResult,
+    SessionStreakPageResult,
 };
 use crate::repository::MediaSessionRepository;
 
@@ -17,13 +18,14 @@ use super::helpers::{
     handle_get_list_paged_result, handle_get_result, handle_list_search_mapping,
     handle_not_found_result,
 };
-use super::{DeviceService, MediaService};
+use super::{DeviceService, MediaService, StoredResponseService};
 
 #[derive(Clone)]
 pub struct MediaSessionService {
     repository: MediaSessionRepository,
     media_service: MediaService,
     device_service: DeviceService,
+    stored_response_service: StoredResponseService,
 }
 
 impl MediaSessionService {
@@ -31,11 +33,13 @@ impl MediaSessionService {
         repository: MediaSessionRepository,
         media_service: MediaService,
         device_service: DeviceService,
+        stored_response_service: StoredResponseService,
     ) -> Self {
         Self {
             repository,
             media_service,
             device_service,
+            stored_response_service,
         }
     }
 }
@@ -111,6 +115,21 @@ impl MediaSessionService {
         user_id: &Uuid,
         search: AggregateSearchDTO,
         quicksearch: Option<String>,
+        mode: Option<FetchMode>,
+    ) -> Result<AggregateResultDTO, ApiErrors> {
+        let request = build_stored_request(&search, quicksearch.clone())?;
+        self.stored_response_service
+            .get_based_on_mode(mode, user_id, "SESSION_AGGREGATE", &request, || {
+                self.calculate_aggregate_sessions(user_id, search, quicksearch)
+            })
+            .await
+    }
+
+    async fn calculate_aggregate_sessions(
+        &self,
+        user_id: &Uuid,
+        search: AggregateSearchDTO,
+        quicksearch: Option<String>,
     ) -> Result<AggregateResultDTO, ApiErrors> {
         let search = handle_aggregate_search_mapping::<SessionDTO, SessionAggregateSearch>(
             search,
@@ -125,6 +144,21 @@ impl MediaSessionService {
         user_id: &Uuid,
         search: AggregateGroupSearchDTO,
         quicksearch: Option<String>,
+        mode: Option<FetchMode>,
+    ) -> Result<Vec<AggregateGroupResultDTO>, ApiErrors> {
+        let request = build_stored_request(&search, quicksearch.clone())?;
+        self.stored_response_service
+            .get_based_on_mode(mode, user_id, "SESSION_AGGREGATE_GROUP", &request, || {
+                self.calculate_aggregate_group_sessions(user_id, search, quicksearch)
+            })
+            .await
+    }
+
+    async fn calculate_aggregate_group_sessions(
+        &self,
+        user_id: &Uuid,
+        search: AggregateGroupSearchDTO,
+        quicksearch: Option<String>,
     ) -> Result<Vec<AggregateGroupResultDTO>, ApiErrors> {
         let search = handle_aggregate_group_search_mapping::<
             SessionDTO,
@@ -135,6 +169,21 @@ impl MediaSessionService {
     }
 
     pub async fn aggregate_first_sessions(
+        &self,
+        user_id: &Uuid,
+        search: AggregateSearchDTO,
+        quicksearch: Option<String>,
+        mode: Option<FetchMode>,
+    ) -> Result<AggregateResultDTO, ApiErrors> {
+        let request = build_stored_request(&search, quicksearch.clone())?;
+        self.stored_response_service
+            .get_based_on_mode(mode, user_id, "SESSION_FIRST_AGGREGATE", &request, || {
+                self.calculate_aggregate_first_sessions(user_id, search, quicksearch)
+            })
+            .await
+    }
+
+    async fn calculate_aggregate_first_sessions(
         &self,
         user_id: &Uuid,
         search: AggregateSearchDTO,
@@ -224,10 +273,37 @@ impl MediaSessionService {
         user_id: &Uuid,
         search: ListSearchDTO,
         quicksearch: Option<String>,
+        mode: Option<FetchMode>,
+    ) -> Result<SessionStreakPageResult, ApiErrors> {
+        let request = build_stored_request(&search, quicksearch.clone())?;
+        self.stored_response_service
+            .get_based_on_mode(mode, user_id, "SESSION_STREAKS", &request, || {
+                self.calculate_search_streaks(user_id, search, quicksearch)
+            })
+            .await
+    }
+
+    async fn calculate_search_streaks(
+        &self,
+        user_id: &Uuid,
+        search: ListSearchDTO,
+        quicksearch: Option<String>,
     ) -> Result<SessionStreakPageResult, ApiErrors> {
         let search =
             handle_list_search_mapping::<SessionDTO, SessionListSearch>(search, quicksearch)?;
         let find_result = self.repository.search_streaks(user_id, search).await;
         handle_get_list_paged_result(find_result)
     }
+}
+
+fn build_stored_request<R>(request: &R, quicksearch: Option<String>) -> Result<String, ApiErrors>
+where
+    R: Sized + serde::Serialize,
+{
+    Ok([
+        crate::convert_utils::to_json_string(request, "Request")
+            .map_err(|err| ApiErrors::UnknownError(err.0))?,
+        quicksearch.unwrap_or_default(),
+    ]
+    .join("-"))
 }

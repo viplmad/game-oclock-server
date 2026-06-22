@@ -1,4 +1,4 @@
-use serde::Serialize;
+use serde::{Deserialize, Serialize};
 use utoipa::ToSchema;
 
 use super::{
@@ -20,7 +20,7 @@ pub type MediaTagPageResult = PageResultDTO<MediaTagDTO>;
 pub type SessionPageResult = PageResultDTO<SessionDTO>;
 pub type SessionStreakPageResult = PageResultDTO<SessionStreakDTO>;
 
-#[derive(Serialize, ToSchema)]
+#[derive(Deserialize, Serialize, ToSchema)]
 pub struct PageResultDTO<T>
 where
     T: ModelInfo,
@@ -33,69 +33,98 @@ where
     pub size: u64,
 }
 
-#[derive(ToSchema)]
+#[derive(ToSchema, Deserialize, Serialize)]
 pub enum AggregateResultDTO {
+    #[serde(untagged)]
     Integer(i64),
+    #[serde(untagged)]
     #[schema(value_type = String)]
     Duration(DurationDef),
 }
 
-#[derive(Serialize, ToSchema)]
+#[derive(Serialize, Deserialize, ToSchema)]
 pub struct AggregateGroupResultDTO {
     pub key: AggregateGroupResultKeyDTO,
     pub value: AggregateGroupResultValueDTO,
 }
 
-#[derive(ToSchema)]
+#[derive(ToSchema, Deserialize, Serialize)]
 pub enum AggregateGroupResultKeyDTO {
+    #[serde(untagged)]
     Integer(i64),
+    #[serde(untagged)]
     String(String),
 }
 
-#[derive(ToSchema)]
+#[derive(ToSchema, Deserialize, Serialize)]
 pub enum AggregateGroupResultValueDTO {
+    #[serde(untagged)]
     Simple(AggregateResultDTO),
+    #[serde(untagged)]
     Sub(Vec<AggregateSubgroupResultDTO>),
 }
 
-#[derive(Serialize, ToSchema)]
+#[derive(Deserialize, Serialize, ToSchema)]
 pub struct AggregateSubgroupResultDTO {
     pub key: AggregateGroupResultKeyDTO,
     pub value: AggregateResultDTO,
 }
 
-impl Serialize for AggregateResultDTO {
-    fn serialize<S>(&self, serializer: S) -> Result<S::Ok, S::Error>
-    where
-        S: serde::Serializer,
-    {
-        match &self {
-            AggregateResultDTO::Integer(i) => i.serialize(serializer),
-            AggregateResultDTO::Duration(d) => d.serialize(serializer),
-        }
-    }
-}
+#[cfg(test)]
+mod tests {
+    use crate::models::{
+        AggregateGroupResultKeyDTO, AggregateGroupResultValueDTO, AggregateResultDTO,
+        AggregateSubgroupResultDTO, DurationDef,
+    };
 
-impl Serialize for AggregateGroupResultKeyDTO {
-    fn serialize<S>(&self, serializer: S) -> Result<S::Ok, S::Error>
-    where
-        S: serde::Serializer,
-    {
-        match &self {
-            AggregateGroupResultKeyDTO::Integer(i) => i.serialize(serializer),
-            AggregateGroupResultKeyDTO::String(s) => s.serialize(serializer),
-        }
+    #[test]
+    fn convert_integer() {
+        let value = AggregateResultDTO::Integer(267);
+        let a = serde_json::to_string::<AggregateResultDTO>(&value).unwrap();
+        println!("{}", a);
+        serde_json::from_str::<AggregateResultDTO>(&a).unwrap();
     }
-}
 
-impl Serialize for AggregateGroupResultValueDTO {
-    fn serialize<S>(&self, serializer: S) -> Result<S::Ok, S::Error>
-    where
-        S: serde::Serializer,
-    {
-        match &self {
-            AggregateGroupResultValueDTO::Simple(s) => s.serialize(serializer),
-            AggregateGroupResultValueDTO::Sub(s) => s.serialize(serializer),
-        }
+    #[test]
+    fn convert_duration() {
+        let value = AggregateResultDTO::Duration(DurationDef::microseconds(10000));
+        let a = serde_json::to_string::<AggregateResultDTO>(&value).unwrap();
+        println!("{}", a);
+        serde_json::from_str::<AggregateResultDTO>(&a).unwrap();
+    }
+
+    #[test]
+    fn convert_group_key_integer() {
+        let value = AggregateGroupResultKeyDTO::Integer(267);
+        let a = serde_json::to_string::<AggregateGroupResultKeyDTO>(&value).unwrap();
+        println!("{}", a);
+        serde_json::from_str::<AggregateGroupResultKeyDTO>(&a).unwrap();
+    }
+
+    #[test]
+    fn convert_group_key_string() {
+        let value = AggregateGroupResultKeyDTO::String(String::from("test"));
+        let a = serde_json::to_string::<AggregateGroupResultKeyDTO>(&value).unwrap();
+        println!("{}", a);
+        serde_json::from_str::<AggregateGroupResultKeyDTO>(&a).unwrap();
+    }
+
+    #[test]
+    fn convert_group_simple() {
+        let value = AggregateGroupResultValueDTO::Simple(AggregateResultDTO::Integer(234));
+        let a = serde_json::to_string::<AggregateGroupResultValueDTO>(&value).unwrap();
+        println!("{}", a);
+        serde_json::from_str::<AggregateGroupResultValueDTO>(&a).unwrap();
+    }
+
+    #[test]
+    fn convert_group_sub() {
+        let value = AggregateGroupResultValueDTO::Sub(vec![AggregateSubgroupResultDTO {
+            key: AggregateGroupResultKeyDTO::Integer(543),
+            value: AggregateResultDTO::Duration(DurationDef::microseconds(123409)),
+        }]);
+        let a = serde_json::to_string::<AggregateGroupResultValueDTO>(&value).unwrap();
+        println!("{}", a);
+        serde_json::from_str::<AggregateGroupResultValueDTO>(&a).unwrap();
     }
 }

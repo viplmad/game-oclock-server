@@ -22,6 +22,7 @@ bcrypt = { version = "^0", default-features = false, features = [ "std" ] }
 # Serialisation/Deserialisation
 serde = { version = "^1", default-features = false }
 serde_json = { version = "^1", default-features = false }
+sha2 = { version = "^0", default-features = false}
 
 # Environment variables
 dotenvy = { version = "^0", default-features = false }

@@ -11,6 +11,7 @@ pub mod repository;
 pub mod routes;
 pub mod services;
 
+pub mod convert_utils;
 pub mod date_utils;
 pub mod errors;
 pub mod migrations;

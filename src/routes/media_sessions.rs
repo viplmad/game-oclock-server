@@ -4,6 +4,7 @@ use crate::models::{
     AggregateGroupResultDTO, AggregateGroupSearchDTO, AggregateResultDTO, AggregateSearchDTO,
     DateTimeDTO, ErrorMessage, ItemId, ListSearchDTO, LoggedUser, MediaSessionDTO, NewSessionDTO,
     OptionalStartEndDateQuery, PageResultDTO, QuicksearchQuery, SessionDTO, SessionStreakDTO,
+    StoredQuicksearchQuery,
 };
 use crate::services::{MediaSessionService, MediaWithSessionService};
 
@@ -120,7 +121,7 @@ pub async fn get_sessions(
     path = "/api/v1/medias/sessions/aggregate",
     tag = "MediaSessions",
     params(
-        QuicksearchQuery,
+        StoredQuicksearchQuery,
     ),
     request_body(content = AggregateSearchDTO, description = "Query", content_type = "application/json"),
     responses(
@@ -136,12 +137,12 @@ pub async fn get_sessions(
 #[post("/medias/sessions/aggregate")]
 pub async fn aggregate_sessions(
     media_session_service: web::Data<MediaSessionService>,
-    query: web::Query<QuicksearchQuery>,
+    query: web::Query<StoredQuicksearchQuery>,
     body: web::Json<AggregateSearchDTO>,
     logged_user: LoggedUser,
 ) -> impl Responder {
     let aggregate_result = media_session_service
-        .aggregate_sessions(&logged_user.id, body.0, query.0.q)
+        .aggregate_sessions(&logged_user.id, body.0, query.0.q, query.0.mode)
         .await;
     handle_get_result(aggregate_result)
 }
@@ -152,7 +153,7 @@ pub async fn aggregate_sessions(
     path = "/api/v1/medias/sessions/aggregate-group",
     tag = "MediaSessions",
     params(
-        QuicksearchQuery,
+        StoredQuicksearchQuery,
     ),
     request_body(content = AggregateGroupSearchDTO, description = "Query", content_type = "application/json"),
     responses(
@@ -168,12 +169,12 @@ pub async fn aggregate_sessions(
 #[post("/medias/sessions/aggregate-group")]
 pub async fn aggregate_group_sessions(
     media_session_service: web::Data<MediaSessionService>,
-    query: web::Query<QuicksearchQuery>,
+    query: web::Query<StoredQuicksearchQuery>,
     body: web::Json<AggregateGroupSearchDTO>,
     logged_user: LoggedUser,
 ) -> impl Responder {
     let aggregate_result = media_session_service
-        .aggregate_group_sessions(&logged_user.id, body.0, query.0.q)
+        .aggregate_group_sessions(&logged_user.id, body.0, query.0.q, query.0.mode)
         .await;
     handle_get_result(aggregate_result)
 }
@@ -184,7 +185,7 @@ pub async fn aggregate_group_sessions(
     path = "/api/v1/medias/sessions/first/aggregate",
     tag = "MediaSessions",
     params(
-        QuicksearchQuery,
+        StoredQuicksearchQuery,
     ),
     request_body(content = AggregateSearchDTO, description = "Query", content_type = "application/json"),
     responses(
@@ -200,12 +201,12 @@ pub async fn aggregate_group_sessions(
 #[post("/medias/sessions/first/aggregate")]
 pub async fn aggregate_first_sessions(
     media_session_service: web::Data<MediaSessionService>,
-    query: web::Query<QuicksearchQuery>,
+    query: web::Query<StoredQuicksearchQuery>,
     body: web::Json<AggregateSearchDTO>,
     logged_user: LoggedUser,
 ) -> impl Responder {
     let aggregate_result = media_session_service
-        .aggregate_first_sessions(&logged_user.id, body.0, query.0.q)
+        .aggregate_first_sessions(&logged_user.id, body.0, query.0.q, query.0.mode)
         .await;
     handle_get_result(aggregate_result)
 }
@@ -216,7 +217,7 @@ pub async fn aggregate_first_sessions(
     path = "/api/v1/medias/sessions/streaks",
     tag = "MediaSessions",
     params(
-        QuicksearchQuery,
+        StoredQuicksearchQuery,
     ),
     request_body(content = ListSearchDTO, description = "Query", content_type = "application/json"),
     responses(
@@ -233,12 +234,12 @@ pub async fn aggregate_first_sessions(
 #[post("/medias/sessions/streaks")]
 pub async fn get_session_streaks(
     media_session_service: web::Data<MediaSessionService>,
-    query: web::Query<QuicksearchQuery>,
+    query: web::Query<StoredQuicksearchQuery>,
     body: web::Json<ListSearchDTO>,
     logged_user: LoggedUser,
 ) -> impl Responder {
     let search_result = media_session_service
-        .search_streaks(&logged_user.id, body.0, query.0.q)
+        .search_streaks(&logged_user.id, body.0, query.0.q, query.0.mode)
         .await;
     handle_get_result(search_result)
 }

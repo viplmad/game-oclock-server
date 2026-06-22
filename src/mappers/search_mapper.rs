@@ -357,7 +357,7 @@ where
             match filter.value {
                 Some(sv) => match sv {
                     SearchValue::Single(v) => Ok(v),
-                    _ => {
+                    SearchValue::Multiple(_) => {
                         let operator = filter.operator;
                         Err(MappingError(format!(
                             "Field search_value must be a single value for operator \"{operator:?}\"."
@@ -391,7 +391,7 @@ where
             match filter.value {
                 Some(sv) => match sv {
                     SearchValue::Multiple(v) => Ok(v),
-                    _ => {
+                    SearchValue::Single(_) => {
                         let operator = filter.operator;
                         Err(MappingError(format!(
                             "Field search_value must be a list for operator \"{operator:?}\"."
@@ -446,12 +446,12 @@ where
 pub fn convert_value(value: &str, kind: FieldType) -> Result<Value, MappingError> {
     match kind {
         FieldType::Integer => {
-            let int_value = convert_with_serde::<i32>(value, "integer")?;
+            let int_value = crate::convert_utils::from_json_string::<i32>(value, "integer")?;
             Ok(int_value.into())
         }
         FieldType::String => Ok(value.into()),
         FieldType::Boolean => {
-            let bool_value = convert_with_serde::<bool>(value, "boolean")?;
+            let bool_value = crate::convert_utils::from_json_string::<bool>(value, "boolean")?;
             Ok(bool_value.into())
         }
         FieldType::Date => {
@@ -469,27 +469,19 @@ pub fn convert_value(value: &str, kind: FieldType) -> Result<Value, MappingError
             Ok(date_time_value.into())
         }
         FieldType::Interval => {
-            let int_value = convert_with_serde::<i32>(value, "integer")?;
+            let int_value = crate::convert_utils::from_json_string::<i32>(value, "integer")?;
             Ok(int_value.into())
         }
         FieldType::Array => Err(MappingError(error_message_builder::convert_to_error(
             value, "array",
         ))),
         FieldType::MediaStatus => {
-            let status =
-                convert_with_serde::<MediaStatus>(&format!("\"{value}\""), "media status")?;
+            let status = crate::convert_utils::from_json_string::<MediaStatus>(
+                &format!("\"{value}\""),
+                "media status",
+            )?;
             let status_value = i16::from(status);
             Ok(status_value.into())
         }
     }
-}
-
-fn convert_with_serde<'a, T>(value: &'a str, type_string: &str) -> Result<T, MappingError>
-where
-    T: serde::de::Deserialize<'a>,
-{
-    serde_json::from_str::<T>(value).map_err(|err| {
-        log::error!("Error converting value. <{}> - {}", value, err);
-        MappingError(error_message_builder::convert_to_error(value, type_string))
-    })
 }
