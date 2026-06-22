@@ -171,10 +171,11 @@ mod tests {
         assert_eq!(
             query.unwrap().query.to_string(PostgresQueryBuilder),
             [
-                r#"SELECT CAST(DATE_PART('month', "MediaSession"."start_date") AS BIGINT), COUNT(DISTINCT "MediaSession"."media_id")"#,
+                r#"SELECT CAST(DATE_PART('month', "MediaSession"."start_date") AS BIGINT), CAST("MediaSession"."media_id" AS TEXT), SUM("MediaSession"."end_date" - "MediaSession"."start_date")"#,
                 r#"FROM "MediaSession""#,
                 r#"WHERE "MediaSession"."user_id" = '00000000-0000-0000-0000-000000000000'"#,
-                r#"GROUP BY CAST(DATE_PART('month', "MediaSession"."start_date") AS BIGINT)"#
+                r#"GROUP BY CAST(DATE_PART('month', "MediaSession"."start_date") AS BIGINT), CAST("MediaSession"."media_id" AS TEXT)"#,
+                r#"ORDER BY CAST(DATE_PART('month', "MediaSession"."start_date") AS BIGINT) ASC, SUM("MediaSession"."end_date" - "MediaSession"."start_date") DESC"#
             ]
             .join(" ")
         );
@@ -209,7 +210,6 @@ mod tests {
                 r#"LEFT JOIN "Media" ON "MediaSession"."media_id" = "Media"."id""#,
                 r#"WHERE "MediaSession"."user_id" = '00000000-0000-0000-0000-000000000000'"#,
                 r#"GROUP BY CAST(UNNEST("Media"."genres") AS TEXT)"#,
-                r#"LIMIT 500 OFFSET 0"#,
             ]
             .join(" ")
         );
@@ -826,11 +826,6 @@ fn array_agg_distinct(from: SimpleExpr) -> SimpleExpr {
 }
 
 //
+#[derive(Iden)]
+#[iden = "LAG"]
 struct Lag;
-
-impl sea_query::Iden for Lag {
-    fn unquoted(&self, s: &mut dyn std::fmt::Write) {
-        #[allow(clippy::unwrap_used)]
-        write!(s, "LAG").unwrap(); // Safe unwrap: just a function name
-    }
-}

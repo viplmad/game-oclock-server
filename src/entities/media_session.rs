@@ -1,7 +1,7 @@
 use std::str::FromStr;
 
 use chrono::{DateTime, FixedOffset};
-use sea_query::{Expr, enum_def};
+use sea_query::{Expr, ExprTrait, enum_def};
 use sqlx::{FromRow, postgres::types::PgInterval};
 use uuid::Uuid;
 

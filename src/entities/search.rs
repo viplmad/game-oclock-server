@@ -1,4 +1,4 @@
-use sea_query::{BinOper, Iden, Order, SeaRc, SelectStatement, SimpleExpr};
+use sea_query::{BinOper, Order, SelectStatement, SimpleExpr};
 
 use super::TableIden;
 
@@ -308,8 +308,8 @@ pub enum FieldIden<T: TableIden> {
 }
 
 pub struct ColIden<T: TableIden> {
-    pub table: SeaRc<dyn Iden>,
-    pub iden: SeaRc<dyn Iden>,
+    pub table: String,
+    pub iden: String,
     pub kind: FieldType,
     resource_type: std::marker::PhantomData<T>,
 }
@@ -333,8 +333,8 @@ impl<T: TableIden> FieldIden<T> {
 impl<T: TableIden> ColIden<T> {
     pub fn new<I: 'static + TableIden>(iden: I, kind: FieldType) -> Self {
         Self {
-            table: SeaRc::new(I::TABLE),
-            iden: SeaRc::new(iden),
+            table: I::TABLE.to_string(),
+            iden: iden.to_string(),
             kind,
             resource_type: std::marker::PhantomData,
         }

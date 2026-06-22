@@ -1,5 +1,5 @@
 use sea_query::{
-    BinOper, Cond, Expr, ExprTrait, Func, LikeExpr, SelectStatement, SimpleExpr, Value,
+    BinOper, Cond, Expr, ExprTrait, Func, Iden, LikeExpr, SelectStatement, SimpleExpr, Value,
 };
 
 use crate::entities::{
@@ -78,7 +78,11 @@ pub fn apply_aggregate_group_search<I: 'static + TableIden + Clone + Copy>(
 ) -> Result<AggregateGroupQuery, SearchErrors> {
     apply_filter(&mut select, search.filter).map_err(SearchErrors::Mapping)?;
 
-    let (_, size) = apply_pagination(&mut select, None, search.size);
+    let (_, size) = if search.size.is_some() {
+        apply_pagination(&mut select, None, search.size)
+    } else {
+        (0, 0)
+    };
 
     let (group_kind, group_field_kind, group_expr) =
         apply_aggregate_group(&mut select, search.group).map_err(SearchErrors::Mapping)?;
@@ -466,7 +470,7 @@ fn coalesce_default(
 ) -> Result<Expr, MappingError> {
     Ok(match default_value {
         Some(def) => Expr::expr(Func::coalesce([
-            column.into(),
+            column,
             convert_value(&def, field_kind)?.into(),
         ])),
         None => column,
@@ -474,18 +478,10 @@ fn coalesce_default(
 }
 
 //
+#[derive(Iden)]
+#[iden = "DATE_PART"]
 struct DatePart;
-impl sea_query::Iden for DatePart {
-    fn unquoted(&self, s: &mut dyn std::fmt::Write) {
-        #[allow(clippy::unwrap_used)]
-        write!(s, "DATE_PART").unwrap(); // Safe unwrap: just a function name
-    }
-}
 
+#[derive(Iden)]
+#[iden = "UNNEST"]
 struct Unnest;
-impl sea_query::Iden for Unnest {
-    fn unquoted(&self, s: &mut dyn std::fmt::Write) {
-        #[allow(clippy::unwrap_used)]
-        write!(s, "UNNEST").unwrap(); // Safe unwrap: just a function name
-    }
-}

@@ -1,5 +1,5 @@
 use sea_query::{PostgresQueryBuilder, QueryStatementWriter};
-use sqlx::{Postgres, postgres::types::PgInterval};
+use sqlx::{AssertSqlSafe, Postgres, postgres::types::PgInterval};
 use uuid::Uuid;
 
 use crate::entities::{
@@ -18,8 +18,7 @@ where
     T: for<'r> sqlx::FromRow<'r, sqlx::postgres::PgRow> + Send + Unpin,
 {
     let sql = build_sql(query);
-    log::info!("{}", sql);
-    sqlx::query_as::<_, T>(&sql)
+    sqlx::query_as::<_, T>(sql)
         .fetch_one(executor)
         .await
         .map_err(|err| {
@@ -36,8 +35,7 @@ where
     X: sqlx::Executor<'c, Database = Postgres>,
 {
     let sql = build_sql(query);
-    log::info!("{}", sql);
-    sqlx::query(&sql)
+    sqlx::query(sql)
         .execute(executor)
         .await
         .map(|_| ())
@@ -56,8 +54,7 @@ where
     T: for<'r> sqlx::FromRow<'r, sqlx::postgres::PgRow> + Send + Unpin,
 {
     let sql = build_sql(query);
-    log::info!("{}", sql);
-    sqlx::query_as::<_, T>(&sql)
+    sqlx::query_as::<_, T>(sql)
         .fetch_optional(executor)
         .await
         .map_err(|err| {
@@ -88,8 +85,7 @@ where
     T: for<'r> sqlx::FromRow<'r, sqlx::postgres::PgRow> + Send + Unpin,
 {
     let sql = build_sql(query);
-    log::info!("{}", sql);
-    sqlx::query_as::<_, T>(&sql)
+    sqlx::query_as::<_, T>(sql)
         .fetch_all(executor)
         .await
         .map_err(|err| {
@@ -268,7 +264,9 @@ where
         .map(|res: Vec<(Uuid,)>| !res.is_empty())
 }
 
-fn build_sql(query: impl QueryStatementWriter) -> String {
+fn build_sql(query: impl QueryStatementWriter) -> AssertSqlSafe<String> {
     // Only Postgres allowed
-    query.to_string(PostgresQueryBuilder)
+    let sql = query.to_string(PostgresQueryBuilder);
+    log::info!("{}", sql);
+    AssertSqlSafe(sql)
 }

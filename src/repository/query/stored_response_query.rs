@@ -1,4 +1,4 @@
-use sea_query::{Expr, OnConflict, Query, QueryStatementWriter, SelectStatement};
+use sea_query::{Expr, ExprTrait, OnConflict, Query, QueryStatementWriter, SelectStatement};
 use uuid::Uuid;
 
 use crate::entities::{StoredResponse, StoredResponseIden};

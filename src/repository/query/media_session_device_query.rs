@@ -1,4 +1,4 @@
-use sea_query::{Expr, Order, SelectStatement};
+use sea_query::{Expr, ExprTrait, Order, SelectStatement};
 use uuid::Uuid;
 
 use crate::entities::{
