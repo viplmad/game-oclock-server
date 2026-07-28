@@ -104,13 +104,13 @@ impl IgdbClient {
                 .map(|d| d.fixed_offset()),
                 genres: item
                     .genres
-                    .unwrap_or_else(Vec::<IgdbElementResponse>::new)
+                    .unwrap_or_else(Vec::<IgdbSlugResponse>::new)
                     .into_iter()
-                    .map(|e| e.name)
+                    .map(|e| e.slug)
                     .collect(),
                 series: item
                     .collections
-                    .unwrap_or_else(Vec::<IgdbElementResponse>::new)
+                    .unwrap_or_else(Vec::<IgdbCollectionResponse>::new)
                     .into_iter()
                     .map(|e| e.name)
                     .collect(),
@@ -175,13 +175,13 @@ impl IgdbClient {
                         .map(|d| d.fixed_offset()),
                         genres: item
                             .genres
-                            .unwrap_or_else(Vec::<IgdbElementResponse>::new)
+                            .unwrap_or_else(Vec::<IgdbSlugResponse>::new)
                             .into_iter()
-                            .map(|e| e.name)
+                            .map(|e| e.slug)
                             .collect(),
                         series: item
                             .collections
-                            .unwrap_or_else(Vec::<IgdbElementResponse>::new)
+                            .unwrap_or_else(Vec::<IgdbCollectionResponse>::new)
                             .into_iter()
                             .map(|e| e.name)
                             .collect(),
@@ -200,8 +200,8 @@ impl IgdbClient {
             "version_title",
             "cover.url",
             "first_release_date",
-            "genres.name",
-            "collections.name",
+            "genres.slug", // Use slug for better aggregation
+            "collections.name", // Use name because is related to game name
             "game_type",
             "parent_game",
         ]
@@ -255,8 +255,8 @@ struct IgdbGamesResponse {
     version_title: Option<String>,
     cover: Option<IgdbCoverResponse>,
     first_release_date: Option<i64>,
-    genres: Option<Vec<IgdbElementResponse>>,
-    collections: Option<Vec<IgdbElementResponse>>,
+    genres: Option<Vec<IgdbSlugResponse>>,
+    collections: Option<Vec<IgdbCollectionResponse>>,
     game_type: Option<i16>,
     // parent_game: Option<i64>,
 }
@@ -265,8 +265,12 @@ struct IgdbCoverResponse {
     url: String,
 }
 #[derive(Deserialize)]
-struct IgdbElementResponse {
+struct IgdbCollectionResponse {
     name: String,
+}
+#[derive(Deserialize)]
+struct IgdbSlugResponse {
+    slug: String,
 }
 
 /// Connection options to Sqlx Postgres.
