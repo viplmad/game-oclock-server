@@ -491,6 +491,11 @@ impl MediaService {
         let new_media = self.external_service.get(&external).await?;
         self.update_media_data(id, new_media).await
     }
+
+    pub async fn unsync_media(&self, id: &Uuid) -> Result<(), ApiErrors> {
+        self.get_media_external_primary(id).await?;
+        self.delete_media_external(id).await
+    }
 }
 
 fn check_media_state_rating(state: &NewMediaStateDTO) -> Result<(), ApiErrors> {

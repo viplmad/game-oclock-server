@@ -43,6 +43,7 @@ pub fn get_openapi() -> utoipa::openapi::OpenApi {
             routes::link_parent_media,
             routes::unlink_parent_media,
             routes::sync_media,
+            routes::unsync_media,
             routes::search_external_medias,
             // Media Sessions
             routes::get_media_sessions,

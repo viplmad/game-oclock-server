@@ -175,6 +175,7 @@ async fn run(
                         .service(routes::link_parent_media)
                         .service(routes::unlink_parent_media)
                         .service(routes::sync_media)
+                        .service(routes::unsync_media)
                         .service(routes::search_external_medias)
                         // Media Sessions
                         .service(routes::get_media_sessions)

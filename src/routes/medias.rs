@@ -646,10 +646,40 @@ pub async fn sync_media(
     handle_update_result(update_result)
 }
 
-// Search external medias
+
+/// Unsync a media
+#[utoipa::path(
+    put,
+    path = "/api/v1/medias/{id}/unsync",
+    tag = "Medias",
+    params(
+        ("id" = String, Path, description = "Media id"),
+    ),
+    responses(
+        (status = 204, description = "Media unsynced"),
+        (status = 401, description = "Unauthorized", body = ErrorMessage, content_type = "application/json"),
+        (status = 403, description = "Forbidden", body = ErrorMessage, content_type = "application/json"),
+        (status = 404, description = "Media not found", body = ErrorMessage, content_type = "application/json"),
+        (status = 500, description = "Internal server error", body = ErrorMessage, content_type = "application/json"),
+    ),
+    security(
+        ("OAuth2" = [])
+    )
+)]
+#[put("/medias/{id}/unsync")]
+pub async fn unsync_media(
+    media_service: web::Data<MediaService>,
+    path: web::Path<ItemId>,
+) -> impl Responder {
+    let ItemId(id) = path.into_inner();
+    let update_result = media_service.unsync_media(&id).await;
+    handle_update_result(update_result)
+}
+
+/// Search external medias
 #[utoipa::path(
     post,
-    path = "/api/v1/medias/search",
+    path = "/api/v1/medias/external/search",
     tag = "Medias",
     params(
         ExternalQuicksearchQuery,
@@ -675,3 +705,4 @@ pub async fn search_external_medias(
         .await;
     handle_get_result(search_result)
 }
+
