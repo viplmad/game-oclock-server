@@ -63,7 +63,7 @@ async fn run(
     let database_connection_pool = SqlxPostgresPoolBuilder::from_env()
         .await
         .expect("Could not open database connection.");
-    migrations::apply_migrations(&database_connection_pool).await;
+    // migrations::apply_migrations(&database_connection_pool).await;
 
     let igdb_client = IgdbClientPoolBuilder::from_env().expect("Could not create IGDB client.");
 
@@ -185,6 +185,7 @@ async fn run(
                         .service(routes::aggregate_group_sessions)
                         .service(routes::aggregate_first_sessions)
                         .service(routes::get_session_streaks)
+                        .service(routes::get_session_dates)
                         .service(routes::get_first_session_medias)
                         .service(routes::get_last_session_medias)
                         .service(routes::get_media_session)

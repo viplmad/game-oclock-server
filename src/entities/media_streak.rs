@@ -16,3 +16,10 @@ pub struct MediaSessionStreak {
     pub media_ids: Vec<Uuid>,
     pub device_ids: Vec<Uuid>,
 }
+
+#[derive(FromRow)]
+pub struct MediaSessionDate {
+    pub start_date: NaiveDate,
+    pub end_date: NaiveDate,
+    pub date: NaiveDate,
+}

@@ -1,3 +1,4 @@
+mod custom_funcs;
 pub mod device_query;
 pub mod location_query;
 pub mod media_available_query;

@@ -3,8 +3,8 @@ use utoipa::ToSchema;
 
 use super::{
     DeviceDTO, DurationDef, LocationAvailableDTO, LocationDTO, MediaAvailableDTO, MediaDTO,
-    MediaSessionDTO, MediaTagDTO, ModelInfo, SessionDTO, SessionStreakDTO, TagDTO, TagMediaDTO,
-    UserDTO,
+    MediaSessionDTO, MediaTagDTO, ModelInfo, SessionDTO, SessionDateDTO, SessionStreakDTO, TagDTO,
+    TagMediaDTO, UserDTO,
 };
 
 pub type DevicePageResult = PageResultDTO<DeviceDTO>;
@@ -19,6 +19,7 @@ pub type MediaAvailablePageResult = PageResultDTO<MediaAvailableDTO>;
 pub type MediaTagPageResult = PageResultDTO<MediaTagDTO>;
 pub type SessionPageResult = PageResultDTO<SessionDTO>;
 pub type SessionStreakPageResult = PageResultDTO<SessionStreakDTO>;
+pub type SessionDatePageResult = PageResultDTO<SessionDateDTO>;
 
 #[derive(Deserialize, Serialize, ToSchema)]
 pub struct PageResultDTO<T>

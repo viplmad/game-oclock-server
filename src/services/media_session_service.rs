@@ -1,4 +1,4 @@
-use chrono::{DateTime, FixedOffset};
+use chrono::{DateTime, FixedOffset, NaiveDate};
 use uuid::Uuid;
 
 use crate::entities::{
@@ -7,8 +7,8 @@ use crate::entities::{
 use crate::errors::ApiErrors;
 use crate::models::{
     AggregateGroupResultDTO, AggregateGroupSearchDTO, AggregateResultDTO, AggregateSearchDTO,
-    FetchMode, ListSearchDTO, Merge, NewSessionDTO, SessionDTO, SessionPageResult,
-    SessionStreakPageResult,
+    FetchMode, ListSearchDTO, Merge, NewSessionDTO, SessionDTO, SessionDatePageResult,
+    SessionPageResult, SessionStreakPageResult,
 };
 use crate::repository::MediaSessionRepository;
 
@@ -266,6 +266,37 @@ impl MediaSessionService {
             .exists_by_id(user_id, media_id, start_datetime)
             .await;
         handle_not_found_result::<SessionDTO>(exists_result)
+    }
+
+    pub async fn search_dates(
+        &self,
+        user_id: &Uuid,
+        search: ListSearchDTO,
+        quicksearch: Option<String>,
+        mode: Option<FetchMode>,
+    ) -> Result<Vec<NaiveDate>, ApiErrors> {
+        let request = build_stored_request(&search, quicksearch.clone())?;
+        self.stored_response_service
+            .get_based_on_mode(mode, user_id, "SESSION_DATES", &request, || {
+                self.calculate_search_dates(user_id, search, quicksearch)
+            })
+            .await
+    }
+
+    async fn calculate_search_dates(
+        &self,
+        user_id: &Uuid,
+        search: ListSearchDTO,
+        quicksearch: Option<String>,
+    ) -> Result<Vec<NaiveDate>, ApiErrors> {
+        let search =
+            handle_list_search_mapping::<SessionDTO, SessionListSearch>(search, quicksearch)?;
+        let find_result = self.repository.search_dates(user_id, search).await;
+
+        let dates: SessionDatePageResult = handle_get_list_paged_result(find_result)?;
+        let mut dates: Vec<NaiveDate> = dates.data.iter().map(|d| d.date).collect();
+        dates.dedup();
+        Ok(dates)
     }
 
     pub async fn search_streaks(

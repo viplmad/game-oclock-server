@@ -21,3 +21,19 @@ impl ModelInfo for SessionStreakDTO {
     const ID_FIELDS: &'static [&'static str] = &["media id", "start datetime"];
     const UNIQUE_FIELDS: &'static [&'static str] = SessionStreakDTO::ID_FIELDS;
 }
+
+#[derive(Deserialize, Serialize, ToSchema)]
+pub struct SessionDateDTO {
+    #[schema(value_type = String, format = Date)]
+    pub start_date: NaiveDate,
+    #[schema(value_type = String, format = Date)]
+    pub end_date: NaiveDate,
+    #[schema(value_type = String, format = Date)]
+    pub date: NaiveDate,
+}
+
+impl ModelInfo for SessionDateDTO {
+    const MODEL_NAME: &'static str = "Media date";
+    const ID_FIELDS: &'static [&'static str] = &["media id", "start datetime"];
+    const UNIQUE_FIELDS: &'static [&'static str] = SessionDateDTO::ID_FIELDS;
+}

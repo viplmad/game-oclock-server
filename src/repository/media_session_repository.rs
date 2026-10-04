@@ -4,8 +4,9 @@ use uuid::Uuid;
 
 use super::query::media_session_query;
 use crate::entities::{
-    AggregateGroupResult, AggregateResult, MediaSession, MediaSessionStreak, MediaSessionWithTime,
-    PageResult, SessionAggregateGroupSearch, SessionAggregateSearch, SessionListSearch,
+    AggregateGroupResult, AggregateResult, MediaSession, MediaSessionDate, MediaSessionStreak,
+    MediaSessionWithTime, PageResult, SessionAggregateGroupSearch, SessionAggregateSearch,
+    SessionListSearch,
 };
 use crate::errors::{RepositoryError, SearchErrors};
 
@@ -131,6 +132,15 @@ impl MediaSessionRepository {
     ) -> Result<bool, RepositoryError> {
         let query = media_session_query::exists_by_id(user_id, media_id, start_datetime);
         exists_some(&self.pool, query).await
+    }
+
+    pub async fn search_dates(
+        &self,
+        user_id: &Uuid,
+        search: SessionListSearch,
+    ) -> Result<PageResult<MediaSessionDate>, SearchErrors> {
+        let query = media_session_query::select_dates_with_search(user_id, search)?;
+        fetch_all_search(&self.pool, query).await
     }
 
     pub async fn search_streaks(

@@ -244,6 +244,39 @@ pub async fn get_session_streaks(
     handle_get_result(search_result)
 }
 
+/// Get all dates
+#[utoipa::path(
+    post,
+    path = "/api/v1/medias/sessions/dates",
+    tag = "MediaSessions",
+    params(
+        StoredQuicksearchQuery,
+    ),
+    request_body(content = ListSearchDTO, description = "Query", content_type = "application/json"),
+    responses(
+        (status = 200, description = "Dates obtained", body = [NaiveDate], content_type = "application/json"),
+        (status = 401, description = "Unauthorized", body = ErrorMessage, content_type = "application/json"),
+        (status = 403, description = "Forbidden", body = ErrorMessage, content_type = "application/json"),
+        (status = 404, description = "Media not found", body = ErrorMessage, content_type = "application/json"),
+        (status = 500, description = "Internal server error", body = ErrorMessage, content_type = "application/json"),
+    ),
+    security(
+        ("OAuth2" = [])
+    )
+)]
+#[post("/medias/sessions/dates")]
+pub async fn get_session_dates(
+    media_session_service: web::Data<MediaSessionService>,
+    query: web::Query<StoredQuicksearchQuery>,
+    body: web::Json<ListSearchDTO>,
+    logged_user: LoggedUser,
+) -> impl Responder {
+    let search_result = media_session_service
+        .search_dates(&logged_user.id, body.0, query.0.q, query.0.mode)
+        .await;
+    handle_get_result(search_result)
+}
+
 /// Search first medias by session
 #[utoipa::path(
     post,

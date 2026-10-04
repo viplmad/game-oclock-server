@@ -1,5 +1,5 @@
 use sea_query::{
-    BinOper, Cond, Expr, ExprTrait, Func, Iden, LikeExpr, SelectStatement, SimpleExpr, Value,
+    BinOper, Cond, Expr, ExprTrait, Func, LikeExpr, SelectStatement, SimpleExpr, Value,
 };
 
 use crate::entities::{
@@ -11,6 +11,8 @@ use crate::entities::{
 };
 use crate::errors::{MappingError, SearchErrors};
 use crate::mappers::convert_value;
+
+use super::custom_funcs::{DatePart, Unnest};
 
 const DEFAULT_PAGE_SIZE: u64 = 500;
 const INITIAL_PAGE: u64 = 0;
@@ -476,12 +478,3 @@ fn coalesce_default(
         None => column,
     })
 }
-
-//
-#[derive(Iden)]
-#[iden = "DATE_PART"]
-struct DatePart;
-
-#[derive(Iden)]
-#[iden = "UNNEST"]
-struct Unnest;
