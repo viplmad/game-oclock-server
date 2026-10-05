@@ -200,7 +200,7 @@ impl IgdbClient {
             "version_title",
             "cover.url",
             "first_release_date",
-            "genres.slug", // Use slug for better aggregation
+            "genres.slug",      // Use slug for better aggregation
             "collections.name", // Use name because is related to game name
             "game_type",
             "parent_game",

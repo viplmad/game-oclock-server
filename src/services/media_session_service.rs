@@ -295,7 +295,7 @@ impl MediaSessionService {
 
         let dates: SessionDatePageResult = handle_get_list_paged_result(find_result)?;
         let mut dates: Vec<NaiveDate> = dates.data.iter().map(|d| d.date).collect();
-        dates.dedup();
+        dates.dedup(); // dedup works because they always come sorted
         Ok(dates)
     }
 

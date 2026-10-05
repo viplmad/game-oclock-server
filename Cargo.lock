@@ -2449,9 +2449,8 @@ dependencies = [
 
 [[package]]
 name = "sea-query"
-version = "1.0.1"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "8d190cfb3bcceb8a8d7d04dee5a0c77f60c7627979cdcb47fdcb8934f009badf"
+version = "1.0.2"
+source = "git+https://github.com/viplmad/sea-query.git?branch=1.0.2-fix#90952d6df4172d9f3bc28fd3aa7a3786b7086bee"
 dependencies = [
  "chrono",
  "sea-query-derive",
@@ -2460,8 +2459,7 @@ dependencies = [
 [[package]]
 name = "sea-query-derive"
 version = "1.0.0"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "a0b0f466921cdd3cf4b89d5c3ac2173dba89a873ab395b123a645de181ec7537"
+source = "git+https://github.com/viplmad/sea-query.git?branch=1.0.2-fix#90952d6df4172d9f3bc28fd3aa7a3786b7086bee"
 dependencies = [
  "darling",
  "heck 0.4.1",

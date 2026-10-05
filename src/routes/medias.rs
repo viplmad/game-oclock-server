@@ -646,7 +646,6 @@ pub async fn sync_media(
     handle_update_result(update_result)
 }
 
-
 /// Unsync a media
 #[utoipa::path(
     put,
@@ -705,4 +704,3 @@ pub async fn search_external_medias(
         .await;
     handle_get_result(search_result)
 }
-

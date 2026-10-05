@@ -296,7 +296,7 @@ mod tests {
         assert_eq!(
             query.unwrap().query.to_string(PostgresQueryBuilder),
             [
-                r#"SELECT CAST(("MediaSession"."start_date" AT TIME ZONE "MediaSession"."start_date_tz") AS DATE) + (unnest(array_positions(array_fill(1,ARRAY[((CAST(("MediaSession"."end_date" AT TIME ZONE "MediaSession"."end_date_tz") AS DATE) - CAST(("MediaSession"."start_date" AT TIME ZONE "MediaSession"."start_date_tz") AS DATE))::int + 1)]), 1)) - 1) as "date"
+                r#"SELECT CAST(("MediaSession"."start_date" AT TIME ZONE "MediaSession"."start_date_tz") AS DATE) AS "start_date", CAST(("MediaSession"."end_date" AT TIME ZONE "MediaSession"."end_date_tz") AS DATE) AS "end_date", CAST(("MediaSession"."start_date" AT TIME ZONE "MediaSession"."start_date_tz") AS DATE) + (UNNEST(ARRAY_POSITIONS(ARRAY_FILL(1, ARRAY[CAST((CAST(("MediaSession"."end_date" AT TIME ZONE "MediaSession"."end_date_tz") AS DATE) - CAST(("MediaSession"."start_date" AT TIME ZONE "MediaSession"."start_date_tz") AS DATE)) AS INT) + 1]), 1)) - 1) AS "date""#,
                 r#"FROM "MediaSession""#,
                 r#"WHERE "MediaSession"."user_id" = '00000000-0000-0000-0000-000000000000'"#,
                 r#"AND "MediaSession"."start_date" >= '2025-01-01T00:00:00Z'"#,
@@ -783,7 +783,7 @@ pub fn select_dates_with_search(
                     )
                     .sub(1),
             ),
-            "DATE",
+            "date",
         );
     from_and_where_user_id(&mut select, user_id);
     select.order_by(
@@ -791,7 +791,12 @@ pub fn select_dates_with_search(
         Order::Asc,
     );
 
-    Ok(apply_search_pagination(select, search.page, search.size))
+    select = apply_search_filter(select, search.filter)?;
+    Ok(SearchQuery {
+        query: select,
+        page: 0,
+        size: 0,
+    })
 }
 
 pub fn select_streaks_with_search(

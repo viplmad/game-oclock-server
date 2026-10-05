@@ -6,7 +6,7 @@ edition = "2024"
 [dependencies]
 actix-web = { version = "^4", default-features = false, features = [ "rustls", "macros" ] }
 sqlx = { version = "^0", default-features = false, features = [ "runtime-tokio", "macros", "migrate", "postgres", "chrono", "uuid" ] }
-sea-query = { version = "^1", default-features = false, features = [ "derive", "backend-postgres", "with-chrono" ] }
+sea-query = { git = "https://github.com/viplmad/sea-query.git", branch = "1.0.2-fix", default-features = false, features = [ "derive", "backend-postgres", "with-chrono" ] }
 chrono = { version = "^0", default-features = false, features = [ "serde" ] }
 iso8601 = { version = "^0", default-features = false }
 
