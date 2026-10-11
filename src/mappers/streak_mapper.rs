@@ -14,11 +14,7 @@ impl From<MediaSessionStreak> for SessionStreakDTO {
 }
 
 impl From<MediaSessionDate> for SessionDateDTO {
-    fn from(streak: MediaSessionDate) -> Self {
-        Self {
-            start_date: streak.start_date,
-            end_date: streak.end_date,
-            date: streak.date,
-        }
+    fn from(date: MediaSessionDate) -> Self {
+        Self { date: date.date }
     }
 }

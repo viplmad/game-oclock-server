@@ -19,7 +19,5 @@ pub struct MediaSessionStreak {
 
 #[derive(FromRow)]
 pub struct MediaSessionDate {
-    pub start_date: NaiveDate,
-    pub end_date: NaiveDate,
     pub date: NaiveDate,
 }

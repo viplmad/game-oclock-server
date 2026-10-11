@@ -25,10 +25,6 @@ impl ModelInfo for SessionStreakDTO {
 #[derive(Deserialize, Serialize, ToSchema)]
 pub struct SessionDateDTO {
     #[schema(value_type = String, format = Date)]
-    pub start_date: NaiveDate,
-    #[schema(value_type = String, format = Date)]
-    pub end_date: NaiveDate,
-    #[schema(value_type = String, format = Date)]
     pub date: NaiveDate,
 }
 

@@ -250,7 +250,7 @@ mod tests {
             [
                 r#"SELECT MIN("start_date") AS "start_date", MAX("end_date") AS "end_date", ARRAY_REMOVE(ARRAY_AGG(DISTINCT "media_id"), NULL) AS "media_ids", ARRAY_REMOVE(ARRAY_AGG(DISTINCT "device_id"), NULL) AS "device_ids", (MAX("end_date") - MIN("start_date")) + 1 AS "days""#,
                 r#"FROM (SELECT "start_date", "end_date", "media_id", "device_id", COUNT(*) FILTER (WHERE "starts_streak") OVER (ORDER BY "start_date") AS "grp""#,
-                r#"FROM (SELECT CAST(("MediaSession"."start_date" AT TIME ZONE "MediaSession"."start_date_tz") AS DATE) AS "start_date", CAST(("MediaSession"."end_date" AT TIME ZONE "MediaSession"."end_date_tz") AS DATE) AS "end_date", "MediaSession"."media_id" AS "media_id", "MediaSession"."device_id" AS "device_id", COALESCE(CAST(("MediaSession"."start_date" AT TIME ZONE "MediaSession"."start_date_tz") AS DATE) - (LAG(CAST(("MediaSession"."end_date" AT TIME ZONE "MediaSession"."end_date_tz") AS DATE)) OVER (ORDER BY "MediaSession"."start_date")), 99) > 1 AS "starts_streak""#,
+                r#"FROM (SELECT CAST(("MediaSession"."start_date" AT TIME ZONE "MediaSession"."start_date_tz") AS DATE) AS "start_date", CAST(("MediaSession"."end_date" AT TIME ZONE "MediaSession"."end_date_tz") AS DATE) - (CASE WHEN (CAST(("MediaSession"."end_date" AT TIME ZONE "MediaSession"."end_date_tz") AS TIME) = '00:00:00') THEN 1 ELSE 0 END) AS "end_date", "MediaSession"."media_id" AS "media_id", "MediaSession"."device_id" AS "device_id", COALESCE(CAST(("MediaSession"."start_date" AT TIME ZONE "MediaSession"."start_date_tz") AS DATE) - (LAG(CAST(("MediaSession"."end_date" AT TIME ZONE "MediaSession"."end_date_tz") AS DATE)) OVER (ORDER BY "MediaSession"."start_date")), 99) > 1 AS "starts_streak""#,
                 r#"FROM "MediaSession""#,
                 r#"WHERE "MediaSession"."user_id" = '00000000-0000-0000-0000-000000000000'"#,
                 r#"AND "MediaSession"."start_date" >= '2025-01-01T00:00:00Z'"#,
@@ -296,7 +296,7 @@ mod tests {
         assert_eq!(
             query.unwrap().query.to_string(PostgresQueryBuilder),
             [
-                r#"SELECT CAST(("MediaSession"."start_date" AT TIME ZONE "MediaSession"."start_date_tz") AS DATE) AS "start_date", CAST(("MediaSession"."end_date" AT TIME ZONE "MediaSession"."end_date_tz") AS DATE) AS "end_date", CAST(("MediaSession"."start_date" AT TIME ZONE "MediaSession"."start_date_tz") AS DATE) + (UNNEST(ARRAY_POSITIONS(ARRAY_FILL(1, ARRAY[(CAST((CAST(("MediaSession"."end_date" AT TIME ZONE "MediaSession"."end_date_tz") AS DATE) - CAST(("MediaSession"."start_date" AT TIME ZONE "MediaSession"."start_date_tz") AS DATE)) AS INT) + 1) - (CASE WHEN (CAST(("MediaSession"."end_date" AT TIME ZONE "MediaSession"."end_date_tz") AS TIME) = '00:00:00') THEN 1 ELSE 0 END)]), 1)) - 1) AS "date""#,
+                r#"SELECT CAST(("MediaSession"."start_date" AT TIME ZONE "MediaSession"."start_date_tz") AS DATE) + (UNNEST(ARRAY_POSITIONS(ARRAY_FILL(1, ARRAY[(CAST((CAST(("MediaSession"."end_date" AT TIME ZONE "MediaSession"."end_date_tz") AS DATE) - CAST(("MediaSession"."start_date" AT TIME ZONE "MediaSession"."start_date_tz") AS DATE)) AS INT) + 1) - (CASE WHEN (CAST(("MediaSession"."end_date" AT TIME ZONE "MediaSession"."end_date_tz") AS TIME) = '00:00:00') THEN 1 ELSE 0 END)]), 1)) - 1) AS "date""#,
                 r#"FROM "MediaSession""#,
                 r#"WHERE "MediaSession"."user_id" = '00000000-0000-0000-0000-000000000000'"#,
                 r#"AND "MediaSession"."start_date" >= '2025-01-01T00:00:00Z'"#,
@@ -767,34 +767,29 @@ pub fn select_dates_with_search(
         Expr::col((MediaSessionIden::Table, MediaSessionIden::EndDateTz)).into(),
     )
     .cast_as("TIME");
-    select
-        .expr_as(start_date_as_date.clone(), STREAK_START_DATE_SUB_ALIAS)
-        .expr_as(end_date_as_date.clone(), STREAK_END_DATE_SUB_ALIAS)
-        .expr_as(
-            start_date_as_date.clone().add(
-                Func::cust(Unnest)
-                    .arg(
-                        Func::cust(ArrayPositions)
-                            .arg(
-                                Func::cust(ArrayFill).arg(1).arg(new_array(
-                                    end_date_as_date
-                                        .clone()
-                                        .sub(start_date_as_date.clone())
-                                        .cast_as("INT")
-                                        .add(1)
-                                        .sub(
-                                            // Remove extra day from end_date if it is midnight
-                                            Expr::case(end_date_as_time.eq("00:00:00"), 1)
-                                                .finally(0),
-                                        ),
-                                )),
-                            )
-                            .arg(1),
-                    )
-                    .sub(1),
-            ),
-            "date",
-        );
+    select.expr_as(
+        start_date_as_date.clone().add(
+            Func::cust(Unnest)
+                .arg(
+                    Func::cust(ArrayPositions)
+                        .arg(
+                            Func::cust(ArrayFill).arg(1).arg(new_array(
+                                end_date_as_date
+                                    .sub(start_date_as_date.clone())
+                                    .cast_as("INT")
+                                    .add(1)
+                                    .sub(
+                                        // Remove extra day from end_date if it is midnight
+                                        is_midnight(end_date_as_time),
+                                    ),
+                            )),
+                        )
+                        .arg(1),
+                )
+                .sub(1),
+        ),
+        "date",
+    );
     from_and_where_user_id(&mut select, user_id);
     select.order_by(
         (MediaSessionIden::Table, MediaSessionIden::StartDate),
@@ -881,9 +876,20 @@ fn starts_streak(
         Expr::col((MediaSessionIden::Table, MediaSessionIden::EndDateTz)).into(),
     )
     .cast_as("DATE");
+    let end_date_as_time = at_time_zone(
+        Expr::col((MediaSessionIden::Table, MediaSessionIden::EndDate)).into(),
+        Expr::col((MediaSessionIden::Table, MediaSessionIden::EndDateTz)).into(),
+    )
+    .cast_as("TIME");
     select
         .expr_as(start_date_as_date.clone(), STREAK_START_DATE_SUB_ALIAS)
-        .expr_as(end_date_as_date.clone(), STREAK_END_DATE_SUB_ALIAS)
+        .expr_as(
+            end_date_as_date.clone().sub(
+                // Remove extra day from end_date if it is midnight
+                is_midnight(end_date_as_time),
+            ),
+            STREAK_END_DATE_SUB_ALIAS,
+        )
         .expr_as(
             Expr::col((MediaSessionIden::Table, MediaSessionIden::MediaId)),
             STREAK_MEDIA_ID_SUB_ALIAS,
@@ -911,6 +917,10 @@ fn starts_streak(
     );
 
     apply_search_filter(select, filter)
+}
+
+fn is_midnight(expr: Expr) -> sea_query::CaseStatement {
+    Expr::case(expr.clone().eq("00:00:00"), 1).finally(0)
 }
 
 fn over_order_by(from: SimpleExpr, order_by: SimpleExpr) -> SimpleExpr {
