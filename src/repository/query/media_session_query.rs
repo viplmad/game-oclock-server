@@ -296,7 +296,7 @@ mod tests {
         assert_eq!(
             query.unwrap().query.to_string(PostgresQueryBuilder),
             [
-                r#"SELECT CAST(("MediaSession"."start_date" AT TIME ZONE "MediaSession"."start_date_tz") AS DATE) AS "start_date", CAST(("MediaSession"."end_date" AT TIME ZONE "MediaSession"."end_date_tz") AS DATE) AS "end_date", CAST(("MediaSession"."start_date" AT TIME ZONE "MediaSession"."start_date_tz") AS DATE) + (UNNEST(ARRAY_POSITIONS(ARRAY_FILL(1, ARRAY[CAST((CAST(("MediaSession"."end_date" AT TIME ZONE "MediaSession"."end_date_tz") AS DATE) - CAST(("MediaSession"."start_date" AT TIME ZONE "MediaSession"."start_date_tz") AS DATE)) AS INT) + 1]), 1)) - 1) AS "date""#,
+                r#"SELECT CAST(("MediaSession"."start_date" AT TIME ZONE "MediaSession"."start_date_tz") AS DATE) AS "start_date", CAST(("MediaSession"."end_date" AT TIME ZONE "MediaSession"."end_date_tz") AS DATE) AS "end_date", CAST(("MediaSession"."start_date" AT TIME ZONE "MediaSession"."start_date_tz") AS DATE) + (UNNEST(ARRAY_POSITIONS(ARRAY_FILL(1, ARRAY[(CAST((CAST(("MediaSession"."end_date" AT TIME ZONE "MediaSession"."end_date_tz") AS DATE) - CAST(("MediaSession"."start_date" AT TIME ZONE "MediaSession"."start_date_tz") AS DATE)) AS INT) + 1) - (CASE WHEN (CAST(("MediaSession"."end_date" AT TIME ZONE "MediaSession"."end_date_tz") AS TIME) = '00:00:00') THEN 1 ELSE 0 END)]), 1)) - 1) AS "date""#,
                 r#"FROM "MediaSession""#,
                 r#"WHERE "MediaSession"."user_id" = '00000000-0000-0000-0000-000000000000'"#,
                 r#"AND "MediaSession"."start_date" >= '2025-01-01T00:00:00Z'"#,
@@ -762,6 +762,11 @@ pub fn select_dates_with_search(
         Expr::col((MediaSessionIden::Table, MediaSessionIden::EndDateTz)).into(),
     )
     .cast_as("DATE");
+    let end_date_as_time = at_time_zone(
+        Expr::col((MediaSessionIden::Table, MediaSessionIden::EndDate)).into(),
+        Expr::col((MediaSessionIden::Table, MediaSessionIden::EndDateTz)).into(),
+    )
+    .cast_as("TIME");
     select
         .expr_as(start_date_as_date.clone(), STREAK_START_DATE_SUB_ALIAS)
         .expr_as(end_date_as_date.clone(), STREAK_END_DATE_SUB_ALIAS)
@@ -776,7 +781,12 @@ pub fn select_dates_with_search(
                                         .clone()
                                         .sub(start_date_as_date.clone())
                                         .cast_as("INT")
-                                        .add(1),
+                                        .add(1)
+                                        .sub(
+                                            // Remove extra day from end_date if it is midnight
+                                            Expr::case(end_date_as_time.eq("00:00:00"), 1)
+                                                .finally(0),
+                                        ),
                                 )),
                             )
                             .arg(1),
