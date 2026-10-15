@@ -114,7 +114,7 @@ impl IgdbClient {
                     .into_iter()
                     .map(|e| e.name)
                     .collect(),
-                image_url: item.cover.map(|v| v.url),
+                image_url: None, // TODO item.cover.map(|v| v.url),
                 parent_id: None,
                 parent_order: None,
             })
