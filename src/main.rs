@@ -6,7 +6,7 @@ use game_oclock_server::{
     migrations, openapi, providers::SqlxPostgresPoolBuilder, repository::*, routes, services::*,
 };
 
-use actix_web::{App, HttpServer, middleware, web};
+use actix_web::{App, HttpMessage, HttpServer, middleware, web};
 use jsonwebtoken::{DecodingKey, EncodingKey};
 use utoipa_swagger_ui::{Config, SwaggerUi};
 
@@ -136,8 +136,15 @@ async fn run(
     let server = HttpServer::new(move || {
         let auth =
             authmiddleware::HttpAuthentication::bearer(game_oclock_server::auth::token_validator);
-            // Common Log Format -> remotehost rfc931 authuser [date] request status bytes
-            let logger = middleware::Logger::new(r#"%a - [%t] "%r" %s %b %D"#);
+        // Common Log Format -> remotehost rfc931 authuser [date] request status bytes
+        let logger = middleware::Logger::new(r#"%a %{AUTHUSER}xi [%t] "%r" %s %b %D"#)
+            .custom_request_replace("AUTHUSER", |req| {
+                req.request()
+                    .extensions()
+                    .get::<uuid::Uuid>()
+                    .map(|v| game_oclock_server::uuid_utils::to_string(v))
+                    .unwrap_or_else(|| String::from("-"))
+            });
 
         App::new()
             // Data injection
@@ -154,10 +161,10 @@ async fn run(
             .app_data(data_media_with_session_service.clone())
             .app_data(data_encoding_key.clone())
             .app_data(data_decoding_key.clone())
-            .wrap(logger)
             .service(
                 web::scope("/api").service(
                     web::scope("/v1")
+                        .wrap(logger)
                         .wrap(auth)
                         // Medias
                         .service(routes::get_media)

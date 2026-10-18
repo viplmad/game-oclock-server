@@ -1,3 +1,4 @@
+use actix_web::HttpMessage;
 use actix_web::{Error, dev::ServiceRequest};
 use actix_web_httpauth::extractors::AuthenticationError;
 use actix_web_httpauth::extractors::bearer::{BearerAuth, Config};
@@ -30,6 +31,7 @@ pub async fn token_validator(
         Ok(token_data) => {
             // Ensure only access token is validated
             if token_data.claims.is_access() {
+                req.extensions_mut().insert(token_data.claims.sub);
                 Ok(req)
             } else {
                 Err((AuthenticationError::from(config).into(), req))
