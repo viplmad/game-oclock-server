@@ -1,12 +1,12 @@
 use std::env;
 
-use actix_web_httpauth::middleware::HttpAuthentication;
+use actix_web_httpauth::middleware as authmiddleware;
 use dotenvy::dotenv;
 use game_oclock_server::{
     migrations, openapi, providers::SqlxPostgresPoolBuilder, repository::*, routes, services::*,
 };
 
-use actix_web::{App, HttpServer, web};
+use actix_web::{App, HttpServer, middleware, web};
 use jsonwebtoken::{DecodingKey, EncodingKey};
 use utoipa_swagger_ui::{Config, SwaggerUi};
 
@@ -134,7 +134,10 @@ async fn run(
     let openapi = openapi::get_openapi();
 
     let server = HttpServer::new(move || {
-        let auth = HttpAuthentication::bearer(game_oclock_server::auth::token_validator);
+        let auth =
+            authmiddleware::HttpAuthentication::bearer(game_oclock_server::auth::token_validator);
+            // Common Log Format -> remotehost rfc931 authuser [date] request status bytes
+            let logger = middleware::Logger::new(r#"%a - [%t] "%r" %s %b %D"#);
 
         App::new()
             // Data injection
@@ -151,6 +154,7 @@ async fn run(
             .app_data(data_media_with_session_service.clone())
             .app_data(data_encoding_key.clone())
             .app_data(data_decoding_key.clone())
+            .wrap(logger)
             .service(
                 web::scope("/api").service(
                     web::scope("/v1")
