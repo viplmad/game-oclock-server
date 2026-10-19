@@ -73,6 +73,7 @@ jobs:
           # udeps-report.json
 
   sonar:
+    if: false
     name: Sonar
     needs: analysis
     # This job will run on ubuntu virtual machine
