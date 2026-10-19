@@ -222,7 +222,7 @@ impl IgdbClient {
             .client
             .post(format!(
                 "{}{}?client_id={}&client_secret={}&grant_type={}",
-                AUTH_BASE_URL, AUTH_PATH, &self.client_id, &self.client_secret, grant_type
+                AUTH_BASE_URL, AUTH_PATH, self.client_id, self.client_secret, grant_type
             ))
             .send()
             .await

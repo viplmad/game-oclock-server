@@ -276,7 +276,7 @@ fn apply_sort<I: 'static + TableIden + Clone + Copy>(
             let expr = build_field_expr(sort.field);
             let order = sort.order;
 
-            select.order_by_expr(expr.into(), order);
+            select.order_by_expr(expr, order);
         }
     }
 }

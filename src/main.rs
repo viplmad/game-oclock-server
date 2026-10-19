@@ -142,7 +142,7 @@ async fn run(
                 req.request()
                     .extensions()
                     .get::<uuid::Uuid>()
-                    .map(|v| game_oclock_server::uuid_utils::to_string(v))
+                    .map(game_oclock_server::uuid_utils::to_string)
                     .unwrap_or_else(|| String::from("-"))
             });
 

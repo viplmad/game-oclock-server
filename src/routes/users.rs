@@ -1,15 +1,15 @@
 use actix_web::{Responder, delete, get, post, put, web};
 
+use crate::errors::forbidden_error;
 use crate::models::{
     AggregateResultDTO, AggregateSearchDTO, ErrorMessage, ItemId, ListSearchDTO, LoggedUser,
     NewUserDTO, PageResultDTO, PasswordChangeDTO, PasswordQuery, QuicksearchQuery, UserDTO,
 };
-use crate::routes::helpers::require_admin_or_current_user;
 use crate::services::UserService;
 
 use super::helpers::{
     handle_action_result, handle_create_result, handle_delete_result, handle_get_result,
-    handle_update_result, require_admin,
+    handle_update_result, require_admin, require_admin_or_current_user,
 };
 
 /// Get a user
@@ -39,8 +39,8 @@ pub async fn get_user(
 ) -> impl Responder {
     let ItemId(id) = path.into_inner();
 
-    if let Err(error) = require_admin_or_current_user(&user_service, &logged_user.id, &id).await {
-        return error;
+    if !require_admin_or_current_user(&user_service, &logged_user.id, &id).await {
+        return forbidden_error();
     }
 
     let get_result = user_service.get_user(&id).await;
@@ -98,8 +98,8 @@ pub async fn get_users(
     body: web::Json<ListSearchDTO>,
     logged_user: LoggedUser,
 ) -> impl Responder {
-    if let Err(error) = require_admin(&user_service, &logged_user.id).await {
-        return error;
+    if !require_admin(&user_service, &logged_user.id).await {
+        return forbidden_error();
     }
 
     let search_result = user_service.search_users(body.0, query.0.q).await;
@@ -132,8 +132,8 @@ pub async fn aggregate_users(
     body: web::Json<AggregateSearchDTO>,
     logged_user: LoggedUser,
 ) -> impl Responder {
-    if let Err(error) = require_admin(&user_service, &logged_user.id).await {
-        return error;
+    if !require_admin(&user_service, &logged_user.id).await {
+        return forbidden_error();
     }
 
     let aggregate_result = user_service.aggregate_users(body.0, query.0.q).await;
@@ -168,8 +168,8 @@ pub async fn create_user(
     body: web::Json<NewUserDTO>,
     logged_user: LoggedUser,
 ) -> impl Responder {
-    if let Err(error) = require_admin(&user_service, &logged_user.id).await {
-        return error;
+    if !require_admin(&user_service, &logged_user.id).await {
+        return forbidden_error();
     }
 
     let create_result = user_service.create_user(body.0, &query.0.password).await;
@@ -206,8 +206,8 @@ pub async fn update_user(
 ) -> impl Responder {
     let ItemId(id) = path.into_inner();
 
-    if let Err(error) = require_admin_or_current_user(&user_service, &logged_user.id, &id).await {
-        return error;
+    if !require_admin_or_current_user(&user_service, &logged_user.id, &id).await {
+        return forbidden_error();
     }
 
     let update_result = user_service.update_user(&id, body.0).await;
@@ -244,8 +244,8 @@ pub async fn change_password(
 ) -> impl Responder {
     let ItemId(id) = path.into_inner();
 
-    if let Err(error) = require_admin_or_current_user(&user_service, &logged_user.id, &id).await {
-        return error;
+    if !require_admin_or_current_user(&user_service, &logged_user.id, &id).await {
+        return forbidden_error();
     }
 
     let change_password_result = user_service.change_user_password(&id, form.0).await;
@@ -278,8 +278,8 @@ pub async fn promote_user(
     path: web::Path<ItemId>,
     logged_user: LoggedUser,
 ) -> impl Responder {
-    if let Err(error) = require_admin(&user_service, &logged_user.id).await {
-        return error;
+    if !require_admin(&user_service, &logged_user.id).await {
+        return forbidden_error();
     }
 
     let ItemId(id) = path.into_inner();
@@ -313,8 +313,8 @@ pub async fn demote_user(
     path: web::Path<ItemId>,
     logged_user: LoggedUser,
 ) -> impl Responder {
-    if let Err(error) = require_admin(&user_service, &logged_user.id).await {
-        return error;
+    if !require_admin(&user_service, &logged_user.id).await {
+        return forbidden_error();
     }
 
     let ItemId(id) = path.into_inner();
@@ -349,8 +349,8 @@ pub async fn delete_user(
 ) -> impl Responder {
     let ItemId(id) = path.into_inner();
 
-    if let Err(error) = require_admin_or_current_user(&user_service, &logged_user.id, &id).await {
-        return error;
+    if !require_admin_or_current_user(&user_service, &logged_user.id, &id).await {
+        return forbidden_error();
     }
 
     let delete_result = user_service.delete_user(&id).await;

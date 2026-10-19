@@ -753,18 +753,18 @@ pub fn select_dates_with_search(
     let mut select = Query::select();
 
     let start_date_as_date = at_time_zone(
-        Expr::col((MediaSessionIden::Table, MediaSessionIden::StartDate)).into(),
-        Expr::col((MediaSessionIden::Table, MediaSessionIden::StartDateTz)).into(),
+        Expr::col((MediaSessionIden::Table, MediaSessionIden::StartDate)),
+        Expr::col((MediaSessionIden::Table, MediaSessionIden::StartDateTz)),
     )
     .cast_as("DATE");
     let end_date_as_date = at_time_zone(
-        Expr::col((MediaSessionIden::Table, MediaSessionIden::EndDate)).into(),
-        Expr::col((MediaSessionIden::Table, MediaSessionIden::EndDateTz)).into(),
+        Expr::col((MediaSessionIden::Table, MediaSessionIden::EndDate)),
+        Expr::col((MediaSessionIden::Table, MediaSessionIden::EndDateTz)),
     )
     .cast_as("DATE");
     let end_date_as_time = at_time_zone(
-        Expr::col((MediaSessionIden::Table, MediaSessionIden::EndDate)).into(),
-        Expr::col((MediaSessionIden::Table, MediaSessionIden::EndDateTz)).into(),
+        Expr::col((MediaSessionIden::Table, MediaSessionIden::EndDate)),
+        Expr::col((MediaSessionIden::Table, MediaSessionIden::EndDateTz)),
     )
     .cast_as("TIME");
     select.expr_as(
@@ -820,16 +820,16 @@ pub fn select_streaks_with_search(
         .expr_as(min_start_date.clone(), STREAK_START_DATE_ALIAS)
         .expr_as(max_end_date.clone(), STREAK_END_DATE_ALIAS)
         .expr_as(
-            array_agg_distinct(Expr::col(STREAK_MEDIA_ID_SUB_ALIAS).into()),
+            array_agg_distinct(Expr::col(STREAK_MEDIA_ID_SUB_ALIAS)),
             STREAK_MEDIA_IDS_ALIAS,
         )
         .expr_as(
-            array_agg_distinct(Expr::col(STREAK_DEVICE_ID_SUB_ALIAS).into()),
+            array_agg_distinct(Expr::col(STREAK_DEVICE_ID_SUB_ALIAS)),
             STREAK_DEVICE_IDS_ALIAS,
         )
         .expr_as(streak_days.clone(), STREAK_DAYS_ALIAS);
     select.from_subquery(streaks_group(user_id, search.filter)?, "streaks_group_sub");
-    select.add_group_by([Expr::col(STREAK_GROUP_SUB_ALIAS).into()]);
+    select.add_group_by([Expr::col(STREAK_GROUP_SUB_ALIAS)]);
     select.order_by_expr(streak_days.clone(), Order::Desc);
 
     Ok(apply_search_pagination(select, search.page, search.size))
@@ -849,8 +849,8 @@ fn streaks_group(
         .expr_as(
             filter_over_order_by(
                 Expr::col(sea_query::Asterisk).count(),
-                Expr::col(STREAK_STARTS_STREAK_SUB_ALIAS).into(),
-                Expr::col(STREAK_START_DATE_SUB_ALIAS).into(),
+                Expr::col(STREAK_STARTS_STREAK_SUB_ALIAS),
+                Expr::col(STREAK_START_DATE_SUB_ALIAS),
             ),
             STREAK_GROUP_SUB_ALIAS,
         );
@@ -867,18 +867,18 @@ fn starts_streak(
     let mut select = Query::select();
 
     let start_date_as_date = at_time_zone(
-        Expr::col((MediaSessionIden::Table, MediaSessionIden::StartDate)).into(),
-        Expr::col((MediaSessionIden::Table, MediaSessionIden::StartDateTz)).into(),
+        Expr::col((MediaSessionIden::Table, MediaSessionIden::StartDate)),
+        Expr::col((MediaSessionIden::Table, MediaSessionIden::StartDateTz)),
     )
     .cast_as("DATE");
     let end_date_as_date = at_time_zone(
-        Expr::col((MediaSessionIden::Table, MediaSessionIden::EndDate)).into(),
-        Expr::col((MediaSessionIden::Table, MediaSessionIden::EndDateTz)).into(),
+        Expr::col((MediaSessionIden::Table, MediaSessionIden::EndDate)),
+        Expr::col((MediaSessionIden::Table, MediaSessionIden::EndDateTz)),
     )
     .cast_as("DATE");
     let end_date_as_time = at_time_zone(
-        Expr::col((MediaSessionIden::Table, MediaSessionIden::EndDate)).into(),
-        Expr::col((MediaSessionIden::Table, MediaSessionIden::EndDateTz)).into(),
+        Expr::col((MediaSessionIden::Table, MediaSessionIden::EndDate)),
+        Expr::col((MediaSessionIden::Table, MediaSessionIden::EndDateTz)),
     )
     .cast_as("TIME");
     select
@@ -902,10 +902,10 @@ fn starts_streak(
             Func::coalesce([
                 start_date_as_date.clone().sub(over_order_by(
                     Func::cust(Lag).arg(end_date_as_date.clone()).into(),
-                    Expr::col((MediaSessionIden::Table, MediaSessionIden::StartDate)).into(),
+                    Expr::col((MediaSessionIden::Table, MediaSessionIden::StartDate)),
                 )),
                 // 99 > 1 for first lag so it always starts streak
-                Expr::val(99).into(),
+                Expr::val(99),
             ])
             .gt(Expr::val(1)),
             STREAK_STARTS_STREAK_SUB_ALIAS,

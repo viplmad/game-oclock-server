@@ -2,7 +2,7 @@ use actix_web::HttpResponse;
 use serde::Serialize;
 use uuid::Uuid;
 
-use crate::errors::{ToError, forbidden_error};
+use crate::errors::ToError;
 use crate::services::UserService;
 
 pub(super) fn handle_get_result(
@@ -41,30 +41,15 @@ pub(super) fn handle_action_result(service_result: Result<(), impl ToError>) -> 
     }
 }
 
-pub(super) async fn require_admin(
-    user_service: &UserService,
-    user_id: &Uuid,
-) -> Result<(), HttpResponse> {
+pub(super) async fn require_admin(user_service: &UserService, user_id: &Uuid) -> bool {
     let admin_result = user_service.is_user_admin(user_id).await;
-    match admin_result {
-        Ok(admin) => {
-            if !admin {
-                return Err(forbidden_error());
-            }
-            Ok(())
-        }
-        Err(_) => Err(forbidden_error()),
-    }
+    admin_result.unwrap_or(false)
 }
 
 pub(super) async fn require_admin_or_current_user(
     user_service: &UserService,
     user_id: &Uuid,
     id: &Uuid,
-) -> Result<(), HttpResponse> {
-    if user_id == id {
-        Ok(())
-    } else {
-        require_admin(user_service, user_id).await
-    }
+) -> bool {
+    user_id == id || require_admin(user_service, user_id).await
 }
