@@ -13,7 +13,7 @@ ENV AR_aarch64_unknown_linux_musl=llvm-ar
 ENV CARGO_TARGET_AARCH64_UNKNOWN_LINUX_MUSL_RUSTFLAGS="-Clink-self-contained=yes -Clinker=rust-lld"
 ENV PKG_CONFIG_ALLOW_CROSS=1
 RUN rustup target add aarch64-unknown-linux-musl \
- && cargo build --target aarch64-unknown-linux-musl --release
+ && cargo build --locked --target aarch64-unknown-linux-musl --release
 
 
 FROM alpine:3.19 AS runtime
