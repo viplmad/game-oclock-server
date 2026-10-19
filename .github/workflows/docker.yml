@@ -4,7 +4,7 @@ on:
   # Triggers the workflow on Build CI workflow completion but only for the default branch
   workflow_run:
     workflows: ['Build CI']
-    branches: [main]
+    branches: [ main, feat/device ]
     types:
       - completed
 
