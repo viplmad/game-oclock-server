@@ -3,7 +3,7 @@ use std::{
     str::FromStr,
 };
 
-use serde::{de::Visitor, Deserialize, Serialize};
+use serde::{Deserialize, Serialize, de::Visitor};
 
 use crate::errors::error_message_builder;
 
@@ -44,7 +44,7 @@ impl<'de> Deserialize<'de> for DurationDef {
 
 struct DurationVisitor;
 
-impl<'de> Visitor<'de> for DurationVisitor {
+impl Visitor<'_> for DurationVisitor {
     type Value = DurationDef;
 
     fn expecting(&self, formatter: &mut std::fmt::Formatter) -> std::fmt::Result {

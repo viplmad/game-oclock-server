@@ -1,0 +1,181 @@
+use chrono::{DateTime, FixedOffset};
+use uuid::Uuid;
+
+use crate::entities::{
+    LocationAggregateSearch, LocationListSearch, MediaAggregateSearch, MediaAvailable,
+    MediaListSearch,
+};
+use crate::errors::ApiErrors;
+use crate::models::{
+    AggregateResultDTO, AggregateSearchDTO, ListSearchDTO, LocationAvailablePageResult,
+    LocationDTO, MediaAvailableDTO, MediaAvailablePageResult, MediaDTO,
+};
+use crate::repository::MediaAvailableRepository;
+
+use super::helpers::{
+    handle_action_result, handle_aggregate_search_mapping, handle_already_exists_result,
+    handle_get_aggregate_result, handle_get_list_paged_result, handle_list_search_mapping,
+    handle_not_found_result,
+};
+use super::{LocationService, MediaService};
+
+#[derive(Clone)]
+pub struct MediaAvailableService {
+    repository: MediaAvailableRepository,
+    media_service: MediaService,
+    location_service: LocationService,
+}
+
+impl MediaAvailableService {
+    pub fn with(
+        repository: MediaAvailableRepository,
+        media_service: MediaService,
+        location_service: LocationService,
+    ) -> Self {
+        Self {
+            repository,
+            media_service,
+            location_service,
+        }
+    }
+}
+
+impl MediaAvailableService {
+    pub async fn search_location_medias(
+        &self,
+        user_id: &Uuid,
+        location_id: &Uuid,
+        search: ListSearchDTO,
+        quicksearch: Option<String>,
+    ) -> Result<MediaAvailablePageResult, ApiErrors> {
+        self.location_service
+            .exists_location(user_id, location_id)
+            .await?;
+
+        let search = handle_list_search_mapping::<MediaDTO, MediaListSearch>(search, quicksearch)?;
+        let find_result = self
+            .repository
+            .search_all_medias_with_location(user_id, location_id, search)
+            .await;
+        handle_get_list_paged_result(find_result)
+    }
+
+    pub async fn aggregate_location_medias(
+        &self,
+        user_id: &Uuid,
+        location_id: &Uuid,
+        search: AggregateSearchDTO,
+        quicksearch: Option<String>,
+    ) -> Result<AggregateResultDTO, ApiErrors> {
+        self.location_service
+            .exists_location(user_id, location_id)
+            .await?;
+
+        let search =
+            handle_aggregate_search_mapping::<MediaDTO, MediaAggregateSearch>(search, quicksearch)?;
+        let aggregate_result = self
+            .repository
+            .aggregate_all_medias_with_location(user_id, location_id, search)
+            .await;
+        handle_get_aggregate_result::<MediaDTO>(aggregate_result)
+    }
+
+    pub async fn search_media_locations(
+        &self,
+        user_id: &Uuid,
+        media_id: &Uuid,
+        search: ListSearchDTO,
+        quicksearch: Option<String>,
+    ) -> Result<LocationAvailablePageResult, ApiErrors> {
+        self.media_service.exists_media(media_id).await?;
+
+        let search =
+            handle_list_search_mapping::<LocationDTO, LocationListSearch>(search, quicksearch)?;
+        let find_result = self
+            .repository
+            .search_all_locations_with_media(user_id, media_id, search)
+            .await;
+        handle_get_list_paged_result(find_result)
+    }
+
+    pub async fn aggregate_media_locations(
+        &self,
+        user_id: &Uuid,
+        media_id: &Uuid,
+        search: AggregateSearchDTO,
+        quicksearch: Option<String>,
+    ) -> Result<AggregateResultDTO, ApiErrors> {
+        self.media_service.exists_media(media_id).await?;
+
+        let search = handle_aggregate_search_mapping::<LocationDTO, LocationAggregateSearch>(
+            search,
+            quicksearch,
+        )?;
+        let aggregate_result = self
+            .repository
+            .aggregate_all_locations_with_media(user_id, media_id, search)
+            .await;
+        handle_get_aggregate_result::<LocationDTO>(aggregate_result)
+    }
+
+    pub async fn create_media_available(
+        &self,
+        user_id: &Uuid,
+        media_id: &Uuid,
+        location_id: &Uuid,
+        available_date: DateTime<FixedOffset>,
+    ) -> Result<(), ApiErrors> {
+        self.media_service.exists_media(media_id).await?;
+        self.location_service
+            .exists_location(user_id, location_id)
+            .await?;
+
+        let exists_result = self
+            .repository
+            .exists_by_id(user_id, media_id, location_id)
+            .await;
+        handle_already_exists_result::<MediaAvailableDTO>(exists_result)?;
+
+        let create_result = self
+            .repository
+            .create(&MediaAvailable {
+                user_id: *user_id,
+                media_id: *media_id,
+                location_id: *location_id,
+                date: available_date,
+                added_datetime: crate::date_utils::now(),
+                updated_datetime: crate::date_utils::now(),
+            })
+            .await;
+        handle_action_result::<MediaAvailableDTO>(create_result)
+    }
+
+    pub async fn delete_media_available(
+        &self,
+        user_id: &Uuid,
+        media_id: &Uuid,
+        location_id: &Uuid,
+    ) -> Result<(), ApiErrors> {
+        self.exists_media_available(user_id, media_id, location_id)
+            .await?;
+
+        let delete_result = self
+            .repository
+            .delete_by_id(user_id, media_id, location_id)
+            .await;
+        handle_action_result::<MediaAvailableDTO>(delete_result)
+    }
+
+    pub async fn exists_media_available(
+        &self,
+        user_id: &Uuid,
+        media_id: &Uuid,
+        location_id: &Uuid,
+    ) -> Result<(), ApiErrors> {
+        let exists_result = self
+            .repository
+            .exists_by_id(user_id, media_id, location_id)
+            .await;
+        handle_not_found_result::<MediaAvailableDTO>(exists_result)
+    }
+}

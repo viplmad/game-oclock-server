@@ -1,0 +1,480 @@
+use sea_query::{
+    BinOper, Cond, Expr, ExprTrait, Func, LikeExpr, SelectStatement, SimpleExpr, Value,
+};
+
+use crate::entities::{
+    AggregateCountMetric, AggregateDateHistogramGroup, AggregateFieldGroup, AggregateGroup,
+    AggregateGroupQuery, AggregateGroupSearch, AggregateGroupSort, AggregateGroupType,
+    AggregateMetric, AggregateQuery, AggregateSearch, AggregateSumMetric, AggregateType, ColIden,
+    FieldIden, FieldType, Filter, GroupDateHistogramInterval, GroupSortType, ListSearch,
+    MultipleValuesFilter, SearchQuery, SingleValueFilter, Sort, TableIden,
+};
+use crate::errors::{MappingError, SearchErrors};
+use crate::mappers::convert_value;
+
+use super::custom_funcs::{DatePart, Unnest};
+
+const DEFAULT_PAGE_SIZE: u64 = 500;
+const INITIAL_PAGE: u64 = 0;
+const LIKE_SYMBOL: &str = "%";
+
+pub fn apply_search<I: 'static + TableIden + Clone + Copy>(
+    mut select: SelectStatement,
+    search: ListSearch<I>,
+) -> Result<SearchQuery, SearchErrors> {
+    apply_filter(&mut select, search.filter).map_err(SearchErrors::Mapping)?;
+
+    apply_sort(&mut select, search.sort);
+
+    let (page, size) = apply_pagination(&mut select, search.page, search.size);
+
+    Ok(SearchQuery {
+        query: select,
+        page,
+        size,
+    })
+}
+
+pub fn apply_search_filter<I: 'static + TableIden + Clone + Copy>(
+    mut select: SelectStatement,
+    filter: Option<Vec<Filter<I>>>,
+) -> Result<SelectStatement, SearchErrors> {
+    apply_filter(&mut select, filter).map_err(SearchErrors::Mapping)?;
+
+    Ok(select)
+}
+
+pub fn apply_search_pagination(
+    mut select: SelectStatement,
+    page: Option<u64>,
+    size: Option<u64>,
+) -> SearchQuery {
+    let (page, size) = apply_pagination(&mut select, page, size);
+
+    SearchQuery {
+        query: select,
+        page,
+        size,
+    }
+}
+
+pub fn apply_aggregate_search<I: 'static + TableIden + Clone + Copy>(
+    mut select: SelectStatement,
+    search: AggregateSearch<I>,
+) -> Result<AggregateQuery, SearchErrors> {
+    apply_filter(&mut select, search.filter).map_err(SearchErrors::Mapping)?;
+
+    let (kind, field_kind, _) =
+        apply_aggregate_metric(&mut select, search.aggr).map_err(SearchErrors::Mapping)?;
+
+    Ok(AggregateQuery {
+        query: select,
+        kind,
+        field_kind,
+    })
+}
+
+pub fn apply_aggregate_group_search<I: 'static + TableIden + Clone + Copy>(
+    mut select: SelectStatement,
+    search: AggregateGroupSearch<I>,
+) -> Result<AggregateGroupQuery, SearchErrors> {
+    apply_filter(&mut select, search.filter).map_err(SearchErrors::Mapping)?;
+
+    let (_, size) = if search.size.is_some() {
+        apply_pagination(&mut select, None, search.size)
+    } else {
+        (0, 0)
+    };
+
+    let (group_kind, group_field_kind, group_expr) =
+        apply_aggregate_group(&mut select, search.group).map_err(SearchErrors::Mapping)?;
+
+    let (subgroup_kind, subgroup_field_kind, subgroup_expr) = match search.subgroup {
+        Some(subgroup) => {
+            let (group_kind, group_field_kind, group_expr) =
+                apply_aggregate_group(&mut select, subgroup).map_err(SearchErrors::Mapping)?;
+            (Some(group_kind), Some(group_field_kind), Some(group_expr))
+        }
+        None => (None, None, None),
+    };
+
+    let (kind, field_kind, metric_expr) =
+        apply_aggregate_metric(&mut select, search.aggr).map_err(SearchErrors::Mapping)?;
+
+    apply_aggregate_group_sort(
+        &mut select,
+        search.sort,
+        metric_expr,
+        group_expr,
+        subgroup_expr,
+    )
+    .map_err(SearchErrors::Mapping)?;
+
+    Ok(AggregateGroupQuery {
+        query: select,
+        kind,
+        field_kind,
+        group_kind,
+        group_field_kind,
+        subgroup_kind,
+        subgroup_field_kind,
+        size,
+    })
+}
+
+fn apply_filter<I: 'static + TableIden + Clone + Copy>(
+    select: &mut SelectStatement,
+    filter: Option<Vec<Filter<I>>>,
+) -> Result<(), MappingError> {
+    if let Some(filters) = filter
+        && !filters.is_empty()
+    {
+        let mut ands = Cond::all();
+        let mut ors = Cond::any();
+
+        for filter in filters {
+            let chain_operator = filter.chain_operator();
+            let expr = match filter {
+                Filter::Equal(f) => {
+                    let (col, value) = build_single_value(f)?;
+
+                    col.eq(value)
+                }
+                Filter::NotEqual(f) => {
+                    let (col, value) = build_single_value(f)?;
+
+                    col.ne(value)
+                }
+                Filter::GreaterThan(f) => {
+                    let (col, value) = build_single_value(f)?;
+
+                    col.gt(value)
+                }
+                Filter::GreaterThanOrEqual(f) => {
+                    let (col, value) = build_single_value(f)?;
+
+                    col.gte(value)
+                }
+                Filter::SmallerThan(f) => {
+                    let (col, value) = build_single_value(f)?;
+
+                    col.lt(value)
+                }
+                Filter::SmallerThanOrEqual(f) => {
+                    let (col, value) = build_single_value(f)?;
+
+                    col.lte(value)
+                }
+                Filter::In(f) => {
+                    let (col, values) = build_multiple_values(f)?;
+
+                    col.is_in(values)
+                }
+                Filter::NotIn(f) => {
+                    let (col, values) = build_multiple_values(f)?;
+
+                    col.is_not_in(values)
+                }
+                Filter::StartsWith(f) => {
+                    let value = &f.value;
+                    let col = build_field_expr(f.field);
+
+                    to_lower(col).like(LikeExpr::new(format_like_starts_with(value)))
+                }
+                Filter::NotStartsWith(f) => {
+                    let value = &f.value;
+                    let col = build_field_expr(f.field);
+
+                    to_lower(col).not_like(LikeExpr::new(format_like_starts_with(value)))
+                }
+                Filter::EndsWith(f) => {
+                    let value = &f.value;
+                    let col = build_field_expr(f.field);
+
+                    to_lower(col).like(LikeExpr::new(format_like_ends_with(value)))
+                }
+                Filter::NotEndsWith(f) => {
+                    let value = &f.value;
+                    let col = build_field_expr(f.field);
+
+                    to_lower(col).not_like(LikeExpr::new(format_like_ends_with(value)))
+                }
+                Filter::Contains(f) => {
+                    let value = &f.value;
+                    let col = build_field_expr(f.field);
+
+                    to_lower(col).like(LikeExpr::new(format_like_contains(value)))
+                }
+                Filter::NotContains(f) => {
+                    let value = &f.value;
+                    let col = build_field_expr(f.field);
+
+                    to_lower(col).not_like(LikeExpr::new(format_like_contains(value)))
+                }
+                Filter::Null(f) => {
+                    let col = build_field_expr(f.field);
+
+                    col.is_null()
+                }
+                Filter::NotNull(f) => {
+                    let col = build_field_expr(f.field);
+
+                    col.is_not_null()
+                }
+            };
+
+            match chain_operator {
+                BinOper::And => ands = ands.add(expr),
+                BinOper::Or => ors = ors.add(expr),
+                _ => unreachable!(),
+            }
+        }
+
+        if !ands.is_empty() {
+            select.cond_where(ands);
+        }
+        if !ors.is_empty() {
+            select.cond_where(ors);
+        }
+    }
+
+    Ok(())
+}
+
+fn build_single_value<I: 'static + TableIden + Clone + Copy>(
+    filter: SingleValueFilter<I>,
+) -> Result<(Expr, Value), MappingError> {
+    let field_kind = filter.field.kind();
+    let col = build_field_expr(filter.field);
+
+    let value = convert_value(&filter.value, field_kind)?;
+
+    Ok((col, value))
+}
+
+fn build_multiple_values<I: 'static + TableIden + Clone + Copy>(
+    filter: MultipleValuesFilter<I>,
+) -> Result<(Expr, Vec<Value>), MappingError> {
+    let field_kind = filter.field.kind();
+    let col = build_field_expr(filter.field);
+
+    let values = filter
+        .value
+        .iter()
+        .map(|v| convert_value(v, field_kind.clone()))
+        .collect::<Result<Vec<Value>, MappingError>>()?;
+
+    Ok((col, values))
+}
+
+fn apply_sort<I: 'static + TableIden + Clone + Copy>(
+    select: &mut SelectStatement,
+    optional_sort: Option<Vec<Sort<I>>>,
+) {
+    if let Some(sorts) = optional_sort {
+        for sort in sorts {
+            let expr = build_field_expr(sort.field);
+            let order = sort.order;
+
+            select.order_by_expr(expr, order);
+        }
+    }
+}
+
+fn apply_pagination(
+    select: &mut SelectStatement,
+    optional_page: Option<u64>,
+    optional_size: Option<u64>,
+) -> (u64, u64) {
+    let size = optional_size.unwrap_or(DEFAULT_PAGE_SIZE);
+    select.limit(size);
+
+    let page = optional_page.unwrap_or(INITIAL_PAGE);
+    select.offset(page * size);
+
+    (page, size)
+}
+
+fn apply_aggregate_group_sort(
+    select: &mut SelectStatement,
+    optional_sort: Option<Vec<AggregateGroupSort>>,
+    metric_expr: SimpleExpr,
+    group_expr: SimpleExpr,
+    subgroup_expr: Option<SimpleExpr>,
+) -> Result<(), MappingError> {
+    if let Some(sorts) = optional_sort {
+        for sort in sorts {
+            let expr = match sort.field {
+                GroupSortType::Metric => metric_expr.clone(),
+                GroupSortType::Group => group_expr.clone(),
+                GroupSortType::Subgroup => match subgroup_expr.clone() {
+                    Some(expr) => Ok(expr),
+                    None => Err(MappingError(String::from(
+                        "Cannot use subgroup sort when not using subgroup",
+                    ))),
+                }?,
+            };
+            let order = sort.order;
+
+            select.order_by_expr(expr, order);
+        }
+    }
+
+    Ok(())
+}
+
+fn apply_aggregate_metric<I: 'static + TableIden + Clone + Copy>(
+    select: &mut SelectStatement,
+    aggr: AggregateMetric<I>,
+) -> Result<(AggregateType, FieldType, SimpleExpr), MappingError> {
+    let kind = aggr.kind();
+    let field_kind = aggr.field_kind();
+    let expr = match aggr {
+        AggregateMetric::Count(c) => apply_aggregate_count_metric(select, c),
+        AggregateMetric::Sum(s) => apply_aggregate_sum_metric(select, s),
+    }?;
+
+    Ok((kind, field_kind, expr))
+}
+
+fn apply_aggregate_count_metric<I: 'static + TableIden + Clone + Copy>(
+    select: &mut SelectStatement,
+    aggr: AggregateCountMetric<I>,
+) -> Result<SimpleExpr, MappingError> {
+    let field_kind = aggr.field.kind();
+    let col = build_field_expr(aggr.field);
+
+    let expr = coalesce_default(col, aggr.default_value, field_kind)?;
+
+    let expr = if aggr.distinct {
+        expr.count_distinct()
+    } else {
+        expr.count()
+    };
+
+    select.expr(expr.clone());
+
+    Ok(expr)
+}
+
+fn apply_aggregate_sum_metric<I: 'static + TableIden + Clone + Copy>(
+    select: &mut SelectStatement,
+    aggr: AggregateSumMetric<I>,
+) -> Result<SimpleExpr, MappingError> {
+    let field_kind = aggr.field.kind();
+    let col = build_field_expr(aggr.field);
+
+    let expr = coalesce_default(col, aggr.default_value, field_kind)?;
+
+    let expr = expr.sum();
+
+    select.expr(expr.clone());
+
+    Ok(expr)
+}
+
+fn apply_aggregate_group<I: 'static + TableIden + Clone + Copy>(
+    select: &mut SelectStatement,
+    aggr: AggregateGroup<I>,
+) -> Result<(AggregateGroupType, FieldType, SimpleExpr), MappingError> {
+    let kind = aggr.kind();
+    let field_kind = aggr.field_kind();
+    let expr = match aggr {
+        AggregateGroup::Field(f) => apply_aggregate_field_group(select, f),
+        AggregateGroup::DateHistogram(d) => apply_aggregate_date_histogram_group(select, d),
+    }?;
+
+    Ok((kind, field_kind, expr))
+}
+
+fn apply_aggregate_field_group<I: 'static + TableIden + Clone + Copy>(
+    select: &mut SelectStatement,
+    aggr: AggregateFieldGroup<I>,
+) -> Result<SimpleExpr, MappingError> {
+    let field_kind = aggr.field.kind();
+    let col = build_field_expr(aggr.field);
+
+    let expr = coalesce_default(col, aggr.default_value, field_kind.clone())?;
+    let expr = match field_kind {
+        FieldType::String => expr.cast_as("TEXT"),
+        FieldType::Array => Func::cust(Unnest).arg(expr).cast_as("TEXT"),
+        _ => expr.cast_as("BIGINT"),
+    };
+
+    select.expr(expr.clone());
+    select.add_group_by([expr.clone()]);
+
+    Ok(expr)
+}
+
+fn apply_aggregate_date_histogram_group<I: 'static + TableIden + Clone + Copy>(
+    select: &mut SelectStatement,
+    aggr: AggregateDateHistogramGroup<I>,
+) -> Result<SimpleExpr, MappingError> {
+    let field_kind = aggr.field.kind();
+    let col = build_field_expr(aggr.field);
+
+    let expr = coalesce_default(col, aggr.default_value, field_kind)?;
+
+    let expr = match aggr.interval {
+        GroupDateHistogramInterval::Year => Func::cust(DatePart).arg("year").arg(expr),
+        GroupDateHistogramInterval::Month => Func::cust(DatePart).arg("month").arg(expr),
+        GroupDateHistogramInterval::Day => Func::cust(DatePart).arg("day").arg(expr),
+        GroupDateHistogramInterval::Weekday => Func::cust(DatePart).arg("isodow").arg(expr),
+        GroupDateHistogramInterval::Hour => Func::cust(DatePart).arg("hour").arg(expr),
+        GroupDateHistogramInterval::Minute => Func::cust(DatePart).arg("minute").arg(expr),
+    }
+    .cast_as("BIGINT"); // Cast as int as no float date parts are used
+
+    select.expr(expr.clone());
+    select.add_group_by([expr.clone()]);
+
+    Ok(expr)
+}
+
+fn to_lower(col: Expr) -> Expr {
+    Expr::expr(Func::lower(col))
+}
+
+fn format_like_starts_with(search: &str) -> String {
+    let value: &str = &search.to_lowercase();
+    format!("{value}{LIKE_SYMBOL}")
+}
+
+fn format_like_ends_with(search: &str) -> String {
+    let value: &str = &search.to_lowercase();
+    format!("{LIKE_SYMBOL}{value}")
+}
+
+fn format_like_contains(search: &str) -> String {
+    let value: &str = &search.to_lowercase();
+    format!("{LIKE_SYMBOL}{value}{LIKE_SYMBOL}")
+}
+
+fn build_field_expr<I: 'static + TableIden + Clone + Copy>(field: FieldIden<I>) -> Expr {
+    match field {
+        FieldIden::Col(c) => build_col_expr(c),
+        FieldIden::Expr(e) => Expr::expr(e.expr),
+        FieldIden::ExtCol(e) => build_col_expr(e),
+    }
+}
+
+fn build_col_expr<I: 'static + TableIden + Clone + Copy>(field: ColIden<I>) -> Expr {
+    let table = field.table;
+    let field = field.iden;
+    Expr::col((table, field))
+}
+
+fn coalesce_default(
+    column: Expr,
+    default_value: Option<String>,
+    field_kind: FieldType,
+) -> Result<Expr, MappingError> {
+    Ok(match default_value {
+        Some(def) => Expr::expr(Func::coalesce([
+            column,
+            convert_value(&def, field_kind)?.into(),
+        ])),
+        None => column,
+    })
+}

@@ -1,4 +1,4 @@
-use sea_query::{BinOper, Iden, Order, SelectStatement};
+use sea_query::{BinOper, Order, SelectStatement, SimpleExpr};
 
 use super::TableIden;
 
@@ -8,121 +8,369 @@ pub struct SearchQuery {
     pub size: u64,
 }
 
-pub struct Search<I: TableIden> {
-    pub filter: Option<Vec<Filter<I>>>,
-    pub sort: Option<Vec<Sort<I>>>,
+pub struct AggregateQuery {
+    pub query: SelectStatement,
+    pub kind: AggregateType,
+    pub field_kind: FieldType,
+}
+
+pub struct AggregateGroupQuery {
+    pub query: SelectStatement,
+    pub kind: AggregateType,
+    pub field_kind: FieldType,
+    pub group_kind: AggregateGroupType,
+    pub group_field_kind: FieldType,
+    pub subgroup_kind: Option<AggregateGroupType>,
+    pub subgroup_field_kind: Option<FieldType>,
+    pub size: u64,
+}
+
+pub struct ListSearch<T: TableIden> {
+    pub filter: Option<Vec<Filter<T>>>,
+    pub sort: Option<Vec<Sort<T>>>,
     pub page: Option<u64>,
     pub size: Option<u64>,
 }
 
-pub struct Filter<I: TableIden> {
-    pub table: std::rc::Rc<dyn Iden>,
-    pub field: std::rc::Rc<dyn Iden>,
-    pub value: FieldValue,
-    pub operator: FilterOperator,
+pub struct AggregateSearch<T: TableIden> {
+    pub filter: Option<Vec<Filter<T>>>,
+    pub aggr: AggregateMetric<T>,
+}
+
+pub struct AggregateGroupSearch<T: TableIden> {
+    pub filter: Option<Vec<Filter<T>>>,
+    pub sort: Option<Vec<AggregateGroupSort>>,
+    pub aggr: AggregateMetric<T>,
+    pub group: AggregateGroup<T>,
+    pub subgroup: Option<AggregateGroup<T>>,
+    pub size: Option<u64>,
+}
+
+/// Aggregate metric
+pub enum AggregateMetric<T: TableIden> {
+    Count(AggregateCountMetric<T>),
+    Sum(AggregateSumMetric<T>),
+}
+
+pub struct AggregateSumMetric<T: TableIden> {
+    pub kind: AggregateType,
+    pub field: FieldIden<T>,
+    pub default_value: Option<String>,
+}
+
+pub struct AggregateCountMetric<T: TableIden> {
+    pub kind: AggregateType,
+    pub field: FieldIden<T>,
+    pub default_value: Option<String>,
+    pub distinct: bool,
+}
+
+impl<T: TableIden> AggregateMetric<T> {
+    pub fn kind(&self) -> AggregateType {
+        match self {
+            AggregateMetric::Count(c) => c.kind.clone(),
+            AggregateMetric::Sum(s) => s.kind.clone(),
+        }
+    }
+
+    pub fn field_kind(&self) -> FieldType {
+        match self {
+            AggregateMetric::Count(c) => c.field.kind(),
+            AggregateMetric::Sum(s) => s.field.kind(),
+        }
+    }
+}
+
+impl<T: TableIden> AggregateCountMetric<T> {
+    pub fn new(field: FieldIden<T>, default_value: Option<String>, distinct: bool) -> Self {
+        Self {
+            kind: AggregateType::Count,
+            field,
+            default_value,
+            distinct,
+        }
+    }
+}
+
+impl<T: TableIden> AggregateSumMetric<T> {
+    pub fn new(field: FieldIden<T>, default_value: Option<String>) -> Self {
+        Self {
+            kind: AggregateType::Sum,
+            field,
+            default_value,
+        }
+    }
+}
+
+/// Aggregate group
+pub enum AggregateGroup<T: TableIden> {
+    Field(AggregateFieldGroup<T>),
+    DateHistogram(AggregateDateHistogramGroup<T>),
+}
+
+pub struct AggregateFieldGroup<T: TableIden> {
+    pub kind: AggregateGroupType,
+    pub field: FieldIden<T>,
+    pub default_value: Option<String>,
+}
+
+pub struct AggregateDateHistogramGroup<T: TableIden> {
+    pub kind: AggregateGroupType,
+    pub field: FieldIden<T>,
+    pub default_value: Option<String>,
+    pub interval: GroupDateHistogramInterval,
+}
+
+pub enum GroupDateHistogramInterval {
+    Year,
+    Month,
+    Weekday,
+    Day,
+    Hour,
+    Minute,
+}
+
+impl<T: TableIden> AggregateGroup<T> {
+    pub fn field_ext_table(&self) -> Option<String> {
+        let field = match self {
+            AggregateGroup::Field(f) => &f.field,
+            AggregateGroup::DateHistogram(f) => &f.field,
+        };
+        match field {
+            crate::entities::FieldIden::ExtCol(e) => Some(e.table.to_string()),
+            _ => None,
+        }
+    }
+
+    pub fn kind(&self) -> AggregateGroupType {
+        match self {
+            AggregateGroup::Field(f) => f.kind.clone(),
+            AggregateGroup::DateHistogram(f) => f.kind.clone(),
+        }
+    }
+
+    pub fn field_kind(&self) -> FieldType {
+        match self {
+            AggregateGroup::Field(f) => f.field.kind(),
+            AggregateGroup::DateHistogram(f) => f.field.kind(),
+        }
+    }
+}
+
+impl<T: TableIden> AggregateFieldGroup<T> {
+    pub fn new(field: FieldIden<T>, default_value: Option<String>) -> Self {
+        Self {
+            kind: AggregateGroupType::Field,
+            field,
+            default_value,
+        }
+    }
+}
+
+impl<T: TableIden> AggregateDateHistogramGroup<T> {
+    pub fn new(
+        field: FieldIden<T>,
+        default_value: Option<String>,
+        interval: GroupDateHistogramInterval,
+    ) -> Self {
+        Self {
+            kind: AggregateGroupType::DateHistogram,
+            field,
+            default_value,
+            interval,
+        }
+    }
+}
+//
+pub struct AggregateGroupSort {
+    pub field: GroupSortType,
+    pub order: Order,
+}
+
+pub enum GroupSortType {
+    Metric,
+    Group,
+    Subgroup,
+}
+
+impl AggregateGroupSort {
+    pub fn new(field: GroupSortType, order: Order) -> Self {
+        Self { field, order }
+    }
+}
+
+/// Filter
+pub enum Filter<T: TableIden> {
+    Equal(SingleValueFilter<T>),
+    NotEqual(SingleValueFilter<T>),
+    GreaterThan(SingleValueFilter<T>),
+    GreaterThanOrEqual(SingleValueFilter<T>),
+    SmallerThan(SingleValueFilter<T>),
+    SmallerThanOrEqual(SingleValueFilter<T>),
+    In(MultipleValuesFilter<T>),
+    NotIn(MultipleValuesFilter<T>),
+    StartsWith(SingleValueFilter<T>),
+    NotStartsWith(SingleValueFilter<T>),
+    EndsWith(SingleValueFilter<T>),
+    NotEndsWith(SingleValueFilter<T>),
+    Contains(SingleValueFilter<T>),
+    NotContains(SingleValueFilter<T>),
+    Null(NoValueFilter<T>),
+    NotNull(NoValueFilter<T>),
+}
+
+pub struct SingleValueFilter<T: TableIden> {
+    pub field: FieldIden<T>,
+    pub value: String,
     pub chain_operator: BinOper,
-    resource_type: std::marker::PhantomData<I>,
+}
+
+pub struct MultipleValuesFilter<T: TableIden> {
+    pub field: FieldIden<T>,
+    pub value: Vec<String>,
+    pub chain_operator: BinOper,
+}
+
+pub struct NoValueFilter<T: TableIden> {
+    pub field: FieldIden<T>,
+    pub chain_operator: BinOper,
 }
 
 impl<T: TableIden> Filter<T> {
-    pub fn new<I: TableIden>(
-        table: std::rc::Rc<dyn Iden>,
-        field: std::rc::Rc<dyn Iden>,
-        value: FieldValue,
-        operator: FilterOperator,
-        chain_operator: BinOper,
-    ) -> Self {
-        Self {
-            table,
-            field,
-            value,
-            operator,
-            chain_operator,
-            resource_type: std::marker::PhantomData,
+    pub fn chain_operator(&self) -> BinOper {
+        match self {
+            Filter::Equal(f) => f.chain_operator,
+            Filter::NotEqual(f) => f.chain_operator,
+            Filter::GreaterThan(f) => f.chain_operator,
+            Filter::GreaterThanOrEqual(f) => f.chain_operator,
+            Filter::SmallerThan(f) => f.chain_operator,
+            Filter::SmallerThanOrEqual(f) => f.chain_operator,
+            Filter::In(f) => f.chain_operator,
+            Filter::NotIn(f) => f.chain_operator,
+            Filter::StartsWith(f) => f.chain_operator,
+            Filter::NotStartsWith(f) => f.chain_operator,
+            Filter::EndsWith(f) => f.chain_operator,
+            Filter::NotEndsWith(f) => f.chain_operator,
+            Filter::Contains(f) => f.chain_operator,
+            Filter::NotContains(f) => f.chain_operator,
+            Filter::Null(f) => f.chain_operator,
+            Filter::NotNull(f) => f.chain_operator,
         }
     }
 }
 
-pub enum FieldValue {
-    Value(FieldSearchValue),
-    Values(FieldSearchValues),
+impl<T: TableIden> SingleValueFilter<T> {
+    pub fn new(field: FieldIden<T>, value: String, chain_operator: BinOper) -> Self {
+        Self {
+            field,
+            value,
+            chain_operator,
+        }
+    }
 }
 
-pub struct FieldSearchValue {
-    pub _type: FieldType,
-    pub value: String,
+impl<T: TableIden> MultipleValuesFilter<T> {
+    pub fn new(field: FieldIden<T>, value: Vec<String>, chain_operator: BinOper) -> Self {
+        Self {
+            field,
+            value,
+            chain_operator,
+        }
+    }
 }
 
-pub struct FieldSearchValues {
-    pub _type: FieldType,
-    pub values: Vec<String>,
+impl<T: TableIden> NoValueFilter<T> {
+    pub fn new(field: FieldIden<T>, chain_operator: BinOper) -> Self {
+        Self {
+            field,
+            chain_operator,
+        }
+    }
 }
 
-#[derive(Clone)]
-pub enum FilterOperator {
-    Equal,
-    NotEqual,
-    GreaterThan,
-    GreaterThanOrEqual,
-    SmallerThan,
-    SmallerThanOrEqual,
-    In,
-    NotIn,
-    StartsWith,
-    NotStartsWith,
-    EndsWith,
-    NotEndsWith,
-    Contains,
-    NotContains,
-}
-
-pub struct Sort<I: TableIden> {
-    pub table: std::rc::Rc<dyn Iden>,
-    pub field: std::rc::Rc<dyn Iden>,
+/// Sort
+pub struct Sort<T: TableIden> {
+    pub field: FieldIden<T>,
     pub order: Order,
-    resource_type: std::marker::PhantomData<I>,
 }
 
 impl<T: TableIden> Sort<T> {
-    pub fn new<I: TableIden>(
-        table: std::rc::Rc<dyn Iden>,
-        field: std::rc::Rc<dyn Iden>,
-        order: Order,
-    ) -> Self {
-        Self {
-            table,
-            field,
-            order,
-            resource_type: std::marker::PhantomData,
-        }
+    pub fn new(field: FieldIden<T>, order: Order) -> Self {
+        Self { field, order }
     }
 }
 
-pub struct FieldIden<I: TableIden> {
-    pub table: std::rc::Rc<dyn Iden>,
-    pub iden: std::rc::Rc<dyn Iden>,
-    pub _type: FieldType,
-    resource_type: std::marker::PhantomData<I>,
+/// Field
+pub enum FieldIden<T: TableIden> {
+    Col(ColIden<T>),
+    Expr(ExprIden<T>),
+    ExtCol(ColIden<T>),
+}
+
+pub struct ColIden<T: TableIden> {
+    pub table: String,
+    pub iden: String,
+    pub kind: FieldType,
+    resource_type: std::marker::PhantomData<T>,
+}
+
+pub struct ExprIden<T: TableIden> {
+    pub expr: SimpleExpr,
+    pub kind: FieldType,
+    resource_type: std::marker::PhantomData<T>,
 }
 
 impl<T: TableIden> FieldIden<T> {
-    pub fn new<I: 'static + TableIden>(iden: I, _type: FieldType) -> Self {
+    pub fn kind(&self) -> FieldType {
+        match self {
+            FieldIden::Col(c) => c.kind.clone(),
+            FieldIden::Expr(e) => e.kind.clone(),
+            FieldIden::ExtCol(e) => e.kind.clone(),
+        }
+    }
+}
+
+impl<T: TableIden> ColIden<T> {
+    pub fn new<I: 'static + TableIden>(iden: I, kind: FieldType) -> Self {
         Self {
-            table: std::rc::Rc::new(I::TABLE),
-            iden: std::rc::Rc::new(iden),
-            _type,
+            table: I::TABLE.to_string(),
+            iden: iden.to_string(),
+            kind,
             resource_type: std::marker::PhantomData,
         }
     }
 }
 
-#[derive(Clone)]
+impl<T: TableIden> ExprIden<T> {
+    pub fn new<I: 'static + TableIden>(expr: SimpleExpr, kind: FieldType) -> Self {
+        Self {
+            expr,
+            kind,
+            resource_type: std::marker::PhantomData,
+        }
+    }
+}
+
+#[derive(Clone, PartialEq)]
 pub enum FieldType {
     Integer,
     String,
     Boolean,
     Date,
     DateTime,
-    GameStatus,
-    PlatformType,
+    Interval,
+    Array,
+    MediaStatus,
+}
+
+#[derive(Clone, PartialEq)]
+pub enum AggregateType {
+    Count,
+    Sum,
+}
+
+#[derive(Clone, PartialEq)]
+pub enum AggregateGroupType {
+    Field,
+    DateHistogram,
 }

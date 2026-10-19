@@ -1,44 +1,28 @@
 use std::str::FromStr;
 
-use chrono::NaiveDateTime;
-use sea_query::Iden;
+use chrono::{DateTime, FixedOffset};
+use sea_query::enum_def;
 use sqlx::FromRow;
 use uuid::Uuid;
 
-use super::{FieldIden, FieldType, Search, TableIden};
+use super::{AggregateSearch, ColIden, FieldIden, FieldType, ListSearch, TableIden};
 
-pub type UserSearch = Search<UserIden>;
-
-#[derive(Clone, Copy, Iden)]
-#[iden = "User"]
-pub enum UserIden {
-    Table,
-    #[iden = "id"]
-    Id,
-    #[iden = "username"]
-    Username,
-    #[iden = "password"]
-    Password,
-    #[iden = "admin"]
-    Admin,
-    #[iden = "added_datetime"]
-    AddedDateTime,
-    #[iden = "updated_datetime"]
-    UpdatedDateTime,
-}
-
-impl TableIden for UserIden {
-    const TABLE: Self = Self::Table;
-}
+pub type UserListSearch = ListSearch<UserIden>;
+pub type UserAggregateSearch = AggregateSearch<UserIden>;
 
 #[derive(FromRow)]
+#[enum_def(table_name = "User")]
 pub struct User {
     pub id: Uuid,
     pub username: String,
     pub password: String,
-    pub admin: bool,
-    pub added_datetime: NaiveDateTime,
-    pub updated_datetime: NaiveDateTime,
+    pub role: String,
+    pub added_datetime: DateTime<FixedOffset>,
+    pub updated_datetime: DateTime<FixedOffset>,
+}
+
+impl TableIden for UserIden {
+    const TABLE: Self = Self::Table;
 }
 
 impl FromStr for FieldIden<UserIden> {
@@ -46,14 +30,26 @@ impl FromStr for FieldIden<UserIden> {
 
     fn from_str(field: &str) -> Result<Self, Self::Err> {
         match field {
-            "id" => Ok(FieldIden::new(UserIden::Id, FieldType::String)),
-            "name" => Ok(FieldIden::new(UserIden::Username, FieldType::String)),
-            "admin" => Ok(FieldIden::new(UserIden::Admin, FieldType::Boolean)),
-            "added_datetime" => Ok(FieldIden::new(UserIden::AddedDateTime, FieldType::DateTime)),
-            "updated_datetime" => Ok(FieldIden::new(
-                UserIden::UpdatedDateTime,
+            "id" => Ok(FieldIden::Col(ColIden::new(
+                UserIden::Id,
+                FieldType::String,
+            ))),
+            "name" => Ok(FieldIden::Col(ColIden::new(
+                UserIden::Username,
+                FieldType::String,
+            ))),
+            "role" => Ok(FieldIden::Col(ColIden::new(
+                UserIden::Role,
+                FieldType::String,
+            ))),
+            "added_datetime" => Ok(FieldIden::Col(ColIden::new(
+                UserIden::AddedDatetime,
                 FieldType::DateTime,
-            )),
+            ))),
+            "updated_datetime" => Ok(FieldIden::Col(ColIden::new(
+                UserIden::UpdatedDatetime,
+                FieldType::DateTime,
+            ))),
             _ => Err(()),
         }
     }

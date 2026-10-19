@@ -4,7 +4,7 @@ use utoipa::ToSchema;
 #[derive(Serialize, ToSchema)]
 pub struct ErrorMessage {
     pub error: String,
-    pub error_description: String,
+    pub error_description: String, // TODO Problem Detail
 }
 
 impl ErrorMessage {

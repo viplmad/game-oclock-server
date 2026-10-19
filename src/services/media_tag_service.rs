@@ -1,0 +1,171 @@
+use uuid::Uuid;
+
+use crate::entities::{
+    MediaAggregateSearch, MediaListSearch, MediaTag, TagAggregateSearch, TagListSearch,
+};
+use crate::errors::ApiErrors;
+use crate::models::{
+    AggregateResultDTO, AggregateSearchDTO, ListSearchDTO, MediaDTO, MediaTagDTO,
+    MediaTagPageResult, TagDTO, TagMediaPageResult,
+};
+use crate::repository::MediaTagRepository;
+
+use super::helpers::{
+    handle_action_result, handle_aggregate_search_mapping, handle_already_exists_result,
+    handle_get_aggregate_result, handle_get_list_paged_result, handle_list_search_mapping,
+    handle_not_found_result,
+};
+use super::{MediaService, TagService};
+
+#[derive(Clone)]
+pub struct MediaTagService {
+    repository: MediaTagRepository,
+    media_service: MediaService,
+    tag_service: TagService,
+}
+
+impl MediaTagService {
+    pub fn with(
+        repository: MediaTagRepository,
+        media_service: MediaService,
+        tag_service: TagService,
+    ) -> Self {
+        Self {
+            repository,
+            media_service,
+            tag_service,
+        }
+    }
+}
+
+impl MediaTagService {
+    pub async fn search_tag_medias(
+        &self,
+        user_id: &Uuid,
+        tag_id: &Uuid,
+        search: ListSearchDTO,
+        quicksearch: Option<String>,
+    ) -> Result<MediaTagPageResult, ApiErrors> {
+        self.tag_service.exists_tag(user_id, tag_id).await?;
+
+        let search = handle_list_search_mapping::<MediaDTO, MediaListSearch>(search, quicksearch)?;
+        let find_result = self
+            .repository
+            .search_all_medias_with_tag(user_id, tag_id, search)
+            .await;
+        handle_get_list_paged_result(find_result)
+    }
+
+    pub async fn aggregate_tag_medias(
+        &self,
+        user_id: &Uuid,
+        tag_id: &Uuid,
+        search: AggregateSearchDTO,
+        quicksearch: Option<String>,
+    ) -> Result<AggregateResultDTO, ApiErrors> {
+        self.tag_service.exists_tag(user_id, tag_id).await?;
+
+        let search =
+            handle_aggregate_search_mapping::<MediaDTO, MediaAggregateSearch>(search, quicksearch)?;
+        let aggregate_result = self
+            .repository
+            .aggregate_all_medias_with_tag(user_id, tag_id, search)
+            .await;
+        handle_get_aggregate_result::<MediaDTO>(aggregate_result)
+    }
+
+    pub async fn search_media_tags(
+        &self,
+        user_id: &Uuid,
+        media_id: &Uuid,
+        search: ListSearchDTO,
+        quicksearch: Option<String>,
+    ) -> Result<TagMediaPageResult, ApiErrors> {
+        self.media_service.exists_media(media_id).await?;
+
+        let search = handle_list_search_mapping::<TagDTO, TagListSearch>(search, quicksearch)?;
+        let find_result = self
+            .repository
+            .search_all_tags_with_media(user_id, media_id, search)
+            .await;
+        handle_get_list_paged_result(find_result)
+    }
+
+    pub async fn aggregate_media_tags(
+        &self,
+        user_id: &Uuid,
+        media_id: &Uuid,
+        search: AggregateSearchDTO,
+        quicksearch: Option<String>,
+    ) -> Result<AggregateResultDTO, ApiErrors> {
+        self.media_service.exists_media(media_id).await?;
+
+        let search =
+            handle_aggregate_search_mapping::<TagDTO, TagAggregateSearch>(search, quicksearch)?;
+        let find_result = self
+            .repository
+            .aggregate_all_tags_with_media(user_id, media_id, search)
+            .await;
+        handle_get_aggregate_result::<TagDTO>(find_result)
+    }
+
+    pub async fn create_media_tag(
+        &self,
+        user_id: &Uuid,
+        media_id: &Uuid,
+        tag_id: &Uuid,
+        order: Option<u32>,
+    ) -> Result<(), ApiErrors> {
+        self.media_service.exists_media(media_id).await?;
+        self.tag_service.exists_tag(user_id, tag_id).await?;
+
+        let exists_result = self
+            .repository
+            .exists_by_id(user_id, media_id, tag_id)
+            .await;
+        handle_already_exists_result::<MediaTagDTO>(exists_result)?;
+
+        let create_result = self
+            .repository
+            .create(&MediaTag {
+                user_id: *user_id,
+                media_id: *media_id,
+                tag_id: *tag_id,
+                order: order.map_or(0, |o| {
+                    i32::try_from(o).expect("Order is not within valid range")
+                }),
+                added_datetime: crate::date_utils::now(),
+                updated_datetime: crate::date_utils::now(),
+            })
+            .await;
+        handle_action_result::<MediaTagDTO>(create_result)
+    }
+
+    pub async fn delete_media_tag(
+        &self,
+        user_id: &Uuid,
+        media_id: &Uuid,
+        tag_id: &Uuid,
+    ) -> Result<(), ApiErrors> {
+        self.exists_media_tag(user_id, media_id, tag_id).await?;
+
+        let delete_result = self
+            .repository
+            .delete_by_id(user_id, media_id, tag_id)
+            .await;
+        handle_action_result::<MediaTagDTO>(delete_result)
+    }
+
+    pub async fn exists_media_tag(
+        &self,
+        user_id: &Uuid,
+        media_id: &Uuid,
+        tag_id: &Uuid,
+    ) -> Result<(), ApiErrors> {
+        let exists_result = self
+            .repository
+            .exists_by_id(user_id, media_id, tag_id)
+            .await;
+        handle_not_found_result::<MediaTagDTO>(exists_result)
+    }
+}

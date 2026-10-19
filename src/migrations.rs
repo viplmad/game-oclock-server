@@ -2,10 +2,8 @@ use std::path::Path;
 
 use sqlx::PgPool;
 
-use crate::temp_file_utils;
-
 use crate::models::NewUserDTO;
-use crate::services::users_service;
+use crate::services::UserService;
 
 pub async fn apply_migrations(pool: &PgPool) {
     let migrator = sqlx::migrate::Migrator::new(Path::new("./migrations"))
@@ -16,31 +14,33 @@ pub async fn apply_migrations(pool: &PgPool) {
         .await
         .expect("Could not apply database migrations.");
 
-    let exists_admin = users_service::exists_admin_user(pool)
+    log::info!("Database migrations applied.");
+}
+
+pub async fn check_admin_user(user_service: &UserService) {
+    let exists_admin = user_service
+        .exists_admin_user()
         .await
         .expect("Could not check if admin user exists");
-    match exists_admin {
-        true => log::info!("Database admin present."),
-        false => {
-            users_service::create_user(
-                pool,
+    if exists_admin {
+        log::info!("Admin user present.");
+    } else {
+        let admin_user_id = user_service
+            .create_user(
                 NewUserDTO {
-                    username: String::from("admin"),
+                    username: Some(String::from("admin")),
                 },
                 "admin",
             )
             .await
             .expect("Could not create admin user");
+        user_service
+            .promote_user(&admin_user_id)
+            .await
+            .expect("Could not promote admin user");
 
-            log::info!("Database admin not present, created 'admin' user with default 'admin' password. PLEASE CHANGE PASSWORD.");
-        }
+        log::info!(
+            "Admin user not present, created 'admin' user with default 'admin' password. PLEASE CHANGE PASSWORD."
+        );
     }
-
-    log::info!("Database migrations applied.");
-}
-
-pub async fn delete_old_temp_files() {
-    temp_file_utils::delete_all_temp_dirs().await;
-
-    log::info!("Old temp images deleted.");
 }

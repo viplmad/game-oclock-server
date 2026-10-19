@@ -1,41 +1,27 @@
 use std::str::FromStr;
 
-use chrono::NaiveDateTime;
-use sea_query::Iden;
+use chrono::{DateTime, FixedOffset};
+use sea_query::enum_def;
 use sqlx::FromRow;
 use uuid::Uuid;
 
-use super::{FieldIden, FieldType, Search, TableIden};
+use super::{AggregateSearch, ColIden, FieldIden, FieldType, ListSearch, TableIden};
 
-pub type TagSearch = Search<TagIden>;
-
-#[derive(Clone, Copy, Iden)]
-#[iden = "Tag"]
-pub enum TagIden {
-    Table,
-    #[iden = "id"]
-    Id,
-    #[iden = "user_id"]
-    UserId,
-    #[iden = "name"]
-    Name,
-    #[iden = "added_datetime"]
-    AddedDateTime,
-    #[iden = "updated_datetime"]
-    UpdatedDateTime,
-}
-
-impl TableIden for TagIden {
-    const TABLE: Self = Self::Table;
-}
+pub type TagListSearch = ListSearch<TagIden>;
+pub type TagAggregateSearch = AggregateSearch<TagIden>;
 
 #[derive(FromRow)]
+#[enum_def(table_name = "Tag")]
 pub struct Tag {
     pub id: Uuid,
     pub user_id: Uuid,
     pub name: String,
-    pub added_datetime: NaiveDateTime,
-    pub updated_datetime: NaiveDateTime,
+    pub added_datetime: DateTime<FixedOffset>,
+    pub updated_datetime: DateTime<FixedOffset>,
+}
+
+impl TableIden for TagIden {
+    const TABLE: Self = Self::Table;
 }
 
 impl FromStr for FieldIden<TagIden> {
@@ -43,13 +29,19 @@ impl FromStr for FieldIden<TagIden> {
 
     fn from_str(field: &str) -> Result<Self, Self::Err> {
         match field {
-            "id" => Ok(FieldIden::new(TagIden::Id, FieldType::String)),
-            "name" => Ok(FieldIden::new(TagIden::Name, FieldType::String)),
-            "added_datetime" => Ok(FieldIden::new(TagIden::AddedDateTime, FieldType::DateTime)),
-            "updated_datetime" => Ok(FieldIden::new(
-                TagIden::UpdatedDateTime,
+            "id" => Ok(FieldIden::Col(ColIden::new(TagIden::Id, FieldType::String))),
+            "name" => Ok(FieldIden::Col(ColIden::new(
+                TagIden::Name,
+                FieldType::String,
+            ))),
+            "added_datetime" => Ok(FieldIden::Col(ColIden::new(
+                TagIden::AddedDatetime,
                 FieldType::DateTime,
-            )),
+            ))),
+            "updated_datetime" => Ok(FieldIden::Col(ColIden::new(
+                TagIden::UpdatedDatetime,
+                FieldType::DateTime,
+            ))),
             _ => Err(()),
         }
     }

@@ -1,4 +1,4 @@
-use serde::Deserialize;
+use serde::{Deserialize, Serialize};
 use utoipa::{IntoParams, ToSchema};
 
 #[derive(Deserialize, IntoParams)]
@@ -6,30 +6,113 @@ pub struct QuicksearchQuery {
     pub q: Option<String>,
 }
 
-#[derive(Deserialize, ToSchema)]
-pub struct SearchDTO {
+#[derive(Deserialize, IntoParams)]
+pub struct ExternalQuicksearchQuery {
+    pub source: String,
+    pub q: String,
+}
+
+#[derive(Deserialize, IntoParams)]
+pub struct StoredQuicksearchQuery {
+    pub q: Option<String>,
+    pub mode: Option<FetchMode>,
+}
+
+#[derive(Deserialize, Serialize, ToSchema)]
+pub struct ListSearchDTO {
     pub filter: Option<Vec<FilterDTO>>,
     pub sort: Option<Vec<SortDTO>>,
     pub page: Option<u64>,
     pub size: Option<u64>,
 }
 
-#[derive(Deserialize, ToSchema)]
-pub struct FilterDTO {
+/// Aggregate metric
+#[derive(Clone, Default, Deserialize, ToSchema)]
+pub enum FetchMode {
+    /// Get from new calculation (ignore stored) and then NOT store
+    #[default]
+    OnlyCalculate,
+    /// Get from stored, if not found fail
+    OnlyStored,
+    /// Get from new calculation (ignore stored) and then store
+    ForceCalculateAndStore,
+    /// Get from stored, if not found new calcuation and then store
+    StoredOrCalculate,
+}
+
+#[derive(Deserialize, Serialize, ToSchema)]
+pub struct AggregateSearchDTO {
+    pub filter: Option<Vec<FilterDTO>>,
+    pub aggr: AggregateMetricDTO,
+}
+
+#[derive(Deserialize, Serialize, ToSchema)]
+pub struct AggregateGroupSearchDTO {
+    pub filter: Option<Vec<FilterDTO>>,
+    pub sort: Option<Vec<AggregateGroupSortDTO>>,
+    pub aggr: AggregateMetricDTO,
+    pub group: AggregateGroupDTO,
+    pub subgroup: Option<AggregateGroupDTO>,
+    pub size: Option<u64>,
+}
+
+/// Aggregate metric
+#[derive(Clone, Deserialize, Serialize, ToSchema)]
+pub enum AggregateMetricType {
+    Count,
+    Sum,
+}
+
+#[derive(Deserialize, Serialize, ToSchema)]
+pub struct AggregateMetricDTO {
+    pub kind: AggregateMetricType,
     pub field: String,
-    pub value: SearchValue,
-    pub operator: OperatorType,
-    pub chain_operator: Option<ChainOperatorType>,
+    pub default_value: Option<String>,
+    // Count
+    pub distinct: Option<bool>,
 }
 
-#[derive(Clone, Deserialize, ToSchema)]
-#[serde(untagged)]
-pub enum SearchValue {
-    Value(String),
-    Values(Vec<String>),
+/// Aggregate group
+#[derive(Clone, Deserialize, Serialize, ToSchema)]
+pub enum AggregateGroupType {
+    Field,
+    DateHistogram,
 }
 
-#[derive(Clone, Deserialize, ToSchema)]
+#[derive(Deserialize, Serialize, ToSchema)]
+pub struct AggregateGroupDTO {
+    pub kind: AggregateGroupType,
+    pub field: String,
+    pub default_value: Option<String>,
+    // DateHistogram
+    pub interval: Option<DateHistogramInterval>,
+}
+
+#[derive(Clone, Deserialize, Serialize, ToSchema)]
+pub enum DateHistogramInterval {
+    Year,
+    Month,
+    Weekday,
+    Day,
+    Hour,
+    Minute,
+}
+//
+#[derive(Deserialize, Serialize, ToSchema)]
+pub struct AggregateGroupSortDTO {
+    pub field: AggregateGroupSortType,
+    pub order: OrderType,
+}
+
+#[derive(Clone, Deserialize, Serialize, ToSchema)]
+pub enum AggregateGroupSortType {
+    Metric,
+    Group,
+    Subgroup,
+}
+
+/// Filter
+#[derive(Debug, Clone, Deserialize, Serialize, ToSchema)]
 pub enum OperatorType {
     Eq,
     NotEq,
@@ -45,21 +128,40 @@ pub enum OperatorType {
     NotEndsWith,
     Contains,
     NotContains,
+    Null,
+    NotNull,
 }
 
-#[derive(Clone, Deserialize, ToSchema)]
+#[derive(Deserialize, Serialize, ToSchema)]
+pub struct FilterDTO {
+    pub operator: OperatorType,
+    pub field: String,
+    pub chain_operator: Option<ChainOperatorType>,
+    // Single and Multiple
+    pub value: Option<SearchValue>,
+}
+
+#[derive(Clone, Deserialize, Serialize, ToSchema)]
+#[serde(untagged)]
+pub enum SearchValue {
+    Single(String),
+    Multiple(Vec<String>),
+}
+
+#[derive(Clone, Deserialize, Serialize, ToSchema)]
 pub enum ChainOperatorType {
     And,
     Or,
 }
 
-#[derive(Deserialize, ToSchema)]
+/// Sort
+#[derive(Deserialize, Serialize, ToSchema)]
 pub struct SortDTO {
     pub field: String,
     pub order: OrderType,
 }
 
-#[derive(Clone, Deserialize, ToSchema)]
+#[derive(Clone, Deserialize, Serialize, ToSchema)]
 pub enum OrderType {
     Asc,
     Desc,

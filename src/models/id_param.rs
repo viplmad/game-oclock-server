@@ -1,22 +1,15 @@
 use chrono::NaiveDate;
 use serde::Deserialize;
 use utoipa::IntoParams;
+use uuid::Uuid;
 
 #[derive(Deserialize, IntoParams)]
 #[into_params(names("id"))]
-pub struct ItemId(pub String);
+pub struct ItemId(pub Uuid);
 
 #[derive(Deserialize, IntoParams)]
 #[into_params(names("id", "other_id"))]
-pub struct ItemIdAndRelatedId(pub String, pub String);
-
-#[derive(Deserialize, IntoParams)]
-pub struct StartEndDateQuery {
-    #[param(value_type = String, format = Date)]
-    pub start_date: NaiveDate,
-    #[param(value_type = String, format = Date)]
-    pub end_date: NaiveDate,
-}
+pub struct ItemIdAndRelatedId(pub Uuid, pub Uuid);
 
 #[derive(Deserialize, IntoParams)]
 pub struct OptionalStartEndDateQuery {

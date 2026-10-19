@@ -1,28 +1,17 @@
-use std::{env, fs::File, io::BufReader};
+use std::env;
 
-use actix_web_httpauth::middleware::HttpAuthentication;
+use actix_web_httpauth::middleware as authmiddleware;
 use dotenvy::dotenv;
 use game_oclock_server::{
-    clients::cloudinary::{CloudinaryClient, CloudinaryClientBuilder},
-    migrations, openapi,
-    providers::ImageClientProvider,
-    routes,
+    migrations, openapi, providers::SqlxPostgresPoolBuilder, repository::*, routes, services::*,
 };
 
-use actix_web::{web, App, HttpServer};
+use actix_web::{App, HttpMessage, HttpServer, middleware, web};
 use jsonwebtoken::{DecodingKey, EncodingKey};
-use sqlx::{
-    postgres::{PgConnectOptions, PgPoolOptions, PgSslMode},
-    PgPool,
-};
 use utoipa_swagger_ui::{Config, SwaggerUi};
 
 const DEFAULT_HOST: &str = "0.0.0.0";
 const DEFAULT_HTTP_PORT: &str = "80";
-const DEFAULT_HTTPS_PORT: &str = "443";
-
-const TLS_CERT_PATH: &str = "/certs/cert.pem";
-const TLS_KEY_PATH: &str = "/certs/key.pem";
 
 #[actix_web::main]
 async fn main() -> std::io::Result<()> {
@@ -33,22 +22,16 @@ async fn main() -> std::io::Result<()> {
     let port = env::var("PORT")
         .unwrap_or_else(|_| String::from(DEFAULT_HTTP_PORT))
         .parse()
-        .expect("Port is not a number");
+        .expect("Port is not a number.");
 
     // Encoding/Decoding
-    let secret_key: String = env::var("SECRET_KEY").expect("Secret key not set.");
+    let secret_key: String = env::var("SECRET_KEY")
+        .expect("Secret key not set. Set through 'SECRET_KEY' environemnt variable.");
 
     let encoding_key = generate_encoding_key(&secret_key);
     let decoding_key = generate_decoding_key(&secret_key);
 
-    // TLS
-    let tls_port = env::var("TLS_PORT")
-        .unwrap_or_else(|_| String::from(DEFAULT_HTTPS_PORT))
-        .parse()
-        .expect("TLS port is not a number");
-    let tls_config = load_tls_config();
-
-    run(host, port, encoding_key, decoding_key, tls_port, tls_config)
+    run(host, port, encoding_key, decoding_key)
         .await
         .expect("Could not start server.");
 
@@ -57,48 +40,6 @@ async fn main() -> std::io::Result<()> {
 
 fn init_logger() {
     env_logger::init();
-}
-
-async fn get_connection_pool() -> Result<PgPool, sqlx::Error> {
-    let host = env::var("DB_HOST").expect("Database host not set.");
-    let port = env::var("DB_PORT")
-        .expect("Database port not set.")
-        .parse()
-        .expect("Database port is not a number.");
-    let database = env::var("DB_DATABASE").expect("Database not set.");
-    let user = env::var("DB_USER").expect("Database user not set.");
-    let password = env::var("DB_PASSWORD").expect("Database password not set.");
-
-    // Manually-constructed options
-    let conn = PgConnectOptions::new()
-        .username(&user)
-        .password(&password)
-        .host(&host)
-        .port(port)
-        .database(&database)
-        .ssl_mode(PgSslMode::Prefer);
-
-    PgPoolOptions::new()
-        .acquire_timeout(std::time::Duration::from_secs(2))
-        .max_connections(5)
-        .connect_with(conn)
-        .await
-        .map(|res| {
-            log::info!(
-                "Postgres database connected to {}:<redacted>@{}:{}/{}",
-                user,
-                // Hide password from info log
-                host,
-                port,
-                database
-            );
-            res
-        })
-}
-
-fn get_cloudinary_client_provider() -> Option<CloudinaryClient> {
-    CloudinaryClientBuilder::try_from_env()
-        .map(|client| CloudinaryClient::default().connect_with(client))
 }
 
 fn generate_encoding_key(key: &str) -> EncodingKey {
@@ -114,124 +55,187 @@ async fn run(
     port: u16,
     encoding_key: EncodingKey,
     decoding_key: DecodingKey,
-    tls_port: u16,
-    tls_config: Option<rustls::ServerConfig>,
 ) -> std::io::Result<()> {
     let data_encoding_key = web::Data::new(encoding_key);
     let data_decoding_key = web::Data::new(decoding_key);
 
     // Repository
-    let database_connection_pool = get_connection_pool()
+    let database_connection_pool = SqlxPostgresPoolBuilder::from_env()
         .await
         .expect("Could not open database connection.");
-    migrations::apply_migrations(&database_connection_pool).await;
+    // migrations::apply_migrations(&database_connection_pool).await;
 
-    let data_database_connection = web::Data::new(database_connection_pool);
+    let igdb_client = IgdbClientPoolBuilder::from_env().expect("Could not create IGDB client.");
 
-    // Image client
-    let image_client_provider =
-        if let Some(cloudinary_client_provider) = get_cloudinary_client_provider() {
-            ImageClientProvider::new(cloudinary_client_provider)
-        } else {
-            ImageClientProvider::empty()
-        };
-    let data_image_client = web::Data::new(image_client_provider);
-    migrations::delete_old_temp_files().await;
+    let user_repository = UserRepository::with_connection(database_connection_pool.clone());
+    let user_service = UserService::with(user_repository);
+    migrations::check_admin_user(&user_service).await;
+
+    let device_repository = DeviceRepository::with_connection(database_connection_pool.clone());
+    let media_available_repository =
+        MediaAvailableRepository::with_connection(database_connection_pool.clone());
+    let media_session_repository =
+        MediaSessionRepository::with_connection(database_connection_pool.clone());
+    let media_session_device_repository =
+        MediaSessionDeviceRepository::with_connection(database_connection_pool.clone());
+    let media_repository = MediaRepository::with_connection(database_connection_pool.clone());
+    let media_tag_repository =
+        MediaTagRepository::with_connection(database_connection_pool.clone());
+    let media_with_session_repository =
+        MediaWithSessionRepository::with_connection(database_connection_pool.clone());
+    let location_repository = LocationRepository::with_connection(database_connection_pool.clone());
+    let tag_repository = TagRepository::with_connection(database_connection_pool.clone());
+    let stored_response_repository =
+        StoredResponseRepository::with_connection(database_connection_pool.clone());
+
+    let auth_service = AuthService::with(user_service.clone());
+    let stored_response_service = StoredResponseService::with(stored_response_repository);
+    let device_service = DeviceService::with(device_repository);
+    let external_media_service = MediaExternalService::with(igdb_client);
+    let media_service = MediaService::with(external_media_service.clone(), media_repository);
+    let location_service = LocationService::with(location_repository);
+    let tag_service = TagService::with(tag_repository);
+    let media_available_service = MediaAvailableService::with(
+        media_available_repository,
+        media_service.clone(),
+        location_service.clone(),
+    );
+    let media_session_service = MediaSessionService::with(
+        media_session_repository,
+        media_service.clone(),
+        device_service.clone(),
+        stored_response_service,
+    );
+    let media_session_device_service = MediaSessionDeviceService::with(
+        media_session_device_repository,
+        media_service.clone(),
+        device_service.clone(),
+    );
+    let media_tag_service = MediaTagService::with(
+        media_tag_repository,
+        media_service.clone(),
+        tag_service.clone(),
+    );
+    let media_with_session_service = MediaWithSessionService::with(media_with_session_repository);
+
+    let data_auth_service = web::Data::new(auth_service.clone());
+    let data_user_service = web::Data::new(user_service.clone());
+    let data_device_service = web::Data::new(device_service.clone());
+    let data_media_service = web::Data::new(media_service.clone());
+    let data_location_service = web::Data::new(location_service.clone());
+    let data_tag_service = web::Data::new(tag_service.clone());
+    let data_media_available_service = web::Data::new(media_available_service.clone());
+    let data_media_session_service = web::Data::new(media_session_service.clone());
+    let data_media_session_device_service = web::Data::new(media_session_device_service.clone());
+    let data_media_tag_service = web::Data::new(media_tag_service.clone());
+    let data_media_with_session_service = web::Data::new(media_with_session_service.clone());
 
     // OpenAPI
     let openapi = openapi::get_openapi();
 
-    let mut server = HttpServer::new(move || {
-        let auth = HttpAuthentication::bearer(game_oclock_server::auth::token_validator);
+    let server = HttpServer::new(move || {
+        let auth =
+            authmiddleware::HttpAuthentication::bearer(game_oclock_server::auth::token_validator);
+        // Common Log Format -> remotehost rfc931 authuser [date] request status bytes
+        let logger = middleware::Logger::new(r#"%a %{AUTHUSER}xi [%t] "%r" %s %b %D"#)
+            .custom_request_replace("AUTHUSER", |req| {
+                req.request()
+                    .extensions()
+                    .get::<uuid::Uuid>()
+                    .map(game_oclock_server::uuid_utils::to_string)
+                    .unwrap_or_else(|| String::from("-"))
+            });
 
         App::new()
-            .app_data(data_database_connection.clone())
-            .app_data(data_image_client.clone())
+            // Data injection
+            .app_data(data_auth_service.clone())
+            .app_data(data_user_service.clone())
+            .app_data(data_device_service.clone())
+            .app_data(data_media_service.clone())
+            .app_data(data_location_service.clone())
+            .app_data(data_tag_service.clone())
+            .app_data(data_media_available_service.clone())
+            .app_data(data_media_session_service.clone())
+            .app_data(data_media_session_device_service.clone())
+            .app_data(data_media_tag_service.clone())
+            .app_data(data_media_with_session_service.clone())
             .app_data(data_encoding_key.clone())
             .app_data(data_decoding_key.clone())
             .service(
                 web::scope("/api").service(
                     web::scope("/v1")
+                        .wrap(logger)
                         .wrap(auth)
-                        // Games
-                        .service(routes::get_game)
-                        .service(routes::get_tag_games)
-                        .service(routes::get_platform_games)
-                        .service(routes::get_games)
-                        .service(routes::post_game)
-                        .service(routes::post_game_cover)
-                        .service(routes::put_game)
-                        .service(routes::put_game_cover)
-                        .service(routes::link_game_platform)
-                        .service(routes::link_game_tag)
-                        .service(routes::delete_game)
-                        .service(routes::delete_game_cover)
-                        .service(routes::unlink_game_tag)
-                        .service(routes::unlink_game_platform)
-                        // Game Finish
-                        .service(routes::get_game_finishes)
-                        .service(routes::get_first_game_finish)
-                        .service(routes::get_finished_games_review)
-                        .service(routes::get_first_finished_games)
-                        .service(routes::get_last_finished_games)
-                        .service(routes::post_game_finish)
-                        .service(routes::delete_game_finish)
-                        // Game Logs
-                        .service(routes::get_game_logs)
-                        .service(routes::get_total_game_logs)
-                        .service(routes::get_played_games_review)
-                        .service(routes::get_played_games)
-                        .service(routes::get_first_played_games)
-                        .service(routes::get_last_played_games)
-                        .service(routes::post_game_log)
-                        .service(routes::delete_game_log)
-                        // DLCs
-                        .service(routes::get_dlc)
-                        .service(routes::get_dlc_base_game)
-                        .service(routes::get_game_dlcs)
-                        .service(routes::get_platform_dlcs)
-                        .service(routes::get_dlcs)
-                        .service(routes::post_dlc)
-                        .service(routes::post_dlc_cover)
-                        .service(routes::put_dlc)
-                        .service(routes::put_dlc_cover)
-                        .service(routes::link_dlc_game)
-                        .service(routes::link_dlc_platform)
-                        .service(routes::delete_dlc)
-                        .service(routes::delete_dlc_cover)
-                        .service(routes::unlink_dlc_game)
-                        .service(routes::unlink_dlc_platform)
-                        // DLC Finish
-                        .service(routes::get_dlc_finishes)
-                        .service(routes::get_first_dlc_finish)
-                        .service(routes::get_first_finished_dlcs)
-                        .service(routes::get_last_finished_dlcs)
-                        .service(routes::post_dlc_finish)
-                        .service(routes::delete_dlc_finish)
-                        // Platforms
-                        .service(routes::get_platform)
-                        .service(routes::get_game_platforms)
-                        .service(routes::get_dlc_platforms)
-                        .service(routes::get_platforms)
-                        .service(routes::post_platform)
-                        .service(routes::post_platform_icon)
-                        .service(routes::put_platform)
-                        .service(routes::put_platform_icon)
-                        .service(routes::delete_platform)
-                        .service(routes::delete_platform_icon)
+                        // Medias
+                        .service(routes::get_media)
+                        .service(routes::get_tag_medias)
+                        .service(routes::aggregate_tag_medias)
+                        .service(routes::get_location_medias)
+                        .service(routes::aggregate_location_medias)
+                        .service(routes::get_device_medias)
+                        .service(routes::aggregate_device_medias)
+                        .service(routes::get_medias)
+                        .service(routes::aggregate_medias)
+                        .service(routes::create_media)
+                        .service(routes::update_media)
+                        .service(routes::link_media_tag)
+                        .service(routes::link_media_location)
+                        .service(routes::delete_media)
+                        .service(routes::unlink_media_tag)
+                        .service(routes::unlink_media_location)
+                        .service(routes::link_parent_media)
+                        .service(routes::unlink_parent_media)
+                        .service(routes::sync_media)
+                        .service(routes::unsync_media)
+                        .service(routes::search_external_medias)
+                        // Media Sessions
+                        .service(routes::get_media_sessions)
+                        .service(routes::aggregate_media_sessions)
+                        .service(routes::get_sessions)
+                        .service(routes::aggregate_sessions)
+                        .service(routes::aggregate_group_sessions)
+                        .service(routes::aggregate_first_sessions)
+                        .service(routes::get_session_streaks)
+                        .service(routes::get_session_dates)
+                        .service(routes::get_first_session_medias)
+                        .service(routes::get_last_session_medias)
+                        .service(routes::get_media_session)
+                        .service(routes::create_media_session)
+                        .service(routes::delete_media_session)
                         // Tags
                         .service(routes::get_tag)
-                        .service(routes::get_game_tags)
+                        .service(routes::get_media_tags)
+                        .service(routes::aggregate_media_tags)
                         .service(routes::get_tags)
-                        .service(routes::post_tag)
-                        .service(routes::put_tag)
+                        .service(routes::aggregate_tags)
+                        .service(routes::create_tag)
+                        .service(routes::update_tag)
                         .service(routes::delete_tag)
+                        // Locations
+                        .service(routes::get_location)
+                        .service(routes::get_media_locations)
+                        .service(routes::aggregate_media_locations)
+                        .service(routes::get_locations)
+                        .service(routes::aggregate_locations)
+                        .service(routes::create_location)
+                        .service(routes::update_location)
+                        .service(routes::delete_location)
+                        // Devices
+                        .service(routes::get_device)
+                        .service(routes::get_media_devices)
+                        .service(routes::aggregate_media_devices)
+                        .service(routes::get_devices)
+                        .service(routes::aggregate_devices)
+                        .service(routes::create_device)
+                        .service(routes::update_device)
+                        .service(routes::delete_device)
                         // Users
                         .service(routes::get_user)
                         .service(routes::get_current_user)
                         .service(routes::get_users)
-                        .service(routes::post_user)
-                        .service(routes::put_user)
+                        .service(routes::aggregate_users)
+                        .service(routes::create_user)
+                        .service(routes::update_user)
                         .service(routes::change_password)
                         .service(routes::promote_user)
                         .service(routes::demote_user)
@@ -243,6 +247,7 @@ async fn run(
             // Health check
             .service(routes::health)
             // OpenAPI
+            .service(web::redirect("/api-docs", "/api-docs/")) // Redirect if no slash
             .service(
                 SwaggerUi::new("/api-docs/{_:.*}")
                     .url("/api-docs/public-api.json", openapi.clone())
@@ -254,99 +259,6 @@ async fn run(
             )
     });
 
-    if let Some(config) = tls_config {
-        log::info!(
-            "TLS enabled -> Server listening on https://{}:{}",
-            host,
-            tls_port
-        );
-        server = server.bind_rustls((host.clone(), tls_port), config)?;
-    }
-
     log::info!("Server listening on http://{}:{}", host, port);
     server.bind((host, port))?.run().await
-}
-
-fn load_tls_config() -> Option<rustls::ServerConfig> {
-    // TODO get paths from env
-    let cert_path = TLS_CERT_PATH;
-    let key_path = TLS_KEY_PATH;
-
-    // Load TLS key/cert files
-    let cert_file = match File::open(cert_path) {
-        Ok(file) => Some(file),
-        Err(err) => {
-            log::info!(
-                "cert.pem file NOT found at {} -> TLS disabled. - {}",
-                cert_path,
-                err.to_string()
-            );
-            return None;
-        }
-    }?;
-    log::info!("cert.pem file found at {}.", cert_path);
-
-    let key_file = match File::open(key_path) {
-        Ok(file) => Some(file),
-        Err(err) => {
-            log::info!(
-                "key.pem file NOT found at {} -> TLS disabled. -  {}",
-                key_path,
-                err.to_string()
-            );
-            return None;
-        }
-    }?;
-    log::info!("key.pem file found at {}.", key_path);
-
-    // Init server config builder with safe defaults
-    let config = rustls::ServerConfig::builder()
-        .with_safe_defaults()
-        .with_no_client_auth();
-
-    let cert_file_reader = &mut BufReader::new(cert_file);
-    let key_file_reader = &mut BufReader::new(key_file);
-
-    // Convert files to key/cert objects
-    let cert_chain = match rustls_pemfile::certs(cert_file_reader) {
-        Ok(certs) => Some(certs.into_iter().map(rustls::Certificate).collect()),
-        Err(err) => {
-            log::warn!(
-                "Cert chain could not be obtained from cert.pem. -> TLS disabled - {}",
-                err.to_string()
-            );
-            return None;
-        }
-    }?;
-
-    let mut keys: Vec<rustls::PrivateKey> =
-        match rustls_pemfile::pkcs8_private_keys(key_file_reader) {
-            Ok(keys) => Some(keys.into_iter().map(rustls::PrivateKey).collect()),
-            Err(err) => {
-                log::warn!(
-                    "Private keys could not be obtained from key.pem. -> TLS disabled - {}",
-                    err.to_string()
-                );
-                return None;
-            }
-        }?;
-
-    // exit if no keys could be parsed
-    if keys.is_empty() {
-        log::info!("Could not locate PKCS 8 private keys. -> TLS disabled");
-        return None;
-    }
-
-    config
-        .with_single_cert(cert_chain, keys.remove(0))
-        .map_or_else(
-            |err| {
-                log::info!(
-                    "Error creating tls config. -> TLS disabled - {}",
-                    err.to_string()
-                );
-                None
-            },
-            Some,
-        )
 }

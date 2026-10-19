@@ -1,10 +1,13 @@
-use actix_web::{dev::ServiceRequest, Error};
-use actix_web_httpauth::extractors::bearer::{BearerAuth, Config};
+use actix_web::HttpMessage;
+use actix_web::{Error, dev::ServiceRequest};
 use actix_web_httpauth::extractors::AuthenticationError;
+use actix_web_httpauth::extractors::bearer::{BearerAuth, Config};
 use jsonwebtoken::{Algorithm, DecodingKey, EncodingKey, Header, TokenData, Validation};
+use uuid::Uuid;
 
 use crate::errors::{TokenErrors, ValidationError};
 use crate::models::{TokenResponse, UserClaims};
+use crate::uuid_utils;
 
 const KID: &str = "075d91f0-a35b-455a-9d78-8598846805e8"; // Random UUID
 const ISSUER: &str = "game_oclock";
@@ -28,6 +31,7 @@ pub async fn token_validator(
         Ok(token_data) => {
             // Ensure only access token is validated
             if token_data.claims.is_access() {
+                req.extensions_mut().insert(token_data.claims.sub);
                 Ok(req)
             } else {
                 Err((AuthenticationError::from(config).into(), req))
@@ -46,13 +50,13 @@ pub fn validate_token(
     validation.set_required_spec_claims(&["iss", "sub", "iat", "exp", "jti"]);
 
     jsonwebtoken::decode::<UserClaims>(token, decoding_key, &validation).map_err(|err| {
-        log::error!("Error decoding JWT. - {}", err.to_string());
+        log::error!("Error decoding JWT. - {}", err);
         ValidationError()
     })
 }
 
 pub fn generate_token_response(
-    user_id: &str,
+    user_id: &Uuid,
     encoding_key: &EncodingKey,
 ) -> Result<TokenResponse, TokenErrors> {
     let access_token_claims = create_access_token_claims(user_id);
@@ -70,30 +74,27 @@ pub fn generate_token_response(
     })
 }
 
-fn create_access_token_claims(user_id: &str) -> UserClaims {
+fn create_access_token_claims(user_id: &Uuid) -> UserClaims {
     create_token_claims(user_id, crate::date_utils::SECONDS_PER_DAY, None)
 }
 
-fn create_refresh_token_claims(user_id: &str, access_token_id: &str) -> UserClaims {
-    create_token_claims(
-        user_id,
-        SECONDS_PER_ONE_WEEK,
-        Some(String::from(access_token_id)),
-    )
+fn create_refresh_token_claims(user_id: &Uuid, access_token_id: &Uuid) -> UserClaims {
+    create_token_claims(user_id, SECONDS_PER_ONE_WEEK, Some(*access_token_id))
 }
 
 fn create_token_claims(
-    user_id: &str,
+    user_id: &Uuid,
     expiry_seconds: i64,
-    access_token_id: Option<String>,
+    access_token_id: Option<Uuid>,
 ) -> UserClaims {
-    let now = crate::date_utils::now().and_utc().timestamp();
+    let now = crate::date_utils::now().timestamp();
     UserClaims {
         iss: String::from(ISSUER),
-        sub: user_id.to_string(),
+        sub: *user_id,
         iat: now,
         exp: now + expiry_seconds,
-        kid: String::from(KID),
+        #[allow(clippy::unwrap_used)]
+        kid: uuid_utils::parse_uuid(KID).unwrap(), // Safe unwrap: comes from constant
         jti: crate::uuid_utils::new_random_uuid(),
         ati: access_token_id,
     }
@@ -104,7 +105,7 @@ fn generate_token(
     encoding_key: &EncodingKey,
 ) -> Result<String, ValidationError> {
     jsonwebtoken::encode(&Header::default(), &claims, encoding_key).map_err(|err| {
-        log::error!("Error encodign JWT. - {}", err.to_string());
+        log::error!("Error encodign JWT. - {}", err);
         ValidationError()
     })
 }

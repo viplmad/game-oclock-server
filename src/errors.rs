@@ -29,6 +29,10 @@ pub mod error_message_builder {
         format!("Database error accessing {model_name}.")
     }
 
+    pub fn external_error(service: &str) -> String {
+        format!("Request error accessing external service {service}")
+    }
+
     pub fn created_but_error_get(model_name: &str) -> String {
         format!("{model_name} was created but cannot be retrieved.")
     }
@@ -60,12 +64,13 @@ pub struct ValidationError();
 
 pub struct PasswordError();
 
+#[derive(Debug)]
 pub struct RepositoryError();
 
-pub struct ImageClientError();
-
+#[derive(Debug)]
 pub struct MappingError(pub String);
 
+#[derive(Debug)]
 pub enum SearchErrors {
     Repository(RepositoryError),
     Mapping(MappingError),

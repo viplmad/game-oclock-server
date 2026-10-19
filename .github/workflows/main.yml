@@ -3,7 +3,7 @@ name: Build CI
 on:
   # Triggers the workflow on push or pull request events but only for the default branch
   push:
-    branches: [main]
+    branches: [ main, feat/device ]
 
 env:
   CARGO_TERM_COLOR: always
@@ -15,16 +15,35 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - name: Checkout
-        uses: actions/checkout@v4.1.1
+        uses: actions/checkout@v7
         with:
           # Disabling shallow clone is recommended for improving relevancy of reporting
           fetch-depth: 0
 
+      - name: Ensure Cargo Directories Exist for Cache Restore
+        run: |
+          mkdir -p ~/.cargo/registry
+          mkdir -p ~/.cargo/index
+          mkdir -p target          
+        shell: bash
+
+      - name: Cache Cargo Registry, Index, Build
+        uses: actions/cache@v6
+        with:
+          path: |
+            ~/.cargo/registry
+            ~/.cargo/index
+            target            
+          key: ${{ runner.os }}-${{ runner.arch }}-cargo-${{ hashFiles('**/Cargo.toml') }}
+          restore-keys: |
+            cargo-build-${{ runner.os }}-${{ runner.arch }}-${{ hashFiles('**/Cargo.toml') }}
+            cargo-build-${{ runner.os }}-${{ runner.arch }}-            
+
       - name: Setup rust environment
-        uses: actions-rs/toolchain@v1.0.6
+        uses: actions-rs/toolchain@v1
         with:
           profile: minimal
-          toolchain: nightly-2024-02-04
+          toolchain: stable
           components: rustfmt, clippy
 
       - name: Get dependencies
@@ -43,7 +62,7 @@ jobs:
       # - run: cargo udeps --quiet --workspace --all-features --all-targets --output json > udeps-report.json
 
       - name: Create reports artifact
-        uses: actions/upload-artifact@v4.3.1
+        uses: actions/upload-artifact@v7
         with:
           name: reports
           path: |
@@ -54,24 +73,44 @@ jobs:
           # udeps-report.json
 
   sonar:
+    if: false
     name: Sonar
     needs: analysis
     # This job will run on ubuntu virtual machine
     runs-on: ubuntu-latest
     steps:
       - name: Checkout
-        uses: actions/checkout@v4.1.1
+        uses: actions/checkout@v7
+
+      - name: Ensure Cargo Directories Exist for Cache Restore
+        run: |
+          mkdir -p ~/.cargo/registry
+          mkdir -p ~/.cargo/index
+          mkdir -p target          
+        shell: bash
+
+      - name: Cache Cargo Registry, Index, Build
+        uses: actions/cache@v6
+        with:
+          path: |
+            ~/.cargo/registry
+            ~/.cargo/index
+            target            
+          key: ${{ runner.os }}-${{ runner.arch }}-cargo-${{ hashFiles('**/Cargo.toml') }}
+          restore-keys: |
+            cargo-build-${{ runner.os }}-${{ runner.arch }}-${{ hashFiles('**/Cargo.toml') }}
+            cargo-build-${{ runner.os }}-${{ runner.arch }}-            
 
       - name: Download reports artifact
-        uses: actions/download-artifact@v4.1.4
+        uses: actions/download-artifact@v8
         with:
           name: reports
 
       - name: Setup rust environment
-        uses: actions-rs/toolchain@v1.0.6
+        uses: actions-rs/toolchain@v1
         with:
           profile: minimal
-          toolchain: nightly-2024-02-04
+          toolchain: stable
           components: rustfmt, clippy
 
       - name: Get dependencies
@@ -101,7 +140,7 @@ jobs:
           regex: true
 
       - name: Upload reports to sonar
-        uses: SonarSource/sonarcloud-github-action@v2.1.1
+        uses: SonarSource/sonarqube-scan-action@v8
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }} # Needed to get PR information, if any
           SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
@@ -111,7 +150,7 @@ jobs:
           # ,sonar-deny-report.json,sonar-udeps-report.json
 
       - name: Create sonar reports artifact
-        uses: actions/upload-artifact@v4.3.1
+        uses: actions/upload-artifact@v7
         with:
           name: sonar-reports
           path: |
@@ -128,13 +167,32 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - name: Checkout
-        uses: actions/checkout@v4.1.1
+        uses: actions/checkout@v7
+
+      - name: Ensure Cargo Directories Exist for Cache Restore
+        run: |
+          mkdir -p ~/.cargo/registry
+          mkdir -p ~/.cargo/index
+          mkdir -p target          
+        shell: bash
+
+      - name: Cache Cargo Registry, Index, Build
+        uses: actions/cache@v6
+        with:
+          path: |
+            ~/.cargo/registry
+            ~/.cargo/index
+            target            
+          key: ${{ runner.os }}-${{ runner.arch }}-cargo-${{ hashFiles('**/Cargo.toml') }}
+          restore-keys: |
+            cargo-build-${{ runner.os }}-${{ runner.arch }}-${{ hashFiles('**/Cargo.toml') }}
+            cargo-build-${{ runner.os }}-${{ runner.arch }}-            
 
       - name: Setup rust environment
-        uses: actions-rs/toolchain@v1.0.6
+        uses: actions-rs/toolchain@v1
         with:
           profile: minimal
-          toolchain: nightly-2024-02-04
+          toolchain: stable
           components: rustfmt, clippy
 
       - name: Build executable
