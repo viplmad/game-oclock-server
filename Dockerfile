@@ -32,5 +32,7 @@ RUN addgroup -S nonroot \
  && chown -R nonroot:nonroot /app \
  && chmod -R 755 /app
 
+WORKDIR /app
+
 USER nonroot
-ENTRYPOINT ["./app/game-oclock-server"]
+ENTRYPOINT ["./game-oclock-server"]
