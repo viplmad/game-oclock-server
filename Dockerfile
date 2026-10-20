@@ -16,7 +16,7 @@ COPY Cargo.toml Cargo.lock rust-toolchain.toml /
 ARG TARGETPLATFORM
 
 RUN rustup target add $(xx-cargo --print-target-triple) \
- && cargo build --target=$(xx-cargo --print-target-triple) --locked --release \
+ && RUSTFLAGS="-C link-arg=-Wl,--no-fix-cortex-a53-843419" cargo build --target=$(xx-cargo --print-target-triple) --locked --release \
  && mv /target/$(xx-cargo --print-target-triple)/release/game-oclock-server /build/game-oclock-server
 
 
