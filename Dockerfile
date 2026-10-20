@@ -23,7 +23,7 @@ ENV CC_aarch64_unknown_linux_gnu=aarch64-linux-gnu-gcc
 #ENV PKG_CONFIG_ALLOW_CROSS=1
 RUN rustup target add $(xx-cargo --print-target-triple) \
  && RUSTFLAGS="-C linker-flavor=gcc" cargo build --target=$(xx-cargo --print-target-triple) --locked --release \
- && mv /target/$(xx-cargo --print-target-triple)/release/game-oclock-server /build/game-oclock-server
+ && mkdir /build && mv /target/$(xx-cargo --print-target-triple)/release/game-oclock-server /build/game-oclock-server
 
 
 FROM alpine:3 AS runtime
