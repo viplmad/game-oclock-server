@@ -3,14 +3,13 @@ name: Build CI
 on:
   # Triggers the workflow on push or pull request events but only for the default branch
   push:
-    branches: [ main, feat/device ]
+    branches: [ main ]
 
 env:
   CARGO_TERM_COLOR: always
 
 jobs:
   analysis:
-    if: false
     name: Analysis
     # This job will run on ubuntu virtual machine
     runs-on: ubuntu-latest
@@ -74,7 +73,6 @@ jobs:
           # udeps-report.json
 
   sonar:
-    if: false
     name: Sonar
     needs: analysis
     # This job will run on ubuntu virtual machine
@@ -162,7 +160,6 @@ jobs:
           # sonar-udeps-report.json
 
   build:
-    if: false
     name: Build
     needs: analysis
     # This job will run on ubuntu virtual machine
@@ -198,4 +195,4 @@ jobs:
           components: rustfmt, clippy
 
       - name: Build executable
-        run: cargo build --release
+        run: cargo build --locked --release
