@@ -6,7 +6,7 @@ COPY --from=xx / /
 
 # muslc is required in order to build the rust image.
 RUN apt-get update \
- && apt-get --no-install-recommends install -y cmake clang gcc llvm musl-tools libssl-dev \
+ && apt-get --no-install-recommends install -y cmake clang llvm musl-tools libssl-dev gcc-aarch64-linux-gnu g++-aarch64-linux-gnu \
  && rm -rf /var/lib/apt/lists/*
 
  # Sets the environment variable for the cargo build command that follows.
