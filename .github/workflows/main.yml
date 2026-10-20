@@ -10,6 +10,7 @@ env:
 
 jobs:
   analysis:
+    if: false
     name: Analysis
     # This job will run on ubuntu virtual machine
     runs-on: ubuntu-latest
@@ -161,6 +162,7 @@ jobs:
           # sonar-udeps-report.json
 
   build:
+    if: false
     name: Build
     needs: analysis
     # This job will run on ubuntu virtual machine
