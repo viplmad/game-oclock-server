@@ -6,7 +6,7 @@ COPY --from=xx / /
 
 # muslc is required in order to build the rust image.
 RUN apt-get update \
- && apt-get --no-install-recommends install -y cmake clang llvm musl-tools libssl-dev \
+ && apt-get --no-install-recommends install -y cmake clang gcc llvm musl-tools libssl-dev \
  && rm -rf /var/lib/apt/lists/*
 
  # Sets the environment variable for the cargo build command that follows.
@@ -15,7 +15,8 @@ COPY Cargo.toml Cargo.lock rust-toolchain.toml /
 
 ARG TARGETPLATFORM
 
-RUN cargo build --target=$(xx-cargo --print-target-triple) --locked --release \
+RUN rustup target add $(xx-cargo --print-target-triple) \
+ && cargo build --target=$(xx-cargo --print-target-triple) --locked --release \
  && mv /target/$(xx-cargo --print-target-triple)/release/game-oclock-server /build/game-oclock-server
 
 
