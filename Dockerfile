@@ -30,7 +30,7 @@ COPY --from=builder /build/game-oclock-server /app
 RUN addgroup -S nonroot \
  && adduser -S nonroot -G nonroot \
  && chown -R nonroot:nonroot /app \
- && chmod 755 /app
+ && chmod -R 755 /app
 
 USER nonroot
 ENTRYPOINT ["./app/game-oclock-server"]
