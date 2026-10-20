@@ -1,5 +1,8 @@
 # syntax=docker/dockerfile:1
+FROM --platform=$BUILDPLATFORM tonistiigi/xx:1.10.0 AS xx
 FROM --platform=$BUILDPLATFORM rust:1-bookworm AS builder
+
+COPY --from=xx / /
 
 # muslc is required in order to build the rust image.
 RUN apt-get update \
