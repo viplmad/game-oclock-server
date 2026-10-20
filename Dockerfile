@@ -26,7 +26,7 @@ RUN rustup target add $(xx-cargo --print-target-triple) \
  && mkdir /build && mv /target/$(xx-cargo --print-target-triple)/release/game-oclock-server /build/game-oclock-server
 
 
-FROM alpine:3 AS runtime
+FROM --platform=$BUILDPLATFORM alpine:3 AS runtime
 
 COPY migrations /app/migrations
 COPY --from=builder /build/game-oclock-server /app
