@@ -23,7 +23,7 @@ RUN rustup target add aarch64-unknown-linux-musl \
  && mkdir /build && mv /target/aarch64-unknown-linux-musl/release/game-oclock-server /build/game-oclock-server
 
 
-FROM --platform=$BUILDPLATFORM alpine:3 AS runtime
+FROM alpine:3 AS runtime
 
 COPY migrations /app/migrations
 COPY --from=builder /build/game-oclock-server /app
