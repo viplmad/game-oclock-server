@@ -693,7 +693,7 @@ pub async fn unsync_media(
         ("OAuth2" = [])
     )
 )]
-#[post("/medias/search")]
+#[post("/medias/external/search")]
 pub async fn search_external_medias(
     media_service: web::Data<MediaService>,
     query: web::Query<ExternalQuicksearchQuery>,
