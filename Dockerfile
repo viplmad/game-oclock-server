@@ -1,8 +1,5 @@
 # syntax=docker/dockerfile:1
-FROM --platform=$BUILDPLATFORM tonistiigi/xx:1.10.0 AS xx
 FROM --platform=$BUILDPLATFORM rust:1-bookworm AS builder
-
-COPY --from=xx / /
 
 # muslc is required in order to build the rust image.
 RUN apt-get update \
@@ -21,9 +18,9 @@ ENV CC_aarch64_unknown_linux_musl=clang
 ENV AR_aarch64_unknown_linux_musl=llvm-ar
 ENV CARGO_TARGET_AARCH64_UNKNOWN_LINUX_MUSL_RUSTFLAGS="-Clink-self-contained=yes -Clinker=rust-lld"
 ENV PKG_CONFIG_ALLOW_CROSS=1
-RUN rustup target add $(xx-cargo --print-target-triple) \
- && cargo build --target=$(xx-cargo --print-target-triple) --locked --release \
- && mkdir /build && mv /target/$(xx-cargo --print-target-triple)/release/game-oclock-server /build/game-oclock-server
+RUN rustup target add aarch64-unknown-linux-musl \
+ && cargo build --target=aarch64-unknown-linux-musl --locked --release \
+ && mkdir /build && mv /target/aarch64-unknown-linux-musl/release/game-oclock-server /build/game-oclock-server
 
 
 FROM --platform=$BUILDPLATFORM alpine:3 AS runtime
